@@ -1,0 +1,1 @@
+1. Application registry-regulation-management has been successfully deployed!!
