@@ -1,0 +1,15 @@
+{
+  "file-validator.error.title.encoding": "Inappropriate file encoding.",
+  "file-validator.error.title.max-size": "The file is too large.",
+  "file-validator.error.title.extension": "Inappropriate file format.",
+  "file-validator.error.title.token": "Necessary attributes have not been created in the user management system. Please contact the administrator.",
+  "file-validator.error.tittle.form-already-exists": "The form's system name is not unique. Please enter the system name that is not used in any registry forms.",
+  "file-validator.error.tittle.bp-already-exists": "A business process with this system name already exists.",
+  "file-validator.error.table-not-found": "Table was not found.",
+  "group-validator.error.group.required": "The list of groups is mandatory.",
+  "group-validator.error.group.name.required": "Group name is mandatory.",
+  "group-validator.error.group.name.unique": "A group with this name already exists. Please enter a different name.",
+  "group-validator.error.group.name.regex": "Group name should contain only valid characters.",
+  "group-validator.error.group.process-definition.required": "Business process identifiers are required.",
+  "group-validator.error.group.process-definition.duplicate": "A business process can belong to only one group."
+}

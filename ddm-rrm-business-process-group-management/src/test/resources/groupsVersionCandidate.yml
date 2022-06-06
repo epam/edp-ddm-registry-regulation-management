@@ -1,0 +1,11 @@
+groups:
+  - name: "Перша група"
+    processDefinitions:
+      - "bp-1-process_definition_id"
+  - name: "Четверта група"
+    processDefinitions:
+      - "bp-3-process_definition_id"
+  - name: "Третя група"
+ungrouped:
+  - "bp-4-process_definition_id"
+  - "bp-5-process_definition_id"

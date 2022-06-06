@@ -1,0 +1,42 @@
+gerrit:
+  url: http://localhost:8081
+  user: user
+  password: pass
+  head-branch: head-branch
+  repository: repository
+  repository-directory: ${java.io.tmpdir}/testDirectory
+
+spring:
+  cloud:
+    vault:
+      enabled: false
+  cache:
+    cache-names: dates,conflicts,latestRebase,catalog
+    caffeine:
+      spec: expireAfterAccess=5s
+
+registry-regulation-management:
+  async:
+    enabled: false
+  retry:
+    enabled: false
+  scheduled:
+    clean-obsolete-version-contexts:
+      cron: '-'
+    master-repo-refresh:
+      cron: '-'
+    version-candidate-repo-refresh:
+      cron: '-'
+  schema-crawler:
+    schema: public
+    exclude-tables:
+      - public.databasechangelog
+      - public.databasechangeloglock
+    exclude-table-prefixes: ddm,test
+    exclude-table-suffixes: hst
+    exclude-field-prefixes: ddm,dcm
+
+management:
+  endpoint:
+    prometheus:
+      enabled: false

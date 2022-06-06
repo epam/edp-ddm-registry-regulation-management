@@ -1,0 +1,12 @@
+groups:
+- name: "111"
+  processDefinitions:
+  - "bp-1-process_definition_id"
+  - "bp-2-process_definition_id"
+- name: "222"
+  processDefinitions:
+  - "bp-3-process_definition_id"
+- name: "333"
+ungrouped:
+- "bp-4-process_definition_id"
+- "bp-5-process_definition_id"

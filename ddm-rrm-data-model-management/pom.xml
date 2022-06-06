@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>registry-regulation-management-parent</artifactId>
+    <groupId>com.epam.digital.data.platform</groupId>
+    <version>1.9.7</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>ddm-rrm-data-model-management</artifactId>
+  <name>ddm-rrm-data-model-management</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>liquibase-ddm-ext</artifactId>
+      <version>${liquibase-ddm-ext.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>us.fatehi</groupId>
+      <artifactId>schemacrawler</artifactId>
+      <version>${schemacrawler.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-file-management</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.cjnygard</groupId>
+        <artifactId>rest-maven-plugin</artifactId>
+        <version>0.1.4</version>
+        <executions>
+          <execution>
+            <id>download-ext-schema</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>rest-request</goal>
+            </goals>
+            <configuration>
+              <endpoint>
+                ${artifactory.extensions-url}/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd
+              </endpoint>
+              <method>GET</method>
+              <outputDir>${basedir}/target/classes/liquibase-schema</outputDir>
+              <outputFilename>liquibase-ext-schema.xsd</outputFilename>
+            </configuration>
+          </execution>
+          <execution>
+            <id>download-dbchangelog</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>rest-request</goal>
+            </goals>
+            <configuration>
+              <endpoint>
+                ${artifactory.extensions-url}/com/epam/digital/data/platform/dbchangelog/${dbchangelog.version}/dbchangelog-${dbchangelog.version}.xsd
+              </endpoint>
+              <method>GET</method>
+              <outputDir>${basedir}/target/classes/liquibase-schema</outputDir>
+              <outputFilename>dbchangelog.xsd</outputFilename>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

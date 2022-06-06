@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.epam.digital.data.platform</groupId>
+    <artifactId>low-code-platform-parent</artifactId>
+    <version>1.6.0.7</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>registry-regulation-management-parent</artifactId>
+  <version>1.9.7</version>
+  <packaging>pom</packaging>
+
+  <name>registry-regulation-management-parent</name>
+  <description>Registry regulation management service</description>
+
+  <modules>
+    <module>ddm-rrm-core</module>
+    <module>ddm-rrm</module>
+    <module>ddm-rrm-git-integration</module>
+    <module>ddm-rrm-data-model-management</module>
+    <module>ddm-rrm-gerrit-integration</module>
+    <module>ddm-rrm-openshift-integration</module>
+    <module>ddm-rrm-security</module>
+    <module>ddm-rrm-file-management</module>
+    <module>ddm-rrm-scheduled-jobs</module>
+    <module>ddm-rrm-user-management</module>
+    <module>ddm-rrm-form-management</module>
+    <module>ddm-rrm-settings-management</module>
+    <module>ddm-rrm-business-process-management</module>
+    <module>ddm-rrm-version-management</module>
+    <module>ddm-rrm-rest-api</module>
+    <module>ddm-rrm-business-process-group-management</module>
+  </modules>
+
+  <properties>
+    <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
+    <spring.restdocs.mockmvc.version>2.0.6.RELEASE</spring.restdocs.mockmvc.version>
+    <springdoc.openapi.ui.version>1.6.9</springdoc.openapi.ui.version>
+    <ddm.starter.actuator.version>1.6.0.1</ddm.starter.actuator.version>
+    <ddm-starter-security.version>1.6.0.13</ddm-starter-security.version>
+    <ddm-ceph-client.version>1.6.0.3</ddm-ceph-client.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <java.version>11</java.version>
+    <openshift-client.version>5.12.2</openshift-client.version>
+    <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
+    <ddm-starter-localization.version>1.6.0.11</ddm-starter-localization.version>
+    <apache-encoding-detector.version>2.7</apache-encoding-detector.version>
+    <jgit.version>6.1.0.202203080745-r</jgit.version>
+    <gerrit.client.version>0.9.4</gerrit.client.version>
+    <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
+    <liquibase-ddm-ext.version>1.6.0.2</liquibase-ddm-ext.version>
+    <zonky-embedded-postgres.version>2.0.2</zonky-embedded-postgres.version>
+
+    <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+    <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
+    <json-path.version>2.6.0</json-path.version>
+    <schemacrawler.version>16.11.5</schemacrawler.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
+    <sonar.coverage.exclusions>
+      <!-- do not calc coverage for the classes without BL: -->
+      **/model/**/*,
+      **/config/**/*,
+      **/util/Header*,
+      <!-- Remove archiver alter -->
+      **/RegistryRegulationManagementApplication*,
+    </sonar.coverage.exclusions>
+    <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
+    <ddm-maven-tails.version>0.0.1-SNAPSHOT</ddm-maven-tails.version>
+
+    <artifactory.extensions-url>${artifactory.baseUrl}/repository/extensions
+    </artifactory.extensions-url>
+
+    <dbchangelog.version>4.5</dbchangelog.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>1.33</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>${spring-boot-starter-web.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <configuration>
+              <sources>
+                <source>target/generated-sources</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${mapstruct.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>local</id>
+      <properties>
+        <artifactory.baseUrl>
+          https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com/nexus
+        </artifactory.baseUrl>
+      </properties>
+    </profile>
+  </profiles>
+</project>

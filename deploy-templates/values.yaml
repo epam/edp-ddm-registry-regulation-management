@@ -1,0 +1,139 @@
+global:
+  container:
+    requestsLimitsEnabled: true
+  deploymentMode: development
+  istio:
+    sidecar:
+      requestsLimitsEnabled: true
+      resources:
+        requests: {}
+        limits: {}
+  registry:
+    registryRegulationManagement:
+      container:
+        envVars: {}
+        resources:
+          requests: {}
+          limits: {}
+      istio:
+        sidecar:
+          enabled: true
+          resources:
+            requests: {}
+            limits: {}
+
+name: registry-regulation-management
+
+version: 1.1.0
+
+deployProfile: prod
+
+registryRegulationManagement:
+  volume:
+    claimName: registry-regulation-management-pvc
+    size: 5Gi
+  retry:
+    headBranchCloningDelay: 300000
+    dataModelContextCreatingDelay: 300000
+  dataSource:
+    driverClassName: org.postgresql.Driver
+    registryDataBase: registry
+    registryDevDataBasePrefix: registry_dev_
+    publicSchema: public
+    connectionTimeoutInMillis: 10000
+  subjectTableName: subject
+  scheduled:
+    cleanObsoleteVersionContexts:
+      cron: '0 0 20 ? * *'
+      timezone: UTC
+    masterRepoRefresh:
+      cron: '0 */5 * ? * *'
+      timezone: UTC
+  dataModel:
+    tablesFilePath: data-model/createTables.xml
+
+port: 8080
+
+service:
+  port: 8080
+
+ingress:
+  required: true
+  site: rrm-api
+
+s3:
+  config:
+    client:
+      protocol: http
+    options:
+      pathStyleAccess: true
+
+userImportCeph:
+  httpEndpoint: ${USER_IMPORT_CEPH_BUCKET_HOST}
+  bucketName: user-import
+
+data:
+  jobName: publish-users-job
+
+image:
+  name: registry-regulation-management
+  version: latest
+
+keycloak:
+  realms:
+    officer: officer-portal
+    citizen: citizen-portal
+    admin: admin
+  certificatesEndpoint: /protocol/openid-connect/certs
+  officerRealmName: "officer-portal"
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+  readiness:
+    path: /actuator/health/readiness
+
+monitoring:
+  namespace: openshift-monitoring
+  prometheusScrapePath: /actuator/prometheus
+  jobLabel: app
+
+Role:
+  type: Role
+  name: registry-regulation-management-role
+RoleBinding:
+  type: RoleBinding
+  name: registry-regulation-management-role
+
+serviceAccount:
+  create: true
+  annotations: { }
+  name: registry-regulation-management
+
+vault:
+  key: registry-regulation-management-encryption-key
+  encryptionRole: registry-regulation-management-encryption-only-role
+
+gerrit:
+  secret: gerrit-ciuser-password
+  url: http://gerrit:8080
+  basePath: /gerrit
+  repository: registry-regulations
+  headBranch: master
+  repositoryDirectory: /var/lib/repos-data
+scheduled:
+  repositoryRefreshCron: '0 */5 * ? * *'
+  repositoryRefreshTimezone: UTC
+
+db:
+  url: citus-master
+  secret: citus-roles-secrets
+  port: 5432
+
+cache:
+  names: dates,conflicts,latestRebase,catalog
+  spec: expireAfterAccess=1d
+
+
+user:
+  accessToken: user-import-access-token
