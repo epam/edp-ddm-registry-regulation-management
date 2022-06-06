@@ -1,0 +1,11 @@
+gerrit:
+  url: http://gerrit
+  user: user
+  password: pass
+  head-branch: head-branch
+  repository: repository
+
+spring:
+  cloud:
+    vault:
+      enabled: false
