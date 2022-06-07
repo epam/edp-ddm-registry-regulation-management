@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: registry-regulation-management
+  mvc:
+    throw-exception-if-no-handler-found: true
+  zipkin:
+    baseUrl: http://zipkin.istio-system.svc:9411
+    sender:
+      type: web
+  sleuth:
+    opentracing:
+      enabled: true
+    baggage:
+      correlation-enabled: true
+      remote-fields: x-request-id, x-access-token
+      correlation-fields: x-request-id
+  web:
+    resources:
+      add-mappings: false
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+
+s3:
+  config:
+    client:
+      protocol: http
+      signerOverride: S3SignerType
+    options:
+      pathStyleAccess: true
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: "*"
+    jmx:
+      exposure:
+        exclude: "*"
+  endpoint:
+    health:
+      enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState, livenessResponseCheck
+        readiness:
+          include: readinessState
+    loggers:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    kafka:
+      enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /openapi
+
+openapi:
+  request:
+    headers:
+      - X-Access-Token
+  response:
+    codes:
+      get-by-id: 200, 401, 403, 500, 501
+      post: 200, 400, 401, 403, 422, 500, 501
+
+platform:
+  security:
+    enabled: true
+    whitelist:
+      - /openapi
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /actuator/**
+
+user-import-ceph:
+  bucket: ${USER_IMPORT_CEPH_BUCKET_NAME}

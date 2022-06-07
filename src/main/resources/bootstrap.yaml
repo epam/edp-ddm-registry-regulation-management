@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: registry-regulation-management
+
+logging:
+  config: classpath:log4j2-json-console.xml
+---
+spring:
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        paths: /app/config/config.yaml
+        enable-api: false
+      secrets:
+        enabled: true
+        enable-api: false
+        paths:
+          - /app/secrets/userimportceph
+---
+spring:
+  cloud:
+    kubernetes:
+      config:
+        enabled: false
+  config:
+    activate:
+      on-profile: local
+
+logging:
+  config: ''

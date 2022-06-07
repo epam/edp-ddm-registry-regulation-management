@@ -1,0 +1,33 @@
+spring:
+  zipkin:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+
+server:
+  port: 7070
+
+user-import-ceph:
+  http-endpoint: http://localhost:4566
+  access-key: access-key
+  secret-key: secret-key
+  bucket: bucket
+
+s3:
+  config:
+    client:
+      protocol: http
+      signerOverride: S3SignerType
+    options:
+      pathStyleAccess: true
+
+logging:
+  level:
+    root: INFO
+    org.zalando.logbook: TRACE
+  pattern:
+    #   Logging patterns inherited from Spring Boot default logging system configuration
+    #   add tracing
+    console: '%d{${LOG_DATEFORMAT_PATTERN}} [trace:%X{traceId}/%X{spanId}/%X{x-request-id}] ${LOG_LEVEL_PATTERN} %pid --- [%15.15t] %-40.40c{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}'

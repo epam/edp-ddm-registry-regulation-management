@@ -5,6 +5,10 @@ Expand the name of the chart.
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{- define "keycloak.urlPrefix" -}}
+{{- printf "%s%s%s%s" "https://" .Values.keycloak.host "/auth/realms/" .Release.Namespace -}}
+{{- end -}}
+
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
@@ -60,3 +64,27 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{- define "issuer.officer" -}}
+{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.officer -}}
+{{- end -}}
+
+{{- define "issuer.citizen" -}}
+{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.citizen -}}
+{{- end -}}
+
+{{- define "issuer.admin" -}}
+{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin -}}
+{{- end -}}
+
+{{- define "jwksUri.officer" -}}
+{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.officer .Values.keycloak.certificatesEndpoint -}}
+{{- end -}}
+
+{{- define "jwksUri.citizen" -}}
+{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.citizen .Values.keycloak.certificatesEndpoint -}}
+{{- end -}}
+
+{{- define "jwksUri.admin" -}}
+{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin .Values.keycloak.certificatesEndpoint -}}
+{{- end -}}

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: registry-regulation-management-properties
+data:
+  config.yaml: |-
+    server:
+      max-http-header-size: 32KB
+
+    s3:
+      config:
+        client: {{ .Values.s3.config.client | toYaml | nindent 10 }}
+        options: {{ .Values.s3.config.options | toYaml | nindent 10 }}
+
+    user-import-ceph:
+      http-endpoint: {{ .Values.userImportCeph.httpEndpoint }}
+      bucketName: {{ .Values.userImportCeph.bucketName }}
