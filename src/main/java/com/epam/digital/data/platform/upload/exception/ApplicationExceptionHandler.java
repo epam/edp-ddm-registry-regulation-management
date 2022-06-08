@@ -86,6 +86,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
             .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
+  @ExceptionHandler(OpenShiftInvocationException.class)
+  public ResponseEntity<DetailedErrorResponse> handleOpenShiftInvocationException(
+          OpenShiftInvocationException exception) {
+    log.error("Open-shift invocation exception", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(newDetailedResponse(RUNTIME_ERROR, exception));
+  }
+
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {
     var response = new DetailedErrorResponse();
     response.setTraceId(MDC.get(TRACE_ID.getHeaderName()));

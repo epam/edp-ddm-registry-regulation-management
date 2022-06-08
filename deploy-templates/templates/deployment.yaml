@@ -60,6 +60,9 @@ spec:
             - mountPath: /app/secrets/userimportceph
               name: {{ .Chart.Name }}-user-import-ceph-bucket-credentials
               readOnly: true
+            - mountPath: /app/secrets/openshift
+              name: {{ .Chart.Name }}-open-shift-credentials
+              readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:
@@ -71,6 +74,11 @@ spec:
                 configMapKeyRef:
                   name: {{ .Values.userImportCeph.bucketName }}
                   key: BUCKET_HOST
+            - name: OPEN_SHIFT_NAMESPACE
+                valueFrom:
+                  configMapKeyRef:
+                    name: {{ .Release.Namespace }}
+                    key: OPEN_SHIFT_NAMESPACE
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -88,3 +96,11 @@ spec:
                 path: user-import-ceph.access-key
               - key: AWS_SECRET_ACCESS_KEY
                 path: user-import-ceph.secret-key
+        - name: {{ .Chart.Name }}-open-shift-credentials
+          secret:
+            secretName: {{ .Values.open-shift.job-name }}
+            items:
+              - key: OPEN_SHIFT_USERNAME
+                path: open-shift.username
+              - key: OPEN_SHIFT_PASSWORD
+                path: open-shift.password

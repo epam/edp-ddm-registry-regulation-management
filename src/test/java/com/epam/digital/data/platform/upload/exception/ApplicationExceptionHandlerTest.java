@@ -18,6 +18,8 @@ package com.epam.digital.data.platform.upload.exception;
 
 
 import com.epam.digital.data.platform.upload.controller.UserImportController;
+import com.epam.digital.data.platform.upload.model.SecurityContext;
+import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,6 +61,9 @@ class ApplicationExceptionHandlerTest {
 
   @MockBean
   UserImportService userImportService;
+
+  @MockBean
+  OpenShiftService openShiftService;
 
   @Test
   @SneakyThrows
@@ -123,5 +129,25 @@ class ApplicationExceptionHandlerTest {
             .andExpectAll(
                     status().isForbidden(),
                     jsonPath("$.code").value(is("FORBIDDEN_OPERATION")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnOpenShiftInvocationException() {
+    doThrow(new OpenShiftInvocationException("ERROR", new RuntimeException())).when(openShiftService).startImport(new SecurityContext());
+
+    mockMvc.perform(post(BASE_URL + "/imports"))
+            .andExpect(status().isInternalServerError())
+            .andExpect(response -> assertTrue(
+                    response.getResolvedException() instanceof OpenShiftInvocationException))
+            .andExpect(
+                    jsonPath("$.code").value(is("RUNTIME_ERROR"))
+            );
+  }
+
+  private SecurityContext securityContext() {
+    var context = new SecurityContext();
+    context.setAccessToken("stub");
+    return context;
   }
 }

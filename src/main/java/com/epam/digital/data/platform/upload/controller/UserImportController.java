@@ -16,9 +16,12 @@
 
 package com.epam.digital.data.platform.upload.controller;
 
+import com.epam.digital.data.platform.upload.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
+import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -42,9 +45,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserImportController {
   private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s\"";
   private final UserImportService userImportService;
+  private final OpenShiftService openShiftService;
 
-  public UserImportController(UserImportService userImportService) {
+  public UserImportController(UserImportService userImportService, OpenShiftService openShiftService) {
     this.userImportService = userImportService;
+    this.openShiftService = openShiftService;
   }
 
   @PostMapping
@@ -69,6 +74,7 @@ public class UserImportController {
 
   @GetMapping("/{id}")
   public ResponseEntity<Resource> downloadFile(@PathVariable("id") String id) {
+    log.info("downloadFile called");
     CephFileDto cephObject = userImportService.downloadFile(id);
     return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -78,4 +84,10 @@ public class UserImportController {
             .body(new InputStreamResource(cephObject.getContent()));
   }
 
+  @PostMapping("/imports")
+  public ResponseEntity<Void> imports(@HttpSecurityContext SecurityContext securityContext) {
+    log.info("imports called");
+    openShiftService.startImport(securityContext);
+    return ResponseEntity.accepted().build();
+  }
 }

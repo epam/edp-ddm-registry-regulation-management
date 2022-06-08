@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.upload.controller;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
+import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -55,6 +57,9 @@ class UserImportControllerTest {
 
   @MockBean
   UserImportService userImportService;
+
+  @MockBean
+  OpenShiftService openShiftService;
 
   @Test
   @SneakyThrows
@@ -113,5 +118,12 @@ class UserImportControllerTest {
                     header().longValue(CONTENT_LENGTH_HEADER_NAME, contentLength),
                     header().string(HttpHeaders.CONTENT_DISPOSITION, HEADER_VALUE)
             );
+  }
+
+  @Test
+  @SneakyThrows
+  void startImport() {
+    mockMvc.perform(post(BASE_URL + "/imports"))
+            .andExpectAll(status().isAccepted());
   }
 }
