@@ -58,7 +58,7 @@ spec:
               readOnly: true
               subPath: config.yaml
             - mountPath: /app/secrets/userimportceph
-              name: {{ .Chart.Name }}-user-import-ceph-bucket-credentials
+              name: {{ .Chart.Name }}-user-import-ceph-credentials
               readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
@@ -84,7 +84,7 @@ spec:
         - name: config
           configMap:
             name: registry-regulation-management-properties
-        - name: {{ .Chart.Name }}-user-import-ceph-bucket-credentials
+        - name: {{ .Chart.Name }}-user-import-ceph-credentials
           secret:
             secretName: {{ .Values.userImportCeph.bucketName }}
             items:
