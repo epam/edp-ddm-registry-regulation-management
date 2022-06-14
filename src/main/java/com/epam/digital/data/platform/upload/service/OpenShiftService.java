@@ -45,7 +45,7 @@ public class OpenShiftService {
   private final Config openShiftConfig;
   private final String jobName;
 
-  public OpenShiftService(@Value("${open-shift.job-name}") String jobName,
+  public OpenShiftService(@Value("${openshift.job.name}") String jobName,
                           UserImportService userImportService,
                           Config openShiftConfig) {
     this.userImportService = userImportService;
@@ -54,7 +54,7 @@ public class OpenShiftService {
   }
 
   public void startImport(SecurityContext securityContext) {
-    CephEntityReadDto fileInfo = userImportService.getFileInfo();
+    CephEntityReadDto fileInfo = userImportService.getFileInfo(securityContext);
     if (StringUtils.isBlank(fileInfo.getId())) {
       throw new GetProcessingException("Bucket is empty, nothing to import");
     }

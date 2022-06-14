@@ -94,6 +94,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
             .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
+  @ExceptionHandler(JwtParsingException.class)
+  public ResponseEntity<DetailedErrorResponse> handleJwtParsingException(
+          JwtParsingException exception) {
+    log.error("Jwt parsing exception", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(newDetailedResponse(RUNTIME_ERROR, exception));
+  }
+
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {
     var response = new DetailedErrorResponse();
     response.setTraceId(MDC.get(TRACE_ID.getHeaderName()));

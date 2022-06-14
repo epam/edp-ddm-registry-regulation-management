@@ -85,11 +85,7 @@ platform:
 user-import-ceph:
   bucket: ${USER_IMPORT_CEPH_BUCKET_NAME}
 
-open-shift:
-  url: https://api.%s.%s:6443
-  job-name: publish-users-job
-  cluster: cicd2
-  base-domain: mdtu-ddm.projects.epam.com
-  username: auto-openshift
-  password: YXV0by1vcGVuc2hpZnQ=
-  namespace: ${OPEN_SHIFT_NAMESPACE}
+openshift:
+  namespace: ${OPENSHIFT_NAMESPACE}
+  job:
+    name: ${OPENSHIFT_JOB}

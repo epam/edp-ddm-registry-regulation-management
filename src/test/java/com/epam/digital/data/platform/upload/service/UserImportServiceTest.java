@@ -22,9 +22,9 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.upload.exception.CephInvocationException;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.ImportProcessingException;
+import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +36,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -61,18 +63,23 @@ class UserImportServiceTest {
   @Mock
   CephService cephService;
 
-  MockMultipartFile file = new MockMultipartFile("file", "users.csv", MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
+  @Mock
+  UserInfoService userInfoService;
 
   UserImportService userImportService;
 
+  MockMultipartFile file = new MockMultipartFile("file", "users.csv", MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
+
+
   @BeforeEach
   void init() {
-    this.userImportService = new UserImportService(cephService, FILE_BUCKET, new ObjectMapper());
+    this.userImportService = new UserImportService(cephService, FILE_BUCKET, userInfoService);
   }
 
   @Test
   void validSaveFileToStorage() {
-    userImportService.storeFile(file);
+    when(userInfoService.createUsername("userToken")).thenReturn("userName");
+    userImportService.storeFile(file, new SecurityContext("userToken"));
 
     verify(cephService).put(eq(FILE_BUCKET), any(), eq(CEPH_OBJECT_CONTENT_TYPE), any(), any());
   }
@@ -80,9 +87,10 @@ class UserImportServiceTest {
   @Test
   void shouldConvertAnyExceptionToUploadProcessingException() {
     when(cephService.put(any(), any(), any(), any(), any())).thenThrow(RuntimeException.class);
+    when(userInfoService.createUsername("userToken")).thenReturn("userName");
 
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.storeFile(file));
+            () -> userImportService.storeFile(file, new SecurityContext("userToken")));
 
     assertThat(exception.getMessage()).isEqualTo("Failed saving file to ceph");
   }
@@ -96,7 +104,7 @@ class UserImportServiceTest {
             StringUtils.EMPTY.getBytes());
 
     var exception = assertThrows(ImportProcessingException.class,
-            () -> userImportService.storeFile(emptyFile));
+            () -> userImportService.storeFile(emptyFile, new SecurityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
   }
@@ -127,11 +135,14 @@ class UserImportServiceTest {
     final Set<String> setOfKeys = Set.of(stringCephEntity);
     final CephEntityReadDto expectedFilesInfo = new CephEntityReadDto(stringCephEntity, "users.csv");
     final CephObjectMetadata cephObjectMetadata = new CephObjectMetadata();
-    cephObjectMetadata.setUserMetadata(Map.of("id", stringCephEntity, "name", "users.csv"));
+    cephObjectMetadata.setUserMetadata(Map.of("id", stringCephEntity,
+            "name", new String(Base64.getEncoder().encode("users.csv".getBytes(StandardCharsets.UTF_8))),
+            "username", "userName"));
     when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenReturn(setOfKeys);
     when(cephService.getMetadata(FILE_BUCKET, setOfKeys)).thenReturn(Collections.singletonList(cephObjectMetadata));
+    when(userInfoService.createUsername("userToken")).thenReturn("userName");
 
-    CephEntityReadDto filesInfo = userImportService.getFileInfo();
+    CephEntityReadDto filesInfo = userImportService.getFileInfo(new SecurityContext("userToken"));
 
     verify(cephService).getKeys(FILE_BUCKET, StringUtils.EMPTY);
     verify(cephService).getMetadata(FILE_BUCKET, setOfKeys);
@@ -140,10 +151,8 @@ class UserImportServiceTest {
 
   @Test
   void getShouldThrowGetProcessingExceptionWithAnyErrorFromCeph() {
-    when(cephService.getKeys(any(), any())).thenThrow(RuntimeException.class);
-
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.getFileInfo());
+            () -> userImportService.getFileInfo(any()));
 
     assertThat(exception.getMessage()).isEqualTo("Failed retrieve files info");
   }
@@ -152,9 +161,11 @@ class UserImportServiceTest {
   @SneakyThrows
   void validDownloadFileFromStorage() {
     final byte[] contentBytes = "test".getBytes();
+    final String fileName = "test.csv";
+    final String encodedFileName = new String(Base64.getEncoder().encode(fileName.getBytes(StandardCharsets.UTF_8)));
     var cephServiceResponse = CephObject.builder()
             .content(new ByteArrayInputStream(contentBytes))
-            .metadata(CephObjectMetadata.builder().userMetadata(Map.of("name", "test.csv")).build())
+            .metadata(CephObjectMetadata.builder().userMetadata(Map.of("name", encodedFileName)).build())
             .build();
     when(cephService.get(FILE_BUCKET, CEPH_ENTITY_ID.toString()))
             .thenReturn(Optional.of(cephServiceResponse));
@@ -162,7 +173,7 @@ class UserImportServiceTest {
     CephFileDto cephFileDto = userImportService.downloadFile(CEPH_ENTITY_ID.toString());
 
     assertArrayEquals(contentBytes, cephFileDto.getContent().readAllBytes());
-    assertEquals(cephServiceResponse.getMetadata().getUserMetadata().get("name"), cephFileDto.getFileName());
+    assertEquals(fileName, cephFileDto.getFileName());
     assertEquals(cephServiceResponse.getMetadata().getContentLength(), cephFileDto.getContentLength());
   }
 

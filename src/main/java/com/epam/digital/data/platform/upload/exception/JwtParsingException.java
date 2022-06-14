@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.model.dto;
+package com.epam.digital.data.platform.upload.exception;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+public class JwtParsingException extends RuntimeException {
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CephEntityReadDto {
-  @JsonInclude(Include.NON_NULL)
-  private String id;
-  @JsonInclude(Include.NON_NULL)
-  private String name;
+  public JwtParsingException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

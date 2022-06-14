@@ -26,7 +26,6 @@
         <junit.jupiter.version>5.6.2</junit.jupiter.version>
         <openshift-client.version>5.12.2</openshift-client.version>
         <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
-        <jodd-util.version>6.0.1</jodd-util.version>
         <sonar.coverage.exclusions>
             <!-- do not calc coverage for the classes without BL: -->
             **/model/**/*,
@@ -159,14 +158,6 @@
             <groupId>io.fabric8</groupId>
             <artifactId>openshift-client</artifactId>
             <version>${openshift-client.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jodd</groupId>
-            <artifactId>jodd-util</artifactId>
-            <version>${jodd-util.version}</version>
-            <optional>true</optional>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>

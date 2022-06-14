@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.upload.controller;
 
+import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
@@ -34,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -70,7 +72,7 @@ class UserImportControllerTest {
             MediaType.MULTIPART_FORM_DATA_VALUE,
             "test".getBytes());
     var cephEntity = new CephEntityImportDto(CEPH_ENTITY_ID);
-    when(userImportService.storeFile(file)).thenReturn(cephEntity);
+    when(userImportService.storeFile(file, new SecurityContext())).thenReturn(cephEntity);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpectAll(
@@ -84,7 +86,7 @@ class UserImportControllerTest {
   void getFilesInfo() {
     final String fileName = "users.csv";
     final CephEntityReadDto expectedFilesInfo = new CephEntityReadDto(CEPH_ENTITY_ID.toString(), fileName);
-    when(userImportService.getFileInfo()).thenReturn(expectedFilesInfo);
+    when(userImportService.getFileInfo(any())).thenReturn(expectedFilesInfo);
 
     mockMvc.perform(get(BASE_URL))
             .andExpectAll(

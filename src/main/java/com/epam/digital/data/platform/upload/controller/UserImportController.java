@@ -53,16 +53,17 @@ public class UserImportController {
   }
 
   @PostMapping
-  public ResponseEntity<CephEntityImportDto> handleFileUpload(@RequestParam("file") MultipartFile file) {
+  public ResponseEntity<CephEntityImportDto> handleFileUpload(@RequestParam("file") MultipartFile file,
+                                                              @HttpSecurityContext SecurityContext securityContext) {
     log.info("handleFileUpload called");
     return ResponseEntity.status(HttpStatus.CREATED)
-            .body(userImportService.storeFile(file));
+            .body(userImportService.storeFile(file, securityContext));
   }
 
   @GetMapping
-  public ResponseEntity<CephEntityReadDto> getFileInfo() {
+  public ResponseEntity<CephEntityReadDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
     log.info("getFilesInfo called");
-    return ResponseEntity.ok().body(userImportService.getFileInfo());
+    return ResponseEntity.ok().body(userImportService.getFileInfo(securityContext));
   }
 
   @DeleteMapping("/{id}")

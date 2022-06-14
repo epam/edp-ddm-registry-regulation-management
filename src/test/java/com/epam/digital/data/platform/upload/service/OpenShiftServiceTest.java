@@ -39,6 +39,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,18 +76,18 @@ class OpenShiftServiceTest {
             .withPath("/apis/batch/v1/namespaces/test/jobs")
             .andReturn(HttpURLConnection.HTTP_OK, exampleJob)
             .once();
-    when(userImportService.getFileInfo()).thenReturn(cephEntityReadDto);
+    when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
 
     openShiftService.startImport(securityContext());
 
-    verify(userImportService).getFileInfo();
+    verify(userImportService).getFileInfo(any());
     Job job = client.batch().v1().jobs().inNamespace(NAMESPACE).list().getItems().get(0);
     assertEquals(JOB_NAME, job.getMetadata().getName());
   }
 
   @Test
   void shouldThrowGetProcessingExceptionDueToEmptyCeph() {
-    when(userImportService.getFileInfo()).thenReturn(new CephEntityReadDto());
+    when(userImportService.getFileInfo(any())).thenReturn(new CephEntityReadDto());
 
     var exception = assertThrows(GetProcessingException.class,
             () -> openShiftService.startImport(securityContext()));
@@ -97,7 +98,7 @@ class OpenShiftServiceTest {
   @Test
   void shouldConvertAnyOpenShiftExceptionToOpenShiftInvocationException() {
     var cephEntityReadDto = new CephEntityReadDto(UUID.randomUUID().toString(), "test.txt");
-    when(userImportService.getFileInfo()).thenReturn(cephEntityReadDto);
+    when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
     var exception = assertThrows(OpenShiftInvocationException.class,
             () -> openShiftService.startImport(securityContext()));
 

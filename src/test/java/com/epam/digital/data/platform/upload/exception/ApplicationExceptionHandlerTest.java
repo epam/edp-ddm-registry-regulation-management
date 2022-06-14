@@ -37,6 +37,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -68,7 +69,7 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnRuntimeErrorOnGenericException() {
-    when(userImportService.storeFile(file)).thenThrow(RuntimeException.class);
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(RuntimeException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpect(status().isInternalServerError())
@@ -80,7 +81,7 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnInternalErrorUploadProcessingException() {
-    when(userImportService.storeFile(file)).thenThrow(new ImportProcessingException("ERROR", new RuntimeException()));
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(new ImportProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpect(status().isBadRequest())
@@ -109,7 +110,7 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnGetProcessingException() {
-    when(userImportService.getFileInfo()).thenThrow(new GetProcessingException("ERROR", new RuntimeException()));
+    when(userImportService.getFileInfo(any())).thenThrow(new GetProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(get(BASE_URL))
             .andExpect(status().isNotFound())
@@ -123,7 +124,7 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturn403WhenForbiddenOperation() {
-    when(userImportService.storeFile(file)).thenThrow(AccessDeniedException.class);
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(AccessDeniedException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpectAll(
@@ -145,9 +146,14 @@ class ApplicationExceptionHandlerTest {
             );
   }
 
-  private SecurityContext securityContext() {
-    var context = new SecurityContext();
-    context.setAccessToken("stub");
-    return context;
+  @Test
+  @SneakyThrows
+  void shouldThrowJwtParsingException() {
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(JwtParsingException.class);
+
+    mockMvc.perform(multipart(BASE_URL).file(file))
+            .andExpectAll(
+                    status().isInternalServerError(),
+                    jsonPath("$.code").value(is("RUNTIME_ERROR")));
   }
 }

@@ -16,5 +16,5 @@ data:
       http-endpoint: {{ .Values.userImportCeph.httpEndpoint }}
       bucketName: {{ .Values.userImportCeph.bucketName }}
 
-    open-shift:
-      job-name: {{ .Values.open-shift.job-name }}
+    data:
+      jobName: {{ .Values.data.jobName }}

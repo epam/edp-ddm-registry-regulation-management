@@ -17,10 +17,6 @@
 package com.epam.digital.data.platform.upload.exception;
 
 public class CephInvocationException extends RuntimeException {
-  public CephInvocationException(String message) {
-    super(message);
-  }
-
   public CephInvocationException(String message, Throwable cause) {
     super(message, cause);
   }

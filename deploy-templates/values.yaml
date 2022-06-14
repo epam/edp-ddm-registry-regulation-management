@@ -22,8 +22,8 @@ userImportCeph:
   httpEndpoint: ${USER_IMPORT_CEPH_BUCKET_HOST}
   bucketName: user-import
 
-open-shift:
-  job-name: publish-users-job
+data:
+  jobName: publish-users-job
 
 image:
   name: registry-regulation-management

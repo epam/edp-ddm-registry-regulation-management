@@ -32,11 +32,7 @@ logging:
     #   add tracing
     console: '%d{${LOG_DATEFORMAT_PATTERN}} [trace:%X{traceId}/%X{spanId}/%X{x-request-id}] ${LOG_LEVEL_PATTERN} %pid --- [%15.15t] %-40.40c{1.} : %m%n${LOG_EXCEPTION_CONVERSION_WORD}'
 
-open-shift:
-  url: https://api.%s.%s:6443
-  job-name: example
-  cluster: cicd2
-  base-domain: mdtu-ddm.projects.epam.com
-  username: auto-openshift
-  password: YXV0by1vcGVuc2hpZnQ=
-  namespace: mdtu-ddm-edp-cicd-data-dev-dev
+openshift:
+  namespace: test
+  job:
+    name: test

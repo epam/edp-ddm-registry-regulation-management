@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.model.dto;
+package com.epam.digital.data.platform.upload.util;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import static org.springframework.util.StreamUtils.copyToString;
 
+public final class TestUtils {
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CephEntityReadDto {
-  @JsonInclude(Include.NON_NULL)
-  private String id;
-  @JsonInclude(Include.NON_NULL)
-  private String name;
+  public static String getContent(String filePath) {
+    try {
+      return copyToString(TestUtils.class.getClassLoader().getResourceAsStream(filePath),
+          StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
