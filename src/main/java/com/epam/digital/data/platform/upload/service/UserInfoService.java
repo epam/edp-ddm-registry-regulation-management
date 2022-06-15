@@ -33,7 +33,7 @@ public class UserInfoService {
   public String createUsername(String token) {
     var jwtClaims = tokenParserService.parseClaims(token);
 
-    var str = jwtClaims.getFullName() + jwtClaims.getEdrpou() + jwtClaims.getDrfo();
+    var str = jwtClaims.getFullName().toLowerCase() + jwtClaims.getEdrpou() + jwtClaims.getDrfo();
     return DigestUtils.sha256Hex(str.getBytes(StandardCharsets.UTF_8));
   }
 }

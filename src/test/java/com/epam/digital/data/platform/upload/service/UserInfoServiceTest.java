@@ -41,16 +41,6 @@ class UserInfoServiceTest {
 
     var username = userInfoService.createUsername(token);
 
-    assertEquals("66eb8aa22a851d87d03c11246d165b0793988e6ecc3a7c8377c0543b5fb7d685", username);
-  }
-
-  private JwtClaims getTestJwtClaims() {
-    var jwtClaims = new JwtClaims();
-    jwtClaims.setDrfo("1010101014");
-    jwtClaims.setEdrpou("34554362");
-    jwtClaims.setSubject("496fd2fd-3497-4391-9ead-41410522d06f");
-    jwtClaims.setFullName("Сидоренко Василь Леонідович");
-
-    return jwtClaims;
+    assertEquals("c0ab3771f5cd55655855c6b13d919e1bca19d08e6b345064025c05bbd574f802", username);
   }
 }

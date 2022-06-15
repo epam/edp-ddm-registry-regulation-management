@@ -36,7 +36,7 @@ import java.util.UUID;
 
 @Service
 public class OpenShiftService {
-  private static final String CALL_APP_JAR = ">- java -jar app.jar --id='%s' -DUSER_ACCESS_TOKEN='%s' -DREQUEST_ID='%s'";
+  private static final String CALL_APP_JAR = ">- \njava -jar app.jar --id='%s' --USER_ACCESS_TOKEN='%s' --REQUEST_ID='%s'";
   private static final String MDC_TRACE_ID_HEADER = "X-B3-TraceId";
   private static final String JOB_NAME_LABEL = "name";
   private static final String MINUS_DELIMITER = "-";
