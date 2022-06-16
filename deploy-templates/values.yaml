@@ -46,3 +46,15 @@ monitoring:
   namespace: openshift-monitoring
   prometheusScrapePath: /actuator/prometheus
   jobLabel: app
+
+Role:
+  type: Role
+  name: registry-regulation-management-role
+RoleBinding:
+  type: RoleBinding
+  name: registry-regulation-management-role
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: registry-regulation-management

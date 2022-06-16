@@ -1,0 +1,15 @@
+kind: {{ .Values.Role.type }}
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.Role.name }}
+rules:
+  - verbs:
+      - get
+      - list
+      - update
+      - create
+      - patch
+    apiGroups:
+      - '*'
+    resources:
+      - jobs
