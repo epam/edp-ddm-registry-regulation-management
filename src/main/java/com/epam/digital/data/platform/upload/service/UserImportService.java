@@ -21,17 +21,20 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.upload.exception.CephInvocationException;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.ImportProcessingException;
+import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -51,14 +54,17 @@ public class UserImportService {
   private final CephService userImportCephService;
   private final UserInfoService userInfoService;
   private final String userImportFileBucket;
+  private final VaultService vaultService;
 
   public UserImportService(
           CephService userImportCephService,
           @Value("${user-import-ceph.bucket}") String userImportFileBucket,
-          UserInfoService userInfoService) {
+          UserInfoService userInfoService,
+          VaultService vaultService) {
     this.userImportCephService = userImportCephService;
     this.userImportFileBucket = userImportFileBucket;
     this.userInfoService = userInfoService;
+    this.vaultService = vaultService;
   }
 
   public CephEntityImportDto storeFile(MultipartFile file, SecurityContext securityContext) {
@@ -81,10 +87,21 @@ public class UserImportService {
 
     String username = userInfoService.createUsername(securityContext.getAccessToken());
 
+    byte[] encryptedContent = getEncryptedContent(file);
+
     var cephKey = UUID.randomUUID();
-    saveFileToCeph(cephKey.toString(), file, encodedFileName, username);
+    saveFileToCeph(cephKey.toString(), encryptedContent, encodedFileName, username);
 
     return new CephEntityImportDto(cephKey);
+  }
+
+  private byte[] getEncryptedContent(MultipartFile file) {
+    try {
+      return vaultService.encrypt(new String(file.getBytes(), StandardCharsets.UTF_8))
+              .getBytes(StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new VaultInvocationException("Exception during Vault content encryption", e);
+    }
   }
 
   public CephEntityReadDto getFileInfo(SecurityContext securityContext) {
@@ -139,10 +156,22 @@ public class UserImportService {
 
     var decodedFileName = new String(Base64.getDecoder().decode(fileName), StandardCharsets.UTF_8);
 
-    return new CephFileDto(decodedFileName, cephObject.getContent(), cephObject.getMetadata().getContentLength());
+    var decodedInputStream = decodeContent(cephObject.getContent());
+
+    return new CephFileDto(decodedFileName, decodedInputStream, cephObject.getMetadata().getContentLength());
   }
 
-  private void saveFileToCeph(String cephKey, MultipartFile file, String originalFilename, String username) {
+  private InputStream decodeContent(InputStream content) {
+    try {
+      return IOUtils.toInputStream(
+              vaultService.decrypt(new String(content.readAllBytes(), StandardCharsets.UTF_8)),
+              StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new VaultInvocationException("Exception during Vault content decryption", e);
+    }
+  }
+
+  private void saveFileToCeph(String cephKey, byte[] content, String originalFilename, String username) {
     log.info("Storing file to Ceph. Key: {}, Name: {}", cephKey, originalFilename);
     try {
       userImportCephService.put(
@@ -150,7 +179,7 @@ public class UserImportService {
               cephKey,
               CEPH_OBJECT_CONTENT_TYPE,
               Map.of(NAME, originalFilename, ID, cephKey, USERNAME, username),
-              new ByteArrayInputStream(file.getBytes()));
+              new ByteArrayInputStream(content));
     } catch (Exception e) {
       throw new CephInvocationException("Failed saving file to ceph", e);
     }

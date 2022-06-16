@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.upload.service;
 
-import com.epam.digital.data.platform.upload.model.JwtClaims;
 import com.epam.digital.data.platform.upload.util.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@WebMvcTest
+@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
 @TestPropertySource(properties = {"platform.security.enabled=false"})
 @Import({PermitAllWebSecurityConfig.class})
 @ContextConfiguration

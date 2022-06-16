@@ -19,19 +19,16 @@ package com.epam.digital.data.platform.upload.controller;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
-import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
 import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.io.ByteArrayInputStream;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
@@ -42,7 +39,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -104,6 +100,9 @@ class UserImportControllerTest {
             .andExpectAll(status().isNoContent());
   }
 
+ /*
+  TODO [MDTUDDM-12911] Will be available in the next release. Required: extend 'admin-portal-encryption-only-role' to decrypt data.
+
   @Test
   @SneakyThrows
   void downloadFile() {
@@ -120,7 +119,7 @@ class UserImportControllerTest {
                     header().longValue(CONTENT_LENGTH_HEADER_NAME, contentLength),
                     header().string(HttpHeaders.CONTENT_DISPOSITION, HEADER_VALUE)
             );
-  }
+  }*/
 
   @Test
   @SneakyThrows

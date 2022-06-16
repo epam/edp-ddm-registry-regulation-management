@@ -32,6 +32,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
+@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
 @ContextConfiguration(
         classes = {UserImportController.class, ApplicationExceptionHandler.class}
 )
@@ -155,5 +156,27 @@ class ApplicationExceptionHandlerTest {
             .andExpectAll(
                     status().isInternalServerError(),
                     jsonPath("$.code").value(is("RUNTIME_ERROR")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowVaultInvocationException() {
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(VaultInvocationException.class);
+
+    mockMvc.perform(multipart(BASE_URL).file(file))
+            .andExpectAll(
+                    status().isInternalServerError(),
+                    jsonPath("$.code").value(is("RUNTIME_ERROR")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowMaxUploadSizeExceededException() {
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(MaxUploadSizeExceededException.class);
+
+    mockMvc.perform(multipart(BASE_URL).file(file))
+            .andExpectAll(
+                    status().isBadRequest(),
+                    jsonPath("$.code").value(is("FILE_SIZE_ERROR")));
   }
 }

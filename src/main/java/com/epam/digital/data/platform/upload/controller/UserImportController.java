@@ -20,15 +20,10 @@ import com.epam.digital.data.platform.upload.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
-import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
 import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,6 +68,8 @@ public class UserImportController {
     return ResponseEntity.noContent().build();
   }
 
+  /*
+  TODO [MDTUDDM-12911] Will be available in the next release. Required: extend 'admin-portal-encryption-only-role' to decrypt data.
   @GetMapping("/{id}")
   public ResponseEntity<Resource> downloadFile(@PathVariable("id") String id) {
     log.info("downloadFile called");
@@ -83,7 +80,7 @@ public class UserImportController {
             .header(HttpHeaders.CONTENT_DISPOSITION,
                     String.format(ATTACHMENT_HEADER_VALUE, cephObject.getFileName()))
             .body(new InputStreamResource(cephObject.getContent()));
-  }
+  }*/
 
   @PostMapping("/imports")
   public ResponseEntity<Void> imports(@HttpSecurityContext SecurityContext securityContext) {

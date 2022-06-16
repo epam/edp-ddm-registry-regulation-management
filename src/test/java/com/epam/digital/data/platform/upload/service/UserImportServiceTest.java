@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.upload.exception.CephInvocationException;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.ImportProcessingException;
+import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
@@ -66,6 +67,9 @@ class UserImportServiceTest {
   @Mock
   UserInfoService userInfoService;
 
+  @Mock
+  VaultService vaultService;
+
   UserImportService userImportService;
 
   MockMultipartFile file = new MockMultipartFile("file", "users.csv", MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
@@ -73,26 +77,18 @@ class UserImportServiceTest {
 
   @BeforeEach
   void init() {
-    this.userImportService = new UserImportService(cephService, FILE_BUCKET, userInfoService);
+    this.userImportService = new UserImportService(cephService, FILE_BUCKET, userInfoService, vaultService);
   }
 
   @Test
   void validSaveFileToStorage() {
+    var contentStr = "test";
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
+    when(vaultService.encrypt(contentStr)).thenReturn(contentStr);
+
     userImportService.storeFile(file, new SecurityContext("userToken"));
 
     verify(cephService).put(eq(FILE_BUCKET), any(), eq(CEPH_OBJECT_CONTENT_TYPE), any(), any());
-  }
-
-  @Test
-  void shouldConvertAnyExceptionToUploadProcessingException() {
-    when(cephService.put(any(), any(), any(), any(), any())).thenThrow(RuntimeException.class);
-    when(userInfoService.createUsername("userToken")).thenReturn("userName");
-
-    var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.storeFile(file, new SecurityContext("userToken")));
-
-    assertThat(exception.getMessage()).isEqualTo("Failed saving file to ceph");
   }
 
   @Test
@@ -169,6 +165,7 @@ class UserImportServiceTest {
             .build();
     when(cephService.get(FILE_BUCKET, CEPH_ENTITY_ID.toString()))
             .thenReturn(Optional.of(cephServiceResponse));
+    when(vaultService.decrypt("test")).thenReturn("test");
 
     CephFileDto cephFileDto = userImportService.downloadFile(CEPH_ENTITY_ID.toString());
 
@@ -202,5 +199,15 @@ class UserImportServiceTest {
 
     assertThat(exception.getMessage())
             .isEqualTo("Failed download file from ceph - missed file name, cephKey: " + stringCephEntity);
+  }
+
+  @Test
+  void storeFileShouldThrowVaultInvocationExceptionWithErrorFromVault() {
+    when(vaultService.encrypt(any())).thenThrow(new RuntimeException());
+
+    var exception = assertThrows(VaultInvocationException.class,
+            () -> userImportService.storeFile(file, new SecurityContext()));
+
+    assertThat(exception.getMessage()).isEqualTo("Exception during Vault content encryption");
   }
 }
