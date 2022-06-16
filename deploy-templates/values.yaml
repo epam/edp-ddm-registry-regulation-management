@@ -35,6 +35,7 @@ keycloak:
     citizen: citizen-portal
     admin: admin
   certificatesEndpoint: /protocol/openid-connect/certs
+  officerRealmName: "officer-portal"
 
 probes:
   liveness:
@@ -58,3 +59,6 @@ serviceAccount:
   create: true
   annotations: {}
   name: registry-regulation-management
+
+vault:
+  encryptionRole: admin-portal-encryption-only-role

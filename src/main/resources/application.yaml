@@ -89,3 +89,6 @@ openshift:
   namespace: ${OPENSHIFT_NAMESPACE}
   job:
     name: ${OPENSHIFT_JOB}
+
+keycloak:
+  realm: ${KEYCLOAK_REALM}

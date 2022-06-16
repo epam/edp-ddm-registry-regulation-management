@@ -88,3 +88,10 @@ Create the name of the service account to use
 {{- define "jwksUri.admin" -}}
 {{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin .Values.keycloak.certificatesEndpoint -}}
 {{- end -}}
+
+{{/*
+Create officer-portal realm name in Keycloak
+*/}}
+{{- define "keycloak.officerRealm" -}}
+{{- printf "%s-%s" .Values.namespace .Values.keycloak.officerRealmName }}
+{{- end -}}

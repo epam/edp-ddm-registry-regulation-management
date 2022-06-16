@@ -36,3 +36,6 @@ openshift:
   namespace: test
   job:
     name: test
+
+keycloak:
+  realm: test-realm
