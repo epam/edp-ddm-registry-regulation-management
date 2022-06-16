@@ -18,11 +18,11 @@ spring:
         paths:
           - /app/secrets/userimportceph
           - /app/secrets/openshift
-  vault:
-    uri: ${VAULT_URI}
-    authentication: KUBERNETES
-    kubernetes:
-      role: ${VAULT_ENCRYPTION_ROLE}
+    vault:
+      uri: ${VAULT_URI}
+      authentication: KUBERNETES
+      kubernetes:
+        role: ${VAULT_ENCRYPTION_ROLE}
 ---
 spring:
   cloud:
