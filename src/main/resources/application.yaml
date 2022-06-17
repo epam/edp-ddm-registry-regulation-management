@@ -92,3 +92,6 @@ openshift:
 
 keycloak:
   realm: ${KEYCLOAK_REALM}
+
+vault:
+  key: ${VAULT_KEY}

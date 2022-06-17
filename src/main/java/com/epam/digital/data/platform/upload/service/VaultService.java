@@ -26,8 +26,7 @@ public class VaultService {
   private final String keyName;
   private final VaultOperations operations;
 
-  public VaultService(@Value("keycloak-attribute-key-${keycloak.realm}") String keyName,
-                      VaultOperations operations) {
+  public VaultService(@Value("${vault.key}") String keyName, VaultOperations operations) {
     this.keyName = keyName;
     this.operations = operations;
   }

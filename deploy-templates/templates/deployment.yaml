@@ -77,6 +77,8 @@ spec:
               value: {{ .Values.data.jobName }}
             - name: VAULT_URI
               value: http://hashicorp-vault.{{ .Values.namespace }}.svc:8200
+            - name: VAULT_KEY
+              value: {{ .Values.vault.key }}
             - name: VAULT_ENCRYPTION_ROLE
               value: {{ .Values.vault.encryptionRole }}
             - name: KEYCLOAK_REALM

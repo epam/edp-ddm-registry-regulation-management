@@ -61,4 +61,5 @@ serviceAccount:
   name: registry-regulation-management
 
 vault:
-  encryptionRole: admin-portal-encryption-only-role
+  key: registry-regulation-management-encryption-key
+  encryptionRole: registry-regulation-management-encryption-only-role
