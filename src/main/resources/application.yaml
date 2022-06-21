@@ -95,3 +95,7 @@ keycloak:
 
 vault:
   key: ${VAULT_KEY}
+
+file-validator:
+  encoding: UTF-8
+  extension: csv

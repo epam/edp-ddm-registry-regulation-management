@@ -20,9 +20,10 @@ import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.upload.exception.CephInvocationException;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
-import com.epam.digital.data.platform.upload.exception.ImportProcessingException;
+import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
+import com.epam.digital.data.platform.upload.model.ValidationResult;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
@@ -38,7 +39,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -55,34 +55,31 @@ public class UserImportService {
   private final UserInfoService userInfoService;
   private final String userImportFileBucket;
   private final VaultService vaultService;
+  private final ValidatorService validatorService;
 
   public UserImportService(
           CephService userImportCephService,
           @Value("${user-import-ceph.bucket}") String userImportFileBucket,
           UserInfoService userInfoService,
-          VaultService vaultService) {
+          VaultService vaultService,
+          ValidatorService validatorService) {
     this.userImportCephService = userImportCephService;
     this.userImportFileBucket = userImportFileBucket;
+    this.validatorService = validatorService;
     this.userInfoService = userInfoService;
     this.vaultService = vaultService;
   }
 
   public CephEntityImportDto storeFile(MultipartFile file, SecurityContext securityContext) {
-    if (Objects.isNull(file) || file.isEmpty()) {
-      throw new ImportProcessingException("File cannot be saved to Ceph - file is null or empty");
-    }
-
-    var originalFilename = file.getOriginalFilename();
-
-    if (StringUtils.isBlank(originalFilename)) {
-      throw new ImportProcessingException("File cannot be saved to Ceph - file name is missed");
-    }
+    ValidationResult validationResult = validatorService.validate(file);
 
     String encodedFileName;
     try {
-      encodedFileName = new String(Base64.getEncoder().encode(originalFilename.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+      encodedFileName = new String(Base64.getEncoder()
+              .encode(validationResult.getFileName().getBytes(StandardCharsets.UTF_8)),
+              StandardCharsets.UTF_8);
     } catch (IllegalArgumentException e) {
-      throw new ImportProcessingException("Cannot read file name", e);
+      throw new FileLoadProcessingException("Cannot read file name", e);
     }
 
     String username = userInfoService.createUsername(securityContext.getAccessToken());
@@ -184,5 +181,4 @@ public class UserImportService {
       throw new CephInvocationException("Failed saving file to ceph", e);
     }
   }
-
 }

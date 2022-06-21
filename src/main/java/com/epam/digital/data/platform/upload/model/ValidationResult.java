@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.upload.model;
 
-public class ImportProcessingException extends RuntimeException {
-  public ImportProcessingException(String message) {
-    super(message);
-  }
+import lombok.Getter;
+import lombok.Setter;
 
-  public ImportProcessingException(String message, Throwable cause) {
-    super(message, cause);
-  }
+@Getter
+@Setter
+public class ValidationResult {
+  private String fileName;
+  private String encoding;
+  private String extension;
 }

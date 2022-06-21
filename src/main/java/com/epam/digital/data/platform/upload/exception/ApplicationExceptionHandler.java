@@ -16,6 +16,8 @@
 
 package com.epam.digital.data.platform.upload.exception;
 
+import com.epam.digital.data.platform.starter.localization.MessageResolver;
+import com.epam.digital.data.platform.upload.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.upload.model.exception.DetailedErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -27,17 +29,27 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Objects;
+
 import static com.epam.digital.data.platform.upload.util.Header.TRACE_ID;
 
 @Slf4j
 @RestControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
+  public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
+  public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
+  public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
   private static final String IMPORT_CEPH_ERROR = "IMPORT_CEPH_ERROR";
-  private static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   private static final String GET_CEPH_ERROR = "GET_CEPH_ERROR";
   private static final String RUNTIME_ERROR = "RUNTIME_ERROR";
+
+  private final MessageResolver messageResolver;
+
+  public ApplicationExceptionHandler(MessageResolver messageResolver) {
+    this.messageResolver = messageResolver;
+  }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<DetailedErrorResponse> handleException(Exception exception) {
@@ -46,9 +58,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
-  @ExceptionHandler(ImportProcessingException.class)
-  public ResponseEntity<DetailedErrorResponse> handleImportProcessingException(
-          ImportProcessingException exception) {
+  @ExceptionHandler(FileLoadProcessingException.class)
+  public ResponseEntity<DetailedErrorResponse> handleFileLoadProcessingException(
+          FileLoadProcessingException exception) {
     log.error("Error during upload to Ceph", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(newDetailedResponse(IMPORT_CEPH_ERROR, exception));
@@ -102,11 +114,31 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
             .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
+  @ExceptionHandler(FileEncodingException.class)
+  public ResponseEntity<DetailedErrorResponse> handleFileEncodingException(
+          FileEncodingException exception) {
+    log.error("File encoding exception", exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(newDetailedResponse(FILE_ENCODING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(FileExtensionException.class)
+  public ResponseEntity<DetailedErrorResponse> handleFileExtensionException(
+          FileExtensionException exception) {
+    log.error("File extension exception", exception);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(newDetailedResponse(FILE_EXTENSION_ERROR, exception));
+  }
+
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {
     var response = new DetailedErrorResponse();
     response.setTraceId(MDC.get(TRACE_ID.getHeaderName()));
     response.setCode(code);
     response.setDetails(exception.getMessage());
+
+    var titleKey = FileValidatorErrorMessageTitle.from(code);
+    response.setLocalizedMessage(Objects.isNull(titleKey) ? null : messageResolver.getMessage(titleKey));
+
     return response;
   }
 }

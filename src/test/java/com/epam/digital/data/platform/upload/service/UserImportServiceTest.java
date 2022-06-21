@@ -21,9 +21,10 @@ import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.upload.exception.CephInvocationException;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
-import com.epam.digital.data.platform.upload.exception.ImportProcessingException;
+import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
+import com.epam.digital.data.platform.upload.model.ValidationResult;
 import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
 import lombok.SneakyThrows;
@@ -70,6 +71,9 @@ class UserImportServiceTest {
   @Mock
   VaultService vaultService;
 
+  @Mock
+  ValidatorService validatorService;
+
   UserImportService userImportService;
 
   MockMultipartFile file = new MockMultipartFile("file", "users.csv", MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
@@ -77,14 +81,17 @@ class UserImportServiceTest {
 
   @BeforeEach
   void init() {
-    this.userImportService = new UserImportService(cephService, FILE_BUCKET, userInfoService, vaultService);
+    this.userImportService = new UserImportService(cephService, FILE_BUCKET, userInfoService, vaultService, validatorService);
   }
 
   @Test
   void validSaveFileToStorage() {
     var contentStr = "test";
+    var validationResult = new ValidationResult();
+    validationResult.setFileName(file.getOriginalFilename());
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
     when(vaultService.encrypt(contentStr)).thenReturn(contentStr);
+    when(validatorService.validate(file)).thenReturn(validationResult);
 
     userImportService.storeFile(file, new SecurityContext("userToken"));
 
@@ -93,14 +100,11 @@ class UserImportServiceTest {
 
   @Test
   void storeFileShouldThrowUploadProcessingExceptionWithEmptyFile() {
-    MockMultipartFile emptyFile = new MockMultipartFile(
-            "file",
-            "users.csv",
-            MediaType.MULTIPART_FORM_DATA_VALUE,
-            StringUtils.EMPTY.getBytes());
+    when(validatorService.validate(file))
+            .thenThrow(new FileLoadProcessingException("File cannot be saved to Ceph - file is null or empty"));
 
-    var exception = assertThrows(ImportProcessingException.class,
-            () -> userImportService.storeFile(emptyFile, new SecurityContext()));
+    var exception = assertThrows(FileLoadProcessingException.class,
+            () -> userImportService.storeFile(file, new SecurityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
   }
@@ -203,7 +207,10 @@ class UserImportServiceTest {
 
   @Test
   void storeFileShouldThrowVaultInvocationExceptionWithErrorFromVault() {
+    var validationResult = new ValidationResult();
+    validationResult.setFileName(file.getOriginalFilename());
     when(vaultService.encrypt(any())).thenThrow(new RuntimeException());
+    when(validatorService.validate(file)).thenReturn(validationResult);
 
     var exception = assertThrows(VaultInvocationException.class,
             () -> userImportService.storeFile(file, new SecurityContext()));

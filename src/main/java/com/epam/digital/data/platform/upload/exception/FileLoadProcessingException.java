@@ -14,28 +14,14 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.model.exception;
+package com.epam.digital.data.platform.upload.exception;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class DetailedErrorResponse {
-  private String traceId;
-  private String code;
-  private String details;
-  private String localizedMessage;
-
-  @JsonInclude(Include.NON_NULL)
-  public String getDetails() {
-    return details;
+public class FileLoadProcessingException extends RuntimeException {
+  public FileLoadProcessingException(String message) {
+    super(message);
   }
 
-  @JsonInclude(Include.NON_NULL)
-  public String getLocalizedMessage() {
-    return localizedMessage;
+  public FileLoadProcessingException(String message, Throwable cause) {
+    super(message, cause);
   }
 }

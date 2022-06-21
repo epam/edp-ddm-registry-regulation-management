@@ -26,6 +26,8 @@
         <junit.jupiter.version>5.6.2</junit.jupiter.version>
         <openshift-client.version>5.12.2</openshift-client.version>
         <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
+        <ddm-starter-localization.version>1.6.0.1</ddm-starter-localization.version>
+        <apache-encoding-detector.version>2.7</apache-encoding-detector.version>
         <sonar.coverage.exclusions>
             <!-- do not calc coverage for the classes without BL: -->
             **/model/**/*,
@@ -90,6 +92,11 @@
             <groupId>com.epam.digital.data.platform</groupId>
             <artifactId>ddm-ceph-client</artifactId>
             <version>${ddm.ceph.client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.epam.digital.data.platform</groupId>
+            <artifactId>ddm-starter-localization</artifactId>
+            <version>${ddm-starter-localization.version}</version>
         </dependency>
 
         <dependency>
@@ -182,6 +189,12 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-vault-config</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.any23</groupId>
+            <artifactId>apache-any23-encoding</artifactId>
+            <version>${apache-encoding-detector.version}</version>
         </dependency>
 
     </dependencies>

@@ -17,10 +17,13 @@
 package com.epam.digital.data.platform.upload.exception;
 
 
+import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import com.epam.digital.data.platform.upload.controller.UserImportController;
+import com.epam.digital.data.platform.upload.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
+import com.epam.digital.data.platform.upload.validator.Validator;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +70,12 @@ class ApplicationExceptionHandlerTest {
   @MockBean
   OpenShiftService openShiftService;
 
+  @MockBean
+  Validator validator;
+
+  @MockBean
+  private MessageResolver messageResolver;
+
   @Test
   @SneakyThrows
   void shouldReturnRuntimeErrorOnGenericException() {
@@ -82,12 +91,12 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnInternalErrorUploadProcessingException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(new ImportProcessingException("ERROR", new RuntimeException()));
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(new FileLoadProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpect(status().isBadRequest())
             .andExpect(response -> assertTrue(
-                    response.getResolvedException() instanceof ImportProcessingException))
+                    response.getResolvedException() instanceof FileLoadProcessingException))
             .andExpect(
                     jsonPath("$.code").value(is("IMPORT_CEPH_ERROR"))
             );
@@ -173,10 +182,38 @@ class ApplicationExceptionHandlerTest {
   @SneakyThrows
   void shouldThrowMaxUploadSizeExceededException() {
     when(userImportService.storeFile(file, new SecurityContext())).thenThrow(MaxUploadSizeExceededException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.SIZE)).thenReturn("Файл занадто великого розміру.");
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpectAll(
                     status().isBadRequest(),
-                    jsonPath("$.code").value(is("FILE_SIZE_ERROR")));
+                    jsonPath("$.code").value(is("FILE_SIZE_ERROR")),
+                    jsonPath("$.localizedMessage").value(is("Файл занадто великого розміру.")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowFileEncodingException() {
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(FileEncodingException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.ENCODING)).thenReturn("Файл невідповідного кодування.");
+
+    mockMvc.perform(multipart(BASE_URL).file(file))
+            .andExpectAll(
+                    status().isBadRequest(),
+                    jsonPath("$.code").value(is("FILE_ENCODING_EXCEPTION")),
+                    jsonPath("$.localizedMessage").value(is("Файл невідповідного кодування.")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowFileExtensionException() {
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(FileExtensionException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.EXTENSION)).thenReturn("Невідповідний формат файлу.");
+
+    mockMvc.perform(multipart(BASE_URL).file(file))
+            .andExpectAll(
+                    status().isBadRequest(),
+                    jsonPath("$.code").value(is("FILE_EXTENSION_ERROR")),
+                    jsonPath("$.localizedMessage").value(is("Невідповідний формат файлу.")));
   }
 }

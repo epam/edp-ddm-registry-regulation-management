@@ -39,3 +39,7 @@ openshift:
 
 keycloak:
   realm: test-realm
+
+file-validator:
+  encoding: UTF-8
+  extension: csv

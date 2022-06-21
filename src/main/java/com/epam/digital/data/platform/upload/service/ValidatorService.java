@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,26 +16,25 @@
 
 package com.epam.digital.data.platform.upload.service;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.epam.digital.data.platform.upload.model.ValidationResult;
+import com.epam.digital.data.platform.upload.validator.Validator;
 import org.springframework.stereotype.Service;
-import org.springframework.vault.core.VaultOperations;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class VaultService {
+public class ValidatorService {
 
-  private final String keyName;
-  private final VaultOperations operations;
+  private final Validator validator;
 
-  public VaultService(@Value("${vault.key}") String keyName, VaultOperations operations) {
-    this.keyName = keyName;
-    this.operations = operations;
+  public ValidatorService(Validator validator) {
+    this.validator = validator;
   }
 
-  public String decrypt(String encryptedContent) {
-    return operations.opsForTransit().decrypt(keyName, encryptedContent);
-  }
+  public ValidationResult validate(MultipartFile file) {
+    var validationResult = new ValidationResult();
 
-  public String encrypt(String content) {
-    return operations.opsForTransit().encrypt(keyName, content);
+    validator.validate(file, validationResult);
+
+    return validationResult;
   }
 }
