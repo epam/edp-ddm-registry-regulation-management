@@ -19,7 +19,7 @@ package com.epam.digital.data.platform.upload.service;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
+import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.JobListBuilder;
@@ -65,7 +65,7 @@ class OpenShiftServiceTest {
   @Test
   void validStartImportJob() {
     var id = UUID.randomUUID().toString();
-    var cephEntityReadDto = new CephEntityReadDto(id, "test.txt");
+    var cephEntityReadDto = new CephFileInfoDto(id, "test.txt", 1L);
 
     Job exampleJob = createJobBuilder().build();
     server.expect()
@@ -87,7 +87,7 @@ class OpenShiftServiceTest {
 
   @Test
   void shouldThrowGetProcessingExceptionDueToEmptyCeph() {
-    when(userImportService.getFileInfo(any())).thenReturn(new CephEntityReadDto());
+    when(userImportService.getFileInfo(any())).thenReturn(new CephFileInfoDto());
 
     var exception = assertThrows(GetProcessingException.class,
             () -> openShiftService.startImport(securityContext()));
@@ -97,7 +97,7 @@ class OpenShiftServiceTest {
 
   @Test
   void shouldConvertAnyOpenShiftExceptionToOpenShiftInvocationException() {
-    var cephEntityReadDto = new CephEntityReadDto(UUID.randomUUID().toString(), "test.txt");
+    var cephEntityReadDto = new CephFileInfoDto(UUID.randomUUID().toString(), "test.txt", 1L);
     when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
     var exception = assertThrows(OpenShiftInvocationException.class,
             () -> openShiftService.startImport(securityContext()));

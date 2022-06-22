@@ -40,6 +40,6 @@ class UserInfoServiceTest {
 
     var username = userInfoService.createUsername(token);
 
-    assertEquals("c0ab3771f5cd55655855c6b13d919e1bca19d08e6b345064025c05bbd574f802", username);
+    assertEquals("e481d63f631d9bb38680c52f42e4d7f0bda3acf207abe338ee6260b331bb43b3", username);
   }
 }

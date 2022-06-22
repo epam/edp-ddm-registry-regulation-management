@@ -17,8 +17,7 @@
 package com.epam.digital.data.platform.upload.controller;
 
 import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
+import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.SneakyThrows;
@@ -67,7 +66,7 @@ class UserImportControllerTest {
             "users.csv",
             MediaType.MULTIPART_FORM_DATA_VALUE,
             "test".getBytes());
-    var cephEntity = new CephEntityImportDto(CEPH_ENTITY_ID);
+    var cephEntity = new CephFileInfoDto(CEPH_ENTITY_ID.toString(), file.getOriginalFilename(), file.getSize());
     when(userImportService.storeFile(file, new SecurityContext())).thenReturn(cephEntity);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
@@ -81,7 +80,7 @@ class UserImportControllerTest {
   @SneakyThrows
   void getFilesInfo() {
     final String fileName = "users.csv";
-    final CephEntityReadDto expectedFilesInfo = new CephEntityReadDto(CEPH_ENTITY_ID.toString(), fileName);
+    final var expectedFilesInfo = new CephFileInfoDto(CEPH_ENTITY_ID.toString(), fileName, 1L);
     when(userImportService.getFileInfo(any())).thenReturn(expectedFilesInfo);
 
     mockMvc.perform(get(BASE_URL))
@@ -89,7 +88,8 @@ class UserImportControllerTest {
                     status().isOk(),
                     content().contentType(MediaType.APPLICATION_JSON),
                     jsonPath("$.id", is(CEPH_ENTITY_ID.toString())),
-                    jsonPath("$.name", is(fileName)));
+                    jsonPath("$.name", is(fileName)),
+                    jsonPath("$.size", is(1)));
 
   }
 

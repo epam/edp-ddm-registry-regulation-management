@@ -23,10 +23,8 @@ import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
+import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -49,6 +48,7 @@ public class UserImportService {
   private static final String CEPH_OBJECT_CONTENT_TYPE = "application/octet-stream";
   private static final String USERNAME = "username";
   private static final String NAME = "name";
+  private static final String SIZE = "size";
   private static final String ID = "id";
 
   private final CephService userImportCephService;
@@ -70,8 +70,8 @@ public class UserImportService {
     this.vaultService = vaultService;
   }
 
-  public CephEntityImportDto storeFile(MultipartFile file, SecurityContext securityContext) {
-    ValidationResult validationResult = validatorService.validate(file);
+  public CephFileInfoDto storeFile(MultipartFile file, SecurityContext securityContext) {
+    var validationResult = validatorService.validate(file);
 
     String encodedFileName;
     try {
@@ -86,10 +86,12 @@ public class UserImportService {
 
     byte[] encryptedContent = getEncryptedContent(file);
 
-    var cephKey = UUID.randomUUID();
-    saveFileToCeph(cephKey.toString(), encryptedContent, encodedFileName, username);
+    String existingId = getFileInfo(securityContext).getId();
+    var cephKey = StringUtils.defaultIfBlank(existingId, UUID.randomUUID().toString());
 
-    return new CephEntityImportDto(cephKey);
+    saveFileToCeph(cephKey, encryptedContent, encodedFileName, username, validationResult.getSize());
+
+    return new CephFileInfoDto(cephKey, validationResult.getFileName(), file.getSize());
   }
 
   private byte[] getEncryptedContent(MultipartFile file) {
@@ -101,11 +103,11 @@ public class UserImportService {
     }
   }
 
-  public CephEntityReadDto getFileInfo(SecurityContext securityContext) {
+  public CephFileInfoDto getFileInfo(SecurityContext securityContext) {
     try {
       Set<String> keys = userImportCephService.getKeys(userImportFileBucket, StringUtils.EMPTY);
       if (keys.isEmpty()) {
-        return new CephEntityReadDto();
+        return new CephFileInfoDto();
       }
 
       String username = userInfoService.createUsername(securityContext.getAccessToken());
@@ -115,17 +117,18 @@ public class UserImportService {
               .filter(cephObjectMetadata -> StringUtils.equals(cephObjectMetadata.getUserMetadata().get(USERNAME), username))
               .findFirst()
               .map(cephObjectMetadata -> mapToDto(cephObjectMetadata.getUserMetadata()))
-              .orElse(new CephEntityReadDto());
+              .orElse(new CephFileInfoDto());
     } catch (Exception e) {
       throw new CephInvocationException("Failed retrieve files info", e);
     }
   }
 
-  private CephEntityReadDto mapToDto(Map<String, String> userMetadata) {
-    return CephEntityReadDto
+  private CephFileInfoDto mapToDto(Map<String, String> userMetadata) {
+    return CephFileInfoDto
             .builder()
             .id(userMetadata.getOrDefault(ID, StringUtils.EMPTY))
             .name(new String(Base64.getDecoder().decode(userMetadata.getOrDefault(NAME, StringUtils.EMPTY))))
+            .size(Long.parseLong(userMetadata.getOrDefault(SIZE, "0")))
             .build();
   }
 
@@ -168,14 +171,15 @@ public class UserImportService {
     }
   }
 
-  private void saveFileToCeph(String cephKey, byte[] content, String originalFilename, String username) {
+  private void saveFileToCeph(String cephKey, byte[] content, String originalFilename,
+                              String username, String originalFileSize) {
     log.info("Storing file to Ceph. Key: {}, Name: {}", cephKey, originalFilename);
     try {
       userImportCephService.put(
               userImportFileBucket,
               cephKey,
               CEPH_OBJECT_CONTENT_TYPE,
-              Map.of(NAME, originalFilename, ID, cephKey, USERNAME, username),
+              Map.of(NAME, originalFilename, ID, cephKey, USERNAME, username, SIZE, originalFileSize),
               new ByteArrayInputStream(content));
     } catch (Exception e) {
       throw new CephInvocationException("Failed saving file to ceph", e);

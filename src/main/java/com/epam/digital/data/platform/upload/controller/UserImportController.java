@@ -18,8 +18,7 @@ package com.epam.digital.data.platform.upload.controller;
 
 import com.epam.digital.data.platform.upload.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityImportDto;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
+import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.upload.service.OpenShiftService;
 import com.epam.digital.data.platform.upload.service.UserImportService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,15 +47,15 @@ public class UserImportController {
   }
 
   @PostMapping
-  public ResponseEntity<CephEntityImportDto> handleFileUpload(@RequestParam("file") MultipartFile file,
-                                                              @HttpSecurityContext SecurityContext securityContext) {
+  public ResponseEntity<CephFileInfoDto> handleFileUpload(@RequestParam("file") MultipartFile file,
+                                                          @HttpSecurityContext SecurityContext securityContext) {
     log.info("handleFileUpload called");
     return ResponseEntity.status(HttpStatus.CREATED)
             .body(userImportService.storeFile(file, securityContext));
   }
 
   @GetMapping
-  public ResponseEntity<CephEntityReadDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
+  public ResponseEntity<CephFileInfoDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
     log.info("getFilesInfo called");
     return ResponseEntity.ok().body(userImportService.getFileInfo(securityContext));
   }

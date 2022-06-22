@@ -5,6 +5,10 @@ spring:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
+  jackson:
+    deserialization:
+      fail-on-missing-creator-properties: true
+      fail-on-null-creator-properties: true
 
 server:
   port: 7070
@@ -43,3 +47,6 @@ keycloak:
 file-validator:
   encoding: UTF-8
   extension: csv
+
+vault:
+  key: key

@@ -30,5 +30,7 @@ public class FileExistenceValidator extends Validator {
     if (Objects.isNull(inputFile) || inputFile.isEmpty()) {
       throw new FileLoadProcessingException("File cannot be saved to Ceph - file is null or empty");
     }
+
+    validationResult.setSize(String.valueOf(inputFile.getSize()));
   }
 }

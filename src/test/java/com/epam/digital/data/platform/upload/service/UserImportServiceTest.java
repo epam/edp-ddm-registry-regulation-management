@@ -25,8 +25,8 @@ import com.epam.digital.data.platform.upload.exception.FileLoadProcessingExcepti
 import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
 import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
+import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,6 +89,7 @@ class UserImportServiceTest {
     var contentStr = "test";
     var validationResult = new ValidationResult();
     validationResult.setFileName(file.getOriginalFilename());
+    validationResult.setSize(String.valueOf(file.getSize()));
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
     when(vaultService.encrypt(contentStr)).thenReturn(contentStr);
     when(validatorService.validate(file)).thenReturn(validationResult);
@@ -133,16 +134,17 @@ class UserImportServiceTest {
   void validGetFilesInfoFromStorage() {
     final String stringCephEntity = CEPH_ENTITY_ID.toString();
     final Set<String> setOfKeys = Set.of(stringCephEntity);
-    final CephEntityReadDto expectedFilesInfo = new CephEntityReadDto(stringCephEntity, "users.csv");
+    final var expectedFilesInfo = new CephFileInfoDto(stringCephEntity, "users.csv", 1L);
     final CephObjectMetadata cephObjectMetadata = new CephObjectMetadata();
     cephObjectMetadata.setUserMetadata(Map.of("id", stringCephEntity,
             "name", new String(Base64.getEncoder().encode("users.csv".getBytes(StandardCharsets.UTF_8))),
-            "username", "userName"));
+            "username", "userName",
+            "size", "1"));
     when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenReturn(setOfKeys);
     when(cephService.getMetadata(FILE_BUCKET, setOfKeys)).thenReturn(Collections.singletonList(cephObjectMetadata));
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
 
-    CephEntityReadDto filesInfo = userImportService.getFileInfo(new SecurityContext("userToken"));
+    var filesInfo = userImportService.getFileInfo(new SecurityContext("userToken"));
 
     verify(cephService).getKeys(FILE_BUCKET, StringUtils.EMPTY);
     verify(cephService).getMetadata(FILE_BUCKET, setOfKeys);

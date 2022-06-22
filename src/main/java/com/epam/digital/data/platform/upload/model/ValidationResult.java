@@ -25,4 +25,5 @@ public class ValidationResult {
   private String fileName;
   private String encoding;
   private String extension;
+  private String size;
 }

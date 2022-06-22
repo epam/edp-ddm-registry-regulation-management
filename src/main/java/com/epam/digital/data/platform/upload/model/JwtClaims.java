@@ -16,48 +16,30 @@
 
 package com.epam.digital.data.platform.upload.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.ToString;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JwtClaims {
 
-  @JsonProperty("sub")
-  protected String subject;
-  private String edrpou;
-  private String drfo;
-  private String fullName;
+  private final String subject;
+  private final String edrpou;
+  private final String drfo;
+  private final String fullName;
 
-  public String getSubject() {
-    return subject;
-  }
-
-  public void setSubject(String subject) {
+  @JsonCreator
+  public JwtClaims(@JsonProperty("sub") String subject,
+                   @JsonProperty("edrpou") String edrpou,
+                   @JsonProperty("drfo") String drfo,
+                   @JsonProperty("fullName") String fullName) {
     this.subject = subject;
-  }
-
-  public String getEdrpou() {
-    return edrpou;
-  }
-
-  public void setEdrpou(String edrpou) {
     this.edrpou = edrpou;
-  }
-
-  public String getDrfo() {
-    return drfo;
-  }
-
-  public void setDrfo(String drfo) {
     this.drfo = drfo;
-  }
-
-  public String getFullName() {
-    return fullName;
-  }
-
-  public void setFullName(String fullName) {
     this.fullName = fullName;
   }
 }

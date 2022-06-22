@@ -16,22 +16,21 @@
 
 package com.epam.digital.data.platform.upload.model.dto;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CephEntityReadDto {
-  @JsonInclude(Include.NON_NULL)
+public class CephFileInfoDto {
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private String id;
-  @JsonInclude(Include.NON_NULL)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private String name;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private long size;
 }

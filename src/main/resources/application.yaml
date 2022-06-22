@@ -21,6 +21,10 @@ spring:
     multipart:
       max-file-size: 30MB
       max-request-size: 30MB
+  jackson:
+    deserialization:
+      fail-on-missing-creator-properties: true
+      fail-on-null-creator-properties: true
 
 s3:
   config:

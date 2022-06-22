@@ -41,10 +41,10 @@ class TokenParserServiceTest {
 
     var jwtClaims = tokenParserService.parseClaims(token);
 
-    assertEquals("496fd2fd-3497-4391-9ead-41410522d06f", jwtClaims.getSubject());
-    assertEquals("34554362", jwtClaims.getEdrpou());
-    assertEquals("1010101014", jwtClaims.getDrfo());
-    assertEquals("Сидоренко Василь Леонідович", jwtClaims.getFullName());
+    assertEquals("49acde86-8ab9-43f4-a74b-a9c9bf8eee53", jwtClaims.getSubject());
+    assertEquals("11111111", jwtClaims.getEdrpou());
+    assertEquals("0101010101", jwtClaims.getDrfo());
+    assertEquals("Петров Петр Петровіч", jwtClaims.getFullName());
   }
 
   @Test

@@ -19,7 +19,6 @@ package com.epam.digital.data.platform.upload.service;
 import com.epam.digital.data.platform.upload.exception.GetProcessingException;
 import com.epam.digital.data.platform.upload.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephEntityReadDto;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec;
 import io.fabric8.kubernetes.client.Config;
@@ -54,7 +53,7 @@ public class OpenShiftService {
   }
 
   public void startImport(SecurityContext securityContext) {
-    CephEntityReadDto fileInfo = userImportService.getFileInfo(securityContext);
+    var fileInfo = userImportService.getFileInfo(securityContext);
     if (StringUtils.isBlank(fileInfo.getId())) {
       throw new GetProcessingException("Bucket is empty, nothing to import");
     }
