@@ -31,6 +31,6 @@ public class CephFileInfoDto {
   private String id;
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String name;
-  @JsonInclude(JsonInclude.Include.NON_NULL)
+  @JsonInclude(JsonInclude.Include.NON_DEFAULT)
   private long size;
 }
