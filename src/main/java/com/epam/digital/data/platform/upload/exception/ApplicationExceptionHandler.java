@@ -40,6 +40,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
   public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
+  public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
   private static final String IMPORT_CEPH_ERROR = "IMPORT_CEPH_ERROR";
   private static final String GET_CEPH_ERROR = "GET_CEPH_ERROR";
@@ -110,8 +111,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public ResponseEntity<DetailedErrorResponse> handleJwtParsingException(
           JwtParsingException exception) {
     log.error("Jwt parsing exception", exception);
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(newDetailedResponse(RUNTIME_ERROR, exception));
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(newDetailedResponse(JWT_PARSING_ERROR, exception));
   }
 
   @ExceptionHandler(FileEncodingException.class)

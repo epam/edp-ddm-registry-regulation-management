@@ -163,8 +163,8 @@ class ApplicationExceptionHandlerTest {
 
     mockMvc.perform(multipart(BASE_URL).file(file))
             .andExpectAll(
-                    status().isInternalServerError(),
-                    jsonPath("$.code").value(is("RUNTIME_ERROR")));
+                    status().isBadRequest(),
+                    jsonPath("$.code").value(is("JWT_PARSING_ERROR")));
   }
 
   @Test

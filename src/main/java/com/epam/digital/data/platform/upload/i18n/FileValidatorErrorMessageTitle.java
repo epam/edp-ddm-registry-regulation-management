@@ -31,7 +31,9 @@ public enum FileValidatorErrorMessageTitle implements MessageTitle {
   SIZE(ApplicationExceptionHandler.FILE_SIZE_ERROR,
           "file-validator.error.title.max-size"),
   EXTENSION(ApplicationExceptionHandler.FILE_EXTENSION_ERROR,
-          "file-validator.error.title.extension");
+          "file-validator.error.title.extension"),
+  TOKEN(ApplicationExceptionHandler.JWT_PARSING_ERROR,
+          "file-validator.error.title.token");
 
   private final String errorCode;
   private final String titleKey;
