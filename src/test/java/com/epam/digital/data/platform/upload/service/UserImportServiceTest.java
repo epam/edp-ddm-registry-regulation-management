@@ -153,8 +153,11 @@ class UserImportServiceTest {
 
   @Test
   void getShouldThrowGetProcessingExceptionWithAnyErrorFromCeph() {
+    when(userInfoService.createUsername("userToken")).thenReturn("userName");
+    when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenThrow(new RuntimeException());
+
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.getFileInfo(any()));
+            () -> userImportService.getFileInfo(new SecurityContext("userToken")));
 
     assertThat(exception.getMessage()).isEqualTo("Failed retrieve files info");
   }

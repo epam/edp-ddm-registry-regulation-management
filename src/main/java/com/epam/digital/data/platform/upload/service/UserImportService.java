@@ -103,13 +103,13 @@ public class UserImportService {
   }
 
   public CephFileInfoDto getFileInfo(SecurityContext securityContext) {
+    String username = userInfoService.createUsername(securityContext.getAccessToken());
+
     try {
       Set<String> keys = userImportCephService.getKeys(userImportFileBucket, StringUtils.EMPTY);
       if (keys.isEmpty()) {
         return new CephFileInfoDto();
       }
-
-      String username = userInfoService.createUsername(securityContext.getAccessToken());
 
       return userImportCephService.getMetadata(userImportFileBucket, keys)
               .stream()
