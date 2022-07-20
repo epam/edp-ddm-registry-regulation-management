@@ -1,0 +1,49 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.epam.digital.data.platform.poc.versioning.api.service;
+
+import com.epam.digital.data.platform.poc.versioning.api.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.poc.versioning.api.model.VersioningRequestDto;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+@Component
+public class RequestToFileConverter {
+
+  private static final String DIRECTORY_PATH = "forms/";
+
+  @Autowired
+  private GerritPropertiesConfig config;
+
+  public File convert(VersioningRequestDto requestDto) throws IOException {
+    if(requestDto != null && requestDto.getContent() != null) {
+      String path = config.getRepositoryDirectory() + DIRECTORY_PATH;
+      String fileName = FilenameUtils.getName(requestDto.getFormName());
+      File file = new File(path, fileName);
+      try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        writer.write(requestDto.getContent());
+      }
+      return file;
+    }
+    return null;
+  }
+}
