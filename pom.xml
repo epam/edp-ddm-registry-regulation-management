@@ -28,6 +28,8 @@
         <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
         <ddm-starter-localization.version>1.6.0.1</ddm-starter-localization.version>
         <apache-encoding-detector.version>2.7</apache-encoding-detector.version>
+        <jgit.version>6.1.0.202203080745-r</jgit.version>
+        <gerrit.client.version>0.9.4</gerrit.client.version>
         <sonar.coverage.exclusions>
             <!-- do not calc coverage for the classes without BL: -->
             **/model/**/*,
@@ -97,6 +99,18 @@
             <groupId>com.epam.digital.data.platform</groupId>
             <artifactId>ddm-starter-localization</artifactId>
             <version>${ddm-starter-localization.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>${jgit.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.urswolfer.gerrit.client.rest</groupId>
+            <artifactId>gerrit-rest-java-client</artifactId>
+            <version>${gerrit.client.version}</version>
         </dependency>
 
         <dependency>

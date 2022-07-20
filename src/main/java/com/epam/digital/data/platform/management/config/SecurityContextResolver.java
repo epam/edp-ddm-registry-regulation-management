@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.config;
+package com.epam.digital.data.platform.management.config;
 
-import com.epam.digital.data.platform.upload.annotation.HttpSecurityContext;
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.util.Header;
+import com.epam.digital.data.platform.management.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.util.Header;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;

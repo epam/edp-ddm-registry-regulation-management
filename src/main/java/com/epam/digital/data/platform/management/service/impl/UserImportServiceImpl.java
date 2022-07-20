@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service.impl;
+package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
-import com.epam.digital.data.platform.upload.exception.CephInvocationException;
-import com.epam.digital.data.platform.upload.exception.GetProcessingException;
-import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
-import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
-import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.upload.service.UserImportService;
-import com.epam.digital.data.platform.upload.service.UserInfoService;
-import com.epam.digital.data.platform.upload.service.ValidatorService;
-import com.epam.digital.data.platform.upload.service.VaultService;
+import com.epam.digital.data.platform.management.exception.CephInvocationException;
+import com.epam.digital.data.platform.management.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.exception.FileLoadProcessingException;
+import com.epam.digital.data.platform.management.exception.VaultInvocationException;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.dto.CephFileDto;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.service.UserImportService;
+import com.epam.digital.data.platform.management.service.UserInfoService;
+import com.epam.digital.data.platform.management.service.ValidatorService;
+import com.epam.digital.data.platform.management.service.VaultService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

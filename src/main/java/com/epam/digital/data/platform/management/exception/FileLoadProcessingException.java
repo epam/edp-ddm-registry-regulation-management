@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.management.exception;
 
 public class FileLoadProcessingException extends RuntimeException {
   public FileLoadProcessingException(String message) {

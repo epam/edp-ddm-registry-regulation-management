@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.management.exception;
 
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
-import com.epam.digital.data.platform.upload.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.upload.model.exception.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
+import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -31,7 +31,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.util.Objects;
 
-import static com.epam.digital.data.platform.upload.util.Header.TRACE_ID;
+import static com.epam.digital.data.platform.management.util.Header.TRACE_ID;
 
 @Slf4j
 @RestControllerAdvice

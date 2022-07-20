@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.poc.versioning.api.model;
+package com.epam.digital.data.platform.management.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;

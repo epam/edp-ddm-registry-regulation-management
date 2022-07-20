@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service.impl;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.upload.service.VaultService;
+import com.epam.digital.data.platform.management.service.VaultService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.core.VaultOperations;

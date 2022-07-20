@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.util;
+package com.epam.digital.data.platform.management.util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

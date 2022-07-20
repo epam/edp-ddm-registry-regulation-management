@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.validator;
+package com.epam.digital.data.platform.management.validator;
 
-import com.epam.digital.data.platform.upload.exception.FileEncodingException;
-import com.epam.digital.data.platform.upload.exception.FileExtensionException;
-import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
-import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.validator.format.FileEncodingValidator;
-import com.epam.digital.data.platform.upload.validator.format.FileExtensionValidator;
-import com.epam.digital.data.platform.upload.validator.generic.FileExistenceValidator;
-import com.epam.digital.data.platform.upload.validator.generic.FileNameValidator;
+import com.epam.digital.data.platform.management.exception.FileEncodingException;
+import com.epam.digital.data.platform.management.exception.FileExtensionException;
+import com.epam.digital.data.platform.management.exception.FileLoadProcessingException;
+import com.epam.digital.data.platform.management.model.ValidationResult;
+import com.epam.digital.data.platform.management.validator.format.FileEncodingValidator;
+import com.epam.digital.data.platform.management.validator.format.FileExtensionValidator;
+import com.epam.digital.data.platform.management.validator.generic.FileExistenceValidator;
+import com.epam.digital.data.platform.management.validator.generic.FileNameValidator;
 import lombok.SneakyThrows;
 import org.apache.any23.encoding.EncodingDetector;
 import org.junit.jupiter.api.BeforeEach;

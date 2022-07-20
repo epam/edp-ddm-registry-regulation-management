@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.management.exception;
 
 
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
-import com.epam.digital.data.platform.upload.controller.UserImportController;
-import com.epam.digital.data.platform.upload.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.service.OpenShiftService;
-import com.epam.digital.data.platform.upload.service.impl.UserImportServiceImpl;
-import com.epam.digital.data.platform.upload.validator.Validator;
+import com.epam.digital.data.platform.management.controller.UserImportController;
+import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.service.OpenShiftService;
+import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.validator.Validator;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

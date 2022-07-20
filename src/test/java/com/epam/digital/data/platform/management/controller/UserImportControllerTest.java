@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.controller;
+package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.upload.service.OpenShiftService;
-import com.epam.digital.data.platform.upload.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.service.OpenShiftService;
+import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

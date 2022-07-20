@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.annotation;
+package com.epam.digital.data.platform.management.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

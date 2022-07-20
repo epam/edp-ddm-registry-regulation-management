@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service.impl;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.upload.service.TokenParserService;
-import com.epam.digital.data.platform.upload.service.UserInfoService;
+import com.epam.digital.data.platform.management.service.TokenParserService;
+import com.epam.digital.data.platform.management.service.UserInfoService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 

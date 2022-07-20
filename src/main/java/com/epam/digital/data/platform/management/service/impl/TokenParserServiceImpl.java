@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service.impl;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.upload.exception.JwtParsingException;
-import com.epam.digital.data.platform.upload.model.JwtClaims;
-import com.epam.digital.data.platform.upload.service.TokenParserService;
+import com.epam.digital.data.platform.management.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.model.JwtClaims;
+import com.epam.digital.data.platform.management.service.TokenParserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;

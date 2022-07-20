@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service.impl;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.service.ValidatorService;
-import com.epam.digital.data.platform.upload.validator.Validator;
+import com.epam.digital.data.platform.management.model.ValidationResult;
+import com.epam.digital.data.platform.management.service.ValidatorService;
+import com.epam.digital.data.platform.management.validator.Validator;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.management.exception;
 
 public class CephInvocationException extends RuntimeException {
   public CephInvocationException(String message, Throwable cause) {

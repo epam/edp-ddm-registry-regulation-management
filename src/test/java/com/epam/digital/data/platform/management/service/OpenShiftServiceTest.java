@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.upload.exception.GetProcessingException;
-import com.epam.digital.data.platform.upload.exception.OpenShiftInvocationException;
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.upload.service.impl.OpenShiftServiceImpl;
+import com.epam.digital.data.platform.management.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.exception.OpenShiftInvocationException;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.service.impl.OpenShiftServiceImpl;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.JobListBuilder;

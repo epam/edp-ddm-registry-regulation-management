@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.validator.format;
+package com.epam.digital.data.platform.management.validator.format;
 
-import com.epam.digital.data.platform.upload.exception.FileExtensionException;
-import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.validator.Validator;
+import com.epam.digital.data.platform.management.exception.FileExtensionException;
+import com.epam.digital.data.platform.management.model.ValidationResult;
+import com.epam.digital.data.platform.management.validator.Validator;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.multipart.MultipartFile;

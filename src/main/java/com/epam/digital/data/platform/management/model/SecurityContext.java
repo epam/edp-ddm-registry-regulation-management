@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.model;
+package com.epam.digital.data.platform.management.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

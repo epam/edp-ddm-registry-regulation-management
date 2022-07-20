@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.poc.versioning.api.service;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.poc.versioning.api.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.poc.versioning.api.model.ChangeInfoDto;
-import com.epam.digital.data.platform.poc.versioning.api.model.VersioningRequestDto;
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
+import com.epam.digital.data.platform.management.service.JGitService;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
@@ -46,7 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class JGitService {
+public class JGitServiceImpl implements JGitService {
 
   private static final String ORIGIN = "origin";
   private static final String REPOSITORY_DOES_NOT_EXIST = "Repository does not exist";
@@ -72,6 +73,7 @@ public class JGitService {
     }
   }
 
+  @Override
   public void pull() throws Exception {
     File repositoryDirectory = new File(gerritPropertiesConfig.getRepositoryDirectory());
     if(repositoryDirectory.exists()) {
@@ -82,6 +84,7 @@ public class JGitService {
     }
   }
 
+  @Override
   public List<String> getFilesInPath(String path) throws Exception {
     List<String> items = new ArrayList<>();
     File repositoryDirectory = getRepositoryFile();
@@ -112,6 +115,7 @@ public class JGitService {
     return items;
   }
 
+  @Override
   public String getFileContent(String filePath) throws Exception {
     File repositoryDirectory = getRepositoryFile();
     if(repositoryDirectory.exists()) {
@@ -133,6 +137,7 @@ public class JGitService {
     return REPOSITORY_DOES_NOT_EXIST;
   }
 
+  @Override
   public String convertAndAmend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception {
     File repositoryFile = getRepositoryFile();
     if(repositoryFile.exists()) {
@@ -149,6 +154,7 @@ public class JGitService {
     return null;
   }
 
+  @Override
   public String amend(File file, ChangeInfoDto changeInfoDto, Git git) throws Exception {
     addFileToGit(file, git);
     Status gitStatus = git.status().call();
@@ -164,6 +170,7 @@ public class JGitService {
     return REPOSITORY_DOES_NOT_EXIST;
   }
 
+  @Override
   public String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
     File repositoryFile = getRepositoryFile();
     if(repositoryFile.exists()) {

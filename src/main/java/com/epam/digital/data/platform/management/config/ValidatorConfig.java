@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.config;
+package com.epam.digital.data.platform.management.config;
 
-import com.epam.digital.data.platform.upload.validator.Validator;
-import com.epam.digital.data.platform.upload.validator.format.FileEncodingValidator;
-import com.epam.digital.data.platform.upload.validator.format.FileExtensionValidator;
-import com.epam.digital.data.platform.upload.validator.generic.FileExistenceValidator;
-import com.epam.digital.data.platform.upload.validator.generic.FileNameValidator;
+import com.epam.digital.data.platform.management.validator.Validator;
+import com.epam.digital.data.platform.management.validator.format.FileEncodingValidator;
+import com.epam.digital.data.platform.management.validator.format.FileExtensionValidator;
+import com.epam.digital.data.platform.management.validator.generic.FileExistenceValidator;
+import com.epam.digital.data.platform.management.validator.generic.FileNameValidator;
 import org.apache.any23.encoding.EncodingDetector;
 import org.apache.any23.encoding.TikaEncodingDetector;
 import org.springframework.beans.factory.annotation.Value;

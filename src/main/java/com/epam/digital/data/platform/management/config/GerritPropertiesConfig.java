@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.config;
+package com.epam.digital.data.platform.management.config;
 
 import lombok.Getter;
 import lombok.Setter;

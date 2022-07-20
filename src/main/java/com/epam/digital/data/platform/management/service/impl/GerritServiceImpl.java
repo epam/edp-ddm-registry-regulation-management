@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.poc.versioning.api.service;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.poc.versioning.api.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.poc.versioning.api.model.ChangeInfoDto;
-import com.epam.digital.data.platform.poc.versioning.api.model.RobotCommentRequestDto;
-import com.epam.digital.data.platform.poc.versioning.api.model.VoteRequestDto;
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
+import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
+import com.epam.digital.data.platform.management.service.GerritService;
 import com.google.gerrit.extensions.api.GerritApi;
 import com.google.gerrit.extensions.api.accounts.AccountInput;
-import com.google.gerrit.extensions.api.changes.ChangeApi;
-import com.google.gerrit.extensions.api.changes.Changes;
-import com.google.gerrit.extensions.api.changes.RebaseInput;
-import com.google.gerrit.extensions.api.changes.ReviewInput;
-import com.google.gerrit.extensions.api.changes.ReviewResult;
+import com.google.gerrit.extensions.api.changes.*;
 import com.google.gerrit.extensions.client.ChangeStatus;
 import com.google.gerrit.extensions.client.ReviewerState;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -40,16 +37,10 @@ import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
-public class VersioningGerritService implements VersioningService {
-
+public class GerritServiceImpl implements GerritService {
   public static final String CODE_REVIEW_LABEL = "Code-Review";
   public static final short CODE_REVIEW_VALUE = 2;
 

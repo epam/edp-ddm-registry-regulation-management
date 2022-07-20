@@ -1,4 +1,4 @@
-package com.epam.digital.data.platform.poc.versioning.api.model;
+package com.epam.digital.data.platform.management.model.dto;
 
 import lombok.Builder;
 import lombok.Getter;

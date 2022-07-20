@@ -1,6 +1,6 @@
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.upload.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.SecurityContext;
 
 public interface OpenShiftService {
     void startImport(SecurityContext securityContext);

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.poc.versioning.api.service;
+package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.poc.versioning.api.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.poc.versioning.api.model.VersioningRequestDto;
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

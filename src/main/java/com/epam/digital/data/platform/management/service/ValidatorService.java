@@ -1,6 +1,6 @@
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.upload.model.ValidationResult;
+import com.epam.digital.data.platform.management.model.ValidationResult;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ValidatorService {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.controller;
+package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.starter.security.PermitAllWebSecurityConfig;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

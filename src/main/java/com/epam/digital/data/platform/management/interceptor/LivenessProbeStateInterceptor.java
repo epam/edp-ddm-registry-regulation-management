@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.interceptor;
+package com.epam.digital.data.platform.management.interceptor;
 
 import com.epam.digital.data.platform.starter.actuator.livenessprobe.LivenessStateHandler;
 import org.springframework.http.HttpStatus;

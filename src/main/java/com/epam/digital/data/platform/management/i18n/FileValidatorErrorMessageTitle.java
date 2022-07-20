@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.i18n;
+package com.epam.digital.data.platform.management.i18n;
 
 import com.epam.digital.data.platform.starter.localization.MessageTitle;
-import com.epam.digital.data.platform.upload.exception.ApplicationExceptionHandler;
+import com.epam.digital.data.platform.management.exception.ApplicationExceptionHandler;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

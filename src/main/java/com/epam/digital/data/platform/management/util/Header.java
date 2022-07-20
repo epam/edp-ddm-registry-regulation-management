@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.util;
+package com.epam.digital.data.platform.management.util;
 
 public enum Header {
   TRACE_ID("X-B3-TraceId"),

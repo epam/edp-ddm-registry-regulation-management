@@ -1,4 +1,4 @@
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
 public interface VaultService {
     String decrypt(String encryptedContent);

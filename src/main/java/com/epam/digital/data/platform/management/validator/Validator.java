@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.validator;
+package com.epam.digital.data.platform.management.validator;
 
-import com.epam.digital.data.platform.upload.model.ValidationResult;
+import com.epam.digital.data.platform.management.model.ValidationResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Objects;

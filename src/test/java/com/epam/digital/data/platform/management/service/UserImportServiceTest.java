@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
-import com.epam.digital.data.platform.upload.exception.CephInvocationException;
-import com.epam.digital.data.platform.upload.exception.GetProcessingException;
-import com.epam.digital.data.platform.upload.exception.FileLoadProcessingException;
-import com.epam.digital.data.platform.upload.exception.VaultInvocationException;
-import com.epam.digital.data.platform.upload.model.SecurityContext;
-import com.epam.digital.data.platform.upload.model.ValidationResult;
-import com.epam.digital.data.platform.upload.model.dto.CephFileDto;
-import com.epam.digital.data.platform.upload.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.upload.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.exception.CephInvocationException;
+import com.epam.digital.data.platform.management.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.exception.FileLoadProcessingException;
+import com.epam.digital.data.platform.management.exception.VaultInvocationException;
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.ValidationResult;
+import com.epam.digital.data.platform.management.model.dto.CephFileDto;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;

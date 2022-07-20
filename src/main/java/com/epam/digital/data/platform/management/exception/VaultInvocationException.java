@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.exception;
+package com.epam.digital.data.platform.management.exception;
 
 public class VaultInvocationException extends RuntimeException {
   public VaultInvocationException(String message, Throwable cause) {

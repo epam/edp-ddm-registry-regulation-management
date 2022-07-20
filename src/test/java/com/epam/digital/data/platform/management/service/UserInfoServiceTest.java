@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.upload.service;
+package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.upload.service.impl.TokenParserServiceImpl;
-import com.epam.digital.data.platform.upload.service.impl.UserInfoServiceImpl;
-import com.epam.digital.data.platform.upload.util.TestUtils;
+import com.epam.digital.data.platform.management.service.impl.TokenParserServiceImpl;
+import com.epam.digital.data.platform.management.service.impl.UserInfoServiceImpl;
+import com.epam.digital.data.platform.management.util.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

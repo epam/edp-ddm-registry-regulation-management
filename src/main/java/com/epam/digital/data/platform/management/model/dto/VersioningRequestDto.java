@@ -1,4 +1,4 @@
-package com.epam.digital.data.platform.poc.versioning.api.model;
+package com.epam.digital.data.platform.management.model.dto;
 
 /*
  * Copyright 2022 EPAM Systems.
