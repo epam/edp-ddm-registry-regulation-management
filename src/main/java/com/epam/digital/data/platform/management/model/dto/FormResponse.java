@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class FormsResponseDto {
+public class FormResponse {
   private String name;
   private FormStatus status;
 }

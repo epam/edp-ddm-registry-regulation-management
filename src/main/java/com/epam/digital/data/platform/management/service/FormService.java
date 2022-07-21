@@ -1,7 +1,6 @@
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.dto.FormsResponseDto;
-import org.springframework.web.bind.annotation.PathVariable;
+import com.epam.digital.data.platform.management.model.dto.FormResponse;
 
 import java.util.List;
 
@@ -9,12 +8,12 @@ public interface FormService {
     /**
      * Get form list for specific version
      */
-    List<FormsResponseDto> getFormListForSpecificVersion(String versionName);
+    List<FormResponse> getFormListByVersion(String versionName);
 
     /**
      * Create new form - create form from scratch or create from copy
      */
-    void createNewForm(String formName, String content, String versionName);
+    void createForm(String formName, String content, String versionName);
 
     /**
      * Get content from existing form
@@ -24,7 +23,7 @@ public interface FormService {
     /**
      * Update the content of existing form
      */
-    void updateFormContent(String content, String formName, String versionName);
+    void updateForm(String content, String formName, String versionName);
 
     /**
      * Delete form

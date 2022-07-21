@@ -5,4 +5,7 @@ public interface VersionedFileRepository {
     String readFile(String path);
     boolean isFileExists(String path);
     void deleteFile(String path);
+
+    String getVersionId();
+    void pullRepository();
 }
