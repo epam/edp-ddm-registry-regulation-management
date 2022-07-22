@@ -90,7 +90,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     private String getChangeId() throws RestApiException {
         List<ChangeInfo> mrList = gerritService.getMRList();
         ChangeInfo changeInfo = mrList.stream()
-                .filter(change -> versionName != null && versionName.equals(change.subject))
+                .filter(change -> versionName != null && versionName.equals(String.valueOf(change._number)))
                 .findFirst()
                 .orElse(null);
         return changeInfo != null ? changeInfo.changeId : null;

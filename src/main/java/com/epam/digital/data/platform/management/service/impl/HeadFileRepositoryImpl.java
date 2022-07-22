@@ -2,7 +2,6 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import lombok.Setter;
 
 import javax.naming.OperationNotSupportedException;

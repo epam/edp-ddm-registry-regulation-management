@@ -1,10 +1,10 @@
 package com.epam.digital.data.platform.management.service;
 
-import java.util.List;
+import java.util.Map;
 
 public interface VersionedFileRepositoryFactory {
 
-    VersionedFileRepository getRepoByVersion(String versionName);
+    VersionedFileRepository getRepoByVersion(String versionName) throws Exception;
 
-    List<VersionedFileRepository> getAvailableRepos();
+    Map<String, VersionedFileRepository> getAvailableRepos();
 }
