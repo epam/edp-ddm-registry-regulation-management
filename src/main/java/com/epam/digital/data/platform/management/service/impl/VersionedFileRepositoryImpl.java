@@ -1,16 +1,24 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FormResponse;
+import com.epam.digital.data.platform.management.model.dto.FormStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import lombok.Setter;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * This repo is for branches except master branch
@@ -24,6 +32,30 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
     private GerritService gerritService;
     private static final String FILE_DOES_NOT_EXIST = "File does not exist";
+
+    @Override
+    public List<FormResponse> getFileList() throws Exception {
+        return getFileList(File.pathSeparator);
+    }
+
+    @Override
+    public List<FormResponse> getFileList(String path) throws Exception {
+        Map<String, FormResponse> formsInMaster = jGitService.getFilesInPath(versionName, path).stream()
+                .map(el -> FormResponse.builder().name(el).status(FormStatus.CURRENT).build())
+                .collect(Collectors.toMap(FormResponse::getName, Function.identity()));
+
+        gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
+            if (key.contains(path)) {
+                FormResponse formsResponseDto = formsInMaster.get(FilenameUtils.getName(key));
+                if (formsResponseDto == null) {
+                    formsInMaster.put(key, FormResponse.builder().name(key).status(FormStatus.NEW).build());
+                } else {
+                    formsResponseDto.setStatus(getStatus(value));
+                }
+            }
+        });
+        return new ArrayList<>(formsInMaster.values());
+    }
 
     @Override
     public void writeFile(String path, String content) throws Exception {
@@ -94,5 +126,19 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
                 .findFirst()
                 .orElse(null);
         return changeInfo != null ? changeInfo.changeId : null;
+    }
+
+    private FormStatus getStatus(FileInfo fileInfo){
+        Character status = fileInfo.status;
+        if(status == null) {
+            return FormStatus.CHANGED;
+        }
+        if(status.toString().equals("A")) {
+            return FormStatus.NEW;
+        }
+        if(status.toString().equals("D")) {
+            return FormStatus.DELETED;
+        }
+        return null;
     }
 }

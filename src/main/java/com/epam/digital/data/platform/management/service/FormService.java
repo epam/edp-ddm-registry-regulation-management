@@ -8,25 +8,25 @@ public interface FormService {
     /**
      * Get form list for specific version
      */
-    List<FormResponse> getFormListByVersion(String versionName);
+    List<FormResponse> getFormListByVersion(String versionName) throws Exception;
 
     /**
      * Create new form - create form from scratch or create from copy
      */
-    void createForm(String formName, String content, String versionName);
+    void createForm(String formName, String content, String versionName) throws Exception;
 
     /**
      * Get content from existing form
      */
-    String getFormContent(String formName, String versionName);
+    String getFormContent(String formName, String versionName) throws Exception;
 
     /**
      * Update the content of existing form
      */
-    void updateForm(String content, String formName, String versionName);
+    void updateForm(String content, String formName, String versionName) throws Exception;
 
     /**
      * Delete form
      */
-    void deleteForm(String formName, String versionName);
+    void deleteForm(String formName, String versionName) throws Exception;
 }
