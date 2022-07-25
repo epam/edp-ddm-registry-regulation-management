@@ -13,6 +13,15 @@ spring:
 server:
   port: 7070
 
+platform:
+  security:
+    enabled: true
+    whitelist:
+      - /openapi
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /actuator/**
+
 user-import-ceph:
   http-endpoint: http://localhost:4566
   access-key: access-key

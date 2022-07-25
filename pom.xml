@@ -13,7 +13,7 @@
 
     <properties>
         <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
-        <ddm.starter.swagger.version>1.6.0.1</ddm.starter.swagger.version>
+        <springdoc.openapi.ui.version>1.6.9</springdoc.openapi.ui.version>
         <ddm.starter.actuator.version>1.6.0.1</ddm.starter.actuator.version>
         <ddm.starter.security.version>1.6.0.1</ddm.starter.security.version>
         <ddm.ceph.client.version>1.6.0.3</ddm.ceph.client.version>
@@ -76,9 +76,9 @@
             <version>${ddm.starter.actuator.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.epam.digital.data.platform</groupId>
-            <artifactId>ddm-starter-swagger</artifactId>
-            <version>${ddm.starter.swagger.version}</version>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>${springdoc.openapi.ui.version}</version>
         </dependency>
         <dependency>
             <groupId>com.epam.digital.data.platform</groupId>
