@@ -10,11 +10,13 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.google.gerrit.extensions.common.LabelInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 public class VersionManagementServiceImpl implements VersionManagementService {
 
     @Autowired
@@ -34,6 +36,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         return gerritService.getMRList().stream()
                 .map(e -> ChangeInfo.builder()
                         .id(e.id)
+                        .number(e._number)
                         .changeId(e.changeId)
                         .branch(e.branch)
                         .created(e.created)

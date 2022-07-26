@@ -1,6 +1,6 @@
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
+import com.epam.digital.data.platform.management.model.dto.FileResponse;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ public interface FormService {
     /**
      * Get form list for specific version
      */
-    List<FormResponse> getFormListByVersion(String versionName) throws Exception;
+    List<FileResponse> getFormListByVersion(String versionName) throws Exception;
 
     /**
      * Create new form - create form from scratch or create from copy

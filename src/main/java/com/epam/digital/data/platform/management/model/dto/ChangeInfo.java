@@ -35,6 +35,7 @@ public class ChangeInfo {
     private Timestamp submitted;
     private String changeId;
     private String id;
+    private int number;
     private String project;
     private String branch;
     private String topic;

@@ -1,6 +1,6 @@
 package com.epam.digital.data.platform.management.model.dto;
 
-public enum FormStatus {
+public enum FileStatus {
   NEW,
   CHANGED,
   CURRENT,

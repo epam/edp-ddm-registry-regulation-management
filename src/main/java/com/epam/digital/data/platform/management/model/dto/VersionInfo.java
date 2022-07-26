@@ -24,7 +24,7 @@ import lombok.Setter;
 @Setter
 @Builder
 @AllArgsConstructor
-public class Version {
+public class VersionInfo {
     private String id;
     private String name;
     private String description;

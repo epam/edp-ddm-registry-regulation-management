@@ -1,8 +1,8 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
-import com.epam.digital.data.platform.management.model.dto.FormStatus;
+import com.epam.digital.data.platform.management.model.dto.FileResponse;
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
@@ -34,23 +34,36 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     private static final String FILE_DOES_NOT_EXIST = "File does not exist";
 
     @Override
-    public List<FormResponse> getFileList() throws Exception {
+    public List<FileResponse> getFileList() throws Exception {
         return getFileList(File.pathSeparator);
     }
 
     @Override
-    public List<FormResponse> getFileList(String path) throws Exception {
-        Map<String, FormResponse> formsInMaster = jGitService.getFilesInPath(versionName, path).stream()
-                .map(el -> FormResponse.builder().name(el).status(FormStatus.CURRENT).build())
-                .collect(Collectors.toMap(FormResponse::getName, Function.identity()));
+    public List<FileResponse> getFileList(String path) throws Exception {
+        //todo update dates from  git log
+        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path).stream()
+                .map(el -> FileResponse.builder()
+                        .name(el)
+                        .status(FileStatus.CURRENT)
+                        .path(path)
+                        .build())
+                .collect(Collectors.toMap(FileResponse::getName, Function.identity()));
 
+        ChangeInfo ci = getChangeInfo();
         gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
             if (key.contains(path)) {
-                FormResponse formsResponseDto = formsInMaster.get(FilenameUtils.getName(key));
+                FileResponse formsResponseDto = formsInMaster.get(FilenameUtils.getName(key));
                 if (formsResponseDto == null) {
-                    formsInMaster.put(key, FormResponse.builder().name(key).status(FormStatus.NEW).build());
+                    formsInMaster.put(key, FileResponse.builder()
+                            .name(key)
+                            .status(FileStatus.NEW)
+                            .created(ci.created)
+                            .updated(ci.updated)
+                            .build());
                 } else {
                     formsResponseDto.setStatus(getStatus(value));
+//                    formsResponseDto.setCreated(ci.created);
+                    formsResponseDto.setUpdated(ci.updated);
                 }
             }
         });
@@ -98,7 +111,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
         }
 
         String changeId = getChangeId();
-        if(changeId != null) {
+        if (changeId != null) {
             ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
             return jGitService.delete(changeInfo, path);
         }
@@ -128,16 +141,25 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
         return changeInfo != null ? changeInfo.changeId : null;
     }
 
-    private FormStatus getStatus(FileInfo fileInfo){
+    private ChangeInfo getChangeInfo() throws RestApiException {
+        List<ChangeInfo> mrList = gerritService.getMRList();
+        ChangeInfo changeInfo = mrList.stream()
+                .filter(change -> versionName != null && versionName.equals(String.valueOf(change._number)))
+                .findFirst()
+                .orElse(null);
+        return changeInfo;
+    }
+
+    private FileStatus getStatus(FileInfo fileInfo) {
         Character status = fileInfo.status;
-        if(status == null) {
-            return FormStatus.CHANGED;
+        if (status == null) {
+            return FileStatus.CHANGED;
         }
-        if(status.toString().equals("A")) {
-            return FormStatus.NEW;
+        if (status.toString().equals("A")) {
+            return FileStatus.NEW;
         }
-        if(status.toString().equals("D")) {
-            return FormStatus.DELETED;
+        if (status.toString().equals("D")) {
+            return FileStatus.DELETED;
         }
         return null;
     }

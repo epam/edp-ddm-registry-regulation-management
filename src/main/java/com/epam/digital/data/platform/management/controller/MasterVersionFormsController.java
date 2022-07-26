@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.ShortFormDetails;
+import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,7 +44,7 @@ public class MasterVersionFormsController {
   @Operation(summary = "Get forms list for master version", parameters = {
           @Parameter(in= ParameterIn.HEADER,name = "X-Access-Token", schema = @Schema(type = "string"))}, responses = {
           @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  array =@ArraySchema(schema = @Schema(implementation = ShortFormDetails.class)))),
+                  array =@ArraySchema(schema = @Schema(implementation = FormDetailsShort.class)))),
           @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                           schema = @Schema(implementation = DetailedErrorResponse.class))),
           @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -52,7 +52,7 @@ public class MasterVersionFormsController {
           @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                           schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<List<ShortFormDetails>> getFormsFromMaster() throws Exception {
+  public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster() throws Exception {
 
     return ResponseEntity.ok().build();
   }

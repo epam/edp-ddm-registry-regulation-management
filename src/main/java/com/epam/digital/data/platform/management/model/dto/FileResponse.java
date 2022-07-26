@@ -4,10 +4,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Timestamp;
+
 @Getter
 @Setter
 @Builder
-public class FormResponse {
+public class FileResponse {
   private String name;
-  private FormStatus status;
+  private String path;
+  private FileStatus status;
+  private Timestamp created;
+  private Timestamp updated;
 }

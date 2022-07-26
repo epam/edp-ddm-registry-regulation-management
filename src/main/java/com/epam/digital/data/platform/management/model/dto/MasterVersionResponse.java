@@ -28,13 +28,38 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
+//todo rename to sync with VersionInfoDetailed
 public class MasterVersionResponse {
+  /**
+   * last MR number
+   */
   private String id;
+  /**
+   * last MR name
+   */
   private String name;
+  /**
+   * last MR description
+   */
   private String description;
+  /**
+   * last MR autor
+   */
   private String author;
+  /**
+   * last MR merge time
+   */
   private LocalDateTime latestUpdate;
+  /**
+   * todo this field can be retrieved only from jenkins
+   */
   private Boolean published;
+  /**
+   * last MR reviewer
+   */
   private String inspector;
+  /**
+   * last MR validations
+   */
   private List<Validation> validations;
 }

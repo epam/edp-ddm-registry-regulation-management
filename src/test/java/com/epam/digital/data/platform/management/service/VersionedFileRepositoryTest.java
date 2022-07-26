@@ -1,0 +1,106 @@
+package com.epam.digital.data.platform.management.service;
+
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileResponse;
+import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
+import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
+import com.google.gerrit.extensions.common.ChangeInfo;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+
+@ExtendWith(MockitoExtension.class)
+public class VersionedFileRepositoryTest {
+    @Mock
+    private JGitService jGitService;
+    @Mock
+    private GerritService gerritService;
+    @InjectMocks
+    private VersionedFileRepositoryImpl repository;
+
+    @Test
+    @SneakyThrows
+    void getFileListTest() {
+        List<String> list = new ArrayList<>();
+        Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(list);
+        List<FileResponse> fileList = repository.getFileList("/");
+        Assertions.assertNotNull(fileList);
+    }
+
+    @Test
+    @SneakyThrows
+    void writeFileTest() {
+        ChangeInfoDto changeInfoDto = new ChangeInfoDto();
+        changeInfoDto.setSubject("change");
+        repository.setVersionName("1");
+        List<ChangeInfo> changes = new ArrayList<>();
+        ChangeInfo changeInfo = new ChangeInfo();
+        changeInfo.changeId = "changeId";
+        changeInfo._number = 1;
+        changes.add(changeInfo);
+        Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
+        Mockito.when(jGitService.amend(any(), any())).thenReturn("");
+        Mockito.when(gerritService.getMRList()).thenReturn(changes);
+        repository.writeFile("/form", "content");
+        VersioningRequestDto content = VersioningRequestDto.builder().versionName("1").formName("form").content("content").build();
+        Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo("changeId");
+        Mockito.verify(jGitService, Mockito.times(1)).amend(any(), any());
+    }
+
+    @Test
+    @SneakyThrows
+    void deleteTest() {
+        repository.setVersionName("1");
+        String deleted = repository.deleteFile("form");
+        Assertions.assertEquals("File does not exist", deleted);
+        List<ChangeInfo> changes = new ArrayList<>();
+        ChangeInfo changeInfo = new ChangeInfo();
+        changeInfo.changeId = "changeId";
+        changeInfo._number = 1;
+        changes.add(changeInfo);
+        ChangeInfoDto changeInfoDto = new ChangeInfoDto();
+        changeInfoDto.setSubject("change");
+        Mockito.when(gerritService.getMRList()).thenReturn(changes);
+        Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
+        Mockito.when(jGitService.delete(any(), any())).thenReturn("deleted");
+        String form = repository.deleteFile("form");
+        Assertions.assertEquals("deleted", form);
+    }
+
+    @Test
+    @SneakyThrows
+    void readFileTest() {
+        Mockito.when(gerritService.getFileContent(any(), any())).thenReturn("");
+        String file = repository.readFile("/");
+        Assertions.assertNotNull(file);
+        Mockito.verify(gerritService, Mockito.times(1)).getFileContent(any(), any());
+    }
+
+    @Test
+    @SneakyThrows
+    void pullRepositoryTest() {
+        repository.setVersionName("version");
+        repository.pullRepository();
+        Mockito.verify(jGitService, Mockito.times(1)).cloneRepo("version");
+    }
+
+    @Test
+    @SneakyThrows
+    void isFileExistsTest() {
+        ArrayList<String> t = new ArrayList<>();
+        t.add("fileName");
+        Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
+        boolean fileExists = repository.isFileExists("/fileName");
+        Assertions.assertEquals(true, fileExists);
+    }
+}

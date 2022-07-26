@@ -15,27 +15,18 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
-public class VersionDetailedResponse {
-    private String id;
-    private String name;
-    private String description;
-    private String author;
-    private LocalDateTime creationDate;
-    private LocalDateTime latestUpdate;
-    private Boolean published;
-    private Boolean hasConflicts;
-    private List<Inspection> inspections;
-    private List<Validation> validations;
+public class FormDetailsShort {
+  private String name;
+  private String title;
+  private LocalDateTime created;
+  private LocalDateTime updated;
 }

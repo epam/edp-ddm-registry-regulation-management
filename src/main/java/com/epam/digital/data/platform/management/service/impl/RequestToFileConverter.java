@@ -36,7 +36,7 @@ public class RequestToFileConverter {
 
   public File convert(VersioningRequestDto requestDto) throws IOException {
     if(requestDto != null && requestDto.getContent() != null) {
-      String path = config.getRepositoryDirectory() + requestDto.getVersionName() + File.pathSeparator;
+      String path = config.getRepositoryDirectory() + File.pathSeparator + requestDto.getVersionName() + File.pathSeparator;
       String fileName = FilenameUtils.getName(requestDto.getFormName());
       File file = new File(path, fileName);
       try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {

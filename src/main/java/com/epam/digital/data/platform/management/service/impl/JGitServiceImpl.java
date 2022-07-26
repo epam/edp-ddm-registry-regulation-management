@@ -57,13 +57,16 @@ public class JGitServiceImpl implements JGitService {
     @Autowired
     private RequestToFileConverter requestToFileConverter;
 
+    @Autowired
+    private JGitWrapper jGitWrapper;
+
     @Override
     public void cloneRepo(String versionName) throws Exception {
         File directory = getRepositoryDir(versionName);
         if (directory.exists()) {
             pull(versionName);
         } else {
-            Git.cloneRepository().setURI(gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository()).setCredentialsProvider(getCredentialsProvider()).setDirectory(directory).setCloneAllBranches(true).call();
+            jGitWrapper.cloneRepository().setURI(gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository()).setCredentialsProvider(getCredentialsProvider()).setDirectory(directory).setCloneAllBranches(true).call();
         }
     }
 
@@ -71,7 +74,7 @@ public class JGitServiceImpl implements JGitService {
     public void pull(String versionName) throws Exception {
         File repositoryDirectory = getRepositoryDir(versionName);
         if (repositoryDirectory.exists()) {
-            Git git = Git.open(repositoryDirectory);
+            Git git = jGitWrapper.open(repositoryDirectory);
             git.checkout().setName("refs/heads/" + gerritPropertiesConfig.getHeadBranch()).call();
             git.pull().setCredentialsProvider(getCredentialsProvider()).setRebase(true).call();
         }
@@ -82,7 +85,7 @@ public class JGitServiceImpl implements JGitService {
         List<String> items = new ArrayList<>();
         File repositoryDirectory = getRepositoryDir(versionName);
         if (repositoryDirectory.exists()) {
-            Repository repository = Git.open(repositoryDirectory).getRepository();
+            Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
             if (path != null && !path.isEmpty()) {
                 RevTree tree = getRevCommit(repository).getTree();
                 try (TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree)) {
@@ -112,7 +115,7 @@ public class JGitServiceImpl implements JGitService {
     public String getFileContent(String versionName, String filePath) throws Exception {
         File repositoryDirectory = getRepositoryDir(versionName);
         if (repositoryDirectory.exists()) {
-            Repository repository = Git.open(repositoryDirectory).getRepository();
+            Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
             if (filePath != null && !filePath.isEmpty()) {
                 RevTree tree = getRevCommit(repository).getTree();
                 try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -134,7 +137,7 @@ public class JGitServiceImpl implements JGitService {
     public String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception {
         File repositoryFile = getRepositoryDir(requestDto.getVersionName());
         if (repositoryFile.exists()) {
-            Git git = Git.open(repositoryFile);
+            Git git = jGitWrapper.open(repositoryFile);
             git.fetch().setCredentialsProvider(getCredentialsProvider()).setRefSpecs(changeInfoDto.getRefs()).call();
             git.checkout().setName("FETCH_HEAD").call();
             File file = requestToFileConverter.convert(requestDto);
@@ -149,7 +152,7 @@ public class JGitServiceImpl implements JGitService {
     public String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
         File repositoryFile = getRepositoryDir(changeInfoDto.getNumber());
         if (repositoryFile.exists()) {
-            Git git = Git.open(repositoryFile);
+            Git git = jGitWrapper.open(repositoryFile);
             git.fetch().setCredentialsProvider(getCredentialsProvider()).setRefSpecs(changeInfoDto.getRefs()).call();
             git.checkout().setName("FETCH_HEAD").call();
 
