@@ -118,7 +118,7 @@ public class GerritServiceImpl implements GerritService {
     accountInput.httpPassword = gerritPropertiesConfig.getPassword();
     changeInput.author = accountInput;
     ChangeInfo changeInfo = gerritApi.changes().create(changeInput).get();
-    return changeInfo.changeId;
+    return String.valueOf(changeInfo._number);
   }
 
   @Override

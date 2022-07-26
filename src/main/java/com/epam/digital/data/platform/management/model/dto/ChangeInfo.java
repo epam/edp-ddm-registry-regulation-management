@@ -20,15 +20,25 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.sql.Timestamp;
+import java.util.Map;
+
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
-public class FileInfoResponse {
-  private String name;
-  private String status;
-  private Integer lineInserted;
-  private Integer lineDeleted;
-  private long size;
-  private long sizeDelta;
+public class ChangeInfo {
+
+    private String subject;
+    private Timestamp created;
+    private Timestamp updated;
+    private Timestamp submitted;
+    private String changeId;
+    private String id;
+    private String project;
+    private String branch;
+    private String topic;
+    private String owner;
+    private Boolean mergeable;
+    private Map<String, Boolean> labels;
 }

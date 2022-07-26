@@ -10,12 +10,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 @AllArgsConstructor
-public class VersionFileRepositoryFactoryImpl implements VersionedFileRepositoryFactory {
+public class VersionedFileRepositoryFactoryImpl implements VersionedFileRepositoryFactory {
 
     @Autowired
     private GerritPropertiesConfig config;
@@ -27,6 +28,11 @@ public class VersionFileRepositoryFactoryImpl implements VersionedFileRepository
     private GerritService gerritService;
 
     private final Map<String, VersionedFileRepository> repositoryMap = new HashMap<>();
+
+    @PostConstruct
+    public void init() throws Exception {
+        getRepoByVersion(config.getHeadBranch());
+    }
 
     @Override
     public VersionedFileRepository getRepoByVersion(String versionName) throws Exception {

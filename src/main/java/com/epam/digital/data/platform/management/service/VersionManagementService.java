@@ -1,7 +1,8 @@
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoResponse;
-import com.epam.digital.data.platform.management.model.dto.FileInfoResponse;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
+import com.google.gerrit.extensions.restapi.RestApiException;
 
 import java.util.List;
 
@@ -10,50 +11,52 @@ public interface VersionManagementService {
     /**
      * Get versions list
      */
-    List<ChangeInfoResponse> getVersionsList();
+    List<ChangeInfo> getVersionsList() throws RestApiException;
 
     /**
      * Details of head master
      */
-    List<String> getDetailsOfHeadMaster(String path);
+    List<String> getDetailsOfHeadMaster(String path) throws Exception;
 
     /**
      * Details of current version
      */
-    List<FileInfoResponse> getVersionDetails(String versionName);
+    List<VersionedFileInfo> getVersionFileList(String versionName) throws Exception;
 
     /**
      * Create new version
      */
-    void createNewVersion(String versionName);
+    String createNewVersion(String subject) throws RestApiException;
 
-    /**
-     * Mark reviewed the version
-     */
-    boolean markReviewed(String versionName);
+    ChangeInfo getVersionDetails(String versionName) throws RestApiException;
 
-    /**
-     * Submit version by name
-     */
-    void submit(String versionName);
-
-    /**
-     * Decline version by name
-     */
-    void decline(String versionName);
-
-    /**
-     * Rebase version
-     */
-    void rebase(String versionName);
-
-    /**
-     * Put votes to review
-     */
-    boolean vote(String versionName, String label, short value);
-
-    /**
-     * Add robot comment
-     */
-    void robotComment(String versionName, String robotId, String robotRunId, String comment, String message, String filePath);
+//    /**
+//     * Mark reviewed the version
+//     */
+//    boolean markReviewed(String versionName);
+//
+//    /**
+//     * Submit version by name
+//     */
+//    void submit(String versionName);
+//
+//    /**
+//     * Decline version by name
+//     */
+//    void decline(String versionName);
+//
+//    /**
+//     * Rebase version
+//     */
+//    void rebase(String versionName);
+//
+//    /**
+//     * Put votes to review
+//     */
+//    boolean vote(String versionName, String label, short value);
+//
+//    /**
+//     * Add robot comment
+//     */
+//    void robotComment(String versionName, String robotId, String robotRunId, String comment, String message, String filePath);
 }
