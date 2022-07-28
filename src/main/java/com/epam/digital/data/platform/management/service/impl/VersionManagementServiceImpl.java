@@ -9,6 +9,7 @@ import com.epam.digital.data.platform.management.service.VersionManagementServic
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
 import com.google.gerrit.extensions.common.LabelInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +42,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
                         .branch(e.branch)
                         .created(e.created)
                         .subject(e.subject)
+                        .description(e.topic)
                         .project(e.project)
                         .submitted(e.submitted)
                         .topic(e.topic)
@@ -78,14 +80,17 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
     @Override
     public ChangeInfo getVersionDetails(String versionName) throws RestApiException {
-        return gerritService.getMRList().stream()
-                .filter(c -> String.valueOf(c._number).equals(versionName))
-                .map(e -> ChangeInfo.builder()
+        com.google.gerrit.extensions.common.ChangeInfo e = gerritService.getMRByNumber(versionName);
+        if (e == null) {
+            throw new IllegalArgumentException();
+        }
+        return ChangeInfo.builder()
                         .id(e.id)
                         .changeId(e.changeId)
                         .branch(e.branch)
                         .created(e.created)
                         .subject(e.subject)
+                        .description(e.topic)
                         .project(e.project)
                         .submitted(e.submitted)
                         .topic(e.topic)
@@ -93,9 +98,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
                         .owner(e.owner.username)
                         .mergeable(e.mergeable)
                         .labels(getResponseLabels(e.labels))
-                        .build())
-                .findAny()
-                .orElseThrow(IllegalArgumentException::new);
+                        .build();
     }
 
     private Map<String, Boolean> getResponseLabels(Map<String, LabelInfo> labels) {
@@ -104,12 +107,12 @@ public class VersionManagementServiceImpl implements VersionManagementService {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().approved != null));
     }
 
-    private String getChangeId(String versionName) throws RestApiException {
-        List<com.google.gerrit.extensions.common.ChangeInfo> mrList = gerritService.getMRList();
-        com.google.gerrit.extensions.common.ChangeInfo changeInfo = mrList.stream()
-                .filter(change -> versionName != null && versionName.equals(String.valueOf(change._number)))
-                .findFirst()
-                .orElse(null);
-        return changeInfo != null ? changeInfo.changeId : null;
+    private String getChangeId(String versionName) {
+        try {
+            com.google.gerrit.extensions.common.ChangeInfo changeInfo = gerritService.getMRByNumber(versionName);
+            return changeInfo != null ? changeInfo.changeId : null;
+        } catch (RestApiException e) {
+            return StringUtils.EMPTY;
+        }
     }
 }

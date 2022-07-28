@@ -65,6 +65,21 @@ public class GerritServiceImpl implements GerritService {
   }
 
   @Override
+  public ChangeInfo getMRByNumber(String number) throws RestApiException {
+    String query = String.format("project:%s+%s", gerritPropertiesConfig.getRepository(), number);
+    Changes changes = gerritApi.changes();
+    List<ChangeInfo> changeInfos = new ArrayList<>();
+    for (ChangeInfo change : changes.query(query).get()) {
+      ChangeApi changeApi = changes.id(change.changeId);
+      ChangeInfo changeInfo = changeApi.get();
+      changeInfo.mergeable = changeApi.current().mergeable().mergeable;
+      return changeInfo;
+    }
+    // todo throw not found error
+    return null;
+  }
+
+  @Override
   public ChangeInfoDto getChangeInfo(String changeId) throws RestApiException {
     ChangeInfo changeInfo = gerritApi.changes().id(changeId).get();
     ChangeInfoDto changeInfoDto = new ChangeInfoDto();
@@ -179,5 +194,15 @@ public class GerritServiceImpl implements GerritService {
     }
     reviewInput.message(requestDto.getMessage());
     gerritApi.changes().id(changeId).current().review(reviewInput);
+  }
+
+  @Override
+  public String getTopic(String changeId) throws RestApiException {
+    return gerritApi.changes().id(changeId).topic();
+  }
+
+  @Override
+  public void setTopic(String text, String changeId) throws RestApiException {
+    gerritApi.changes().id(changeId).topic(text);
   }
 }

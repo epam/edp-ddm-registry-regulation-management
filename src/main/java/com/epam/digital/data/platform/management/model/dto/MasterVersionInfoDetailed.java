@@ -28,8 +28,7 @@ import java.util.List;
 @Setter
 @Builder
 @AllArgsConstructor
-//todo rename to sync with VersionInfoDetailed
-public class MasterVersionResponse {
+public class MasterVersionInfoDetailed {
   /**
    * last MR number
    */

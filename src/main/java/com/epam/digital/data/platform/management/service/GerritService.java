@@ -27,6 +27,8 @@ import java.util.Map;
 
 public interface GerritService {
   List<ChangeInfo> getMRList() throws RestApiException;
+
+  ChangeInfo getMRByNumber(String number) throws RestApiException;
   ChangeInfoDto getChangeInfo(String changeId) throws RestApiException;
   Map<String, FileInfo> getListOfChangesInMR(String changeId) throws RestApiException;
   String getFileContent(String changeId, String filename) throws RestApiException;
@@ -38,4 +40,8 @@ public interface GerritService {
   void declineChange(String changeId) throws RestApiException;
   void rebase(String changeId) throws RestApiException;
   void robotComment(RobotCommentRequestDto requestDto, String changeId) throws RestApiException;
+
+  String getTopic(String changeId) throws RestApiException;
+
+  void setTopic(String text, String changeId) throws RestApiException;
 }

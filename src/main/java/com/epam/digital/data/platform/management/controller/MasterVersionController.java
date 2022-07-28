@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.MasterVersionResponse;
+import com.epam.digital.data.platform.management.model.dto.MasterVersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,7 +37,7 @@ public class MasterVersionController {
 
   @Operation(summary = "Get master version", parameters = {@Parameter(in= ParameterIn.HEADER,name = "X-Access-Token", schema = @Schema(type = "string"))}, responses = {
           @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = MasterVersionResponse.class))),
+                  schema = @Schema(implementation = MasterVersionInfoDetailed.class))),
           @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
           @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -46,7 +46,7 @@ public class MasterVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
   })
   @GetMapping("/")
-  public ResponseEntity<MasterVersionResponse> getVersionDetails() throws Exception {
+  public ResponseEntity<MasterVersionInfoDetailed> getVersionDetails() throws Exception {
     return ResponseEntity.ok().build();
   }
 

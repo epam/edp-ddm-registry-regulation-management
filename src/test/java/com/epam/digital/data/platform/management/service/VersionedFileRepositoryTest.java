@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 public class VersionedFileRepositoryTest {
@@ -50,7 +51,7 @@ public class VersionedFileRepositoryTest {
         changes.add(changeInfo);
         Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
         Mockito.when(jGitService.amend(any(), any())).thenReturn("");
-        Mockito.when(gerritService.getMRList()).thenReturn(changes);
+        Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
         repository.writeFile("/form", "content");
         VersioningRequestDto content = VersioningRequestDto.builder().versionName("1").formName("form").content("content").build();
         Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo("changeId");
@@ -70,7 +71,7 @@ public class VersionedFileRepositoryTest {
         changes.add(changeInfo);
         ChangeInfoDto changeInfoDto = new ChangeInfoDto();
         changeInfoDto.setSubject("change");
-        Mockito.when(gerritService.getMRList()).thenReturn(changes);
+        Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
         Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
         Mockito.when(jGitService.delete(any(), any())).thenReturn("deleted");
         String form = repository.deleteFile("form");

@@ -95,7 +95,7 @@ public class CandidateVersionController {
                 .id(String.valueOf(changeInfo.getNumber()))
                 .author(changeInfo.getOwner())
                 .creationDate(changeInfo.getCreated().toLocalDateTime())
-                .description(changeInfo.getSubject())
+                .description(changeInfo.getDescription())
                 .hasConflicts(changeInfo.getMergeable())
                 .latestUpdate(changeInfo.getUpdated().toLocalDateTime())
                 .name(changeInfo.getSubject())

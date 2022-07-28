@@ -133,20 +133,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     }
 
     private String getChangeId() throws RestApiException {
-        List<ChangeInfo> mrList = gerritService.getMRList();
-        ChangeInfo changeInfo = mrList.stream()
-                .filter(change -> versionName != null && versionName.equals(String.valueOf(change._number)))
-                .findFirst()
-                .orElse(null);
+        ChangeInfo changeInfo = gerritService.getMRByNumber(versionName);
         return changeInfo != null ? changeInfo.changeId : null;
     }
 
     private ChangeInfo getChangeInfo() throws RestApiException {
-        List<ChangeInfo> mrList = gerritService.getMRList();
-        ChangeInfo changeInfo = mrList.stream()
-                .filter(change -> versionName != null && versionName.equals(String.valueOf(change._number)))
-                .findFirst()
-                .orElse(null);
+        ChangeInfo changeInfo = gerritService.getMRByNumber(versionName);
         return changeInfo;
     }
 

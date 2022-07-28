@@ -5,6 +5,7 @@ import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDt
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
 import com.google.gerrit.extensions.api.GerritApi;
+import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.api.changes.Changes;
 import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.api.changes.RevisionApi;
@@ -22,15 +23,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
+import org.mockito.verification.VerificationMode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
 @ExtendWith(MockitoExtension.class)
 public class GerritServiceTest {
     @Mock
@@ -58,6 +63,84 @@ public class GerritServiceTest {
         changeInfo._number = 5;
         changeInfos.add(changeInfo);
     }
+
+    @Test
+    @SneakyThrows
+    void getTopicFromChange() {
+
+    }
+
+    @Test
+    @SneakyThrows
+    void writeAndGetTopicFromChangeTest() {
+        String topic1 = "testTopic1";
+        String topic2 = "testTopic2";
+
+        Mockito.when(gerritApi.changes()).thenReturn(changes);
+        ChangeApi changeApi = Mockito.mock(ChangeApi.class);
+        Mockito.when(changes.id(any())).thenReturn(changeApi);
+
+        ArgumentCaptor<String> valueCapture = ArgumentCaptor.forClass(String.class);
+        Mockito.when(changeApi.topic()).thenAnswer(e -> valueCapture.getValue());
+        Mockito.doNothing().when(changeApi).topic(valueCapture.capture());
+
+        gerritService.setTopic(topic1, "");
+        Assertions.assertEquals(topic1, valueCapture.getValue());
+        String rTopic1 = gerritService.getTopic("");
+        gerritService.setTopic(topic2, "");
+        Assertions.assertEquals(topic2, valueCapture.getValue());
+        String rTopic2 = gerritService.getTopic("");
+
+        Assertions.assertEquals(topic1, rTopic1);
+        Assertions.assertEquals(topic2, rTopic2);
+    }
+
+    @Test
+    @SneakyThrows
+    void getMRByNumberTest() {
+        Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("");
+        String versionNumber = "10";
+        String testVersion = "project:+" + versionNumber;
+        ChangeInfo info = new ChangeInfo();
+        info._number = 10;
+        info.mergeable = true;
+        Mockito.when(gerritApi.changes()).thenReturn(changes);
+        Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
+        ChangeApi changeApi = Mockito.mock(ChangeApi.class);
+        RevisionApi revisionApi = Mockito.mock(RevisionApi.class);
+        MergeableInfo mergeableInfo = Mockito.mock(MergeableInfo.class);
+        mergeableInfo.mergeable = false;
+        Mockito.when(changes.id(any())).thenReturn(changeApi);
+        Mockito.when(changeApi.get()).thenReturn(info);
+        Mockito.when(changeApi.current()).thenReturn(revisionApi);
+        Mockito.when(revisionApi.mergeable()).thenReturn(mergeableInfo);
+        Mockito.when(request.get()).thenReturn(changeInfos);
+        Assertions.assertTrue(info.mergeable);
+        ChangeInfo c = gerritService.getMRByNumber(versionNumber);
+        Assertions.assertFalse(info.mergeable);
+        Assertions.assertEquals(info, c);
+    }
+
+    @Test
+    @SneakyThrows
+    void getMRByNumberNullableTest() {
+        Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("");
+        String versionNumber = "10";
+        String testVersion = "project:+" + versionNumber;
+        ChangeInfo info = new ChangeInfo();
+        info._number = 10;
+        info.mergeable = true;
+        Mockito.when(gerritApi.changes()).thenReturn(changes);
+        Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
+        ChangeApi changeApi = Mockito.mock(ChangeApi.class);
+        RevisionApi revisionApi = Mockito.mock(RevisionApi.class);
+        MergeableInfo mergeableInfo = Mockito.mock(MergeableInfo.class);
+        mergeableInfo.mergeable = false;
+        Mockito.when(request.get()).thenReturn(new ArrayList<>());
+        ChangeInfo c = gerritService.getMRByNumber(versionNumber);
+        Assertions.assertNull(c);
+    }
+
     @Test
     @SneakyThrows
     void getMrListNotNullTest(){

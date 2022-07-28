@@ -30,6 +30,7 @@ import java.util.Map;
 public class ChangeInfo {
 
     private String subject;
+    private String description;
     private Timestamp created;
     private Timestamp updated;
     private Timestamp submitted;
