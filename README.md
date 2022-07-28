@@ -8,10 +8,14 @@ This service provides API for batch-import process: import/export files with use
 ### Local development:
 ###### Prerequisites:
 * Ceph/S3-like storage is configured and running
+* Vault service is configured and running
 
 ###### Configuration:
 Check `src/main/resources/application-local.yaml` and replace if needed:
   * *-ceph properties with your ceph storage values
+  * vault properties with your Vault values
+Check `src/main/resources/bootstrap.yaml` and replace if needed:
+  * vault properties with your Vault values for 'local' profile
 
 ###### Steps:
 1. (Optional) Package application into jar file with `mvn clean package`

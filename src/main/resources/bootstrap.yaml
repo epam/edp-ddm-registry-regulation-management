@@ -30,11 +30,10 @@ spring:
       config:
         enabled: false
     vault:
-      uri: https://vault
-      authentication: KUBERNETES
-      kubernetes:
-        role: role
-        service-account-token-file: token
+      uri: http://localhost:8200
+      authentication: TOKEN
+      token: myroot
+
   config:
     activate:
       on-profile: local
