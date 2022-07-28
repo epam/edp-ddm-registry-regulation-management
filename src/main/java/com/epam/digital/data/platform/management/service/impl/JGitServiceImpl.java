@@ -30,7 +30,6 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -40,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,9 +85,9 @@ public class JGitServiceImpl implements JGitService {
         if (repositoryDirectory.exists()) {
             Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
             if (path != null && !path.isEmpty()) {
-                RevTree tree = getRevCommit(repository).getTree();
-                try (TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree)) {
-                    try (TreeWalk dirWalk = new TreeWalk(repository)) {
+                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
+                try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
+                    try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
                         dirWalk.addTree(treeWalk.getObjectId(0));
                         dirWalk.setRecursive(true);
                         while (dirWalk.next()) {
@@ -98,8 +96,8 @@ public class JGitServiceImpl implements JGitService {
                     }
                 }
             } else {
-                RevTree tree = getRevCommit(repository).getTree();
-                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
+                try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
                     treeWalk.addTree(tree);
                     treeWalk.setRecursive(true);
                     while (treeWalk.next()) {
@@ -117,8 +115,8 @@ public class JGitServiceImpl implements JGitService {
         if (repositoryDirectory.exists()) {
             Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
             if (filePath != null && !filePath.isEmpty()) {
-                RevTree tree = getRevCommit(repository).getTree();
-                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
+                try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
                     treeWalk.addTree(tree);
                     treeWalk.setRecursive(true);
                     treeWalk.setFilter(PathFilter.create(filePath));
@@ -194,12 +192,6 @@ public class JGitServiceImpl implements JGitService {
         } else {
             git.rm().addFilepattern(filePattern).call();
         }
-    }
-
-    private RevCommit getRevCommit(Repository repository) throws IOException {
-        ObjectId lastCommitId = repository.resolve("refs/heads/" + gerritPropertiesConfig.getHeadBranch());
-        RevWalk revWalk = new RevWalk(repository);
-        return revWalk.parseCommit(lastCommitId);
     }
 
     private String commitMessageWithChangeId(ChangeInfoDto changeInfoDto) {
