@@ -68,15 +68,14 @@ public class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionDetailsTest() {
-    List<ChangeInfo> list = new ArrayList<>();
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo._number = 1;
     changeInfo.owner = new AccountInfo(1);
     changeInfo.labels = new HashMap<>();
-    list.add(changeInfo);
 
-    Mockito.when(gerritService.getMRList()).thenReturn(list);
-    com.epam.digital.data.platform.management.model.dto.ChangeInfo version = managementService.getVersionDetails("1");
+    Mockito.when(gerritService.getMRByNumber("1")).thenReturn(changeInfo);
+    com.epam.digital.data.platform.management.model.dto.ChangeInfo version =
+            managementService.getVersionDetails("1");
     Assertions.assertNotNull(version);
   }
 
