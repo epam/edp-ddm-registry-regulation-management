@@ -1,10 +1,9 @@
 package com.epam.digital.data.platform.management.model.dto;
 
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -13,6 +12,6 @@ public class FileResponse {
   private String name;
   private String path;
   private FileStatus status;
-  private Timestamp created;
-  private Timestamp updated;
+  private LocalDateTime created;
+  private LocalDateTime updated;
 }

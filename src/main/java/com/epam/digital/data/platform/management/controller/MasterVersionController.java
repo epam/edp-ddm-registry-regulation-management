@@ -79,6 +79,5 @@ public class MasterVersionController {
             .name(masterInfo.getSubject())
             .latestUpdate(masterInfo.getUpdated())
             .build());
-
   }
 }

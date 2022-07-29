@@ -26,9 +26,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,13 +43,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Tag(name = "Candidate version forms Rest API")
 @RestController
@@ -73,11 +69,11 @@ public class CandidateVersionFormsController {
 //todo need to parse json to get title
         return ResponseEntity.ok().body(formService.getFormListByVersion(versionCandidateId).stream()
                 .map(e -> FormDetailsShort.builder()
-                        .name(e.getName())
-                        .title("<unknown>")
-                        .created(Optional.ofNullable(e.getCreated()).map(Timestamp::toLocalDateTime).orElse(null))
-                        .updated(Optional.ofNullable(e.getUpdated()).map(Timestamp::toLocalDateTime).orElse(null))
-                        .build())
+                    .name(e.getName())
+                    .title("<unknown>")
+                    .created(e.getCreated())
+                    .updated(e.getUpdated())
+                    .build())
                 .collect(Collectors.toList()));
     }
 

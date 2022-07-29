@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ControllerTest(CandidateVersionFormsController.class)
-public class CandidateVersionFormsControllerTest {
+class CandidateVersionFormsControllerTest {
 
   static final String BASE_URL = "/versions/candidates/1/forms";
 

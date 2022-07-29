@@ -10,15 +10,18 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
-import lombok.Setter;
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Setter;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  * This repo is for branches except master branch
@@ -55,15 +58,15 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
                 FileResponse formsResponseDto = formsInMaster.get(FilenameUtils.getName(key));
                 if (formsResponseDto == null) {
                     formsInMaster.put(key, FileResponse.builder()
-                            .name(key)
-                            .status(FileStatus.NEW)
-                            .created(ci.created)
-                            .updated(ci.updated)
+                        .name(key)
+                        .status(FileStatus.NEW)
+                        .created(toUTCLocalDateTime(ci.created))
+                        .updated(toUTCLocalDateTime(ci.updated))
                             .build());
                 } else {
                     formsResponseDto.setStatus(getStatus(value));
 //                    formsResponseDto.setCreated(ci.created);
-                    formsResponseDto.setUpdated(ci.updated);
+                    formsResponseDto.setUpdated(toUTCLocalDateTime(ci.updated));
                 }
             }
         });
@@ -154,5 +157,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
             return FileStatus.DELETED;
         }
         return null;
+    }
+
+    private LocalDateTime toUTCLocalDateTime(Timestamp timestamp) {
+        if (Objects.isNull(timestamp)) {
+            return null;
+        }
+        return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
     }
 }
