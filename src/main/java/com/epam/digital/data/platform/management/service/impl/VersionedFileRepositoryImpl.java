@@ -29,12 +29,13 @@ import org.apache.commons.io.FilenameUtils;
 @Setter
 public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
+    private static final String FILE_DOES_NOT_EXIST = "File does not exist";
+
     private String versionName;
 
     private JGitService jGitService;
 
     private GerritService gerritService;
-    private static final String FILE_DOES_NOT_EXIST = "File does not exist";
 
     @Override
     public List<FileResponse> getFileList() throws Exception {
@@ -44,25 +45,29 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     @Override
     public List<FileResponse> getFileList(String path) throws Exception {
         //todo update dates from  git log
-        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path).stream()
-                .map(el -> FileResponse.builder()
-                        .name(el)
-                        .status(FileStatus.CURRENT)
-                        .path(path)
-                        .build())
-                .collect(Collectors.toMap(FileResponse::getName, Function.identity()));
+        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path)
+            .stream()
+            .filter(el -> !el.equals(".gitkeep"))
+            .map(el -> FileResponse.builder()
+                .name(FilenameUtils.getBaseName(el))
+                .status(FileStatus.CURRENT)
+                .path(path)
+                .build())
+            .collect(
+                Collectors.toMap(fileResponse -> FilenameUtils.getBaseName(fileResponse.getName()),
+                    Function.identity()));
 
         ChangeInfo ci = getChangeInfo();
         gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
             if (key.startsWith(path)) {
                 FileResponse formsResponseDto = formsInMaster.get(key);
                 if (formsResponseDto == null) {
-                    formsInMaster.put(key, FileResponse.builder()
-                        .name(key)
+                    formsInMaster.put(FilenameUtils.getBaseName(key), FileResponse.builder()
+                        .name(FilenameUtils.getBaseName(key))
                         .status(FileStatus.NEW)
                         .created(toUTCLocalDateTime(ci.created))
                         .updated(toUTCLocalDateTime(ci.updated))
-                            .build());
+                        .build());
                 } else {
                     formsResponseDto.setStatus(getStatus(value));
 //                    formsResponseDto.setCreated(ci.created);

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
@@ -199,7 +200,11 @@ class GerritServiceTest {
     void createChangesTest(){
         Mockito.when(changes.create(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
-        String change = gerritService.createChanges("change");
+
+        var request = new CreateVersionRequest();
+        request.setName("name");
+        request.setDescription("description");
+        String change = gerritService.createChanges(request);
         Assertions.assertNotNull(change);
         Assertions.assertEquals("5", change);
     }

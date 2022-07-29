@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -36,7 +37,7 @@ public interface GerritService {
   String getFileContent(String changeId, String filename) throws RestApiException;
   void submitChanges(String changeId) throws RestApiException;
   void deleteChanges(String changeId) throws RestApiException;
-  String createChanges(String subject) throws RestApiException;
+  String createChanges(CreateVersionRequest subject) throws RestApiException;
   Boolean review(String changeId) throws RestApiException;
   Boolean vote(VoteRequestDto voteRequestDto, String changeId) throws RestApiException;
   void declineChange(String changeId) throws RestApiException;

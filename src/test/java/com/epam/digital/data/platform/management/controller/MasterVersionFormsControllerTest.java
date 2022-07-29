@@ -46,7 +46,7 @@ class MasterVersionFormsControllerTest {
   @SneakyThrows
   void getFormsFromMaster() {
     var fileResponse = FileResponse.builder()
-        .name("form1.json")
+        .name("form1")
         .path("forms/form1.json")
         .status(FileStatus.CURRENT)
         .created(LocalDateTime.of(2022, 7, 29, 15, 6))

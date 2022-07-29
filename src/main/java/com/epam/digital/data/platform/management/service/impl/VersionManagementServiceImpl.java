@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
@@ -70,7 +71,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     }
 
     @Override
-    public String createNewVersion(String subject) throws RestApiException {
+    public String createNewVersion(CreateVersionRequest subject) throws RestApiException {
         return gerritService.createChanges(subject);
     }
 

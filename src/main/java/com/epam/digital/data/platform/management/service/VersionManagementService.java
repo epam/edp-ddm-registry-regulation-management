@@ -1,6 +1,7 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
@@ -30,7 +31,7 @@ public interface VersionManagementService {
     /**
      * Create new version
      */
-    String createNewVersion(String subject) throws RestApiException;
+    String createNewVersion(CreateVersionRequest subject) throws RestApiException;
 
     ChangeInfo getVersionDetails(String versionName) throws RestApiException;
 

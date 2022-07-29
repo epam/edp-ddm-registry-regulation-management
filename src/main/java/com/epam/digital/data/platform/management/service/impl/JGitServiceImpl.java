@@ -20,11 +20,17 @@ import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.JGitService;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -37,11 +43,6 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class JGitServiceImpl implements JGitService {
@@ -71,8 +72,10 @@ public class JGitServiceImpl implements JGitService {
     @Override
     public void pull(String versionName) throws Exception {
         File repositoryDirectory = getRepositoryDir(versionName);
-        if (repositoryDirectory.exists()) {
-            Git git = jGitWrapper.open(repositoryDirectory);
+        if (!repositoryDirectory.exists()) {
+            return;
+        }
+        try (Git git = jGitWrapper.open(repositoryDirectory)) {
             git.checkout().setName("refs/heads/" + gerritPropertiesConfig.getHeadBranch()).call();
             git.pull().setCredentialsProvider(getCredentialsProvider()).setRebase(true).call();
         }
@@ -80,12 +83,15 @@ public class JGitServiceImpl implements JGitService {
 
     @Override
     public List<String> getFilesInPath(String versionName, String path) throws Exception {
-        List<String> items = new ArrayList<>();
         File repositoryDirectory = getRepositoryDir(versionName);
-        if (repositoryDirectory.exists()) {
-            Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
+        if (!repositoryDirectory.exists()) {
+            return List.of();
+        }
+        List<String> items = new ArrayList<>();
+        try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
+            RevTree tree = jGitWrapper.getRevTree(repository,
+                gerritPropertiesConfig.getHeadBranch());
             if (path != null && !path.isEmpty()) {
-                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
                 try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
                     try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
                         dirWalk.addTree(treeWalk.getObjectId(0));
@@ -96,7 +102,6 @@ public class JGitServiceImpl implements JGitService {
                     }
                 }
             } else {
-                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
                 try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
                     treeWalk.addTree(tree);
                     treeWalk.setRecursive(true);
@@ -112,10 +117,13 @@ public class JGitServiceImpl implements JGitService {
     @Override
     public String getFileContent(String versionName, String filePath) throws Exception {
         File repositoryDirectory = getRepositoryDir(versionName);
-        if (repositoryDirectory.exists()) {
-            Repository repository = jGitWrapper.open(repositoryDirectory).getRepository();
+        if (!repositoryDirectory.exists()) {
+            return REPOSITORY_DOES_NOT_EXIST;
+        }
+        try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
             if (filePath != null && !filePath.isEmpty()) {
-                RevTree tree = jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch());
+                RevTree tree = jGitWrapper.getRevTree(repository,
+                    gerritPropertiesConfig.getHeadBranch());
                 try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
                     treeWalk.addTree(tree);
                     treeWalk.setRecursive(true);
@@ -134,9 +142,12 @@ public class JGitServiceImpl implements JGitService {
     @Override
     public String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception {
         File repositoryFile = getRepositoryDir(requestDto.getVersionName());
-        if (repositoryFile.exists()) {
-            Git git = jGitWrapper.open(repositoryFile);
-            git.fetch().setCredentialsProvider(getCredentialsProvider()).setRefSpecs(changeInfoDto.getRefs()).call();
+        if (!repositoryFile.exists()) {
+            return null;
+        }
+        try (Git git = jGitWrapper.open(repositoryFile)) {
+            git.fetch().setCredentialsProvider(getCredentialsProvider())
+                .setRefSpecs(changeInfoDto.getRefs()).call();
             git.checkout().setName("FETCH_HEAD").call();
             File file = requestToFileConverter.convert(requestDto);
             if (file != null) {
@@ -147,16 +158,23 @@ public class JGitServiceImpl implements JGitService {
     }
 
     @Override
+    @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
     public String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
         File repositoryFile = getRepositoryDir(changeInfoDto.getNumber());
-        if (repositoryFile.exists()) {
-            Git git = jGitWrapper.open(repositoryFile);
-            git.fetch().setCredentialsProvider(getCredentialsProvider()).setRefSpecs(changeInfoDto.getRefs()).call();
+        if (!repositoryFile.exists()) {
+            return null;
+        }
+        try (Git git = jGitWrapper.open(repositoryFile)) {
+            git.fetch().setCredentialsProvider(getCredentialsProvider())
+                .setRefSpecs(changeInfoDto.getRefs()).call();
             git.checkout().setName("FETCH_HEAD").call();
 
-            File fileToDelete = new File(FilenameUtils.getFullPathNoEndSeparator(
-                    gerritPropertiesConfig.getRepositoryDirectory() + changeInfoDto.getNumber() + File.pathSeparator + fileName),
-                    FilenameUtils.getName(fileName));
+            var repoDir = FilenameUtils.normalizeNoEndSeparator(
+                gerritPropertiesConfig.getRepositoryDirectory());
+            var fileDirectory =
+                repoDir + File.separator + changeInfoDto.getNumber() + File.separator + fileName;
+            File fileToDelete = new File(FilenameUtils.getFullPathNoEndSeparator(fileDirectory),
+                FilenameUtils.getName(fileName));
             if (fileToDelete.delete()) {
                 return doAmend(fileToDelete, changeInfoDto, git);
             }
@@ -164,29 +182,35 @@ public class JGitServiceImpl implements JGitService {
         return null;
     }
 
-    private String doAmend(File file, ChangeInfoDto changeInfoDto, Git git) throws Exception {
+    private String doAmend(File file, ChangeInfoDto changeInfoDto, Git git)
+        throws GitAPIException, URISyntaxException {
         addFileToGit(file, git);
         Status gitStatus = git.status().call();
 
         if (!gitStatus.isClean()) {
-            RevCommit commit = git.commit().setMessage(commitMessageWithChangeId(changeInfoDto)).setAmend(true).call();
+            RevCommit commit = git.commit().setMessage(commitMessageWithChangeId(changeInfoDto))
+                .setAmend(true).call();
             pushChanges(git);
             return commit.getId().toString();
         }
         return REPOSITORY_DOES_NOT_EXIST;
     }
 
+    @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
     private File getRepositoryDir(String versionName) {
-        return new File(FilenameUtils.getFullPathNoEndSeparator(
-                gerritPropertiesConfig.getRepositoryDirectory() + versionName ));
+        var repoDir = gerritPropertiesConfig.getRepositoryDirectory();
+        return new File(
+            FilenameUtils.normalizeNoEndSeparator(repoDir), FilenameUtils.getName(versionName));
     }
 
     private UsernamePasswordCredentialsProvider getCredentialsProvider() {
-        return new UsernamePasswordCredentialsProvider(gerritPropertiesConfig.getUser(), gerritPropertiesConfig.getPassword());
+        return new UsernamePasswordCredentialsProvider(gerritPropertiesConfig.getUser(),
+            gerritPropertiesConfig.getPassword());
     }
 
-    private void addFileToGit(File file, Git git) throws Exception {
-        String filePattern = FilenameUtils.getName(file.getParent()) + "/" + FilenameUtils.getName(file.getName());
+    private void addFileToGit(File file, Git git) throws GitAPIException {
+        String filePattern =
+            FilenameUtils.getName(file.getParent()) + "/" + FilenameUtils.getName(file.getName());
         if (file.exists()) {
             git.add().addFilepattern(filePattern).call();
         } else {
@@ -198,9 +222,11 @@ public class JGitServiceImpl implements JGitService {
         return changeInfoDto.getSubject() + "\n\n" + "Change-Id: " + changeInfoDto.getChangeId();
     }
 
-    private void pushChanges(Git git) throws Exception {
+    private void pushChanges(Git git) throws URISyntaxException, GitAPIException {
         RemoteAddCommand addCommand = git.remoteAdd();
-        addCommand.setUri(new URIish(gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository()).setUser(gerritPropertiesConfig.getUser()).setPass(gerritPropertiesConfig.getPassword()));
+        addCommand.setUri(new URIish(
+            gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository()).setUser(
+            gerritPropertiesConfig.getUser()).setPass(gerritPropertiesConfig.getPassword()));
         addCommand.setName(ORIGIN);
         addCommand.call();
         PushCommand push = git.push();

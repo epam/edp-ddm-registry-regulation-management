@@ -17,29 +17,33 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
-import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RequestToFileConverter {
 
-  private static final String DIRECTORY_PATH = "forms/";
-
   @Autowired
   private GerritPropertiesConfig config;
 
+  @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
   public File convert(VersioningRequestDto requestDto) throws IOException {
     if(requestDto != null && requestDto.getContent() != null) {
-      String path = config.getRepositoryDirectory() + File.pathSeparator + requestDto.getVersionName() + File.pathSeparator;
-      String fileName = FilenameUtils.getName(requestDto.getFormName());
-      File file = new File(path, fileName);
-      try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+      var repositoryDirectory = FilenameUtils.normalizeNoEndSeparator(
+          config.getRepositoryDirectory());
+      var fileDirectory = FilenameUtils.getPathNoEndSeparator(requestDto.getFormName());
+      var fileName = requestDto.getFormName();
+      var fullPath = repositoryDirectory + File.separator +
+          requestDto.getVersionName() + File.separator + fileDirectory;
+
+      File file = new File(FilenameUtils.normalizeNoEndSeparator(fullPath),
+          FilenameUtils.getName(fileName));
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
         writer.write(requestDto.getContent());
       }
       return file;

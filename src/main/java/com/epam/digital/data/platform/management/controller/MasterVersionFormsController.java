@@ -79,7 +79,7 @@ public class MasterVersionFormsController {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok().body(formService.getFormListByVersion(masterVersionId).stream()
         .map(e -> FormDetailsShort.builder()
-            .name(e.getName().split("\\.")[0])
+            .name(e.getName())
             .title("<unknown>")
             .created(e.getCreated())
             .updated(e.getUpdated())

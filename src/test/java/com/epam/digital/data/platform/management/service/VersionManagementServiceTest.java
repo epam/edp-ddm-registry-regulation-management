@@ -3,6 +3,7 @@ package com.epam.digital.data.platform.management.service;
 import static org.mockito.ArgumentMatchers.any;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -62,8 +63,11 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void createNewVersionTest() {
-    Mockito.when(gerritService.createChanges(any())).thenReturn("changeId");
-    String version = managementService.createNewVersion("version");
+    var createVersionRequest = new CreateVersionRequest();
+    createVersionRequest.setName("version");
+    createVersionRequest.setDescription("description");
+    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn("changeId");
+    String version = managementService.createNewVersion(createVersionRequest);
     Assertions.assertEquals("changeId", version);
   }
 

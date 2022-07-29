@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
@@ -120,11 +121,11 @@ public class GerritServiceImpl implements GerritService {
   }
 
   @Override
-  public String getFileContent(String changeId, String filename) throws RestApiException {
-    if(changeId != null) {
+  public String getFileContent(String changeId, String filePath) throws RestApiException {
+    if (changeId != null) {
       String currentRevision = gerritApi.changes().id(changeId).get().currentRevision;
-      String request = String.format("/changes/%s/revisions/%s/files/%s/content", changeId, currentRevision,
-              "forms%2F" + filename);
+      String request = String.format("/changes/%s/revisions/%s/files/%s/content", changeId,
+          currentRevision, filePath.replace("/", "%2F"));
       JsonElement response = ((GerritApiImpl) gerritApi).restClient().getRequest(request);
       return response.getAsString();
     }
@@ -142,10 +143,11 @@ public class GerritServiceImpl implements GerritService {
   }
 
   @Override
-  public String createChanges(String subject) throws RestApiException {
+  public String createChanges(CreateVersionRequest subject) throws RestApiException {
     ChangeInput changeInput = new ChangeInput();
-    changeInput.subject = subject;
+    changeInput.subject = subject.getName();
     changeInput.status = ChangeStatus.NEW;
+    changeInput.topic = subject.getDescription();
     changeInput.project = gerritPropertiesConfig.getRepository();
     changeInput.branch = gerritPropertiesConfig.getHeadBranch();
     AccountInput accountInput = new AccountInput();

@@ -15,12 +15,18 @@
  */
 package com.epam.digital.data.platform.management.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
 import com.epam.digital.data.platform.management.service.impl.RequestToFileConverter;
+import java.io.File;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
@@ -33,21 +39,17 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.io.File;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-
 @ExtendWith(SpringExtension.class)
-public class JGitServiceTest {
+class JGitServiceTest {
+
+  @TempDir
+  private File tempDir;
 
   @InjectMocks
   private JGitServiceImpl jGitService;
@@ -83,9 +85,10 @@ public class JGitServiceTest {
   @Test
   @SneakyThrows
   void testCloneRepository() {
-    File file = new File("/");
+    File file = new File(tempDir, "version");
+    file.createNewFile();
     Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
     Mockito.when(jGitWrapper.open(any())).thenReturn(git);
@@ -93,38 +96,39 @@ public class JGitServiceTest {
     Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
     Mockito.when(git.pull()).thenReturn(pullCommand);
     Mockito.when(pullCommand.setCredentialsProvider(any())).thenReturn(pullCommand);
-    Mockito.when(pullCommand.setRebase(eq(true))).thenReturn(pullCommand);
+    Mockito.when(pullCommand.setRebase(true)).thenReturn(pullCommand);
     jGitService.cloneRepo("version");
     Mockito.verify(jGitWrapper, times(1)).open(file);
   }
 
   @Test
   @SneakyThrows
-  void testCloneRepositor1y() {
+  void testCloneRepository1() {
     Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
     Mockito.when(cloneCommand.setURI(any())).thenReturn(cloneCommand);
     Mockito.when(cloneCommand.setCredentialsProvider(any())).thenReturn(cloneCommand);
     Mockito.when(cloneCommand.setDirectory(any())).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCloneAllBranches(eq(true))).thenReturn(cloneCommand);
+    Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
     jGitService.cloneRepo("version");
-    Mockito.verify(jGitWrapper, times(1)).cloneRepository();
+    Mockito.verify(jGitWrapper).cloneRepository();
   }
 
   @Test
   @SneakyThrows
   void testPull() {
-    File file = new File("/");
+    File file = new File(tempDir, "version");
+    file.createNewFile();
     Mockito.when(jGitWrapper.open(any())).thenReturn(git);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
     Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
     Mockito.when(git.pull()).thenReturn(pullCommand);
     Mockito.when(pullCommand.setCredentialsProvider(any())).thenReturn(pullCommand);
-    Mockito.when(pullCommand.setRebase(eq(true))).thenReturn(pullCommand);
+    Mockito.when(pullCommand.setRebase(true)).thenReturn(pullCommand);
     jGitService.pull("version");
-    Mockito.verify(jGitWrapper, times(1)).open(file);
+    Mockito.verify(jGitWrapper).open(file);
   }
 
   @Test
@@ -136,65 +140,98 @@ public class JGitServiceTest {
     Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
 
     jGitService.pull("version");
-    Mockito.verify(jGitWrapper, times(0)).open(file);
+    Mockito.verify(jGitWrapper, never()).open(file);
   }
 
   @Test
   @SneakyThrows
-  void getFilesInPathTest(){
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+  void getFilesInPathTest() {
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
-    Mockito.when(jGitWrapper.getRevTree(any(),any())).thenReturn(revTree);
-    Mockito.when(jGitWrapper.getTreeWalk(any(),any(), any())).thenReturn(treeWalk);
-    Mockito.when(jGitWrapper.getTreeWalk(any())).thenReturn(treeWalk);
-    Mockito.when(treeWalk.getPathString()).thenReturn("version");
+    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
+    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getTreeWalk(repository, "/", revTree)).thenReturn(treeWalk);
+    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
+    Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
+    Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
     List<String> version = jGitService.getFilesInPath("version", "/");
     Assertions.assertNotNull(version);
-
+    Assertions.assertNotEquals(0, version.size());
+    Assertions.assertEquals("someFile", version.get(0));
   }
 
   @Test
   @SneakyThrows
-  void getFilesInEmptyPathTest(){
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+  void getFilesInEmptyPathTest() {
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
-    Mockito.when(jGitWrapper.getRevTree(any(),any())).thenReturn(revTree);
-    Mockito.when(jGitWrapper.getTreeWalk(any())).thenReturn(treeWalk);
+    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
+    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
+    Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
+    Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
     List<String> version = jGitService.getFilesInPath("version", "");
     Assertions.assertNotNull(version);
+    Assertions.assertNotEquals(0, version.size());
+    Assertions.assertEquals("someFile", version.get(0));
+  }
+
+  @Test
+  @SneakyThrows
+  void getFilesNoDirExists() {
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory())
+        .thenReturn(tempDir.getPath() + "not_existed_path");
+    List<String> version = jGitService.getFilesInPath("version", "");
+    Assertions.assertNotNull(version);
+    Assertions.assertEquals(0, version.size());
   }
 
   @Test
   @SneakyThrows
   void testAmendRepositoryNotExist() {
-    String amend = jGitService.amend(VersioningRequestDto.builder().build(), new ChangeInfoDto());
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory())
+        .thenReturn(tempDir.getPath() + "not_existed_path");
+    String amend = jGitService.amend(VersioningRequestDto.builder()
+        .versionName("1")
+        .build(), new ChangeInfoDto());
     Assertions.assertNull(amend);
   }
 
   @Test
   @SneakyThrows
   void testAmendEmptyInput() {
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
     Mockito.when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setRefSpecs(anyString())).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-    Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
-    Mockito.when(requestToFileConverter.convert(any())).thenReturn(null);
+    Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
+    var requestDto = VersioningRequestDto.builder().versionName("version").build();
+    Mockito.when(requestToFileConverter.convert(requestDto)).thenReturn(null);
 
     ChangeInfoDto changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setRefs("refs");
-    String amend = jGitService.amend(VersioningRequestDto.builder().build(), changeInfoDto);
+    String amend = jGitService.amend(requestDto, changeInfoDto);
     Assertions.assertNull(amend);
+    Mockito.verify(git, never()).add();
+    Mockito.verify(git, never()).rm();
   }
 
   @Test
   @SneakyThrows
   void getFileContentRepoNotExistTest() {
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory())
+        .thenReturn(tempDir.getPath() + "not_existed_path");
     String version = jGitService.getFileContent("version", "/");
     Assertions.assertEquals("Repository does not exist", version);
   }
@@ -202,48 +239,68 @@ public class JGitServiceTest {
   @Test
   @SneakyThrows
   void getFileContentPathEmptyTest() {
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     String version = jGitService.getFileContent("version", "");
     Assertions.assertEquals("Repository does not exist", version);
 
     version = jGitService.getFileContent("version", null);
     Assertions.assertEquals("Repository does not exist", version);
+
+    Mockito.verify(jGitWrapper, times(2)).open(repo);
   }
 
   @Test
   @SneakyThrows
   void getFileContentEmptyTreeTest() {
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
-    Mockito.when(jGitWrapper.getRevTree(any(),any())).thenReturn(revTree);
-    Mockito.when(jGitWrapper.getTreeWalk(any())).thenReturn(treeWalk);
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
+    Mockito.when(git.getRepository()).thenReturn(repository);
+    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
+    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
+    Mockito.when(treeWalk.next()).thenReturn(false);
     String version = jGitService.getFileContent("version", "/forms");
     Assertions.assertEquals("Repository does not exist", version);
+    Mockito.verify(treeWalk).next();
   }
 
   @Test
   @SneakyThrows
-  void deleteFalseTest(){
+  void deleteFalseTest() {
+    File repo = new File(tempDir, "1");
+    repo.createNewFile();
+
     ChangeInfoDto dto = new ChangeInfoDto();
     dto.setRefs("refs");
     dto.setNumber("1");
-    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
     Mockito.when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setRefSpecs(anyString())).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-    Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn("/");
+    Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
     String formNotDeleted = jGitService.delete(dto, "form");
     Assertions.assertNull(formNotDeleted);
+    Mockito.verify(checkoutCommand).call();
+    Mockito.verify(git, never()).add();
+    Mockito.verify(git, never()).rm();
   }
 
   @Test
   @SneakyThrows
-  void deleteRepoNotExistTest(){
-    String formNotDeleted = jGitService.delete(new ChangeInfoDto(), "form");
+  void deleteRepoNotExistTest() {
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory())
+        .thenReturn(tempDir.getPath() + "not_existed_path");
+    var changeInfoDto = new ChangeInfoDto();
+    changeInfoDto.setNumber("1");
+    String formNotDeleted = jGitService.delete(changeInfoDto, "form");
     Assertions.assertNull(formNotDeleted);
   }
 
