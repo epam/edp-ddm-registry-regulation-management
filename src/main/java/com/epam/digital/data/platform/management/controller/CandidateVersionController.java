@@ -90,7 +90,6 @@ public class CandidateVersionController {
     @GetMapping("/{versionCandidateId}")
     public ResponseEntity<VersionInfoDetailed> getVersionDetails(@PathVariable String versionCandidateId) throws Exception {
         ChangeInfo changeInfo = versionManagementService.getVersionDetails(versionCandidateId);
-        //TODO fix mapping
         return ResponseEntity.ok().body(VersionInfoDetailed.builder()
                 .id(String.valueOf(changeInfo.getNumber()))
                 .author(changeInfo.getOwner())
