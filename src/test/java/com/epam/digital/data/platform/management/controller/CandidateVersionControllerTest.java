@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,8 +71,8 @@ class CandidateVersionControllerTest {
   void getVersionDetailsTest() {
     Mockito.when(service.getVersionDetails("1")).thenReturn(
             ChangeInfo.builder()
-                    .created(new Timestamp(System.currentTimeMillis()))
-                    .updated(new Timestamp(System.currentTimeMillis()))
+                    .created(LocalDateTime.now())
+                    .updated(LocalDateTime.now())
                     .number(1)
                     .build());
     mockMvc.perform(get("/versions/candidates/1"))
