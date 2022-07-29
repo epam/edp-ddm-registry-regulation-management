@@ -77,11 +77,13 @@ public class GerritServiceImpl implements GerritService {
   @Override
   public ChangeInfo getLastMergedMR() throws RestApiException {
     var query = String.format("project:%s+status:merged", gerritPropertiesConfig.getRepository());
-    var changeInfoList = gerritApi.changes().query(query).withLimit(1).get();
+    var changes = gerritApi.changes();
+    var changeInfoList = changes.query(query).withLimit(1).get();
     if (changeInfoList.isEmpty()) {
       return null;
     }
-    return changeInfoList.get(0);
+    var changeId = changeInfoList.get(0).changeId;
+    return changes.id(changeId).get();
   }
 
   @Override

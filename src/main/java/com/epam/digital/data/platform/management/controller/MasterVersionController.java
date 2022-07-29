@@ -17,6 +17,7 @@ package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.model.dto.MasterVersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.service.VersionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -24,6 +25,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,20 +38,47 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/versions/master")
 public class MasterVersionController {
 
-  @Operation(summary = "Get master version", parameters = {@Parameter(in= ParameterIn.HEADER,name = "X-Access-Token", schema = @Schema(type = "string"))}, responses = {
-          @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+  @Autowired
+  private VersionManagementService versionManagementService;
+
+  @Operation(summary = "Get master version",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = MasterVersionInfoDetailed.class))),
-          @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
-  })
-  @GetMapping("/")
-  public ResponseEntity<MasterVersionInfoDetailed> getVersionDetails() throws Exception {
-    return ResponseEntity.ok().build();
+      })
+  @GetMapping
+  public ResponseEntity<MasterVersionInfoDetailed> getMasterVersionInfo() throws Exception {
+    var masterInfo = versionManagementService.getMasterInfo();
+    if (Objects.isNull(masterInfo)) {
+      return ResponseEntity.ok()
+          .body(MasterVersionInfoDetailed.builder().build());
+    }
+
+    return ResponseEntity.ok()
+        .body(MasterVersionInfoDetailed.builder()
+            .id(String.valueOf(masterInfo.getNumber()))
+            .author(masterInfo.getOwner())
+            .description(masterInfo.getDescription())
+            .name(masterInfo.getSubject())
+            .latestUpdate(masterInfo.getUpdated())
+            .build());
+
   }
-
-
 }

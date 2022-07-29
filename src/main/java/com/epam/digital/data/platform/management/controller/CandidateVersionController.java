@@ -94,10 +94,10 @@ public class CandidateVersionController {
         return ResponseEntity.ok().body(VersionInfoDetailed.builder()
                 .id(String.valueOf(changeInfo.getNumber()))
                 .author(changeInfo.getOwner())
-                .creationDate(changeInfo.getCreated().toLocalDateTime())
+                .creationDate(changeInfo.getCreated())
                 .description(changeInfo.getDescription())
                 .hasConflicts(changeInfo.getMergeable())
-                .latestUpdate(changeInfo.getUpdated().toLocalDateTime())
+                .latestUpdate(changeInfo.getUpdated())
                 .name(changeInfo.getSubject())
                 .published(changeInfo.getMergeable())
                 .build());

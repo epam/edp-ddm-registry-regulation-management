@@ -15,13 +15,12 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.sql.Timestamp;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -31,15 +30,14 @@ public class ChangeInfo {
 
     private String subject;
     private String description;
-    private Timestamp created;
-    private Timestamp updated;
-    private Timestamp submitted;
+    private LocalDateTime created;
+    private LocalDateTime updated;
+    private LocalDateTime submitted;
     private String changeId;
     private String id;
     private int number;
     private String project;
     private String branch;
-    private String topic;
     private String owner;
     private Boolean mergeable;
     private Map<String, Boolean> labels;

@@ -9,6 +9,9 @@ import com.epam.digital.data.platform.management.service.VersionManagementServic
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
 import com.google.gerrit.extensions.common.LabelInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -100,17 +103,23 @@ public class VersionManagementServiceImpl implements VersionManagementService {
             .number(changeInfo._number)
             .changeId(changeInfo.changeId)
             .branch(changeInfo.branch)
-            .created(changeInfo.created)
+            .created(toUTCLocalDateTime(changeInfo.created))
             .subject(changeInfo.subject)
             .description(changeInfo.topic)
             .project(changeInfo.project)
-            .submitted(changeInfo.submitted)
-            .topic(changeInfo.topic)
-            .updated(changeInfo.updated)
+            .submitted(toUTCLocalDateTime(changeInfo.submitted))
+            .updated(toUTCLocalDateTime(changeInfo.updated))
             .owner(changeInfo.owner.username)
             .mergeable(changeInfo.mergeable)
             .labels(getResponseLabels(changeInfo.labels))
             .build();
+    }
+
+    private LocalDateTime toUTCLocalDateTime(Timestamp timestamp) {
+        if (Objects.isNull(timestamp)) {
+            return null;
+        }
+        return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
     }
 
     private Map<String, Boolean> getResponseLabels(Map<String, LabelInfo> labels) {

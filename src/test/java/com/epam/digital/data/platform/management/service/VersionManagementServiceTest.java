@@ -6,6 +6,9 @@ import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -85,12 +88,15 @@ class VersionManagementServiceTest {
     changeInfo.owner = new AccountInfo(1);
     changeInfo._number = 1;
     changeInfo.labels = new HashMap<>();
+    var date = LocalDateTime.of(2022, 7, 29, 13, 7);
+    changeInfo.updated = Timestamp.from(date.toInstant(ZoneOffset.UTC));
 
     Mockito.when(gerritService.getLastMergedMR()).thenReturn(changeInfo);
     var result = managementService.getMasterInfo();
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(result.getNumber(), changeInfo._number);
+    Assertions.assertEquals(result.getUpdated(), date);
   }
 
   @Test

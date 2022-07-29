@@ -302,6 +302,8 @@ class GerritServiceTest {
         Mockito.when(changes.query("project:repo+status:merged")).thenReturn(request);
         Mockito.when(request.withLimit(1)).thenReturn(request);
         Mockito.when(request.get()).thenReturn(changeInfos);
+        Mockito.when(changes.id(changeInfo.id)).thenReturn(changeApiRestClient);
+        Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
 
         var result = gerritService.getLastMergedMR();
 
