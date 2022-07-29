@@ -38,7 +38,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
     @Override
     public List<FileResponse> getFileList() throws Exception {
-        return getFileList(File.pathSeparator);
+        return getFileList(File.separator);
     }
 
     @Override
@@ -54,8 +54,8 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
         ChangeInfo ci = getChangeInfo();
         gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
-            if (key.contains(path)) {
-                FileResponse formsResponseDto = formsInMaster.get(FilenameUtils.getName(key));
+            if (key.startsWith(path)) {
+                FileResponse formsResponseDto = formsInMaster.get(key);
                 if (formsResponseDto == null) {
                     formsInMaster.put(key, FileResponse.builder()
                         .name(key)

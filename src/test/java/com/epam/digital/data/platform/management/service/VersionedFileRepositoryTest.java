@@ -5,6 +5,7 @@ import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.common.FileInfo;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -33,9 +37,42 @@ public class VersionedFileRepositoryTest {
     @SneakyThrows
     void getFileListTest() {
         List<String> list = new ArrayList<>();
-        Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(list);
-        List<FileResponse> fileList = repository.getFileList("/");
+        list.add("file1");
+        list.add("file2");
+        Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
+        List<FileResponse> fileList = repository.getFileList(File.separator);
         Assertions.assertNotNull(fileList);
+    }
+
+    @Test
+    @SneakyThrows
+    void getRootFileListTest() {
+        List<String> list = new ArrayList<>();
+        list.add("file1");
+        list.add("file2");
+        Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
+        List<FileResponse> fileList = repository.getFileList();
+        Assertions.assertNotNull(fileList);
+    }
+    @Test
+    @SneakyThrows
+    void getVersionedFileListTest() {
+        List<String> list = new ArrayList<>();
+        list.add("folder/file1");
+        list.add("folder/file2");
+        list.add("folder/file3");
+        var changeInfo = new ChangeInfo();
+        changeInfo.created = new Timestamp(System.currentTimeMillis());
+        var filesInMR = new HashMap<String, FileInfo>();
+        filesInMR.put("folder/file22", new FileInfo());
+        filesInMR.put("folder/file3", new FileInfo());
+
+        Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
+        Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
+        Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
+        List<FileResponse> fileList = repository.getFileList("folder");
+        Assertions.assertNotNull(fileList);
+        Assertions.assertEquals(4, fileList.size());
     }
 
     @Test
