@@ -24,10 +24,12 @@ import com.google.gerrit.extensions.restapi.RestApiException;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.lang.Nullable;
 
 public interface GerritService {
   List<ChangeInfo> getMRList() throws RestApiException;
-
+  @Nullable
+  ChangeInfo getLastMergedMR() throws RestApiException;
   ChangeInfo getMRByNumber(String number) throws RestApiException;
   ChangeInfoDto getChangeInfo(String changeId) throws RestApiException;
   Map<String, FileInfo> getListOfChangesInMR(String changeId) throws RestApiException;

@@ -23,7 +23,11 @@ import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.google.gerrit.extensions.api.GerritApi;
 import com.google.gerrit.extensions.api.accounts.AccountInput;
-import com.google.gerrit.extensions.api.changes.*;
+import com.google.gerrit.extensions.api.changes.ChangeApi;
+import com.google.gerrit.extensions.api.changes.Changes;
+import com.google.gerrit.extensions.api.changes.RebaseInput;
+import com.google.gerrit.extensions.api.changes.ReviewInput;
+import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.client.ChangeStatus;
 import com.google.gerrit.extensions.client.ReviewerState;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -34,10 +38,15 @@ import com.google.gerrit.extensions.restapi.RestApiException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-
-import java.util.*;
 
 @Component
 public class GerritServiceImpl implements GerritService {
@@ -64,19 +73,30 @@ public class GerritServiceImpl implements GerritService {
     return changeInfos;
   }
 
+  @Nullable
+  @Override
+  public ChangeInfo getLastMergedMR() throws RestApiException {
+    var query = String.format("project:%s+status:merged", gerritPropertiesConfig.getRepository());
+    var changeInfoList = gerritApi.changes().query(query).withLimit(1).get();
+    if (changeInfoList.isEmpty()) {
+      return null;
+    }
+    return changeInfoList.get(0);
+  }
+
   @Override
   public ChangeInfo getMRByNumber(String number) throws RestApiException {
     String query = String.format("project:%s+%s", gerritPropertiesConfig.getRepository(), number);
     Changes changes = gerritApi.changes();
-    List<ChangeInfo> changeInfos = new ArrayList<>();
-    for (ChangeInfo change : changes.query(query).get()) {
-      ChangeApi changeApi = changes.id(change.changeId);
-      ChangeInfo changeInfo = changeApi.get();
-      changeInfo.mergeable = changeApi.current().mergeable().mergeable;
-      return changeInfo;
+    var changeInfos = changes.query(query).get();
+    if (changeInfos.isEmpty()) {
+      // todo throw not found error
+      return null;
     }
-    // todo throw not found error
-    return null;
+    ChangeApi changeApi = changes.id(changeInfos.get(0).changeId);
+    ChangeInfo changeInfo = changeApi.get();
+    changeInfo.mergeable = changeApi.current().mergeable().mergeable;
+    return changeInfo;
   }
 
   @Override

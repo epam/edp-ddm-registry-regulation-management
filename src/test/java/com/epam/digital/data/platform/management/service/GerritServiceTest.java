@@ -1,4 +1,8 @@
 package com.epam.digital.data.platform.management.service;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
@@ -10,7 +14,6 @@ import com.google.gerrit.extensions.api.changes.Changes;
 import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.api.changes.RevisionApi;
 import com.google.gerrit.extensions.common.ChangeInfo;
-import java.util.Collection;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
@@ -18,26 +21,25 @@ import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import com.urswolfer.gerrit.client.rest.http.GerritRestClient;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangeApiRestClient;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangesRestClient;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.invocation.InvocationOnMock;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
-import org.mockito.verification.VerificationMode;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
-public class GerritServiceTest {
+class GerritServiceTest {
+
     @Mock
     public GerritPropertiesConfig gerritPropertiesConfig;
     @Mock
@@ -58,10 +60,12 @@ public class GerritServiceTest {
     private GerritRestClient gerritRestClient;
     List<ChangeInfo> changeInfos = new ArrayList<>();
     ChangeInfo changeInfo = new ChangeInfo();
+
     @BeforeEach
     void initChanges() {
         changeInfo._number = 5;
         changeInfos.add(changeInfo);
+        Mockito.lenient().when(gerritApi.changes()).thenReturn(changes);
     }
 
     @Test
@@ -76,7 +80,6 @@ public class GerritServiceTest {
         String topic1 = "testTopic1";
         String topic2 = "testTopic2";
 
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         ChangeApi changeApi = Mockito.mock(ChangeApi.class);
         Mockito.when(changes.id(any())).thenReturn(changeApi);
 
@@ -104,7 +107,6 @@ public class GerritServiceTest {
         ChangeInfo info = new ChangeInfo();
         info._number = 10;
         info.mergeable = true;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
         ChangeApi changeApi = Mockito.mock(ChangeApi.class);
         RevisionApi revisionApi = Mockito.mock(RevisionApi.class);
@@ -130,7 +132,6 @@ public class GerritServiceTest {
         ChangeInfo info = new ChangeInfo();
         info._number = 10;
         info.mergeable = true;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
         ChangeApi changeApi = Mockito.mock(ChangeApi.class);
         RevisionApi revisionApi = Mockito.mock(RevisionApi.class);
@@ -144,7 +145,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void getMrListNotNullTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.query(any())).thenReturn(request);
         Mockito.when(request.get()).thenReturn(new ArrayList<>());
         List<ChangeInfo> mrList = gerritService.getMRList();
@@ -153,7 +153,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void etMrListNotEmptyTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.query(any())).thenReturn(request);
         Mockito.when(request.get()).thenReturn(changeInfos);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
@@ -173,7 +172,6 @@ public class GerritServiceTest {
         HashMap<String, RevisionInfo> revisionsMap = new HashMap<>();
         revisionsMap.put(null, revisionInfo);
         changeInfo.revisions = revisionsMap;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
         ChangeInfoDto changeId = gerritService.getChangeInfo("changeId");
@@ -184,7 +182,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void getMrChangesListTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
         Mockito.when(revisionApi.files()).thenReturn(new HashMap<>());
@@ -200,7 +197,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void createChangesTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.create(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
         String change = gerritService.createChanges("change");
@@ -212,7 +208,6 @@ public class GerritServiceTest {
     void reviewTest(){
         ReviewResult reviewResult = new ReviewResult();
         reviewResult.ready = true;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
         Mockito.when(revisionApi.review(any())).thenReturn(reviewResult);
@@ -240,7 +235,6 @@ public class GerritServiceTest {
         List<String> vals = new ArrayList<>();
         labels.put("Code-Review", null);
         changeInfo.permittedLabels = labels;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
         VoteRequestDto dto = new VoteRequestDto();
@@ -259,7 +253,6 @@ public class GerritServiceTest {
         changeInfo.permittedLabels = labels;
         ReviewResult reviewResult = new ReviewResult();
         reviewResult.ready = true;
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
         Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
@@ -273,7 +266,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void declineChangeTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         gerritService.declineChange("changeId");
         Mockito.verify(changeApiRestClient, Mockito.times(1)).abandon();
@@ -281,7 +273,6 @@ public class GerritServiceTest {
     @Test
     @SneakyThrows
     void robotCommentTest(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
         Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
@@ -291,10 +282,10 @@ public class GerritServiceTest {
         gerritService.robotComment(requestDto, "changeId");
         Mockito.verify(revisionApi, Mockito.times(1)).review(any());
     }
+
     @Test
     @SneakyThrows
-    void robotCommentTestEmptyComment(){
-        Mockito.when(gerritApi.changes()).thenReturn(changes);
+    void robotCommentTestEmptyComment() {
         Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
         Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
         Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
@@ -302,5 +293,41 @@ public class GerritServiceTest {
         RobotCommentRequestDto requestDto = new RobotCommentRequestDto();
         gerritService.robotComment(requestDto, "changeId");
         Mockito.verify(revisionApi, Mockito.times(1)).review(any());
+    }
+
+    @Test
+    @SneakyThrows
+    void getLastMergedMR() {
+        Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
+        Mockito.when(changes.query("project:repo+status:merged")).thenReturn(request);
+        Mockito.when(request.withLimit(1)).thenReturn(request);
+        Mockito.when(request.get()).thenReturn(changeInfos);
+
+        var result = gerritService.getLastMergedMR();
+
+        Assertions.assertSame(result, changeInfo);
+
+        Mockito.verify(request).get();
+        Mockito.verify(request).withLimit(1);
+        Mockito.verify(changes).query("project:repo+status:merged");
+        Mockito.verify(gerritPropertiesConfig).getRepository();
+    }
+
+    @Test
+    @SneakyThrows
+    void getLastMergedMR_noMergedMRs() {
+        Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
+        Mockito.when(changes.query("project:repo+status:merged")).thenReturn(request);
+        Mockito.when(request.withLimit(1)).thenReturn(request);
+        Mockito.when(request.get()).thenReturn(List.of());
+
+        var result = gerritService.getLastMergedMR();
+
+        Assertions.assertNull(result);
+
+        Mockito.verify(request).get();
+        Mockito.verify(request).withLimit(1);
+        Mockito.verify(changes).query("project:repo+status:merged");
+        Mockito.verify(gerritPropertiesConfig).getRepository();
     }
 }

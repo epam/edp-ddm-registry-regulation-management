@@ -4,20 +4,18 @@ import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
+import java.io.File;
+import java.util.List;
 import lombok.AllArgsConstructor;
-import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.util.List;
 
 @Component
 @AllArgsConstructor
 public class FormServiceImpl implements FormService {
 
-    private static final String DIRECTORY_PATH = "/forms";
+    private static final String DIRECTORY_PATH = "forms";
 
     @Autowired
     private VersionedFileRepositoryFactory repoFactory;

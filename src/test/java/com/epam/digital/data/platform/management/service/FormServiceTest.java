@@ -19,7 +19,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 @ExtendWith(MockitoExtension.class)
-public class FormServiceTest {
+class FormServiceTest {
     @Mock
     private VersionedFileRepositoryFactory repositoryFactory;
     @Mock
