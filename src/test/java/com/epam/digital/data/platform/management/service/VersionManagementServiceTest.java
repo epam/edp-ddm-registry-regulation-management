@@ -1,9 +1,14 @@
 package com.epam.digital.data.platform.management.service;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,14 +18,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-
 @ExtendWith(MockitoExtension.class)
-public class VersionManagementServiceTest {
+class VersionManagementServiceTest {
 
   @Mock
   private GerritService gerritService;
@@ -75,8 +74,31 @@ public class VersionManagementServiceTest {
 
     Mockito.when(gerritService.getMRByNumber("1")).thenReturn(changeInfo);
     com.epam.digital.data.platform.management.model.dto.ChangeInfo version =
-            managementService.getVersionDetails("1");
+        managementService.getVersionDetails("1");
     Assertions.assertNotNull(version);
   }
 
+  @Test
+  @SneakyThrows
+  void getMasterInfo() {
+    var changeInfo = new ChangeInfo();
+    changeInfo.owner = new AccountInfo(1);
+    changeInfo._number = 1;
+    changeInfo.labels = new HashMap<>();
+
+    Mockito.when(gerritService.getLastMergedMR()).thenReturn(changeInfo);
+    var result = managementService.getMasterInfo();
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(result.getNumber(), changeInfo._number);
+  }
+
+  @Test
+  @SneakyThrows
+  void getMasterInfo_null() {
+    Mockito.when(gerritService.getLastMergedMR()).thenReturn(null);
+    var result = managementService.getMasterInfo();
+
+    Assertions.assertNull(result);
+  }
 }

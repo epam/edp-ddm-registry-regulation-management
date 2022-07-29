@@ -3,8 +3,8 @@ package com.epam.digital.data.platform.management.service;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
-
 import java.util.List;
+import org.springframework.lang.Nullable;
 
 public interface VersionManagementService {
 
@@ -12,6 +12,10 @@ public interface VersionManagementService {
      * Get versions list
      */
     List<ChangeInfo> getVersionsList() throws RestApiException;
+
+
+    @Nullable
+    ChangeInfo getMasterInfo() throws RestApiException;
 
     /**
      * Details of head master
