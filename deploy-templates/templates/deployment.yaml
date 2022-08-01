@@ -107,7 +107,7 @@ spec:
           secret:
             secretName: {{ .Values.gerrit.secret }}
             items:
-              - key: username
+              - key: user
                 path: gerrit.user
               - key: password
                 path: gerrit.password
