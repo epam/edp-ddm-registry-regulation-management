@@ -4,9 +4,6 @@ import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import lombok.Setter;
-
-import javax.naming.OperationNotSupportedException;
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -15,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.naming.OperationNotSupportedException;
+import lombok.Setter;
+import org.apache.commons.io.FilenameUtils;
 
 @Setter
 public class HeadFileRepositoryImpl implements VersionedFileRepository {
@@ -30,13 +30,14 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
 
     @Override
     public List<FileResponse> getFileList(String path) throws Exception {
-        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path).stream()
-                .map(el -> FileResponse.builder()
-                        .name(el)
-                        .status(FileStatus.CURRENT)
-                        .path(path)
-                        .build())
-                .collect(Collectors.toMap(FileResponse::getName, Function.identity()));
+        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path)
+            .stream()
+            .map(el -> FileResponse.builder()
+                .name(FilenameUtils.getBaseName(el))
+                .status(FileStatus.CURRENT)
+                .path(path)
+                .build())
+            .collect(Collectors.toMap(FileResponse::getName, Function.identity()));
 
         return new ArrayList<>(formsInMaster.values());
     }

@@ -20,7 +20,7 @@ data:
       jobName: {{ .Values.data.jobName }}
     
     gerrit:
-      url: {{ .Values.gerrit.url }}
+      url: {{ .Values.gerrit.url }}-{{ .Values.namespace }}.{{ .Values.dnsWildcard }}
       repository: {{ .Values.gerrit.repository }}
       headBranch: {{ .Values.gerrit.headBranch }}
       repositoryDirectory: {{ .Values.gerrit.repositoryDirectory }}
