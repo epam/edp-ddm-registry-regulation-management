@@ -100,7 +100,7 @@ spec:
                 path: user-import-ceph.access-key
               - key: AWS_SECRET_ACCESS_KEY
                 path: user-import-ceph.secret-key
-        - name: {{ .Chart.Name }}-registry-regulation-management-gerrit-credentials
+        - name: {{ .Chart.Name }}-gerrit-credentials
           secret:
             secretName: {{ .Values.gerrit.secret }}
             items:
