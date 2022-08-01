@@ -60,6 +60,9 @@ spec:
             - mountPath: /app/secrets/userimportceph
               name: {{ .Chart.Name }}-user-import-ceph-credentials
               readOnly: true
+            - mountPath: /app/secrets/gerritcreds
+              name: {{ .Chart.Name }}-gerrit-credentials
+              readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:

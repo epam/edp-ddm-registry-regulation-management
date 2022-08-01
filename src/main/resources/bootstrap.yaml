@@ -17,6 +17,7 @@ spring:
         enable-api: false
         paths:
           - /app/secrets/userimportceph
+          - /app/secrets/gerritcreds
           - /app/secrets/openshift
     vault:
       uri: ${VAULT_URI}
