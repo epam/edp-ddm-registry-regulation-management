@@ -14,10 +14,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Setter;
@@ -75,7 +72,9 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
                 }
             }
         });
-        return new ArrayList<>(formsInMaster.values());
+        var forms = new ArrayList<>(formsInMaster.values());
+        forms.sort(Comparator.comparing(FileResponse::getName));
+        return forms;
     }
 
     @Override

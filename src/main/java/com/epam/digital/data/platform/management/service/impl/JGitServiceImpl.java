@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
@@ -111,6 +112,7 @@ public class JGitServiceImpl implements JGitService {
                 }
             }
         }
+        Collections.sort(items);
         return items;
     }
 

@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.FormService;
@@ -79,17 +80,19 @@ public class CandidateVersionFormsController {
                 content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = DetailedErrorResponse.class)))})
     @GetMapping
-    public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(@PathVariable String versionCandidateId) throws Exception {
+    public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
+        @PathVariable String versionCandidateId) throws Exception {
 //todo need to parse json to get title
-        return ResponseEntity.ok()
-            .body(formService.getFormListByVersion(versionCandidateId).stream()
-                .map(e -> FormDetailsShort.builder()
-                    .name(e.getName())
-                    .title("<unknown>")
-                    .created(e.getCreated())
-                    .updated(e.getUpdated())
-                    .build())
-                .collect(Collectors.toList()));
+      return ResponseEntity.ok()
+          .body(formService.getFormListByVersion(versionCandidateId).stream()
+              .filter(e -> !FileStatus.DELETED.equals(e.getStatus()))
+              .map(e -> FormDetailsShort.builder()
+                  .name(e.getName())
+                  .title("<unknown>")
+                  .created(e.getCreated())
+                  .updated(e.getUpdated())
+                  .build())
+              .collect(Collectors.toList()));
     }
 
     @Operation(summary = "Create new form",

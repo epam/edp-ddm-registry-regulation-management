@@ -4,6 +4,8 @@ import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -24,9 +26,7 @@ public class FormServiceImpl implements FormService {
     @Override
     public List<FileResponse> getFormListByVersion(String versionName) throws Exception {
         VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-        return repo.getFileList(DIRECTORY_PATH).stream()
-            .filter(fileResponse -> !fileResponse.getName().equals(".gitkeep"))
-            .collect(Collectors.toList());
+        return new ArrayList<>(repo.getFileList(DIRECTORY_PATH));
     }
 
     @Override

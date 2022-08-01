@@ -7,9 +7,7 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.naming.OperationNotSupportedException;
@@ -32,14 +30,16 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
     public List<FileResponse> getFileList(String path) throws Exception {
         Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path)
             .stream()
+            .filter(fileName -> !fileName.equals(".gitkeep"))
             .map(el -> FileResponse.builder()
                 .name(FilenameUtils.getBaseName(el))
                 .status(FileStatus.CURRENT)
                 .path(path)
                 .build())
             .collect(Collectors.toMap(FileResponse::getName, Function.identity()));
-
-        return new ArrayList<>(formsInMaster.values());
+        var forms = new ArrayList<>(formsInMaster.values());
+        forms.sort(Comparator.comparing(FileResponse::getName));
+        return forms;
     }
 
     @Override
