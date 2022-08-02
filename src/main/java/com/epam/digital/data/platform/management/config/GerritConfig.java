@@ -19,6 +19,7 @@ import com.google.gerrit.extensions.api.GerritApi;
 import com.urswolfer.gerrit.client.rest.GerritAuthData;
 import com.urswolfer.gerrit.client.rest.GerritRestApiFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +29,7 @@ public class GerritConfig {
   private GerritPropertiesConfig config;
 
   @Bean
+  @ConditionalOnMissingBean
   public GerritApi gerritApi() {
     return new GerritRestApiFactory()
         .create(new GerritAuthData.Basic(config.getUrl(), config.getUser(), config.getPassword()));

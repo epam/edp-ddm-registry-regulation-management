@@ -15,12 +15,7 @@ server:
 
 platform:
   security:
-    enabled: true
-    whitelist:
-      - /openapi
-      - /v3/api-docs/**
-      - /swagger-ui/**
-      - /actuator/**
+    enabled: false
 
 user-import-ceph:
   http-endpoint: http://localhost:4566
