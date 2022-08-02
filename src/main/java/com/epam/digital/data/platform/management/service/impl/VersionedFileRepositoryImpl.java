@@ -42,7 +42,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     @Override
     public List<FileResponse> getFileList(String path) throws Exception {
         //todo update dates from  git log
-        Map<String, FileResponse> formsInMaster = jGitService.getFilesInPath(versionName, path)
+        Map<String, FileResponse> filesInMaster = jGitService.getFilesInPath(versionName, path)
             .stream()
             .filter(el -> !el.equals(".gitkeep"))
             .map(el -> FileResponse.builder()
@@ -57,24 +57,28 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
         ChangeInfo ci = getChangeInfo();
         gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
             if (key.startsWith(path)) {
-                FileResponse formsResponseDto = formsInMaster.get(key);
-                if (formsResponseDto == null) {
-                    formsInMaster.put(FilenameUtils.getBaseName(key), FileResponse.builder()
+                FileResponse filesResponseDto = searchFileInMap(filesInMaster, key);
+                if (filesResponseDto == null) {
+                  filesInMaster.put(FilenameUtils.getBaseName(key), FileResponse.builder()
                         .name(FilenameUtils.getBaseName(key))
                         .status(FileStatus.NEW)
                         .created(toUTCLocalDateTime(ci.created))
                         .updated(toUTCLocalDateTime(ci.updated))
                         .build());
                 } else {
-                    formsResponseDto.setStatus(getStatus(value));
+                  filesResponseDto.setStatus(getStatus(value));
 //                    formsResponseDto.setCreated(ci.created);
-                    formsResponseDto.setUpdated(toUTCLocalDateTime(ci.updated));
+                  filesResponseDto.setUpdated(toUTCLocalDateTime(ci.updated));
                 }
             }
         });
-        var forms = new ArrayList<>(formsInMaster.values());
+        var forms = new ArrayList<>(filesInMaster.values());
         forms.sort(Comparator.comparing(FileResponse::getName));
         return forms;
+    }
+
+    private FileResponse searchFileInMap(Map<String, FileResponse> map, String fileKey) {
+      return map.get(FilenameUtils.getBaseName(fileKey));
     }
 
     @Override

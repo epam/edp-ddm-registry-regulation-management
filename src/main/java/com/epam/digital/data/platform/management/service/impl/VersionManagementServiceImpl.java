@@ -84,16 +84,6 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         return mapChangeInfo(e);
     }
 
-    private String getChangeId(String versionName) {
-        try {
-            com.google.gerrit.extensions.common.ChangeInfo changeInfo = gerritService.getMRByNumber(
-                versionName);
-            return changeInfo != null ? changeInfo.changeId : null;
-        } catch (RestApiException e) {
-            return StringUtils.EMPTY;
-        }
-    }
-
     private ChangeInfo mapChangeInfo(
         @Nullable com.google.gerrit.extensions.common.ChangeInfo changeInfo) {
         if (Objects.isNull(changeInfo)) {

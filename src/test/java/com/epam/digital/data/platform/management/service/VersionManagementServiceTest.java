@@ -4,15 +4,18 @@ import static org.mockito.ArgumentMatchers.any;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.common.FileInfo;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -58,6 +61,27 @@ class VersionManagementServiceTest {
     List<String> detailsOfHeadMaster = managementService.getDetailsOfHeadMaster("path");
     Assertions.assertNotNull(detailsOfHeadMaster);
     Assertions.assertEquals("details", detailsOfHeadMaster.get(0));
+  }
+
+  @Test
+  @SneakyThrows
+  void getVersionFileListTest() {
+    Map<String, FileInfo> fileMap = new HashMap<>();
+    var info = new FileInfo();
+    info.status = 'A';
+    info.size = 50;
+    info.linesInserted = 1;
+    info.linesDeleted = 0;
+    info.sizeDelta = 50;
+    info.binary = false;
+    fileMap.put("file1", info);
+    Mockito.when(gerritService.getListOfChangesInMR("3")).thenReturn(fileMap);
+
+    List<VersionedFileInfo> res = managementService.getVersionFileList("3");
+
+    Assertions.assertEquals(1, res.size());
+    Assertions.assertEquals(50, res.get(0).getSize());
+    Assertions.assertEquals("file1", res.get(0).getName());
   }
 
   @Test

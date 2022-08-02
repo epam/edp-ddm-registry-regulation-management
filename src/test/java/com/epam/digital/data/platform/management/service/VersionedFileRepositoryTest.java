@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -74,6 +75,46 @@ public class VersionedFileRepositoryTest {
         Assertions.assertNotNull(fileList);
         Assertions.assertEquals(4, fileList.size());
     }
+
+  @Test
+  @SneakyThrows
+  void getVersionedFileListWithStatusesTest() {
+    List<String> list = new ArrayList<>();
+    list.add("file1");
+    list.add("file2");
+    list.add("file3");
+    var changeInfo = new ChangeInfo();
+    changeInfo.created = new Timestamp(System.currentTimeMillis());
+    var filesInMR = new HashMap<String, FileInfo>();
+    var fileInfo = new FileInfo();
+    fileInfo.status = 'A';
+    filesInMR.put("folder/file12", fileInfo);
+    fileInfo = new FileInfo();
+    fileInfo.status = 'D';
+    filesInMR.put("folder/file2", fileInfo);
+    filesInMR.put("folder/file14", new FileInfo());
+    filesInMR.put("folder/file3", new FileInfo());
+
+    Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
+    Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
+    Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
+    List<FileResponse> fileList = repository.getFileList("folder");
+    Assertions.assertNotNull(fileList);
+    Assertions.assertEquals(5, fileList.size());
+    Assertions.assertEquals(FileStatus.CURRENT, getFileStatusByName(fileList, "file1"));
+    Assertions.assertEquals(FileStatus.DELETED, getFileStatusByName(fileList, "file2"));
+    Assertions.assertEquals(FileStatus.CHANGED, getFileStatusByName(fileList, "file3"));
+    Assertions.assertEquals(FileStatus.NEW, getFileStatusByName(fileList, "file12"));
+    Assertions.assertEquals(FileStatus.NEW, getFileStatusByName(fileList, "file14"));
+  }
+
+  private FileStatus getFileStatusByName(List<FileResponse> files, String name) {
+      return files.stream()
+          .filter(e -> name.equals(e.getName()))
+          .findAny()
+          .map(FileResponse::getStatus)
+          .orElse(null);
+  }
 
     @Test
     @SneakyThrows
