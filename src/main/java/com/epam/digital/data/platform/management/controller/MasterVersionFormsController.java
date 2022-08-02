@@ -75,12 +75,11 @@ public class MasterVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster() throws Exception {
-    //todo need to parse json to get title
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok().body(formService.getFormListByVersion(masterVersionId).stream()
         .map(e -> FormDetailsShort.builder()
             .name(e.getName())
-            .title("<unknown>")
+            .title(e.getTitle())
             .created(e.getCreated())
             .updated(e.getUpdated())
             .build())

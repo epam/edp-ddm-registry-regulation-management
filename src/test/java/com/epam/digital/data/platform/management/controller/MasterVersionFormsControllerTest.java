@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,9 +45,10 @@ class MasterVersionFormsControllerTest {
   @Test
   @SneakyThrows
   void getFormsFromMaster() {
-    var fileResponse = FileResponse.builder()
+    var fileResponse = FormResponse.builder()
         .name("form1")
         .path("forms/form1.json")
+        .title("form")
         .status(FileStatus.CURRENT)
         .created(LocalDateTime.of(2022, 7, 29, 15, 6))
         .updated(LocalDateTime.of(2022, 7, 29, 15, 7))
@@ -59,7 +60,7 @@ class MasterVersionFormsControllerTest {
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
             jsonPath("$.[0].name", is("form1")),
-            jsonPath("$.[0].title", is("<unknown>")),
+            jsonPath("$.[0].title", is("form")),
             jsonPath("$.[0].created", is("2022-07-29T15:06:00.000Z")),
             jsonPath("$.[0].updated", is("2022-07-29T15:07:00.000Z")));
   }

@@ -10,8 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.impl.FormServiceImpl;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,9 +38,10 @@ class CandidateVersionFormsControllerTest {
   @Test
   @SneakyThrows
   void getFormsByVersionIdTest() {
-    var fileResponse = FileResponse
+    var fileResponse = FormResponse
         .builder()
         .name("formName")
+        .title("form")
         .path("/")
         .status(FileStatus.CHANGED)
         .created(LocalDateTime.of(2022, 7, 29, 18, 55))
@@ -53,7 +54,7 @@ class CandidateVersionFormsControllerTest {
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
             jsonPath("$.[0].name", is("formName")),
-            jsonPath("$.[0].title", is("<unknown>")),
+            jsonPath("$.[0].title", is("form")),
             jsonPath("$.[0].created", is("2022-07-29T18:55:00.000Z")),
             jsonPath("$.[0].updated", is("2022-07-29T18:56:00.000Z")));
   }
@@ -99,7 +100,7 @@ class CandidateVersionFormsControllerTest {
             status().isOk(),
             content().json(jsonForm));
 
-    Mockito.verify(formService).updateForm(jsonForm,"formName", "1");
+    Mockito.verify(formService).updateForm(jsonForm, "formName", "1");
   }
 
   @Test

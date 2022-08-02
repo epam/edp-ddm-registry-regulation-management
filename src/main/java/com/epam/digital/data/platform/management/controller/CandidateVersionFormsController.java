@@ -51,210 +51,210 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/versions/candidates/{versionCandidateId}/forms")
 public class CandidateVersionFormsController {
 
-    @Autowired
-    private FormService formService;
+  @Autowired
+  private FormService formService;
 
-    @Operation(summary = "Get forms list for specific version",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "200",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    array = @ArraySchema(schema = @Schema(implementation = FormDetailsShort.class)))),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @GetMapping
-    public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
-        @PathVariable String versionCandidateId) throws Exception {
-//todo need to parse json to get title
-      return ResponseEntity.ok()
-          .body(formService.getFormListByVersion(versionCandidateId).stream()
-              .filter(e -> !FileStatus.DELETED.equals(e.getStatus()))
-              .map(e -> FormDetailsShort.builder()
-                  .name(e.getName())
-                  .title("<unknown>")
-                  .created(e.getCreated())
-                  .updated(e.getUpdated())
-                  .build())
-              .collect(Collectors.toList()));
-    }
+  @Operation(summary = "Get forms list for specific version",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  array = @ArraySchema(schema = @Schema(implementation = FormDetailsShort.class)))),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @GetMapping
+  public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
+      @PathVariable String versionCandidateId) throws Exception {
+    return ResponseEntity.ok()
+        .body(formService.getFormListByVersion(versionCandidateId).stream()
+            .filter(e -> !FileStatus.DELETED.equals(e.getStatus()))
+            .map(e -> FormDetailsShort.builder()
+                .name(e.getName())
+                .title(e.getTitle())
+                .created(e.getCreated())
+                .updated(e.getUpdated())
+                .build())
+            .collect(Collectors.toList()));
+  }
 
-    @Operation(summary = "Create new form",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "201",
-                description = "Created",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "409",
-                description = "Conflict",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "422",
-                description = "Unprocessable Entity",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @PostMapping("/{formName}")
-    public ResponseEntity<String> formCreate(@RequestBody String form,
-        @PathVariable String versionCandidateId, @PathVariable String formName) throws Exception {
-        formService.createForm(formName, form, versionCandidateId);
-        return ResponseEntity.created(URI.create(
-                String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(form);
-    }
+  @Operation(summary = "Create new form",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "201",
+              description = "Created",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "409",
+              description = "Conflict",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/{formName}")
+  public ResponseEntity<String> formCreate(@RequestBody String form,
+      @PathVariable String versionCandidateId, @PathVariable String formName) throws Exception {
+    formService.createForm(formName, form, versionCandidateId);
+    return ResponseEntity.created(URI.create(
+            String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(form);
+  }
 
-    @Operation(summary = "Get form",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "200",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @GetMapping("/{formName}")
-    public ResponseEntity<String> getForm(@PathVariable String versionCandidateId,
-        @PathVariable String formName) throws Exception {
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(formService.getFormContent(formName, versionCandidateId));
-    }
+  @Operation(summary = "Get form",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @GetMapping("/{formName}")
+  public ResponseEntity<String> getForm(@PathVariable String versionCandidateId,
+      @PathVariable String formName) throws Exception {
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(formService.getFormContent(formName, versionCandidateId));
+  }
 
-    @Operation(summary = "Update form",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "200",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "422",
-                description = "Unprocessable Entity",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @PutMapping(value = "/{formName}")
-    public ResponseEntity<String> updateForm(@RequestBody String form,
-        @PathVariable String versionCandidateId,
-        @PathVariable String formName) throws Exception {
-        formService.updateForm(String.valueOf(form), formName, versionCandidateId);
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(form);
-    }
+  @Operation(summary = "Update form",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PutMapping(value = "/{formName}")
+  public ResponseEntity<String> updateForm(@RequestBody String form,
+      @PathVariable String versionCandidateId,
+      @PathVariable String formName) throws Exception {
+    formService.updateForm(String.valueOf(form), formName, versionCandidateId);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(form);
+  }
 
-    @Operation(summary = "Delete form",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "204",
-                description = "No Content",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @DeleteMapping("/{formName}")
-    public ResponseEntity<String> deleteForm(@PathVariable String versionCandidateId,
-        @PathVariable String formName) throws Exception {
-        formService.deleteForm(formName, versionCandidateId);
-        return ResponseEntity.noContent().build();
-    }
+  @Operation(summary = "Delete form",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "204",
+              description = "No Content",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @DeleteMapping("/{formName}")
+  public ResponseEntity<String> deleteForm(@PathVariable String versionCandidateId,
+      @PathVariable String formName) throws Exception {
+    formService.deleteForm(formName, versionCandidateId);
+    return ResponseEntity.noContent().build();
+  }
 
-    @Operation(summary = "Download form", parameters = {
-        @Parameter(in = ParameterIn.HEADER, name = "X-Access-Token", schema = @Schema(type = "string"))}, responses = {
-        @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-            schema = @Schema(implementation = DetailedErrorResponse.class))),
-        @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-            schema = @Schema(implementation = DetailedErrorResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-            schema = @Schema(implementation = DetailedErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-            schema = @Schema(implementation = DetailedErrorResponse.class)))})
-    @GetMapping("/{formName}/download")
-    public ResponseEntity<Resource> downloadForm(@PathVariable String versionCandidateId, @PathVariable String formName) throws Exception {
-        var formContent = formService.getFormContent(formName, versionCandidateId)
-            .getBytes(StandardCharsets.UTF_8);
+  @Operation(summary = "Download form", parameters = {
+      @Parameter(in = ParameterIn.HEADER, name = "X-Access-Token", schema = @Schema(type = "string"))}, responses = {
+      @ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          schema = @Schema(implementation = DetailedErrorResponse.class))),
+      @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          schema = @Schema(implementation = DetailedErrorResponse.class))),
+      @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          schema = @Schema(implementation = DetailedErrorResponse.class))),
+      @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+          schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @GetMapping("/{formName}/download")
+  public ResponseEntity<Resource> downloadForm(@PathVariable String versionCandidateId,
+      @PathVariable String formName) throws Exception {
+    var formContent = formService.getFormContent(formName, versionCandidateId)
+        .getBytes(StandardCharsets.UTF_8);
 
-        return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION,
-                String.format("attachment; filename=%s.json", formName))
-            .contentLength(formContent.length)
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .body(new ByteArrayResource(formContent));
-    }
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION,
+            String.format("attachment; filename=%s.json", formName))
+        .contentLength(formContent.length)
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(new ByteArrayResource(formContent));
+  }
 }
