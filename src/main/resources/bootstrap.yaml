@@ -31,11 +31,7 @@ spring:
       config:
         enabled: false
     vault:
-      uri: https://vault
-      authentication: KUBERNETES
-      kubernetes:
-        role: role
-        service-account-token-file: token
+      enabled: false
   config:
     activate:
       on-profile: local
