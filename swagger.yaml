@@ -31,21 +31,15 @@ paths:
         '200':
           description: OK
           content:
-            application/json:
-              schema:
-                type: string
+            application/json: {}
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -82,27 +76,21 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              type: string
         required: true
       responses:
-        '201':
+        '200':
           description: OK
           content:
-            '*/*':
-              schema:
-                type: string
+            application/json: {}
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -145,25 +133,21 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              type: string
         required: true
       responses:
         '201':
-          description: OK
+          description: Created
           content:
             application/json: {}
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -209,24 +193,18 @@ paths:
           schema:
             type: string
       responses:
-        '201':
-          description: OK
+        '204':
+          description: No Content
           content:
-            '*/*':
-              schema:
-                type: string
+            application/json: {}
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -258,19 +236,15 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Version'
+                  $ref: '#/components/schemas/VersionInfo'
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '500':
           description: Internal server error
           content:
@@ -294,24 +268,20 @@ paths:
               $ref: '#/components/schemas/CreateVersionRequest'
         required: true
       responses:
-        '200':
+        '201':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateVersionResponse'
+                $ref: '#/components/schemas/VersionInfoDetailed'
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '422':
           description: Unprocessable Entity
           content:
@@ -379,6 +349,38 @@ paths:
       responses:
         '200':
           description: OK
+  /versions/master:
+    get:
+      tags:
+        - Master version Rest API
+      summary: Get master version
+      operationId: getMasterVersionInfo
+      parameters:
+        - name: X-Access-Token
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasterVersionInfoDetailed'
+        '401':
+          description: Unauthorized
+          content:
+            application/json: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json: {}
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
   /versions/master/forms:
     get:
       tags:
@@ -398,19 +400,15 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ShortFormDetails'
+                  $ref: '#/components/schemas/FormDetailsShort'
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '500':
           description: Internal server error
           content:
@@ -443,15 +441,11 @@ paths:
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -488,53 +482,13 @@ paths:
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
-  /versions/master/:
-    get:
-      tags:
-        - Master version Rest API
-      summary: Get master version
-      operationId: getVersionDetails
-      parameters:
-        - name: X-Access-Token
-          in: header
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MasterVersionResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
-        '403':
-          description: Forbidden
           content:
             application/json:
               schema:
@@ -550,7 +504,7 @@ paths:
       tags:
         - Candidate version Rest API
       summary: Get version details by id
-      operationId: getVersionDetails_1
+      operationId: getVersionDetails
       parameters:
         - name: X-Access-Token
           in: header
@@ -567,19 +521,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersionDetailedResponse'
+                $ref: '#/components/schemas/VersionInfoDetailed'
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -616,19 +566,15 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ShortFormDetails'
+                  $ref: '#/components/schemas/FormDetailsShort'
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -670,15 +616,11 @@ paths:
         '401':
           description: Unauthorized
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '403':
           description: Forbidden
           content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DetailedErrorResponse'
+            application/json: {}
         '404':
           description: Not Found
           content:
@@ -718,11 +660,64 @@ components:
           type: string
         localizedMessage:
           type: string
-    CreateVersionResponse:
+    Inspection:
+      type: object
+      properties:
+        name:
+          type: string
+        inspector:
+          type: string
+        result:
+          type: string
+          enum:
+            - APPROVED
+            - REJECTED
+        resultDetails:
+          type: string
+    Validation:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - REGULATION_INTEGRITY
+            - TEST
+        result:
+          type: string
+          enum:
+            - APPROVED
+            - REJECTED
+        resultDetails:
+          type: string
+    VersionInfoDetailed:
       type: object
       properties:
         id:
           type: string
+        name:
+          type: string
+        description:
+          type: string
+        author:
+          type: string
+        creationDate:
+          type: string
+          format: date-time
+        latestUpdate:
+          type: string
+          format: date-time
+        hasConflicts:
+          type: boolean
+        inspections:
+          type: array
+          items:
+            $ref: '#/components/schemas/Inspection'
+        validations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Validation'
     CreateVersionRequest:
       type: object
       properties:
@@ -745,7 +740,29 @@ components:
         size:
           type: integer
           format: int64
-    ShortFormDetails:
+    MasterVersionInfoDetailed:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        author:
+          type: string
+        latestUpdate:
+          type: string
+          format: date-time
+        published:
+          type: boolean
+        inspector:
+          type: string
+        validations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Validation'
+    FormDetailsShort:
       type: object
       properties:
         name:
@@ -758,7 +775,7 @@ components:
         updated:
           type: string
           format: date-time
-    MasterVersionResponse:
+    VersionInfo:
       type: object
       properties:
         id:
@@ -767,85 +784,3 @@ components:
           type: string
         description:
           type: string
-        author:
-          type: string
-        latestUpdate:
-          type: string
-          format: date-time
-        published:
-          type: boolean
-        inspector:
-          type: string
-        validations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Validation'
-    Validation:
-      type: object
-      properties:
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - REGULATION_INTEGRITY
-            - TEST
-        result:
-          type: string
-          enum:
-            - APPROVED
-            - REJECTED
-        resultDetails:
-          type: string
-    Version:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-    Inspection:
-      type: object
-      properties:
-        name:
-          type: string
-        inspector:
-          type: string
-        result:
-          type: string
-          enum:
-            - APPROVED
-            - REJECTED
-        resultDetails:
-          type: string
-    VersionDetailedResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        author:
-          type: string
-        creationDate:
-          type: string
-          format: date-time
-        latestUpdate:
-          type: string
-          format: date-time
-        published:
-          type: boolean
-        hasConflicts:
-          type: boolean
-        inspections:
-          type: array
-          items:
-            $ref: '#/components/schemas/Inspection'
-        validations:
-          type: array
-          items:
-            $ref: '#/components/schemas/Validation'

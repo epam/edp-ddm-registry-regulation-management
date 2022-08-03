@@ -47,121 +47,115 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/versions/candidates")
 public class CandidateVersionController {
 
-    @Autowired
-    private VersionManagementService versionManagementService;
+  @Autowired
+  private VersionManagementService versionManagementService;
 
-    @Operation(summary = "Get versions list",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "200",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    array = @ArraySchema(schema = @Schema(implementation = VersionInfo.class)))),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-        })
-    @GetMapping
-    public ResponseEntity<List<VersionInfo>> getVersionsList() throws Exception {
-        return ResponseEntity.ok(
-            versionManagementService.getVersionsList()
-                .stream().map(c -> VersionInfo.builder()
-                    .id(String.valueOf(c.getNumber()))
-                    .name(c.getSubject())
-                    .description(c.getDescription())
-                    .build())
-                .collect(Collectors.toList())
-        );
-    }
+  @Operation(summary = "Get versions list",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  array = @ArraySchema(schema = @Schema(implementation = VersionInfo.class)))),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+      })
+  @GetMapping
+  public ResponseEntity<List<VersionInfo>> getVersionsList() throws Exception {
+    return ResponseEntity.ok(
+        versionManagementService.getVersionsList()
+            .stream().map(c -> VersionInfo.builder()
+                .id(String.valueOf(c.getNumber()))
+                .name(c.getSubject())
+                .description(c.getDescription())
+                .build())
+            .collect(Collectors.toList())
+    );
+  }
 
-    @Operation(summary = "Create new version",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "201",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = VersionInfoDetailed.class))),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "422",
-                description = "Unprocessable Entity",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))
-        })
-    @PostMapping
-    public ResponseEntity<VersionInfoDetailed> createNewVersion(
-        @RequestBody CreateVersionRequest requestDto) throws Exception {
-        var versionId = versionManagementService.createNewVersion(requestDto);
-        var changeInfo = versionManagementService.getVersionDetails(versionId);
-        return ResponseEntity.created(URI.create("/versions/candidates/" + versionId))
-            .body(mapToVersionInfoDetailed(changeInfo));
-    }
+  @Operation(summary = "Create new version",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "201",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = VersionInfoDetailed.class))),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))
+      })
+  @PostMapping
+  public ResponseEntity<VersionInfoDetailed> createNewVersion(
+      @RequestBody CreateVersionRequest requestDto) throws Exception {
+    var versionId = versionManagementService.createNewVersion(requestDto);
+    var changeInfo = versionManagementService.getVersionDetails(versionId);
+    return ResponseEntity.created(URI.create("/versions/candidates/" + versionId))
+        .body(mapToVersionInfoDetailed(changeInfo));
+  }
 
-    @Operation(summary = "Get version details by id",
-        parameters = @Parameter(in = ParameterIn.HEADER,
-            name = "X-Access-Token",
-            schema = @Schema(type = "string")),
-        responses = {
-            @ApiResponse(responseCode = "200",
-                description = "OK",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = VersionInfoDetailed.class))),
-            @ApiResponse(responseCode = "401",
-                description = "Unauthorized",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "403",
-                description = "Forbidden",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "404",
-                description = "Not Found",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class))),
-            @ApiResponse(responseCode = "500",
-                description = "Internal server error",
-                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                    schema = @Schema(implementation = DetailedErrorResponse.class)))
-        })
-    @GetMapping("/{versionCandidateId}")
-    public ResponseEntity<VersionInfoDetailed> getVersionDetails(
-        @PathVariable String versionCandidateId) throws Exception {
-        ChangeInfo changeInfo = versionManagementService.getVersionDetails(versionCandidateId);
-        return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfo));
-    }
+  @Operation(summary = "Get version details by id",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = VersionInfoDetailed.class))),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))
+      })
+  @GetMapping("/{versionCandidateId}")
+  public ResponseEntity<VersionInfoDetailed> getVersionDetails(
+      @PathVariable String versionCandidateId) throws Exception {
+    ChangeInfo changeInfo = versionManagementService.getVersionDetails(versionCandidateId);
+    return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfo));
+  }
 
-    private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfo changeInfo) {
-        return VersionInfoDetailed.builder()
-            .id(String.valueOf(changeInfo.getNumber()))
-            .author(changeInfo.getOwner())
-            .creationDate(changeInfo.getCreated())
-            .description(changeInfo.getDescription())
-            .hasConflicts(Boolean.FALSE.equals(changeInfo.getMergeable()))
-            .latestUpdate(changeInfo.getUpdated())
-            .name(changeInfo.getSubject())
-            .build();
-    }
+  private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfo changeInfo) {
+    return VersionInfoDetailed.builder()
+        .id(String.valueOf(changeInfo.getNumber()))
+        .author(changeInfo.getOwner())
+        .creationDate(changeInfo.getCreated())
+        .description(changeInfo.getDescription())
+        .hasConflicts(Boolean.FALSE.equals(changeInfo.getMergeable()))
+        .latestUpdate(changeInfo.getUpdated())
+        .name(changeInfo.getSubject())
+        .build();
+  }
 }
