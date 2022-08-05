@@ -1,5 +1,6 @@
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -63,6 +65,16 @@ class FormServiceTest {
   @SneakyThrows
   void createFormTestNoErrorTest() {
     formService.createForm("form", "content", "version");
+  }
+
+  @Test
+  @SneakyThrows
+  void createFormConflictTest() {
+    String formPath = "forms/formName.json";
+    Mockito.when(repositoryFactory.getRepoByVersion("version")).thenReturn(repository);
+    Mockito.when(repository.isFileExists(formPath)).thenReturn(true);
+    assertThatThrownBy(()-> formService.createForm("formName", "content", "version"))
+        .isInstanceOf(FormAlreadyExistsException.class);
   }
 
   @Test

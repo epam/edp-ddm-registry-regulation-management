@@ -39,6 +39,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
   public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
+  public static final String FORM_ALREADY_EXISTS_EXCEPTION = "FORM_ALREADY_EXISTS_EXCEPTION";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
@@ -61,7 +62,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   @ExceptionHandler(FileLoadProcessingException.class)
   public ResponseEntity<DetailedErrorResponse> handleFileLoadProcessingException(
-          FileLoadProcessingException exception) {
+      FileLoadProcessingException exception) {
     log.error("Error during upload to Ceph", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(newDetailedResponse(IMPORT_CEPH_ERROR, exception));
@@ -69,10 +70,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   @ExceptionHandler(GetProcessingException.class)
   public ResponseEntity<DetailedErrorResponse> handleGetProcessingException(
-          GetProcessingException exception) {
+      GetProcessingException exception) {
     log.error("Error during getting from Ceph", exception);
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(newDetailedResponse(GET_CEPH_ERROR, exception));
+        .body(newDetailedResponse(GET_CEPH_ERROR, exception));
   }
 
   @ExceptionHandler(AccessDeniedException.class)
@@ -85,50 +86,58 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   @ExceptionHandler(MaxUploadSizeExceededException.class)
   public ResponseEntity<DetailedErrorResponse> handleMaxUploadSizeExceededException(
-          MaxUploadSizeExceededException exception) {
+      MaxUploadSizeExceededException exception) {
     log.error("File is to large", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(FILE_SIZE_ERROR, exception));
+        .body(newDetailedResponse(FILE_SIZE_ERROR, exception));
   }
 
   @ExceptionHandler(CephInvocationException.class)
   public ResponseEntity<DetailedErrorResponse> handleCephInvocationException(
-          CephInvocationException exception) {
+      CephInvocationException exception) {
     log.error("Ceph invocation exception", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(newDetailedResponse(RUNTIME_ERROR, exception));
+        .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
   @ExceptionHandler(OpenShiftInvocationException.class)
   public ResponseEntity<DetailedErrorResponse> handleOpenShiftInvocationException(
-          OpenShiftInvocationException exception) {
+      OpenShiftInvocationException exception) {
     log.error("Open-shift invocation exception", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(newDetailedResponse(RUNTIME_ERROR, exception));
+        .body(newDetailedResponse(RUNTIME_ERROR, exception));
   }
 
   @ExceptionHandler(JwtParsingException.class)
   public ResponseEntity<DetailedErrorResponse> handleJwtParsingException(
-          JwtParsingException exception) {
+      JwtParsingException exception) {
     log.error("Jwt parsing exception", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(JWT_PARSING_ERROR, exception));
+        .body(newDetailedResponse(JWT_PARSING_ERROR, exception));
   }
 
   @ExceptionHandler(FileEncodingException.class)
   public ResponseEntity<DetailedErrorResponse> handleFileEncodingException(
-          FileEncodingException exception) {
+      FileEncodingException exception) {
     log.error("File encoding exception", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(FILE_ENCODING_EXCEPTION, exception));
+        .body(newDetailedResponse(FILE_ENCODING_EXCEPTION, exception));
   }
 
   @ExceptionHandler(FileExtensionException.class)
   public ResponseEntity<DetailedErrorResponse> handleFileExtensionException(
-          FileExtensionException exception) {
+      FileExtensionException exception) {
     log.error("File extension exception", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(newDetailedResponse(FILE_EXTENSION_ERROR, exception));
+        .body(newDetailedResponse(FILE_EXTENSION_ERROR, exception));
+  }
+
+  @ExceptionHandler(FormAlreadyExistsException.class)
+  public ResponseEntity<DetailedErrorResponse> handleFormAlreadyExistsException(
+      FormAlreadyExistsException exception) {
+    log.error("Form already exists exception", exception);
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(newDetailedResponse(FORM_ALREADY_EXISTS_EXCEPTION, exception));
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

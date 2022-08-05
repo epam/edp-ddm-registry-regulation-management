@@ -1,5 +1,6 @@
 package com.epam.digital.data.platform.management.service.impl;
 
+import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
@@ -46,7 +47,11 @@ public class FormServiceImpl implements FormService {
   @Override
   public void createForm(String formName, String content, String versionName) throws Exception {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-    repo.writeFile(getFormPath(formName), content);
+    String formPath = getFormPath(formName);
+    if(repo.isFileExists(formPath)) {
+      throw new FormAlreadyExistsException(String.format("Form with path '%s' already exists", formPath));
+    }
+    repo.writeFile(formPath, content);
   }
 
   @Override
