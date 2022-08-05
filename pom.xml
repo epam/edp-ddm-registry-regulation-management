@@ -37,8 +37,7 @@
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
     <json-path.version>2.6.0</json-path.version>
-    <assertj.version>3.4.1</assertj.version>
-        <sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
       **/config/**/*,
@@ -138,11 +137,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
@@ -190,18 +184,12 @@
       <version>${apache-encoding-detector.version}</version>
     </dependency>
 
-  <dependency>
-          <groupId>com.jayway.jsonpath</groupId>
-          <artifactId>json-path</artifactId>
-          <version>${json-path.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    <dependency>
+      <groupId>com.jayway.jsonpath</groupId>
+      <artifactId>json-path</artifactId>
+      <version>${json-path.version}</version>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
