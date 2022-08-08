@@ -37,8 +37,8 @@ public class GerritApiMock {
   @SneakyThrows
   public void mockGetLastMergedQuery(@Nullable ChangeInfo changeInfo) {
     var query = Mockito.mock(QueryRequest.class);
-    var queryString = String.format("project:%s+status:merged",
-        gerritPropertiesConfig.getRepository());
+    var queryString = String.format("project:%s+status:merged+owner:%s",
+        gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
     Mockito.when(changes.query(queryString)).thenReturn(query);
     Mockito.when(query.withLimit(1)).thenReturn(query);
     if (Objects.isNull(changeInfo)) {
