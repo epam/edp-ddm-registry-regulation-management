@@ -60,6 +60,8 @@ spec:
             - mountPath: /app/secrets/userimportceph
               name: {{ .Chart.Name }}-user-import-ceph-credentials
               readOnly: true
+            - mountPath: /var/lib/repos-data
+              name: repositories-data
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:
@@ -89,6 +91,9 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
       volumes:
+        - name: repositories-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.registryRegulationManagement.volume.claimName }}
         - name: config
           configMap:
             name: registry-regulation-management-properties

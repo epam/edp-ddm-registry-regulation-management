@@ -2,6 +2,11 @@ name: registry-regulation-management
 
 version: 1.1.0
 
+registryRegulationManagement:
+  volume:
+    claimName: registry-regulation-management-pvc
+    size: 5Gi
+
 port: 8080
 
 service:
