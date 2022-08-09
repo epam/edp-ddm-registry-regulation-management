@@ -1,10 +1,16 @@
 package com.epam.digital.data.platform.management.service;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.impl.FormServiceImpl;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,13 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(MockitoExtension.class)
 class FormServiceTest {
@@ -47,6 +46,7 @@ class FormServiceTest {
   @SneakyThrows
   private void beforeEach() {
     forms.add(FileResponse.builder().name("form").status(FileStatus.NEW).build());
+    forms.add(FileResponse.builder().name("form1").status(FileStatus.DELETED).build());
     Mockito.when(repositoryFactory.getRepoByVersion(any())).thenReturn(repository);
   }
 

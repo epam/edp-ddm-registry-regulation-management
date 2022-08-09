@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PushCommand;
@@ -46,23 +47,18 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class JGitServiceImpl implements JGitService {
 
   private static final String ORIGIN = "origin";
   private static final String REPOSITORY_DOES_NOT_EXIST = "Repository does not exist";
 
-  @Autowired
-  private GerritPropertiesConfig gerritPropertiesConfig;
-
-  @Autowired
-  private RequestToFileConverter requestToFileConverter;
-
-  @Autowired
-  private JGitWrapper jGitWrapper;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final RequestToFileConverter requestToFileConverter;
+  private final JGitWrapper jGitWrapper;
 
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
@@ -71,19 +67,19 @@ public class JGitServiceImpl implements JGitService {
     File directory = getRepositoryDir(versionName);
     if (directory.exists()) {
       pull(versionName);
-    } else {
-      Lock lock = getLock(versionName);
-      lock.lock();
-      try {
-        jGitWrapper.cloneRepository()
-            .setURI(
-                gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository())
-            .setCredentialsProvider(getCredentialsProvider())
-            .setDirectory(directory)
-            .setCloneAllBranches(true).call();
-      } finally {
-        lock.unlock();
-      }
+      return;
+    }
+    Lock lock = getLock(versionName);
+    lock.lock();
+    try {
+      jGitWrapper.cloneRepository()
+          .setURI(getRepositoryUrl())
+          .setCredentialsProvider(getCredentialsProvider())
+          .setDirectory(directory)
+          .setCloneAllBranches(true)
+          .call();
+    } finally {
+      lock.unlock();
     }
   }
 
@@ -101,6 +97,34 @@ public class JGitServiceImpl implements JGitService {
     } finally {
       lock.unlock();
     }
+  }
+
+  @Override
+  public void fetch(String versionName, ChangeInfoDto changeInfoDto) throws Exception {
+    var repositoryDirectory = getRepositoryDir(versionName);
+    if (!repositoryDirectory.exists()) {
+      return;
+    }
+    Lock lock = getLock(versionName);
+    lock.lock();
+    try (Git git = jGitWrapper.open(repositoryDirectory)) {
+      fetch(git, changeInfoDto);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Fetch method that needs opened {@link Git}
+   */
+  private void fetch(Git git, ChangeInfoDto changeInfoDto) throws GitAPIException {
+    git.fetch()
+        .setCredentialsProvider(getCredentialsProvider())
+        .setRefSpecs(changeInfoDto.getRefs())
+        .call();
+    git.checkout()
+        .setName("FETCH_HEAD")
+        .call();
   }
 
   @Override
@@ -180,9 +204,7 @@ public class JGitServiceImpl implements JGitService {
     Lock lock = getLock(requestDto.getVersionName());
     lock.lock();
     try (Git git = jGitWrapper.open(repositoryFile)) {
-      git.fetch().setCredentialsProvider(getCredentialsProvider())
-          .setRefSpecs(changeInfoDto.getRefs()).call();
-      git.checkout().setName("FETCH_HEAD").call();
+      fetch(git, changeInfoDto);
       File file = requestToFileConverter.convert(requestDto);
       if (file != null) {
         return doAmend(file, changeInfoDto, git);
@@ -203,9 +225,7 @@ public class JGitServiceImpl implements JGitService {
     Lock lock = getLock(changeInfoDto.getNumber());
     lock.lock();
     try (Git git = jGitWrapper.open(repositoryFile)) {
-      git.fetch().setCredentialsProvider(getCredentialsProvider())
-          .setRefSpecs(changeInfoDto.getRefs()).call();
-      git.checkout().setName("FETCH_HEAD").call();
+      fetch(git, changeInfoDto);
 
       var repoDir = FilenameUtils.normalizeNoEndSeparator(
           gerritPropertiesConfig.getRepositoryDirectory());
@@ -243,7 +263,6 @@ public class JGitServiceImpl implements JGitService {
         FilenameUtils.normalizeNoEndSeparator(repoDir), FilenameUtils.getName(versionName));
   }
 
-
   private Lock getLock(String versionName) {
     return lockMap.computeIfAbsent(versionName, s -> new ReentrantLock());
   }
@@ -269,9 +288,9 @@ public class JGitServiceImpl implements JGitService {
 
   private void pushChanges(Git git) throws URISyntaxException, GitAPIException {
     RemoteAddCommand addCommand = git.remoteAdd();
-    addCommand.setUri(new URIish(
-        gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository()).setUser(
-        gerritPropertiesConfig.getUser()).setPass(gerritPropertiesConfig.getPassword()));
+    addCommand.setUri(new URIish(getRepositoryUrl())
+        .setUser(gerritPropertiesConfig.getUser())
+        .setPass(gerritPropertiesConfig.getPassword()));
     addCommand.setName(ORIGIN);
     addCommand.call();
     PushCommand push = git.push();
@@ -279,5 +298,9 @@ public class JGitServiceImpl implements JGitService {
     push.setRemote(ORIGIN);
     push.setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
     push.call();
+  }
+
+  private String getRepositoryUrl() {
+    return gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository();
   }
 }

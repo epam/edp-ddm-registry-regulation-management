@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
@@ -35,6 +36,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -140,6 +142,42 @@ class JGitServiceTest {
     Mockito.when(checkoutCommand.setName(any())).thenReturn(checkoutCommand);
 
     jGitService.pull("version");
+    Mockito.verify(jGitWrapper, never()).open(file);
+  }
+
+  @Test
+  @SneakyThrows
+  void testFetch() {
+    File file = new File(tempDir, "version");
+    file.createNewFile();
+    var changeInfoDto = new ChangeInfoDto();
+    changeInfoDto.setRefs("refs for fetch");
+
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
+    Mockito.when(git.fetch()).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs("refs for fetch")).thenReturn(fetchCommand);
+    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
+    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("pass");
+    Mockito.when(fetchCommand.setCredentialsProvider(
+            refEq(new UsernamePasswordCredentialsProvider("user", "pass"))))
+        .thenReturn(fetchCommand);
+    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
+    Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
+
+    jGitService.fetch("version", changeInfoDto);
+
+    Mockito.verify(fetchCommand).call();
+    Mockito.verify(checkoutCommand).call();
+  }
+
+  @Test
+  @SneakyThrows
+  void testFetchDirectoryNotExist() {
+    var file = new File("/");
+
+    jGitService.fetch("version", null);
+
     Mockito.verify(jGitWrapper, never()).open(file);
   }
 

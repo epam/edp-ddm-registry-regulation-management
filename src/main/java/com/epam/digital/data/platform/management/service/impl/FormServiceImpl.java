@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
@@ -31,6 +32,9 @@ public class FormServiceImpl implements FormService {
     List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormResponse> forms = new ArrayList<>();
     for (FileResponse fileResponse : fileList) {
+      if (FileStatus.DELETED.equals(fileResponse.getStatus())) {
+        continue;
+      }
       String formContent = repo.readFile(getFormPath(fileResponse.getName()));
       forms.add(FormResponse.builder()
           .name(fileResponse.getName())
