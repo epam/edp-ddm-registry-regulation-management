@@ -13,6 +13,10 @@ spring:
 server:
   port: 7070
 
+platform:
+  security:
+    enabled: false
+
 user-import-ceph:
   http-endpoint: http://localhost:4566
   access-key: access-key

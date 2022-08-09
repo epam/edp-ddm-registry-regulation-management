@@ -62,6 +62,9 @@ spec:
               readOnly: true
             - mountPath: /var/lib/repos-data
               name: repositories-data
+            - mountPath: /app/secrets/gerritcreds
+              name: {{ .Chart.Name }}-gerrit-credentials
+              readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:
@@ -105,3 +108,11 @@ spec:
                 path: user-import-ceph.access-key
               - key: AWS_SECRET_ACCESS_KEY
                 path: user-import-ceph.secret-key
+        - name: {{ .Chart.Name }}-gerrit-credentials
+          secret:
+            secretName: {{ .Values.gerrit.secret }}
+            items:
+              - key: user
+                path: gerrit.user
+              - key: password
+                path: gerrit.password

@@ -68,3 +68,10 @@ serviceAccount:
 vault:
   key: registry-regulation-management-encryption-key
   encryptionRole: registry-regulation-management-encryption-only-role
+
+gerrit:
+  secret: gerrit-admin-password
+  url: https://gerrit
+  repository: registry-regulations
+  headBranch: master
+  repositoryDirectory: /repositories
