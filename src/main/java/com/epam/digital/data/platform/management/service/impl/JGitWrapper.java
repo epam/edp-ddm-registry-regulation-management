@@ -24,8 +24,8 @@ public class JGitWrapper {
         return Git.cloneRepository();
     }
 
-    public RevTree getRevTree(Repository repository, String headBranch) throws IOException {
-        ObjectId lastCommitId = repository.resolve("refs/heads/" + headBranch);
+    public RevTree getRevTree(Repository repository) throws IOException {
+        ObjectId lastCommitId = repository.resolve("HEAD");
         RevWalk revWalk = new RevWalk(repository);
         return revWalk.parseCommit(lastCommitId).getTree();
     }

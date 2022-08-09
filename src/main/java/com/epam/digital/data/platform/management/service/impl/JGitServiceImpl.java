@@ -137,8 +137,7 @@ public class JGitServiceImpl implements JGitService {
     Lock lock = getLock(versionName);
     lock.lock();
     try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
-      RevTree tree = jGitWrapper.getRevTree(repository,
-          gerritPropertiesConfig.getHeadBranch());
+      RevTree tree = jGitWrapper.getRevTree(repository);
       if (path != null && !path.isEmpty()) {
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
           try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
@@ -175,8 +174,7 @@ public class JGitServiceImpl implements JGitService {
     lock.lock();
     try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
       if (filePath != null && !filePath.isEmpty()) {
-        RevTree tree = jGitWrapper.getRevTree(repository,
-            gerritPropertiesConfig.getHeadBranch());
+        RevTree tree = jGitWrapper.getRevTree(repository);
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
           treeWalk.addTree(tree);
           treeWalk.setRecursive(true);

@@ -263,7 +263,7 @@ class JGitServiceSyncTest {
     when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
 
     RevTree tree = mock(RevTree.class);
-    when(jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch()))
+    when(jGitWrapper.getRevTree(repository))
         .thenAnswer(new Answer<RevTree>() {
           @Override
           public synchronized RevTree answer(InvocationOnMock invocation) throws Throwable {
@@ -356,7 +356,7 @@ class JGitServiceSyncTest {
     when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
 
     RevTree tree = mock(RevTree.class);
-    when(jGitWrapper.getRevTree(repository, gerritPropertiesConfig.getHeadBranch()))
+    when(jGitWrapper.getRevTree(repository))
         .thenAnswer(new Answer<RevTree>() {
           @Override
           public synchronized RevTree answer(InvocationOnMock invocation) throws Throwable {

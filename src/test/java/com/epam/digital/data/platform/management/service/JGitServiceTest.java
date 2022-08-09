@@ -190,7 +190,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository, "/", revTree)).thenReturn(treeWalk);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
@@ -210,7 +210,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
     Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
@@ -299,7 +299,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(false);
     String version = jGitService.getFileContent("version", "/forms");
