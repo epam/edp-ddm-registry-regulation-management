@@ -106,7 +106,7 @@ public class VersionedFileRepositoryTest {
     Assertions.assertEquals(FileStatus.DELETED, getFileStatusByName(fileList, "file2"));
     Assertions.assertEquals(FileStatus.CHANGED, getFileStatusByName(fileList, "file3"));
     Assertions.assertEquals(FileStatus.NEW, getFileStatusByName(fileList, "file12"));
-    Assertions.assertEquals(FileStatus.NEW, getFileStatusByName(fileList, "file14"));
+    Assertions.assertEquals(FileStatus.CHANGED, getFileStatusByName(fileList, "file14"));
   }
 
   private FileStatus getFileStatusByName(List<FileResponse> files, String name) {

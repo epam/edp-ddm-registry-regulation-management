@@ -67,8 +67,8 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
         if (filesResponseDto == null) {
           filesInMaster.put(FilenameUtils.getBaseName(key), FileResponse.builder()
               .name(FilenameUtils.getBaseName(key))
-              .status(FileStatus.NEW)
-              .created(toUTCLocalDateTime(ci.created))
+              .status(getStatus(value))
+//              .created(toUTCLocalDateTime(ci.created))
               .updated(toUTCLocalDateTime(ci.updated))
               .build());
         } else {
