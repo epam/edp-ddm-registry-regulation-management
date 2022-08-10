@@ -17,28 +17,30 @@ package com.epam.digital.data.platform.management.model.dto;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
-public class ChangeInfo {
+@ToString
+@EqualsAndHashCode
+public class ChangeInfoDetailedDto {
 
-    private String subject;
-    private String description;
-    private LocalDateTime created;
-    private LocalDateTime updated;
-    private LocalDateTime submitted;
-    private String changeId;
-    private String id;
-    private int number;
-    private String project;
-    private String branch;
-    private String owner;
-    private Boolean mergeable;
-    private Map<String, Boolean> labels;
+  private String subject;
+  private String description;
+  private LocalDateTime created;
+  private LocalDateTime updated;
+  private LocalDateTime submitted;
+  private String changeId;
+  private String id;
+  private int number;
+  private String project;
+  private String branch;
+  private String owner;
+  private Boolean mergeable;
+  private Map<String, Boolean> labels;
 }

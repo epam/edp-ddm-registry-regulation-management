@@ -1,6 +1,6 @@
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
@@ -12,11 +12,11 @@ public interface VersionManagementService {
     /**
      * Get versions list
      */
-    List<ChangeInfo> getVersionsList() throws RestApiException;
+    List<ChangeInfoDetailedDto> getVersionsList() throws RestApiException;
 
 
     @Nullable
-    ChangeInfo getMasterInfo() throws RestApiException;
+    ChangeInfoDetailedDto getMasterInfo() throws RestApiException;
 
     /**
      * Details of head master
@@ -33,7 +33,7 @@ public interface VersionManagementService {
      */
     String createNewVersion(CreateVersionRequest subject) throws RestApiException;
 
-    ChangeInfo getVersionDetails(String versionName) throws RestApiException;
+    ChangeInfoDetailedDto getVersionDetails(String versionName) throws RestApiException;
 
 //    /**
 //     * Mark reviewed the version

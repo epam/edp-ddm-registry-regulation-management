@@ -10,12 +10,12 @@ import org.opentest4j.AssertionFailedError;
 class Counter {
 
   private String threadName;
-  private int steps;
+  private final int steps;
   private int curStep;
 
   private int completedIterations = 0;
 
-  private List<AssertionFailedError> errorList;
+  private final List<AssertionFailedError> errorList;
 
   public Counter(int steps) {
     this.steps = steps;

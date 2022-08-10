@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
 import java.time.LocalDateTime;
 import lombok.SneakyThrows;
@@ -32,7 +32,7 @@ class MasterVersionControllerTest {
   @Test
   @SneakyThrows
   void getMaster() {
-    var expectedChangeInfo = ChangeInfo.builder()
+    var expectedChangeInfo = ChangeInfoDetailedDto.builder()
         .number(1)
         .owner("owner@epam.com")
         .description("description")

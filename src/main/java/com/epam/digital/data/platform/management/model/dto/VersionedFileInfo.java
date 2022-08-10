@@ -15,15 +15,17 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
 public class VersionedFileInfo {
   private String name;
   private String status;

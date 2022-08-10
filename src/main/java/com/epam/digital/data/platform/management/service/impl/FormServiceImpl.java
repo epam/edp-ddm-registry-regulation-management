@@ -10,21 +10,19 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.jayway.jsonpath.JsonPath;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class FormServiceImpl implements FormService {
 
   private static final String DIRECTORY_PATH = "forms";
   private static final String JSON_FILE_EXTENSION = "json";
   public static final String FORM_TITLE_PATH = "$.title";
 
-  @Autowired
-  private VersionedFileRepositoryFactory repoFactory;
+  private final VersionedFileRepositoryFactory repoFactory;
 
   @Override
   public List<FormResponse> getFormListByVersion(String versionName) throws Exception {

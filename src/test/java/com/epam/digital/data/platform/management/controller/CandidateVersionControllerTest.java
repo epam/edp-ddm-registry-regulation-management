@@ -9,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +40,7 @@ class CandidateVersionControllerTest {
   @Test
   @SneakyThrows
   void getVersionListTest() {
-    var changeInfo = ChangeInfo.builder()
+    var changeInfo = ChangeInfoDetailedDto.builder()
         .number(1)
         .subject("subject")
         .description("description")
@@ -64,7 +64,7 @@ class CandidateVersionControllerTest {
     request.setDescription("description");
     Mockito.when(service.createNewVersion(request)).thenReturn("1");
 
-    var expectedVersionDetails = ChangeInfo.builder()
+    var expectedVersionDetails = ChangeInfoDetailedDto.builder()
         .number(1)
         .subject("versionName")
         .description("description")
@@ -96,7 +96,7 @@ class CandidateVersionControllerTest {
   @Test
   @SneakyThrows
   void getVersionDetailsTest() {
-    var expectedVersionDetails = ChangeInfo.builder()
+    var expectedVersionDetails = ChangeInfoDetailedDto.builder()
         .number(1)
         .subject("versionName")
         .description("description")
