@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,10 +36,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Master version Rest API")
 @RestController
 @RequestMapping("/versions/master")
+@RequiredArgsConstructor
 public class MasterVersionController {
 
-  @Autowired
-  private VersionManagementService versionManagementService;
+  private final VersionManagementService versionManagementService;
 
   @Operation(summary = "Get master version",
       parameters = @Parameter(in = ParameterIn.HEADER,

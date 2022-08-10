@@ -27,19 +27,20 @@ import org.springframework.test.web.servlet.MockMvc;
 @ControllerTest(CandidateVersionFormsController.class)
 class CandidateVersionFormsControllerTest {
 
+  static final String CANDIDATE_VERSION_ID = "1";
   static final String BASE_URL = "/versions/candidates/1/forms";
-
-  @MockBean
-  FormServiceImpl formService;
+  static final String FORM_CONTENT = "{\"name\":\"form1\",\"title\":\"form title\"}";
 
   @Autowired
   MockMvc mockMvc;
 
+  @MockBean
+  FormServiceImpl formService;
+
   @Test
   @SneakyThrows
   void getFormsByVersionIdTest() {
-    var fileResponse = FormResponse
-        .builder()
+    var fileResponse = FormResponse.builder()
         .name("formName")
         .title("form")
         .path("/")
@@ -47,7 +48,8 @@ class CandidateVersionFormsControllerTest {
         .created(LocalDateTime.of(2022, 7, 29, 18, 55))
         .updated(LocalDateTime.of(2022, 7, 29, 18, 56))
         .build();
-    Mockito.when(formService.getFormListByVersion("1")).thenReturn(List.of(fileResponse));
+    Mockito.when(formService.getFormListByVersion(CANDIDATE_VERSION_ID))
+        .thenReturn(List.of(fileResponse));
 
     mockMvc.perform(get(BASE_URL))
         .andExpectAll(
@@ -62,45 +64,41 @@ class CandidateVersionFormsControllerTest {
   @Test
   @SneakyThrows
   void formCreateTest() {
-    String jsonForm = "{\"form\":{\"name\":\"formName\"}}";
-
     mockMvc.perform(post(BASE_URL + "/formName")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(jsonForm))
+            .content(FORM_CONTENT))
         .andExpectAll(
             status().isCreated(),
             header().string(HttpHeaders.LOCATION, "/versions/candidates/1/forms/formName"),
             content().contentType(MediaType.APPLICATION_JSON),
-            content().json(jsonForm));
+            content().json(FORM_CONTENT));
 
-    Mockito.verify(formService).createForm("formName", jsonForm, "1");
+    Mockito.verify(formService).createForm("formName", FORM_CONTENT, CANDIDATE_VERSION_ID);
   }
 
   @Test
   @SneakyThrows
   void getFormTest() {
-    String formContent = "{\"form\":{\"name\":\"formName\"}}";
-    Mockito.when(formService.getFormContent("formName", "1")).thenReturn(formContent);
+    Mockito.when(formService.getFormContent("formName", CANDIDATE_VERSION_ID))
+        .thenReturn(FORM_CONTENT);
 
     mockMvc.perform(get(BASE_URL + "/formName"))
         .andExpectAll(
             status().isOk(),
-            content().json(formContent));
+            content().json(FORM_CONTENT));
   }
 
   @Test
   @SneakyThrows
   void updateFormTest() {
-    String jsonForm = "{\"form\":{\"name\":\"formName\"}}";
-
     mockMvc.perform(put(BASE_URL + "/formName")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(jsonForm))
+            .content(FORM_CONTENT))
         .andExpectAll(
             status().isOk(),
-            content().json(jsonForm));
+            content().json(FORM_CONTENT));
 
-    Mockito.verify(formService).updateForm(jsonForm, "formName", "1");
+    Mockito.verify(formService).updateForm(FORM_CONTENT, "formName", CANDIDATE_VERSION_ID);
   }
 
   @Test
@@ -108,23 +106,7 @@ class CandidateVersionFormsControllerTest {
   void deleteFormTest() {
     mockMvc.perform(delete(BASE_URL + "/formName"))
         .andExpect(status().isNoContent());
-    Mockito.verify(formService).deleteForm("formName", "1");
-  }
 
-  @Test
-  @SneakyThrows
-  void downloadFormTest() {
-    String jsonForm = "{\"form\":{\"name\":\"formName\"}}";
-
-    Mockito.when(formService.getFormContent("formName", "1")).thenReturn(jsonForm);
-
-    mockMvc.perform(get(BASE_URL + "/formName/download"))
-        .andExpectAll(
-            status().isOk(),
-            header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=formName.json"),
-            content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE),
-            content().json(jsonForm));
-
-    Mockito.verify(formService).getFormContent("formName", "1");
+    Mockito.verify(formService).deleteForm("formName", CANDIDATE_VERSION_ID);
   }
 }

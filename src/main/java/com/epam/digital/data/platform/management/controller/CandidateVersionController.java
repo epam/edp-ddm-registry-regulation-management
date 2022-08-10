@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,10 +45,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Candidate version Rest API")
 @RestController
 @RequestMapping("/versions/candidates")
+@RequiredArgsConstructor
 public class CandidateVersionController {
 
-  @Autowired
-  private VersionManagementService versionManagementService;
+  private final VersionManagementService versionManagementService;
 
   @Operation(summary = "Get versions list",
       parameters = @Parameter(in = ParameterIn.HEADER,
