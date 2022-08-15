@@ -52,6 +52,5 @@ public abstract class BaseIT {
     FileUtils.deleteDirectory(tempRepoDirectory);
     Assertions.assertTrue(tempRepoDirectory.mkdirs());
 
-    Mockito.verify(jGitWrapperMock.getCloneCommand()).call();
   }
 }
