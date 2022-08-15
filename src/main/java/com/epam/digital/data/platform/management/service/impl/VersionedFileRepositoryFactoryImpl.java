@@ -29,11 +29,6 @@ public class VersionedFileRepositoryFactoryImpl implements VersionedFileReposito
 
     private final Map<String, VersionedFileRepository> repositoryMap = new HashMap<>();
 
-    @PostConstruct
-    public void init() throws Exception {
-        getRepoByVersion(config.getHeadBranch());
-    }
-
     @Override
     public VersionedFileRepository getRepoByVersion(String versionName) throws Exception {
         VersionedFileRepository repo = null;
