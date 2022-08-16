@@ -71,7 +71,7 @@ vault:
 
 gerrit:
   secret: gerrit-admin-password
-  url: https://gerrit
+  url: http://gerrit:8080
   repository: registry-regulations
   headBranch: master
   repositoryDirectory: /repositories
