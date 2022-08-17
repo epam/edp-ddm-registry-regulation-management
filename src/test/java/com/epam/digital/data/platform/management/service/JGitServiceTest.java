@@ -15,13 +15,16 @@
  */
 package com.epam.digital.data.platform.management.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
@@ -33,8 +36,10 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -83,6 +88,9 @@ class JGitServiceTest {
 
   @Mock
   private TreeWalk treeWalk;
+
+  @Mock
+  private LogCommand logCommand;
 
   @Test
   @SneakyThrows
@@ -199,6 +207,27 @@ class JGitServiceTest {
     Assertions.assertNotNull(version);
     Assertions.assertNotEquals(0, version.size());
     Assertions.assertEquals("someFile", version.get(0));
+  }
+
+  @Test
+  @SneakyThrows
+  void getFormDatesTest() {
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
+    Mockito.when(git.getRepository()).thenReturn(repository);
+    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
+    Mockito.when(git.log()).thenReturn(logCommand);
+
+    RevCommit revCommit = mock(RevCommit.class);
+    RevCommit revCommit2 = mock(RevCommit.class);
+
+    Mockito.when(logCommand.call()).thenReturn(List.of(revCommit, revCommit2));
+    FileDatesDto version = jGitService.getDates("version", "forms");
+    assertThat(version).isNotNull();
+    assertThat(version.getCreate()).isNotNull();
+    assertThat(version.getUpdate()).isNotNull();
   }
 
   @Test

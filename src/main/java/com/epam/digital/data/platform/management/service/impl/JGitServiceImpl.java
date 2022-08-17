@@ -16,15 +16,21 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
+import static com.epam.digital.data.platform.management.config.CacheCustomizer.DATE_CACHE_NAME;
+
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.JGitService;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -33,6 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.Status;
@@ -47,6 +54,8 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -162,6 +171,37 @@ public class JGitServiceImpl implements JGitService {
     }
     Collections.sort(items);
     return items;
+  }
+
+  @Cacheable(DATE_CACHE_NAME)
+  @Override
+  public FileDatesDto getDates(String versionName, String filePath) throws Exception {
+    File repositoryDirectory = getRepositoryDir(versionName);
+    if (!repositoryDirectory.exists()) {
+      return null;
+    }
+    FileDatesDto fileDatesDto = FileDatesDto.builder().build();
+    Git git = jGitWrapper.open(repositoryDirectory);
+    LogCommand log = git.log();
+    log.addPath(filePath);
+    Iterable<RevCommit> call = log.call();
+    Iterator<RevCommit> iterator = call.iterator();
+    RevCommit revCommit = iterator.next();
+    RevCommit last = iterator.next();
+    while (iterator.hasNext()) {
+      last = iterator.next();
+    }
+    fileDatesDto.setUpdate(
+        LocalDateTime.ofEpochSecond(revCommit.getCommitTime(), 0, ZoneOffset.UTC));
+    LocalDateTime createDate = LocalDateTime.ofEpochSecond(
+        last != null ? last.getCommitTime() : revCommit.getCommitTime(), 0, ZoneOffset.UTC);
+    fileDatesDto.setCreate(createDate);
+    return fileDatesDto;
+  }
+
+  @CacheEvict(value = DATE_CACHE_NAME, allEntries = true)
+  @Override
+  public void formDatesCacheEvict() {
   }
 
   @Override
