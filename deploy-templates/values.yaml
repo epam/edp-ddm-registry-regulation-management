@@ -70,7 +70,7 @@ vault:
   encryptionRole: registry-regulation-management-encryption-only-role
 
 gerrit:
-  secret: gerrit-admin-password
+  secret: gerrit-ciuser-password
   url: http://gerrit:8080
   repository: registry-regulations
   headBranch: master
