@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
+        backup.velero.io/backup-volumes: repositories-data
       labels:
         app: {{ .Values.name }}
         version: {{ .Values.version }}
