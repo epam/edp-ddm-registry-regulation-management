@@ -2,7 +2,6 @@ package com.epam.digital.data.platform.management;
 
 import com.epam.digital.data.platform.management.mock.GerritApiMock;
 import com.epam.digital.data.platform.management.mock.JGitWrapperMock;
-import java.io.File;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +17,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.File;
+
 @ActiveProfiles({"local", "test"})
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
@@ -26,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 public abstract class BaseIT {
 
   @TempDir
-  private static File tempRepoDirectory;
+  protected static File tempRepoDirectory;
 
   @Autowired
   protected MockMvc mockMvc;
