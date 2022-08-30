@@ -15,12 +15,16 @@
  */
 package com.epam.digital.data.platform.management.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
@@ -32,9 +36,12 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -81,6 +88,9 @@ class JGitServiceTest {
 
   @Mock
   private TreeWalk treeWalk;
+
+  @Mock
+  private LogCommand logCommand;
 
   @Test
   @SneakyThrows
@@ -145,6 +155,42 @@ class JGitServiceTest {
 
   @Test
   @SneakyThrows
+  void testFetch() {
+    File file = new File(tempDir, "version");
+    file.createNewFile();
+    var changeInfoDto = new ChangeInfoDto();
+    changeInfoDto.setRefs("refs for fetch");
+
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
+    Mockito.when(git.fetch()).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs("refs for fetch")).thenReturn(fetchCommand);
+    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
+    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("pass");
+    Mockito.when(fetchCommand.setCredentialsProvider(
+            refEq(new UsernamePasswordCredentialsProvider("user", "pass"))))
+        .thenReturn(fetchCommand);
+    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
+    Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
+
+    jGitService.fetch("version", changeInfoDto);
+
+    Mockito.verify(fetchCommand).call();
+    Mockito.verify(checkoutCommand).call();
+  }
+
+  @Test
+  @SneakyThrows
+  void testFetchDirectoryNotExist() {
+    var file = new File("/");
+
+    jGitService.fetch("version", null);
+
+    Mockito.verify(jGitWrapper, never()).open(file);
+  }
+
+  @Test
+  @SneakyThrows
   void getFilesInPathTest() {
     File repo = new File(tempDir, "version");
     repo.createNewFile();
@@ -152,7 +198,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository, "/", revTree)).thenReturn(treeWalk);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
@@ -165,6 +211,27 @@ class JGitServiceTest {
 
   @Test
   @SneakyThrows
+  void getFormDatesTest() {
+    File repo = new File(tempDir, "version");
+    repo.createNewFile();
+    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
+    Mockito.when(git.getRepository()).thenReturn(repository);
+    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
+    Mockito.when(git.log()).thenReturn(logCommand);
+
+    RevCommit revCommit = mock(RevCommit.class);
+    RevCommit revCommit2 = mock(RevCommit.class);
+
+    Mockito.when(logCommand.call()).thenReturn(List.of(revCommit, revCommit2));
+    FileDatesDto version = jGitService.getDates("version", "forms");
+    assertThat(version).isNotNull();
+    assertThat(version.getCreate()).isNotNull();
+    assertThat(version.getUpdate()).isNotNull();
+  }
+
+  @Test
+  @SneakyThrows
   void getFilesInEmptyPathTest() {
     File repo = new File(tempDir, "version");
     repo.createNewFile();
@@ -172,7 +239,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
     Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
@@ -261,7 +328,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.getRepository()).thenReturn(repository);
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository, "master")).thenReturn(revTree);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(false);
     String version = jGitService.getFileContent("version", "/forms");

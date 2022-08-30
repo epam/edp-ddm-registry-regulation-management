@@ -62,7 +62,8 @@ public class GerritServiceImpl implements GerritService {
 
   @Override
   public List<ChangeInfo> getMRList() throws RestApiException {
-    String query = String.format("project:%s+status:open", gerritPropertiesConfig.getRepository());
+    String query = String.format("project:%s+status:open+owner:%s",
+        gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
     Changes changes = gerritApi.changes();
     List<ChangeInfo> changeInfos = new ArrayList<>();
     for (ChangeInfo change : changes.query(query).get()) {
@@ -77,7 +78,8 @@ public class GerritServiceImpl implements GerritService {
   @Nullable
   @Override
   public ChangeInfo getLastMergedMR() throws RestApiException {
-    var query = String.format("project:%s+status:merged", gerritPropertiesConfig.getRepository());
+    var query = String.format("project:%s+status:merged+owner:%s",
+        gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
     var changes = gerritApi.changes();
     var changeInfoList = changes.query(query).withLimit(1).get();
     if (changeInfoList.isEmpty()) {

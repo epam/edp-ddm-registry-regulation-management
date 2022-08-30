@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfo;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionInfoDetailed;
@@ -32,7 +32,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,10 +45,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Candidate version Rest API")
 @RestController
 @RequestMapping("/versions/candidates")
+@RequiredArgsConstructor
 public class CandidateVersionController {
 
-  @Autowired
-  private VersionManagementService versionManagementService;
+  private final VersionManagementService versionManagementService;
 
   @Operation(summary = "Get versions list",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -143,19 +143,19 @@ public class CandidateVersionController {
   @GetMapping("/{versionCandidateId}")
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
       @PathVariable String versionCandidateId) throws Exception {
-    ChangeInfo changeInfo = versionManagementService.getVersionDetails(versionCandidateId);
-    return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfo));
+    ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(versionCandidateId);
+    return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }
 
-  private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfo changeInfo) {
+  private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfoDetailedDto changeInfoDetailedDto) {
     return VersionInfoDetailed.builder()
-        .id(String.valueOf(changeInfo.getNumber()))
-        .author(changeInfo.getOwner())
-        .creationDate(changeInfo.getCreated())
-        .description(changeInfo.getDescription())
-        .hasConflicts(Boolean.FALSE.equals(changeInfo.getMergeable()))
-        .latestUpdate(changeInfo.getUpdated())
-        .name(changeInfo.getSubject())
+        .id(String.valueOf(changeInfoDetailedDto.getNumber()))
+        .author(changeInfoDetailedDto.getOwner())
+        .creationDate(changeInfoDetailedDto.getCreated())
+        .description(changeInfoDetailedDto.getDescription())
+        .hasConflicts(Boolean.FALSE.equals(changeInfoDetailedDto.getMergeable()))
+        .latestUpdate(changeInfoDetailedDto.getUpdated())
+        .name(changeInfoDetailedDto.getSubject())
         .build();
   }
 }

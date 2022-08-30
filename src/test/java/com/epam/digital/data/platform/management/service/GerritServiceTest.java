@@ -304,7 +304,8 @@ class GerritServiceTest {
     @SneakyThrows
     void getLastMergedMR() {
         Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
-        Mockito.when(changes.query("project:repo+status:merged")).thenReturn(request);
+        Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
+        Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
         Mockito.when(request.withLimit(1)).thenReturn(request);
         Mockito.when(request.get()).thenReturn(changeInfos);
         Mockito.when(changes.id(changeInfo.id)).thenReturn(changeApiRestClient);
@@ -316,7 +317,7 @@ class GerritServiceTest {
 
         Mockito.verify(request).get();
         Mockito.verify(request).withLimit(1);
-        Mockito.verify(changes).query("project:repo+status:merged");
+        Mockito.verify(changes).query("project:repo+status:merged+owner:user");
         Mockito.verify(gerritPropertiesConfig).getRepository();
     }
 
@@ -324,7 +325,8 @@ class GerritServiceTest {
     @SneakyThrows
     void getLastMergedMR_noMergedMRs() {
         Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
-        Mockito.when(changes.query("project:repo+status:merged")).thenReturn(request);
+        Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
+        Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
         Mockito.when(request.withLimit(1)).thenReturn(request);
         Mockito.when(request.get()).thenReturn(List.of());
 
@@ -334,7 +336,7 @@ class GerritServiceTest {
 
         Mockito.verify(request).get();
         Mockito.verify(request).withLimit(1);
-        Mockito.verify(changes).query("project:repo+status:merged");
+        Mockito.verify(changes).query("project:repo+status:merged+owner:user");
         Mockito.verify(gerritPropertiesConfig).getRepository();
     }
 }

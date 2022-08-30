@@ -33,7 +33,9 @@ public enum FileValidatorErrorMessageTitle implements MessageTitle {
   EXTENSION(ApplicationExceptionHandler.FILE_EXTENSION_ERROR,
           "file-validator.error.title.extension"),
   TOKEN(ApplicationExceptionHandler.JWT_PARSING_ERROR,
-          "file-validator.error.title.token");
+          "file-validator.error.title.token"),
+  FORM_ALREADY_EXISTS(ApplicationExceptionHandler.FORM_ALREADY_EXISTS_EXCEPTION,
+      "file-validator.error.tittle.form-already-exists");
 
   private final String errorCode;
   private final String titleKey;

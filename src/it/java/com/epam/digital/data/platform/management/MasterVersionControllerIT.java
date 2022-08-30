@@ -1,21 +1,20 @@
 package com.epam.digital.data.platform.management;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class MasterVersionControllerIT extends BaseIT {
 
@@ -31,8 +30,8 @@ class MasterVersionControllerIT extends BaseIT {
     changeInfo.updated = Timestamp.from(
         LocalDateTime.of(2022, 8, 2, 16, 15).toInstant(ZoneOffset.UTC));
     changeInfo.labels = Map.of();
-    gerritApiMock.mockGetLastMergedQuery(changeInfo);
 
+    gerritApiMock.mockGetLastMergedQuery(changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get("/versions/master")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
@@ -51,7 +50,6 @@ class MasterVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void getMasterVersionInfo_noLastMergedMR() {
     gerritApiMock.mockGetLastMergedQuery(null);
-
     mockMvc.perform(MockMvcRequestBuilders.get("/versions/master")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
