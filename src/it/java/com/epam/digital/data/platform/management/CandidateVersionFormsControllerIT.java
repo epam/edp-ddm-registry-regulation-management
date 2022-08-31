@@ -80,6 +80,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
 
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(list);
+    jGitWrapperMock.mockLogCommand();
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
@@ -198,10 +199,14 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     revisionInfo.ref = "-1";
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
+    changeInfoDto.setRefs(revisionInfo.ref);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(List.of(initFormDetails(formName, "title")));
+    jGitWrapperMock.mockLogCommand();
+    jGitWrapperMock.mockCheckoutCommand();
+    jGitWrapperMock.mockPullCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
     mockMvc.perform(MockMvcRequestBuilders.delete(
             BASE_REQUEST + "/{formName}", versionCandidateId, formName))
         .andExpect(status().isNoContent());

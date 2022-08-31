@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.exception.GerritConflictException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
@@ -147,9 +148,12 @@ public class GerritServiceImpl implements GerritService {
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
-      } else {
-        throw new GerritCommunicationException("Something went wrong wile submitting candidate with id " + changeId, ex);
       }
+      if (ex.getStatusCode() == HttpStatus.CONFLICT.value()) {
+        throw new GerritConflictException("Failed to submit 1 change due to the following problems:\nChange" + changeId +
+            ". Project policy requires all submissions to be a fast-forward. Please rebase the change locally and upload again for review");
+      }
+      throw new GerritCommunicationException("Something went wrong wile submitting candidate with id " + changeId, ex);
     } catch (RestApiException ex) {
       throw new GerritCommunicationException("Something went wrong wile submitting candidate with id " + changeId, ex);
     }

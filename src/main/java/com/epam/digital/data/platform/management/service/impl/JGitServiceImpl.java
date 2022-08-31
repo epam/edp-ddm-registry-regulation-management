@@ -19,11 +19,13 @@ package com.epam.digital.data.platform.management.service.impl;
 import static com.epam.digital.data.platform.management.config.CacheCustomizer.DATE_CACHE_NAME;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.exception.GitCommandException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.JGitService;
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -175,16 +177,16 @@ public class JGitServiceImpl implements JGitService {
 
   @Cacheable(DATE_CACHE_NAME)
   @Override
-  public FileDatesDto getDates(String versionName, String filePath) throws Exception {
+  public FileDatesDto getDates(String versionName, String filePath) {
     File repositoryDirectory = getRepositoryDir(versionName);
     if (!repositoryDirectory.exists()) {
       return null;
     }
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-    Git git = jGitWrapper.open(repositoryDirectory);
+    Git git = getGit(repositoryDirectory);
     LogCommand log = git.log();
     log.addPath(filePath);
-    Iterable<RevCommit> call = log.call();
+    Iterable<RevCommit> call = getRevCommits(log);
     Iterator<RevCommit> iterator = call.iterator();
     RevCommit revCommit = iterator.next();
     RevCommit last = iterator.next();
@@ -303,6 +305,22 @@ public class JGitServiceImpl implements JGitService {
 
   private Lock getLock(String versionName) {
     return lockMap.computeIfAbsent(versionName, s -> new ReentrantLock());
+  }
+
+  private Iterable<RevCommit> getRevCommits(LogCommand log) {
+    try {
+      return log.call();
+    } catch (GitAPIException e) {
+      throw new GitCommandException("Could not execute call command", e);
+    }
+  }
+
+  private Git getGit(File repositoryDirectory) {
+    try {
+      return jGitWrapper.open(repositoryDirectory);
+    } catch (IOException e) {
+      throw new GitCommandException("Could not open repo", e);
+    }
   }
 
   private UsernamePasswordCredentialsProvider getCredentialsProvider() {

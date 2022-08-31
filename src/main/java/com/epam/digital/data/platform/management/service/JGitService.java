@@ -15,7 +15,7 @@ public interface JGitService {
 
   List<String> getFilesInPath(String versionName, String path) throws Exception;
 
-  FileDatesDto getDates(String versionName, String filePath) throws Exception;
+  FileDatesDto getDates(String versionName, String filePath);
 
   void formDatesCacheEvict();
 

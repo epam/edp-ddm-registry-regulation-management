@@ -146,4 +146,15 @@ public class CandidateVersionControllerIT extends BaseIT {
         .andExpectAll(status().isNotFound());
   }
 
+  @Test
+  @SneakyThrows
+  public void submitVersion_NoSuchVersion() {
+    String candidateId = "noSuchVersion";
+    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockNotFound(candidateId);
+    mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/submit")
+            .accept(MediaType.APPLICATION_JSON_VALUE))
+        .andExpectAll(status().isNotFound());
+  }
+
 }
