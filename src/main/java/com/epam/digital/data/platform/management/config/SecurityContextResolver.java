@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.management.config;
 
-import com.epam.digital.data.platform.management.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.util.Header;
 import org.springframework.core.MethodParameter;
