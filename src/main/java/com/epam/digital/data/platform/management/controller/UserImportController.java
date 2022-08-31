@@ -16,9 +16,10 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.annotation.HttpSecurityContext;
+import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.security.annotation.PreAuthorizeUserManagementRole;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.UserImportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
+@PreAuthorizeUserManagementRole
 @RequestMapping("/batch-loads/users")
 public class UserImportController {
   private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s\"";
