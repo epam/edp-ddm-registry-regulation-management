@@ -501,6 +501,94 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetailedErrorResponse'
+  /versions/candidates/{versionCandidateId}/submit:
+    post:
+      tags:
+        - Candidate version Rest API
+      summary: Submit version candidate by id
+      operationId: submitVersionCandidate
+      parameters:
+        - name: X-Access-Token
+          in: header
+          schema:
+            type: string
+        - name: versionCandidateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
+  /versions/candidates/{versionCandidateId}/decline:
+    post:
+      tags:
+        - Candidate version Rest API
+      summary: Abandon version candidate by id
+      operationId: declineVersionCandidate
+      parameters:
+        - name: X-Access-Token
+          in: header
+          schema:
+            type: string
+        - name: versionCandidateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedErrorResponse'
   /versions/candidates/{versionCandidateId}/forms:
     get:
       tags:

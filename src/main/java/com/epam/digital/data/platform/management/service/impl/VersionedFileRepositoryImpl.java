@@ -1,6 +1,8 @@
 package com.epam.digital.data.platform.management.service.impl;
 
+import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
@@ -10,6 +12,7 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
+
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 
@@ -51,11 +55,16 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     Map<String, FileResponse> filesInMaster = jGitService.getFilesInPath(versionName, path)
         .stream()
         .filter(el -> !el.equals(".gitkeep"))
-        .map(el -> FileResponse.builder()
-            .name(FilenameUtils.getBaseName(el))
-            .status(FileStatus.CURRENT)
-            .path(path)
-            .build())
+        .map(el -> {
+          FileDatesDto dates = jGitService.getDates(versionName, path + "/" + el);
+          return FileResponse.builder()
+              .name(FilenameUtils.getBaseName(el))
+              .status(FileStatus.CURRENT)
+              .created(dates.getCreate())
+              .updated(dates.getUpdate())
+              .path(path)
+              .build();
+        })
         .collect(
             Collectors.toMap(fileResponse -> FilenameUtils.getBaseName(fileResponse.getName()),
                 Function.identity()));

@@ -102,11 +102,6 @@ public class CandidateVersionController {
               description = "Not Found",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "409",
-              description = "Change is abandoned",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DetailedErrorResponse.class))
-          ),
           @ApiResponse(responseCode = "500",
               description = "Internal server error",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -138,7 +133,7 @@ public class CandidateVersionController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
           @ApiResponse(responseCode = "409",
-              description = "Failed to submit",
+              description = "Conflict",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class))
           ),

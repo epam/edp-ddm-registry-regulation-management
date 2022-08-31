@@ -48,6 +48,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String RUNTIME_ERROR = "RUNTIME_ERROR";
   private static final String CHANGE_NOT_FOUND = "CHANGE_NOT_FOUND";
   private static final String GERRIT_COMMUNICATION_EXCEPTION = "GERRIT_COMMUNICATION_EXCEPTION";
+  private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
+  public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
 
   private final MessageResolver messageResolver;
 
@@ -68,6 +70,13 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Error during upload to Ceph", exception);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(newDetailedResponse(IMPORT_CEPH_ERROR, exception));
+  }
+
+  @ExceptionHandler(GitCommandException.class)
+  public ResponseEntity<DetailedErrorResponse> handle(GitCommandException exception) {
+    log.error("Could not perform git command", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(GIT_COMMAND_ERROR, exception));
   }
 
   @ExceptionHandler(GetProcessingException.class)
@@ -156,6 +165,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Something went wrong with accessing gerrit", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(GERRIT_COMMUNICATION_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleGerritConflictException(
+      GerritConflictException exception) {
+    log.error("Conflict occurred on version candidate submission", exception);
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(newDetailedResponse(CONFLICT_ERROR, exception));
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

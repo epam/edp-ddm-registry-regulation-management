@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
@@ -12,6 +13,7 @@ import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import java.io.File;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,10 +39,15 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void getFileListTest() {
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     List<String> list = new ArrayList<>();
     list.add("file1");
     list.add("file2");
     Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList(File.separator);
     Assertions.assertNotNull(fileList);
   }
@@ -48,10 +55,15 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void getRootFileListTest() {
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     List<String> list = new ArrayList<>();
     list.add("file1");
     list.add("file2");
     Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList();
     Assertions.assertNotNull(fileList);
   }
@@ -60,11 +72,16 @@ public class VersionedFileRepositoryTest {
   @SneakyThrows
   void getVersionedFileListTest() {
     List<String> list = new ArrayList<>();
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     list.add("folder/file1");
     list.add("folder/file2");
     list.add("folder/file3");
     var changeInfo = new ChangeInfo();
     changeInfo.created = new Timestamp(System.currentTimeMillis());
+    changeInfo.updated = new Timestamp(System.currentTimeMillis());
     var filesInMR = new HashMap<String, FileInfo>();
     filesInMR.put("folder/file22", new FileInfo());
     filesInMR.put("folder/file3", new FileInfo());
@@ -72,6 +89,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList("folder");
     Assertions.assertNotNull(fileList);
     Assertions.assertEquals(4, fileList.size());
@@ -80,6 +98,10 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void getVersionedFileListWithStatusesTest() {
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     List<String> list = new ArrayList<>();
     list.add("file1");
     list.add("file2");
@@ -99,6 +121,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList("folder");
     Assertions.assertNotNull(fileList);
     Assertions.assertEquals(5, fileList.size());
@@ -141,6 +164,10 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void deleteTest() {
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     repository.setVersionName("1");
     String deleted = repository.deleteFile("form");
     Assertions.assertEquals("File does not exist", deleted);
@@ -155,6 +182,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
     Mockito.when(jGitService.getFilesInPath("1", "forms")).thenReturn(List.of("form"));
     Mockito.when(jGitService.delete(any(), any())).thenReturn("deleted");
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     String form = repository.deleteFile("forms/form.json");
     Assertions.assertEquals("deleted", form);
   }
@@ -179,10 +207,15 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void isFileExistsTest() {
+    FileDatesDto fileDates = FileDatesDto.builder()
+        .create(LocalDateTime.now())
+        .update(LocalDateTime.now())
+        .build();
     ArrayList<String> t = new ArrayList<>();
     t.add("fileName");
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
+    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     boolean fileExists = repository.isFileExists("/fileName");
-    Assertions.assertEquals(true, fileExists);
+    Assertions.assertTrue(fileExists);
   }
 }

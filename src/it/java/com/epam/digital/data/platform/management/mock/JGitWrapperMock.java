@@ -164,7 +164,7 @@ public class JGitWrapperMock {
   public void mockFetchCommand(ChangeInfoDto changeInfoDto) {
     FetchCommand fetchCommand = Mockito.mock(FetchCommand.class);
     Mockito.when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setRefSpecs(Mockito.refEq(changeInfoDto.getRefs())))
+    Mockito.when(fetchCommand.setRefSpecs(changeInfoDto.getRefs()))
         .thenReturn(fetchCommand);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
   }
