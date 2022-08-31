@@ -14,15 +14,26 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.annotation;
+package com.epam.digital.data.platform.management.controller;
 
+import com.epam.digital.data.platform.management.config.JacksonConfig;
+import com.epam.digital.data.platform.starter.security.PlatformSecurityAutoConfiguration;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
+import org.springframework.test.context.ContextConfiguration;
 
-@Target(ElementType.PARAMETER)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface HttpSecurityContext {
+@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
+@Import({PlatformSecurityAutoConfiguration.class, JacksonConfig.class})
+@ContextConfiguration
+public @interface SecuredControllerTest {
 
+  @AliasFor(annotation = ContextConfiguration.class, attribute = "classes")
+  Class<?>[] value() default {};
 }
