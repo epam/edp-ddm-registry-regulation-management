@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: registry-regulation-management
+
+logging:
+  config: classpath:log4j2-json-console.xml
+---
+spring:
+  cloud:
+    kubernetes:
+      config:
+        enabled: true
+        paths: /app/config/config.yaml
+        enable-api: false
+      secrets:
+        enabled: true
+        enable-api: false
+        paths:
+          - /app/secrets/userimportceph
+          - /app/secrets/gerritcreds
+          - /app/secrets/openshift
+    vault:
+      uri: ${VAULT_URI}
+      authentication: KUBERNETES
+      kubernetes:
+        role: ${VAULT_ENCRYPTION_ROLE}
+---
+spring:
+  cloud:
+    kubernetes:
+      config:
+        enabled: false
+    vault:
+      enabled: false
+  config:
+    activate:
+      on-profile: local
+
+logging:
+  config: ''

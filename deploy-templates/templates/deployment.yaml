@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}-deployment
+  labels:
+    app: {{ .Values.name }}
+    version: {{ .Values.version }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+      version: {{ .Values.version }}
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        backup.velero.io/backup-volumes: repositories-data
+      labels:
+        app: {{ .Values.name }}
+        version: {{ .Values.version }}
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: "{{ .Values.image.name }}:{{ .Values.image.version }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: {{ .Values.port }}
+            failureThreshold: 1
+            initialDelaySeconds: 180
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: {{ .Values.port }}
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              memory: 500Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /app/config/config.yaml
+              name: config
+              readOnly: true
+              subPath: config.yaml
+            - mountPath: /app/secrets/userimportceph
+              name: {{ .Chart.Name }}-user-import-ceph-credentials
+              readOnly: true
+            - mountPath: /var/lib/repos-data
+              name: repositories-data
+            - mountPath: /app/secrets/gerritcreds
+              name: {{ .Chart.Name }}-gerrit-credentials
+              readOnly: true
+          env:
+            - name: USER_IMPORT_CEPH_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.userImportCeph.bucketName }}
+                  key: BUCKET_NAME
+            - name: USER_IMPORT_CEPH_BUCKET_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.userImportCeph.bucketName }}
+                  key: BUCKET_HOST
+            - name: OPENSHIFT_NAMESPACE
+              value: {{ .Values.namespace }}
+            - name: OPENSHIFT_JOB
+              value: {{ .Values.data.jobName }}
+            - name: VAULT_URI
+              value: http://hashicorp-vault.{{ .Values.namespace }}.svc:8200
+            - name: VAULT_KEY
+              value: {{ .Values.vault.key }}
+            - name: VAULT_ENCRYPTION_ROLE
+              value: {{ .Values.vault.encryptionRole }}
+            - name: KEYCLOAK_REALM
+              value: "{{ include "keycloak.officerRealm" . }}"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: repositories-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.registryRegulationManagement.volume.claimName }}
+        - name: config
+          configMap:
+            name: registry-regulation-management-properties
+        - name: {{ .Chart.Name }}-user-import-ceph-credentials
+          secret:
+            secretName: {{ .Values.userImportCeph.bucketName }}
+            items:
+              - key: AWS_ACCESS_KEY_ID
+                path: user-import-ceph.access-key
+              - key: AWS_SECRET_ACCESS_KEY
+                path: user-import-ceph.secret-key
+        - name: {{ .Chart.Name }}-gerrit-credentials
+          secret:
+            secretName: {{ .Values.gerrit.secret }}
+            items:
+              - key: user
+                path: gerrit.user
+              - key: password
+                path: gerrit.password
