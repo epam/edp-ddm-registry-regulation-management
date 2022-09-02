@@ -21,8 +21,15 @@ import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.UserImportService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +53,14 @@ public class UserImportController {
     this.openShiftService = openShiftService;
   }
 
+  @Operation(parameters = @Parameter(in = ParameterIn.QUERY,
+      name = "securityContext",
+      schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.ALL_VALUE,
+                  schema = @Schema(implementation = CephFileInfoDto.class)))})
   @PostMapping
   public ResponseEntity<CephFileInfoDto> handleFileUpload(@RequestParam("file") MultipartFile file,
                                                           @HttpSecurityContext SecurityContext securityContext) {
@@ -54,12 +69,27 @@ public class UserImportController {
             .body(userImportService.storeFile(file, securityContext));
   }
 
+  @Operation(parameters = @Parameter(in = ParameterIn.QUERY,
+      name = "securityContext",
+      schema = @Schema(type = "string")),
+      responses = {
+        @ApiResponse(responseCode = "200",
+          description = "OK",
+          content = @Content(mediaType = MediaType.ALL_VALUE,
+            schema = @Schema(implementation = CephFileInfoDto.class)))})
   @GetMapping
   public ResponseEntity<CephFileInfoDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
     log.info("getFilesInfo called");
     return ResponseEntity.ok().body(userImportService.getFileInfo(securityContext));
   }
 
+
+  @Operation(
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.ALL_VALUE,
+                  schema = @Schema(implementation = CephFileInfoDto.class)))})
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteFile(@PathVariable("id") String id) {
     log.info("deleteFile called");
@@ -81,6 +111,10 @@ public class UserImportController {
             .body(new InputStreamResource(cephObject.getContent()));
   }*/
 
+  @Operation(responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.ALL_VALUE))})
   @PostMapping("/imports")
   public ResponseEntity<Void> imports(@HttpSecurityContext SecurityContext securityContext) {
     log.info("imports called");
