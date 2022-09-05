@@ -24,3 +24,7 @@ data:
       repository: {{ .Values.gerrit.repository }}
       headBranch: {{ .Values.gerrit.headBranch }}
       repositoryDirectory: {{ .Values.gerrit.repositoryDirectory }}
+
+    scheduled:
+      repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
+      repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}

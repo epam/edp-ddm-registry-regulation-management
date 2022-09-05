@@ -54,3 +54,7 @@ file-validator:
 
 vault:
   key: key
+
+scheduled:
+  repositoryRefreshCron: '0 * * ? * *'
+  repositoryRefreshTimezone: UTC
