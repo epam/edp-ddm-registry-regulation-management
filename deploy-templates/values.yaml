@@ -75,3 +75,6 @@ gerrit:
   repository: registry-regulations
   headBranch: master
   repositoryDirectory: /repositories
+scheduled:
+  repositoryRefreshCron: '0 * * ? * *'
+  repositoryRefreshTimezone: UTC
