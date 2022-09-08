@@ -127,7 +127,9 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     File theFile = new File(path);
     String parent = theFile.getParent();
     String baseName = FilenameUtils.getBaseName(theFile.getName());
-    return getFileList(parent).stream().anyMatch(f -> baseName.equals(f.getName()));
+    return getFileList(parent).stream()
+        .filter(fileResponse -> !FileStatus.DELETED.equals(fileResponse.getStatus()))
+        .anyMatch(f -> baseName.equals(f.getName()));
   }
 
   @Override
