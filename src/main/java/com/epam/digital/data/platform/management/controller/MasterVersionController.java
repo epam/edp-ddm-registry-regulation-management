@@ -75,7 +75,7 @@ public class MasterVersionController {
             .author(masterInfo.getOwner())
             .description(masterInfo.getDescription())
             .name(masterInfo.getSubject())
-            .latestUpdate(masterInfo.getUpdated())
+            .latestUpdate(masterInfo.getSubmitted())
             .build());
   }
 }

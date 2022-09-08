@@ -37,7 +37,7 @@ class MasterVersionControllerTest {
         .owner("owner@epam.com")
         .description("description")
         .subject("name")
-        .updated(LocalDateTime.of(2022, 7, 29, 12, 31))
+        .submitted(LocalDateTime.of(2022, 7, 29, 12, 31))
         .build();
     Mockito.when(versionManagementService.getMasterInfo()).thenReturn(expectedChangeInfo);
 
