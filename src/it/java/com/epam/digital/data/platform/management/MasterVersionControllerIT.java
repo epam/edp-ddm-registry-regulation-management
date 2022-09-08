@@ -27,7 +27,7 @@ class MasterVersionControllerIT extends BaseIT {
     changeInfo.owner.username = "admin";
     changeInfo.topic = "this is description for version candidate";
     changeInfo.subject = "commit message";
-    changeInfo.updated = Timestamp.from(
+    changeInfo.submitted = Timestamp.from(
         LocalDateTime.of(2022, 8, 2, 16, 15).toInstant(ZoneOffset.UTC));
     changeInfo.labels = Map.of();
 
