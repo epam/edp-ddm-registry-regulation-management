@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
@@ -94,6 +95,14 @@ public class GerritServiceImpl implements GerritService {
     }
     var changeId = changeInfoList.get(0).changeId;
     return changes.id(changeId).get();
+  }
+
+  @Override
+  public List<String> getClosedMrIds() throws RestApiException {
+    String query = String.format("project:%s+status:closed+owner:%s",
+        gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
+    return gerritApi.changes().query(query).get().stream()
+        .map(change->String.valueOf(change._number)).collect(Collectors.toList());
   }
 
   @Override
