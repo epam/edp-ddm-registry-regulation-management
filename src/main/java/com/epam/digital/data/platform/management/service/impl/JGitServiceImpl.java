@@ -56,6 +56,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.util.FileUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -82,13 +83,12 @@ public class JGitServiceImpl implements JGitService {
     }
     Lock lock = getLock(versionName);
     lock.lock();
-    try {
-      jGitWrapper.cloneRepository()
-          .setURI(getRepositoryUrl())
-          .setCredentialsProvider(getCredentialsProvider())
-          .setDirectory(directory)
-          .setCloneAllBranches(true)
-          .call();
+    try (Git call = jGitWrapper.cloneRepository()
+        .setURI(getRepositoryUrl())
+        .setCredentialsProvider(getCredentialsProvider())
+        .setDirectory(directory)
+        .setCloneAllBranches(true)
+        .call()) {
     } finally {
       lock.unlock();
     }
@@ -183,21 +183,22 @@ public class JGitServiceImpl implements JGitService {
       return null;
     }
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-    Git git = getGit(repositoryDirectory);
-    LogCommand log = git.log();
-    log.addPath(filePath);
-    Iterable<RevCommit> call = getRevCommits(log);
-    Iterator<RevCommit> iterator = call.iterator();
-    RevCommit revCommit = iterator.next();
-    RevCommit last = iterator.next();
-    while (iterator.hasNext()) {
-      last = iterator.next();
+    try(Git git = getGit(repositoryDirectory)) {
+      LogCommand log = git.log();
+      log.addPath(filePath);
+      Iterable<RevCommit> call = getRevCommits(log);
+      Iterator<RevCommit> iterator = call.iterator();
+      RevCommit revCommit = iterator.next();
+      RevCommit last = iterator.next();
+      while (iterator.hasNext()) {
+        last = iterator.next();
+      }
+      fileDatesDto.setUpdate(
+          LocalDateTime.ofEpochSecond(revCommit.getCommitTime(), 0, ZoneOffset.UTC));
+      LocalDateTime createDate = LocalDateTime.ofEpochSecond(
+          last != null ? last.getCommitTime() : revCommit.getCommitTime(), 0, ZoneOffset.UTC);
+      fileDatesDto.setCreate(createDate);
     }
-    fileDatesDto.setUpdate(
-        LocalDateTime.ofEpochSecond(revCommit.getCommitTime(), 0, ZoneOffset.UTC));
-    LocalDateTime createDate = LocalDateTime.ofEpochSecond(
-        last != null ? last.getCommitTime() : revCommit.getCommitTime(), 0, ZoneOffset.UTC);
-    fileDatesDto.setCreate(createDate);
     return fileDatesDto;
   }
 
@@ -280,6 +281,15 @@ public class JGitServiceImpl implements JGitService {
       lock.unlock();
     }
     return null;
+  }
+
+  public void deleteRepo(String repoName) throws IOException {
+    File repositoryFile = getRepositoryDir(repoName);
+    if (!repositoryFile.exists()) {
+      return;
+    }
+
+    FileUtils.delete(repositoryFile, FileUtils.RECURSIVE);
   }
 
   private String doAmend(File file, ChangeInfoDto changeInfoDto, Git git)

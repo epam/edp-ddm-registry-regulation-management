@@ -31,6 +31,7 @@ public interface GerritService {
   List<ChangeInfo> getMRList() throws RestApiException;
   @Nullable
   ChangeInfo getLastMergedMR() throws RestApiException;
+  List<String> getClosedMrIds() throws RestApiException;
   ChangeInfo getMRByNumber(String number) throws RestApiException;
   ChangeInfoDto getChangeInfo(String changeId) throws RestApiException;
   Map<String, FileInfo> getListOfChangesInMR(String changeId) throws RestApiException;
