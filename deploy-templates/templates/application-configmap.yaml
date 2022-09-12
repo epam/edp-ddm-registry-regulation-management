@@ -32,3 +32,5 @@ data:
     scheduled:
       repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
+      cleanRepositoriesCron: {{ .Values.scheduled.cleanRepositoriesCron }}
+      cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
