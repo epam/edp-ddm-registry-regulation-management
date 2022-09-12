@@ -4,6 +4,7 @@ import com.epam.digital.data.platform.management.exception.GitCommandException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
+import java.io.IOException;
 import java.util.List;
 import org.springframework.lang.NonNull;
 
@@ -43,4 +44,6 @@ public interface JGitService {
   String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception;
 
   String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception;
+
+  void deleteRepo(String repoName) throws IOException;
 }
