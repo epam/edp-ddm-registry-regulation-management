@@ -78,5 +78,7 @@ gerrit:
   headBranch: master
   repositoryDirectory: /repositories
 scheduled:
-  repositoryRefreshCron: '0 * * ? * *'
+  repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
+  cleanRepositoriesCron: '0 */5 * ? * *'
+  cleanRepositoriesTimezone: UTC
