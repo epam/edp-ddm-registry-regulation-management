@@ -42,7 +42,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class BusinessProcessServiceImpl implements BusinessProcessService {
-  private static final String DIRECTORY_PATH = "business-processes";
+  private static final String DIRECTORY_PATH = "bpmn";
   private static final String XML_FILE_EXTENSION = "xml";
 
   private final VersionedFileRepositoryFactory repoFactory;
