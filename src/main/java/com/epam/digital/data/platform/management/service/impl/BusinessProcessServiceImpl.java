@@ -33,10 +33,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -49,6 +46,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   private static final String XML_FILE_EXTENSION = "xml";
 
   private final VersionedFileRepositoryFactory repoFactory;
+
+  private final DocumentBuilder documentBuilder;
 
   @Override
   public List<BusinessProcessResponse> getProcessesByVersion(String versionName) {
@@ -139,19 +138,11 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private String getNameFromContent(String processContent) {
     try {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-      factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-      factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-      factory.setExpandEntityReferences(false);
-      DocumentBuilder db = factory.newDocumentBuilder();
-      Document doc = db.parse(new InputSource(new StringReader(processContent)));
+      Document doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
       doc.getDocumentElement().normalize();
       NodeList nodeList = doc.getElementsByTagName("bpmn:process");
       Node node = nodeList.item(0);
       return node.getAttributes().getNamedItem("name").getTextContent();
-    } catch (ParserConfigurationException e) {
-      throw new RuntimeException("Could initiate document builder", e);
     } catch (SAXException | IOException exception) {
       throw new RuntimeException("Could not parse xml document", exception);
     }
