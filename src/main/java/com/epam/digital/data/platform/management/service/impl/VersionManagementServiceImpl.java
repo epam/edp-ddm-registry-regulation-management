@@ -1,8 +1,11 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.ChangeBusinessProcessInfo;
+import com.epam.digital.data.platform.management.model.dto.ChangeFormInfo;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
@@ -14,11 +17,13 @@ import com.google.gerrit.extensions.restapi.RestApiException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -99,6 +104,25 @@ public class VersionManagementServiceImpl implements VersionManagementService {
       throw new IllegalArgumentException();
     }
     return mapChangeInfo(e);
+  }
+
+  @Override
+  @SneakyThrows
+  public VersionChanges getVersionChanges(String versionCandidateId) {
+    List<VersionedFileInfo> changedFiles = getVersionFileList(versionCandidateId);
+    return getVersionChanges(changedFiles);
+  }
+
+  private VersionChanges getVersionChanges(List<VersionedFileInfo> changedFiles) {
+    List<ChangeFormInfo> changedForms = new ArrayList<>();
+    List<ChangeBusinessProcessInfo> changeBusinessProcesses = new ArrayList<>();
+    for (VersionedFileInfo fileInfo : changedFiles) {
+//      if (fileInfo.)
+    }
+    return VersionChanges.builder()
+        .changedForms(changedForms)
+        .changedBusinessProcesses(changeBusinessProcesses)
+        .build();
   }
 
   private ChangeInfoDetailedDto mapChangeInfo(ChangeInfo changeInfo) {

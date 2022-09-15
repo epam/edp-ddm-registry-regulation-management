@@ -17,6 +17,7 @@ package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
@@ -222,6 +223,11 @@ public class CandidateVersionController {
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) throws Exception {
     ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(versionCandidateId);
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
+  }
+
+  @GetMapping("/{versionCandidateId}/changes")
+  public ResponseEntity<VersionChanges> getVersionChanges(@PathVariable String versionCandidateId) {
+    return ResponseEntity.ok().body(versionManagementService.getVersionChanges(versionCandidateId));
   }
 
   private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfoDetailedDto changeInfoDetailedDto) {
