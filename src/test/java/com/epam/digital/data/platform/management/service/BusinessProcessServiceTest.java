@@ -78,21 +78,21 @@ public class BusinessProcessServiceTest {
   void getBusinessProcessesListByVersionTest() {
     FileResponse newBusinessProcess = FileResponse.builder()
         .name("business-process")
-        .path("business-processes/business-process.xml")
+        .path("bpmn/business-process.xml")
         .status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
     FileResponse deletedProcess = FileResponse.builder().status(FileStatus.DELETED).build();
 
-    Mockito.when(repository.getFileList("business-processes")).thenReturn(List.of(newBusinessProcess, deletedProcess));
-    Mockito.when(repository.readFile("business-processes/business-process.xml")).thenReturn(PROCESS_CONTENT);
+    Mockito.when(repository.getFileList("bpmn")).thenReturn(List.of(newBusinessProcess, deletedProcess));
+    Mockito.when(repository.readFile("bpmn/business-process.xml")).thenReturn(PROCESS_CONTENT);
 
     List<BusinessProcessResponse> expectedBusinessProcessesList = businessProcessService.getProcessesByVersion(VERSION_ID);
     BusinessProcessResponse expectedBusinessProcess = BusinessProcessResponse.builder()
         .name("business-process")
         .title("Really test name")
-        .path("business-processes/business-process.xml")
+        .path("bpmn/business-process.xml")
         .status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
@@ -105,16 +105,16 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void createBusinessProcessTest() {
-    Mockito.when(repository.isFileExists("business-processes/business-process.xml")).thenReturn(false);
+    Mockito.when(repository.isFileExists("bpmn/business-process.xml")).thenReturn(false);
     Assertions.assertThatCode(() -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
-    Mockito.verify(repository).writeFile("business-processes/business-process.xml", PROCESS_CONTENT);
+    Mockito.verify(repository).writeFile("bpmn/business-process.xml", PROCESS_CONTENT);
   }
 
   @Test
   @SneakyThrows
   void createBusinessProcess_alreadyExistsTest() {
-    Mockito.when(repository.isFileExists("business-processes/business-process.xml")).thenReturn(true);
+    Mockito.when(repository.isFileExists("bpmn/business-process.xml")).thenReturn(true);
     Assertions.assertThatThrownBy(() -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
         .isInstanceOf(BusinessProcessAlreadyExists.class);
 
@@ -124,7 +124,7 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void getBusinessProcessContentTest() {
-    Mockito.when(repository.readFile("business-processes/business-process.xml")).thenReturn(PROCESS_CONTENT);
+    Mockito.when(repository.readFile("bpmn/business-process.xml")).thenReturn(PROCESS_CONTENT);
 
     var actualBusinessProcessContent = businessProcessService.getProcessContent("business-process", VERSION_ID);
 
@@ -138,7 +138,7 @@ public class BusinessProcessServiceTest {
     Assertions.assertThatCode(() -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).writeFile("business-processes/business-process.xml", PROCESS_CONTENT);
+    Mockito.verify(repository).writeFile("bpmn/business-process.xml", PROCESS_CONTENT);
   }
 
   @Test
@@ -147,6 +147,6 @@ public class BusinessProcessServiceTest {
     Assertions.assertThatCode(() -> businessProcessService.deleteProcess("business-process", VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).deleteFile("business-processes/business-process.xml");
+    Mockito.verify(repository).deleteFile("bpmn/business-process.xml");
   }
 }
