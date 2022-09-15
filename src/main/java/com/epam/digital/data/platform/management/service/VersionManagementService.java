@@ -2,6 +2,7 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
@@ -59,6 +60,8 @@ public interface VersionManagementService {
 //     * Put votes to review
 //     */
     boolean vote(String versionName, String label, short value) throws RestApiException;
+
+    VersionChanges getVersionChanges(String versionCandidateId);
 //
 //    /**
 //     * Add robot comment
