@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -26,18 +27,20 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import javax.xml.parsers.DocumentBuilder;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 
-@ExtendWith(MockitoExtension.class)
+@Import(XmlParserConfig.class)
+@ExtendWith(SpringExtension.class)
 public class BusinessProcessServiceTest {
 
   private static final String VERSION_ID = "version";
@@ -59,12 +62,14 @@ public class BusinessProcessServiceTest {
   private VersionedFileRepositoryFactory repositoryFactory;
   @Mock
   private VersionedFileRepository repository;
-  @InjectMocks
+  @Autowired
+  private DocumentBuilder documentBuilder;
   private BusinessProcessServiceImpl businessProcessService;
 
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
+    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 
