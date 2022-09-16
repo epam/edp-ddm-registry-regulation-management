@@ -43,7 +43,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BusinessProcessServiceImpl implements BusinessProcessService {
   private static final String DIRECTORY_PATH = "bpmn";
-  private static final String XML_FILE_EXTENSION = "xml";
+  private static final String BPMN_FILE_EXTENSION = "bpmn";
 
   private final VersionedFileRepositoryFactory repoFactory;
 
@@ -150,6 +150,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private String getProcessPath(String processName) {
     return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName),
-        XML_FILE_EXTENSION);
+        BPMN_FILE_EXTENSION);
   }
 }
