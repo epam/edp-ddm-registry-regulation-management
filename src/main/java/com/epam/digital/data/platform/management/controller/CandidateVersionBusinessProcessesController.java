@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,10 +45,11 @@ import java.util.stream.Collectors;
 
 @Tag(name = "Candidate version business ")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/versions/candidates/{versionCandidateId}/business-processes")
 public class CandidateVersionBusinessProcessesController {
 
-  private BusinessProcessService businessProcessService;
+  private final BusinessProcessService businessProcessService;
 
 
   @Operation(summary = "Get business processes list",
