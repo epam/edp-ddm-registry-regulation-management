@@ -21,18 +21,25 @@ import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -49,7 +56,6 @@ class UserImportControllerTest {
   static final String CONTENT_LENGTH_HEADER_NAME = "Content-Length";
   static final UUID CEPH_ENTITY_ID = UUID.fromString("10e23e2a-6830-42a6-bf21-d0a4a90b5706");
 
-  @Autowired
   MockMvc mockMvc;
 
   @MockBean
@@ -57,6 +63,17 @@ class UserImportControllerTest {
 
   @MockBean
   OpenShiftService openShiftService;
+
+  @RegisterExtension
+  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
+
+  @BeforeEach
+  public void setUp(WebApplicationContext webApplicationContext,
+      RestDocumentationContextProvider restDocumentation) {
+
+    this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        .apply(documentationConfiguration(restDocumentation)).build();
+  }
 
   @Test
   @SneakyThrows
@@ -73,7 +90,8 @@ class UserImportControllerTest {
             .andExpectAll(
                     status().isCreated(),
                     content().contentType(MediaType.APPLICATION_JSON),
-                    jsonPath("$.id", is(cephEntity.getId().toString())));
+                    jsonPath("$.id", is(cephEntity.getId().toString())))
+        .andDo(document("batch-loads/users/POST"));
   }
 
   @Test
@@ -89,7 +107,8 @@ class UserImportControllerTest {
                     content().contentType(MediaType.APPLICATION_JSON),
                     jsonPath("$.id", is(CEPH_ENTITY_ID.toString())),
                     jsonPath("$.name", is(fileName)),
-                    jsonPath("$.size", is(1)));
+                    jsonPath("$.size", is(1)))
+        .andDo(document("batch-loads/users/GET"));
 
   }
 
@@ -97,7 +116,8 @@ class UserImportControllerTest {
   @SneakyThrows
   void deleteFile() {
     mockMvc.perform(delete(BASE_URL + "/{id}", CEPH_ENTITY_ID.toString()))
-            .andExpectAll(status().isNoContent());
+            .andExpectAll(status().isNoContent())
+        .andDo(document("batch-loads/users/{id}/DELETE"));
   }
 
  /*
@@ -125,6 +145,7 @@ class UserImportControllerTest {
   @SneakyThrows
   void startImport() {
     mockMvc.perform(post(BASE_URL + "/imports"))
-            .andExpectAll(status().isAccepted());
+            .andExpectAll(status().isAccepted())
+        .andDo(document("batch-loads/users/imports/POST"));
   }
 }

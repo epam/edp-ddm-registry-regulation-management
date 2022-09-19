@@ -1,0 +1,16 @@
+**** xref:admin-portal-backend:summary.adoc[Адміністративний портал регламенту реєстру]
+
+***** xref:admin-portal-backend:context.adoc[Опис контексту компоненту]
+
+***** xref:admin-portal-backend:structure.adoc[Структура компоненту]
+****** xref:forms/summary.adoc[Форми]
+****** xref:business-processes/summary.adoc[Бізнес-процеси]
+****** xref:data-model/summary.adoc[Модель даних]
+
+***** xref:admin-portal-backend:integration.adoc[Взаємодія з іншими сервісами платформи та користувачами]
+
+***** xref:admin-portal-backend:deployment.adoc[Діаграма розгортання]
+
+***** xref:admin-portal-backend:technologies.adoc[Технологічний стек]
+
+***** xref:rest-api/rest-api-generated/index.adoc[RestAPI]

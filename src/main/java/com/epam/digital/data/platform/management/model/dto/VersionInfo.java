@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,7 +26,10 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 public class VersionInfo {
+    @Schema(required = true, description = "Version candidate identifier")
     private String id;
+    @Schema(required = true, description = "Version candidate name")
     private String name;
+    @Schema(description = "Version candidate description")
     private String description;
 }

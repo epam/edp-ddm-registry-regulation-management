@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -27,13 +28,22 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 public class VersionInfoDetailed {
+    @Schema(required = true, description = "Version candidate identifier")
     private String id;
+    @Schema(required = true, description = "Version candidate name")
     private String name;
+    @Schema(description = "Version candidate description")
     private String description;
+    @Schema(required = true, description = "Version candidate author")
     private String author;
+    @Schema(required = true, description = "Version candidate creation time")
     private LocalDateTime creationDate;
+    @Schema(description = "Version candidate update time")
     private LocalDateTime latestUpdate;
+    @Schema(required = true, description = "Version candidate conflicts flag")
     private Boolean hasConflicts;
+    @Schema(description = "Version candidate inspections")
     private List<Inspection> inspections;
+    @Schema(description = "Version candidate validations")
     private List<Validation> validations;
 }

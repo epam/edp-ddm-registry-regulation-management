@@ -1,6 +1,8 @@
 package com.epam.digital.data.platform.management.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -15,20 +17,23 @@ import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @ControllerTest(MasterVersionFormsController.class)
 class MasterVersionFormsControllerTest {
 
   static final String BASE_URL = "/versions/master/forms";
   static final String HEAD_BRANCH = "master";
-  static final String FORM_CONTENT = "{\"name\":\"form1\",\"title\":\"form title\"}";
+  static final String FORM_CONTENT = "{\"name\":\"John Doe's form\",\"title\":\"John Doe added new component\"}";
 
-  @Autowired
   MockMvc mockMvc;
 
   @MockBean
@@ -36,18 +41,24 @@ class MasterVersionFormsControllerTest {
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
 
+  @RegisterExtension
+  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
+
   @BeforeEach
-  void setUp() {
+  void setUp(WebApplicationContext webApplicationContext,
+      RestDocumentationContextProvider restDocumentation) {
     Mockito.lenient().when(gerritPropertiesConfig.getHeadBranch()).thenReturn(HEAD_BRANCH);
+    this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        .apply(documentationConfiguration(restDocumentation)).build();
   }
 
   @Test
   @SneakyThrows
   void getFormsFromMaster() {
     var expectedFormResponse = FormResponse.builder()
-        .name("form1")
-        .path("forms/form1.json")
-        .title("form")
+        .name("John Doe's form")
+        .path("forms/John Doe's form.json")
+        .title("John Doe added new component")
         .status(FileStatus.CURRENT)
         .created(LocalDateTime.of(2022, 7, 29, 15, 6))
         .updated(LocalDateTime.of(2022, 7, 29, 15, 7))
@@ -59,22 +70,24 @@ class MasterVersionFormsControllerTest {
         .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.[0].name", is("form1")),
-            jsonPath("$.[0].title", is("form")),
+            jsonPath("$.[0].name", is("John Doe's form")),
+            jsonPath("$.[0].title", is("John Doe added new component")),
             jsonPath("$.[0].created", is("2022-07-29T15:06:00.000Z")),
-            jsonPath("$.[0].updated", is("2022-07-29T15:07:00.000Z")));
+            jsonPath("$.[0].updated", is("2022-07-29T15:07:00.000Z")))
+        .andDo(document("versions/master/forms/GET"));
   }
 
   @Test
   @SneakyThrows
   void getFormFromMaster() {
-    var formName = "form1";
+    var formName = "John Doe's form";
     Mockito.when(formService.getFormContent(formName, HEAD_BRANCH)).thenReturn(FORM_CONTENT);
 
     mockMvc.perform(get(String.format("%s/%s", BASE_URL, formName)))
         .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
-            content().json(FORM_CONTENT));
+            content().json(FORM_CONTENT))
+        .andDo(document("versions/master/forms/{formName}/GET"));
   }
 }

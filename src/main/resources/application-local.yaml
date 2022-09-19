@@ -55,6 +55,14 @@ file-validator:
 vault:
   key: key
 
+gerrit:
+  url: https://gerrit
+  repository: registry-regulations
+  repository-directory: ${java.io.tmpdir}
+  user: user
+  password: password
+  head-branch: master
+
 scheduled:
   repositoryRefreshCron: '0 * * ? * *'
   repositoryRefreshTimezone: UTC

@@ -53,7 +53,9 @@ public class UserImportController {
     this.openShiftService = openShiftService;
   }
 
-  @Operation(parameters = @Parameter(in = ParameterIn.QUERY,
+  @Operation(
+      description = "Store file endpoint",
+      parameters = @Parameter(in = ParameterIn.QUERY,
       name = "securityContext",
       schema = @Schema(type = "string")),
       responses = {
@@ -69,7 +71,8 @@ public class UserImportController {
             .body(userImportService.storeFile(file, securityContext));
   }
 
-  @Operation(parameters = @Parameter(in = ParameterIn.QUERY,
+  @Operation(description = "Get file information",
+      parameters = @Parameter(in = ParameterIn.QUERY,
       name = "securityContext",
       schema = @Schema(type = "string")),
       responses = {
@@ -85,13 +88,14 @@ public class UserImportController {
 
 
   @Operation(
+      description = "Delete file endpoint",
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.ALL_VALUE,
                   schema = @Schema(implementation = CephFileInfoDto.class)))})
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteFile(@PathVariable("id") String id) {
+  public ResponseEntity<Void> deleteFile(@PathVariable("id") @Parameter(required = true, description = "Resource identifier") String id) {
     log.info("deleteFile called");
     userImportService.delete(id);
     return ResponseEntity.noContent().build();
@@ -111,7 +115,8 @@ public class UserImportController {
             .body(new InputStreamResource(cephObject.getContent()));
   }*/
 
-  @Operation(responses = {
+  @Operation(description = "Start import endpoint",
+      responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.ALL_VALUE))})

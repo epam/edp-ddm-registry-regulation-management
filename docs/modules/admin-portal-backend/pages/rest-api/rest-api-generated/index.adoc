@@ -1,0 +1,2333 @@
+= Registry regulations admin-portal
+team@openapitools.org
+1.0
+:toc: left
+:numbered:
+:toclevels: 3
+:source-highlighter: highlightjs
+:keywords: openapi, rest, Registry regulations admin-portal
+:specDir: docs/modules/admin-portal-backend/pages/rest-api/rest-api-includes/
+:snippetDir: target/generated-snippets/
+:generator-template: v1 2019-12-20
+:info-url: MVN info URL
+:app-name: Registry regulations admin-portal
+
+== Introduction
+This document describes REST API of 'Registry regulations admin-portal'
+
+
+include::{specDir}intro.adoc[opts=optional]
+
+
+
+== Endpoints
+
+
+[.CandidateVersionFormsRestAPI]
+=== CandidateVersionFormsRestAPI
+
+
+[.deleteForm]
+==== DELETE /versions/candidates/{versionCandidateId}/forms/{formName}
+
+Operation Id:: deleteForm
+
+
+
+
+===== Description
+
+Delete form
+
+
+include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 204
+| No Content
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/DELETE.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.formCreate]
+==== POST /versions/candidates/{versionCandidateId}/forms/{formName}
+
+Operation Id:: formCreate
+
+
+
+
+===== Description
+
+Create new form
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| body
+|  <<string>>
+| X
+| 
+| 
+
+|===
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 201
+| Created
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 409
+| Conflict
+|  <<DetailedErrorResponse>>
+
+
+| 422
+| Unprocessable Entity
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/forms/{formName}/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getForm1]
+==== GET /versions/candidates/{versionCandidateId}/forms/{formName}
+
+Operation Id:: getForm1
+
+
+
+
+===== Description
+
+Get form
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/forms/{formName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getFormsByVersionId]
+==== GET /versions/candidates/{versionCandidateId}/forms
+
+Operation Id:: getFormsByVersionId
+
+
+
+
+===== Description
+
+Get forms list for specific version
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<FormDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<FormDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/forms/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.updateForm]
+==== PUT /versions/candidates/{versionCandidateId}/forms/{formName}
+
+Operation Id:: updateForm
+
+
+
+
+===== Description
+
+Update form
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/PUT/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| body
+|  <<string>>
+| X
+| 
+| 
+
+|===
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 422
+| Unprocessable Entity
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/PUT/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/PUT/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/forms/{formName}/PUT/PUT.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/PUT/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.CandidateVersionRestAPI]
+=== CandidateVersionRestAPI
+
+
+[.createNewVersion]
+==== POST /versions/candidates
+
+Operation Id:: createNewVersion
+
+
+
+
+===== Description
+
+Endpoint to create new version candidate.
+
+
+// markup not found, no include::{specDir}versions/candidates/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| CreateVersionRequest
+|  <<CreateVersionRequest>>
+| X
+| 
+| 
+
+|===
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<VersionInfoDetailed>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 201
+| OK
+|  <<VersionInfoDetailed>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 422
+| Unprocessable Entity
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.declineVersionCandidate]
+==== POST /versions/candidates/{versionCandidateId}/decline
+
+Operation Id:: declineVersionCandidate
+
+
+
+
+===== Description
+
+Abandon version candidate by id
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/decline/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 204
+| No Content
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/decline/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/decline/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/decline/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/decline/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getVersionDetails]
+==== GET /versions/candidates/{versionCandidateId}
+
+Operation Id:: getVersionDetails
+
+
+
+
+===== Description
+
+Get version details by id
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<VersionInfoDetailed>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<VersionInfoDetailed>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getVersionsList]
+==== GET /versions/candidates
+
+Operation Id:: getVersionsList
+
+
+
+
+===== Description
+
+Get versions list
+
+
+// markup not found, no include::{specDir}versions/candidates/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<VersionInfo>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<VersionInfo>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.submitVersionCandidate]
+==== POST /versions/candidates/{versionCandidateId}/submit
+
+Operation Id:: submitVersionCandidate
+
+
+
+
+===== Description
+
+Submit version candidate by id
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/submit/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 204
+| No Content
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 409
+| Conflict
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/submit/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/submit/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/submit/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/submit/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.MasterVersionFormsRestAPI]
+=== MasterVersionFormsRestAPI
+
+
+[.getForm]
+==== GET /versions/master/forms/{formName}
+
+Operation Id:: getForm
+
+
+
+
+===== Description
+
+Get form
+
+
+// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+<<String>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<String>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/forms/\{formName\}/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/forms/\{formName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/forms/{formName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getFormsFromMaster]
+==== GET /versions/master/forms
+
+Operation Id:: getFormsFromMaster
+
+
+
+
+===== Description
+
+Get forms list for master version
+
+
+// markup not found, no include::{specDir}versions/master/forms/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<FormDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<FormDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/forms/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/forms/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/forms/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/forms/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.MasterVersionRestAPI]
+=== MasterVersionRestAPI
+
+
+[.getMasterVersionInfo]
+==== GET /versions/master
+
+Operation Id:: getMasterVersionInfo
+
+
+
+
+===== Description
+
+Get master version
+
+
+// markup not found, no include::{specDir}versions/master/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<MasterVersionInfoDetailed>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<MasterVersionInfoDetailed>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.UserImportController]
+=== UserImportController
+
+
+[.deleteFile]
+==== DELETE /batch-loads/users/{id}
+
+Operation Id:: deleteFile
+
+
+
+
+===== Description
+
+Delete file endpoint
+
+
+// markup not found, no include::{specDir}batch-loads/users/\{id\}/DELETE/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| id
+| Resource identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+
+
+===== Return Type
+
+<<CephFileInfoDto>>
+
+
+===== Content Type
+
+* */*
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<CephFileInfoDto>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :batch-loads/users/{id}/DELETE/DELETE.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}batch-loads/users/\{id\}/DELETE/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getFileInfo]
+==== GET /batch-loads/users
+
+Operation Id:: getFileInfo
+
+
+
+
+===== Description
+
+Get file information
+
+
+// markup not found, no include::{specDir}batch-loads/users/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Query Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| securityContext
+|  
+| X
+| null
+| 
+
+|===
+
+
+===== Return Type
+
+<<CephFileInfoDto>>
+
+
+===== Content Type
+
+* */*
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<CephFileInfoDto>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}batch-loads/users/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}batch-loads/users/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :batch-loads/users/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}batch-loads/users/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.handleFileUpload]
+==== POST /batch-loads/users
+
+Operation Id:: handleFileUpload
+
+
+
+
+===== Description
+
+Store file endpoint
+
+
+// markup not found, no include::{specDir}batch-loads/users/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| HandleFileUploadRequest
+|  <<HandleFileUploadRequest>>
+| -
+| 
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Query Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| securityContext
+|  
+| -
+| null
+| 
+
+|===
+
+
+===== Return Type
+
+<<CephFileInfoDto>>
+
+
+===== Content Type
+
+* */*
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<CephFileInfoDto>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}batch-loads/users/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}batch-loads/users/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :batch-loads/users/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}batch-loads/users/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.imports]
+==== POST /batch-loads/users/imports
+
+Operation Id:: imports
+
+
+
+
+===== Description
+
+Start import endpoint
+
+
+// markup not found, no include::{specDir}batch-loads/users/imports/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| SecurityContext
+|  <<SecurityContext>>
+| -
+| 
+| 
+
+|===
+
+
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* */*
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}batch-loads/users/imports/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}batch-loads/users/imports/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :batch-loads/users/imports/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}batch-loads/users/imports/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[#models]
+== Models
+
+
+[#CephFileInfoDto]
+=== _CephFileInfoDto_ 
+
+
+
+[.fields-CephFileInfoDto]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| id
+| 
+| String 
+| 
+|  
+
+| name
+| 
+| String 
+| 
+|  
+
+| size
+| 
+| Long 
+| 
+| int64 
+
+|===
+
+
+[#CreateVersionRequest]
+=== _CreateVersionRequest_ 
+
+
+
+[.fields-CreateVersionRequest]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| X
+| String 
+| Name from request
+|  
+
+| description
+| X
+| String 
+| Description from request
+|  
+
+|===
+
+
+[#DetailedErrorResponse]
+=== _DetailedErrorResponse_ 
+
+
+
+[.fields-DetailedErrorResponse]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| traceId
+| X
+| String 
+| Request identifier
+|  
+
+| code
+| X
+| String 
+| Error code
+|  
+
+| details
+| X
+| String 
+| Error details
+|  
+
+| localizedMessage
+| 
+| String 
+| Localized error message
+|  
+
+|===
+
+
+[#FormDetailsShort]
+=== _FormDetailsShort_ 
+
+
+
+[.fields-FormDetailsShort]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| X
+| String 
+| Form service name
+|  
+
+| title
+| X
+| String 
+| Form name
+|  
+
+| created
+| X
+| Date 
+| Form creation date
+| date-time 
+
+| updated
+| 
+| Date 
+| Form updated date
+| date-time 
+
+|===
+
+
+[#HandleFileUploadRequest]
+=== _HandleFileUploadRequest_ 
+
+
+
+[.fields-HandleFileUploadRequest]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| file
+| X
+| File 
+| 
+| binary 
+
+| securityContext
+| 
+| SecurityContext 
+| 
+|  
+
+|===
+
+
+[#Inspection]
+=== _Inspection_ 
+
+Version candidate inspections
+
+[.fields-Inspection]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| X
+| String 
+| Name of inspection
+|  
+
+| inspector
+| X
+| String 
+| Person who performed inspection
+|  
+
+| result
+| X
+| String 
+| Inspection result
+|  _Enum:_ APPROVED, REJECTED, 
+
+| resultDetails
+| X
+| String 
+| Inspection result detailsN
+|  
+
+|===
+
+
+[#MasterVersionInfoDetailed]
+=== _MasterVersionInfoDetailed_ 
+
+
+
+[.fields-MasterVersionInfoDetailed]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| id
+| 
+| String 
+| Last version candidate identifier
+|  
+
+| name
+| 
+| String 
+| Last version candidate name
+|  
+
+| description
+| 
+| String 
+| Last version candidate description
+|  
+
+| author
+| 
+| String 
+| Last version candidate author
+|  
+
+| latestUpdate
+| 
+| Date 
+| Last version candidate update time
+| date-time 
+
+| published
+| 
+| Boolean 
+| Last version candidate publication flag
+|  
+
+| inspector
+| 
+| String 
+| Last version candidate inspector
+|  
+
+| validations
+| 
+| List  of <<Validation>>
+| Last version candidate validations
+|  
+
+|===
+
+
+[#SecurityContext]
+=== _SecurityContext_ 
+
+
+
+[.fields-SecurityContext]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| accessToken
+| 
+| String 
+| 
+|  
+
+|===
+
+
+[#Validation]
+=== _Validation_ 
+
+Version candidate validations
+
+[.fields-Validation]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| X
+| String 
+| Validation name
+|  
+
+| type
+| X
+| String 
+| Validation type
+|  _Enum:_ REGULATION_INTEGRITY, TEST, 
+
+| result
+| X
+| String 
+| Validation result
+|  _Enum:_ APPROVED, REJECTED, 
+
+| resultDetails
+| X
+| String 
+| Validation result details
+|  
+
+|===
+
+
+[#VersionInfo]
+=== _VersionInfo_ 
+
+
+
+[.fields-VersionInfo]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| id
+| X
+| String 
+| Version candidate identifier
+|  
+
+| name
+| X
+| String 
+| Version candidate name
+|  
+
+| description
+| 
+| String 
+| Version candidate description
+|  
+
+|===
+
+
+[#VersionInfoDetailed]
+=== _VersionInfoDetailed_ 
+
+
+
+[.fields-VersionInfoDetailed]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| id
+| X
+| String 
+| Version candidate identifier
+|  
+
+| name
+| X
+| String 
+| Version candidate name
+|  
+
+| description
+| 
+| String 
+| Version candidate description
+|  
+
+| author
+| X
+| String 
+| Version candidate author
+|  
+
+| creationDate
+| X
+| Date 
+| Version candidate creation time
+| date-time 
+
+| latestUpdate
+| 
+| Date 
+| Version candidate update time
+| date-time 
+
+| hasConflicts
+| X
+| Boolean 
+| Version candidate conflicts flag
+|  
+
+| inspections
+| 
+| List  of <<Inspection>>
+| Version candidate inspections
+|  
+
+| validations
+| 
+| List  of <<Validation>>
+| Version candidate validations
+|  
+
+|===
+
+

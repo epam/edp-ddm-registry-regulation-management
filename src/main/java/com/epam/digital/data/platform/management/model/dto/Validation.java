@@ -15,14 +15,19 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class Validation {
+  @Schema(required = true, description = "Validation name")
   private String name;
+  @Schema(required = true, description = "Validation type")
   private ValidationType type;
+  @Schema(required = true, description = "Validation result")
   private ResultValues result;
+  @Schema(required = true, description = "Validation result details")
   private String resultDetails;
 }
