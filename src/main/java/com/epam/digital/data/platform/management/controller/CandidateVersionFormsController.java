@@ -49,9 +49,11 @@ public class CandidateVersionFormsController {
 
   private final FormService formService;
 
-  @Operation(summary = "Get forms list for specific version",
+  @Operation(description = "Get forms list for specific version",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -74,7 +76,7 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
-      @PathVariable String versionCandidateId) throws Exception {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) throws Exception {
     return ResponseEntity.ok()
         .body(formService.getFormListByVersion(versionCandidateId).stream()
             .map(e -> FormDetailsShort.builder()
@@ -86,9 +88,11 @@ public class CandidateVersionFormsController {
             .collect(Collectors.toList()));
   }
 
-  @Operation(summary = "Create new form",
+  @Operation(description = "Create new form",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "201",
@@ -118,7 +122,8 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PostMapping("/{formName}")
   public ResponseEntity<String> formCreate(@RequestBody String form,
-      @PathVariable String versionCandidateId, @PathVariable String formName) throws Exception {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
     formService.createForm(formName, form, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
@@ -126,9 +131,11 @@ public class CandidateVersionFormsController {
         .body(form);
   }
 
-  @Operation(summary = "Get form",
+  @Operation(description = "Get form",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -147,16 +154,19 @@ public class CandidateVersionFormsController {
               description = "Internal server error",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{formName}")
-  public ResponseEntity<String> getForm(@PathVariable String versionCandidateId,
-      @PathVariable String formName) throws Exception {
+  public ResponseEntity<String> getForm(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(formService.getFormContent(formName, versionCandidateId));
   }
 
-  @Operation(summary = "Update form",
+  @Operation(description = "Update form",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -182,17 +192,19 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping(value = "/{formName}")
   public ResponseEntity<String> updateForm(@RequestBody String form,
-      @PathVariable String versionCandidateId,
-      @PathVariable String formName) throws Exception {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
     formService.updateForm(String.valueOf(form), formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(form);
   }
 
-  @Operation(summary = "Delete form",
+  @Operation(description = "Delete form",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "204",
@@ -213,8 +225,8 @@ public class CandidateVersionFormsController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @DeleteMapping("/{formName}")
-  public ResponseEntity<String> deleteForm(@PathVariable String versionCandidateId,
-      @PathVariable String formName) throws Exception {
+  public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
     formService.deleteForm(formName, versionCandidateId);
     return ResponseEntity.noContent().build();
   }

@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,8 +26,12 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 public class FormDetailsShort {
+  @Schema(required = true, description = "Form service name")
   private String name;
+  @Schema(required = true, description = "Form name")
   private String title;
+  @Schema(required = true, description = "Form creation date")
   private LocalDateTime created;
+  @Schema(description = "Form updated date")
   private LocalDateTime updated;
 }

@@ -15,14 +15,19 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class Inspection {
+  @Schema(required = true, description = "Name of inspection")
   private String name;
+  @Schema(required = true, description = "Person who performed inspection")
   private String inspector;
+  @Schema(required = true, description = "Inspection result")
   private ResultValues result;
+  @Schema(required = true, description = "Inspection result detailsN")
   private String resultDetails;
 }

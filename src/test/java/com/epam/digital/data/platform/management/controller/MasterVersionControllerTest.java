@@ -1,7 +1,12 @@
 package com.epam.digital.data.platform.management.controller;
 
+import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_AUTHOR;
+import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_DESCRIPTION;
+import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_NAME;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,32 +16,47 @@ import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto
 import com.epam.digital.data.platform.management.service.VersionManagementService;
 import java.time.LocalDateTime;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @ControllerTest(MasterVersionController.class)
 class MasterVersionControllerTest {
 
   static final String BASE_URL = "/versions/master";
 
-  @Autowired
   MockMvc mockMvc;
 
   @MockBean
   VersionManagementService versionManagementService;
+
+  @RegisterExtension
+  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
+
+  @BeforeEach
+  public void setUp(WebApplicationContext webApplicationContext,
+      RestDocumentationContextProvider restDocumentation) {
+
+    this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+        .apply(documentationConfiguration(restDocumentation)).build();
+  }
 
   @Test
   @SneakyThrows
   void getMaster() {
     var expectedChangeInfo = ChangeInfoDetailedDto.builder()
         .number(1)
-        .owner("owner@epam.com")
-        .description("description")
-        .subject("name")
+        .owner(VERSION_CANDIDATE_AUTHOR)
+        .description(VERSION_CANDIDATE_DESCRIPTION)
+        .subject(VERSION_CANDIDATE_NAME)
         .submitted(LocalDateTime.of(2022, 7, 29, 12, 31))
         .build();
     Mockito.when(versionManagementService.getMasterInfo()).thenReturn(expectedChangeInfo);
@@ -46,13 +66,14 @@ class MasterVersionControllerTest {
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
             jsonPath("$.id", is("1")),
-            jsonPath("$.name", is("name")),
-            jsonPath("$.description", is("description")),
-            jsonPath("$.author", is("owner@epam.com")),
+            jsonPath("$.name", is(VERSION_CANDIDATE_NAME)),
+            jsonPath("$.description", is(VERSION_CANDIDATE_DESCRIPTION)),
+            jsonPath("$.author", is(VERSION_CANDIDATE_AUTHOR)),
             jsonPath("$.latestUpdate", is("2022-07-29T12:31:00.000Z")),
             jsonPath("$.published", nullValue()),
             jsonPath("$.inspector", nullValue()),
-            jsonPath("$.validations", nullValue()));
+            jsonPath("$.validations", nullValue()))
+        .andDo(document("versions/master/GET"));
   }
 
   @Test
@@ -71,6 +92,7 @@ class MasterVersionControllerTest {
             jsonPath("$.latestUpdate", nullValue()),
             jsonPath("$.published", nullValue()),
             jsonPath("$.inspector", nullValue()),
-            jsonPath("$.validations", nullValue()));
+            jsonPath("$.validations", nullValue()))
+        .andDo(document("versions/master/GET"));
   }
 }

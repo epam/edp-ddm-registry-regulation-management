@@ -31,7 +31,8 @@ spring:
       config:
         enabled: false
     vault:
-      enabled: false
+      uri: https://localhost:8200
+      authentication: NONE
   config:
     activate:
       on-profile: local

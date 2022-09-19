@@ -47,9 +47,11 @@ public class MasterVersionFormsController {
   private final FormService formService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
-  @Operation(summary = "Get forms list for master version", parameters = {
+  @Operation(description = "Get forms list for master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string"))},
       responses = {
           @ApiResponse(responseCode = "200",
@@ -79,9 +81,11 @@ public class MasterVersionFormsController {
         .collect(Collectors.toList()));
   }
 
-  @Operation(summary = "Get form",
+  @Operation(description = "Get form",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -103,7 +107,7 @@ public class MasterVersionFormsController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{formName}")
-  public ResponseEntity<Object> getForm(@PathVariable String formName) throws Exception {
+  public ResponseEntity<Object> getForm(@PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)

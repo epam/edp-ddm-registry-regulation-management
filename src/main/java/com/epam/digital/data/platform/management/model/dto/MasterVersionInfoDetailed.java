@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,33 +33,41 @@ public class MasterVersionInfoDetailed {
   /**
    * last MR number
    */
+  @Schema(description = "Last version candidate identifier")
   private String id;
   /**
    * last MR name
    */
+  @Schema(description = "Last version candidate name")
   private String name;
   /**
    * last MR description
    */
+  @Schema(description = "Last version candidate description")
   private String description;
   /**
    * last MR autor
    */
+  @Schema(description = "Last version candidate author")
   private String author;
   /**
    * last MR merge time
    */
+  @Schema(description = "Last version candidate update time")
   private LocalDateTime latestUpdate;
   /**
    * todo this field can be retrieved only from jenkins
    */
+  @Schema(description = "Last version candidate publication flag")
   private Boolean published;
   /**
    * last MR reviewer
    */
+  @Schema(description = "Last version candidate inspector")
   private String inspector;
   /**
    * last MR validations
    */
+  @Schema(description = "Last version candidate validations")
   private List<Validation> validations;
 }

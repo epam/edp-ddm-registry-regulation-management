@@ -18,15 +18,20 @@ package com.epam.digital.data.platform.management.model.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
 public class DetailedErrorResponse {
+  @Schema(required = true, description = "Request identifier")
   private String traceId;
+  @Schema(required = true, description = "Error code")
   private String code;
+  @Schema(required = true, description = "Error details")
   private String details;
+  @Schema(description = "Localized error message")
   private String localizedMessage;
 
   @JsonInclude(Include.NON_NULL)

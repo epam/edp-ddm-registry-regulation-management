@@ -50,9 +50,11 @@ public class CandidateVersionController {
 
   private final VersionManagementService versionManagementService;
 
-  @Operation(summary = "Get versions list",
+  @Operation(description = "Get versions list",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -84,9 +86,11 @@ public class CandidateVersionController {
   }
 
 
-  @Operation(summary = "Abandon version candidate by id",
+  @Operation(description = "Abandon version candidate by id",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "204",
@@ -109,14 +113,16 @@ public class CandidateVersionController {
       })
   @PostMapping("/{versionCandidateId}/decline")
   public ResponseEntity<String> declineVersionCandidate(
-      @PathVariable String versionCandidateId) {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     versionManagementService.decline(versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
-  @Operation(summary = "Submit version candidate by id",
+  @Operation(description = "Submit version candidate by id",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "204",
@@ -143,16 +149,18 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @PostMapping("/{versionCandidateId}/submit")
-  public ResponseEntity<String> submitVersionCandidate(@PathVariable String versionCandidateId) {
+  public ResponseEntity<String> submitVersionCandidate(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     versionManagementService.markReviewed(versionCandidateId);
     versionManagementService.submit(versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
 
-  @Operation(summary = "Create new version",
+  @Operation(description = "Endpoint to create new version candidate.",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "201",
@@ -183,9 +191,11 @@ public class CandidateVersionController {
         .body(mapToVersionInfoDetailed(changeInfo));
   }
 
-  @Operation(summary = "Get version details by id",
+  @Operation(description = "Get version details by id",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -209,7 +219,7 @@ public class CandidateVersionController {
       })
   @GetMapping("/{versionCandidateId}")
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
-      @PathVariable String versionCandidateId) throws Exception {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) throws Exception {
     ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(versionCandidateId);
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }

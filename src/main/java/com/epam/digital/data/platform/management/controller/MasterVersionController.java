@@ -41,9 +41,11 @@ public class MasterVersionController {
 
   private final VersionManagementService versionManagementService;
 
-  @Operation(summary = "Get master version",
+  @Operation(description = "Get master version",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
