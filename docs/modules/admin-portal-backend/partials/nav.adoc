@@ -3,9 +3,9 @@
 ***** xref:admin-portal-backend:context.adoc[Опис контексту компоненту]
 
 ***** xref:admin-portal-backend:structure.adoc[Структура компоненту]
-****** xref:forms/summary.adoc[Форми]
-****** xref:business-processes/summary.adoc[Бізнес-процеси]
-****** xref:data-model/summary.adoc[Модель даних]
+****** xref:admin-portal-backend:forms/summary.adoc[Форми]
+****** xref:admin-portal-backend:business-processes/summary.adoc[Бізнес-процеси]
+****** xref:admin-portal-backend:data-model/summary.adoc[Модель даних]
 
 ***** xref:admin-portal-backend:integration.adoc[Взаємодія з іншими сервісами платформи та користувачами]
 
@@ -13,4 +13,4 @@
 
 ***** xref:admin-portal-backend:technologies.adoc[Технологічний стек]
 
-***** xref:rest-api/rest-api-generated/index.adoc[RestAPI]
+***** xref:admin-portal-backend:rest-api/rest-api-generated/index.adoc[RestAPI]
