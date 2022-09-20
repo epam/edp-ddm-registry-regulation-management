@@ -51,31 +51,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public List<BusinessProcessResponse> getProcessesByVersion(String versionName) {
-    VersionedFileRepository repo;
-    List<FileResponse> fileList;
-    try {
-      repo = repoFactory.getRepoByVersion(versionName);
-      fileList = repo.getFileList(DIRECTORY_PATH);
-    } catch (Exception e) {
-      throw new ReadingRepositoryException("Could not read repo to get process", e);
-    }
-    List<BusinessProcessResponse> processes = new ArrayList<>();
-    for (FileResponse fileResponse : fileList) {
-      if (FileStatus.DELETED.equals(fileResponse.getStatus())) {
-        continue;
-      }
-      String processContent;
-      processContent = getProcessContent(repo, fileResponse);
-      processes.add(BusinessProcessResponse.builder()
-          .name(fileResponse.getName())
-          .path(fileResponse.getPath())
-          .status(fileResponse.getStatus())
-          .created(fileResponse.getCreated())
-          .updated(fileResponse.getUpdated())
-          .title(getNameFromContent(processContent))
-          .build());
-    }
-    return processes;
+    return getProcessesByVersion(versionName, FileStatus.DELETED);
+  }
+
+  @Override
+  public List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName) {
+    return getProcessesByVersion(versionName, FileStatus.CURRENT);
   }
 
   @Override
@@ -151,5 +132,33 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   private String getProcessPath(String processName) {
     return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName),
         BPMN_FILE_EXTENSION);
+  }
+
+  private List<BusinessProcessResponse> getProcessesByVersion(String versionName, FileStatus skippedStatus) {
+    VersionedFileRepository repo;
+    List<FileResponse> fileList;
+    try {
+      repo = repoFactory.getRepoByVersion(versionName);
+      fileList = repo.getFileList(DIRECTORY_PATH);
+    } catch (Exception e) {
+      throw new ReadingRepositoryException("Could not read repo to get process", e);
+    }
+    List<BusinessProcessResponse> processes = new ArrayList<>();
+    for (FileResponse fileResponse : fileList) {
+      if (fileResponse.getStatus().equals(skippedStatus)) {
+        continue;
+      }
+      String processContent;
+      processContent = getProcessContent(repo, fileResponse);
+      processes.add(BusinessProcessResponse.builder()
+          .name(fileResponse.getName())
+          .path(fileResponse.getPath())
+          .status(fileResponse.getStatus())
+          .created(fileResponse.getCreated())
+          .updated(fileResponse.getUpdated())
+          .title(getNameFromContent(processContent))
+          .build());
+    }
+    return processes;
   }
 }

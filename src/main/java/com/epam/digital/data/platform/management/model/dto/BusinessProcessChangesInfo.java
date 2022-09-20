@@ -27,7 +27,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @EqualsAndHashCode
-public class ChangeFormInfo {
+public class BusinessProcessChangesInfo {
   private String name;
   private String title;
   private FileStatus status;

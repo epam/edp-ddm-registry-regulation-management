@@ -10,6 +10,8 @@ public interface FormService {
    */
   List<FormResponse> getFormListByVersion(String versionName) throws Exception;
 
+  List<FormResponse> getChangedFormsListByVersion(String versionName) throws Exception;
+
   /**
    * Create new form - create form from scratch or create from copy
    */

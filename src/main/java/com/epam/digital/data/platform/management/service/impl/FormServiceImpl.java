@@ -26,24 +26,12 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public List<FormResponse> getFormListByVersion(String versionName) throws Exception {
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-    List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
-    List<FormResponse> forms = new ArrayList<>();
-    for (FileResponse fileResponse : fileList) {
-      if (FileStatus.DELETED.equals(fileResponse.getStatus())) {
-        continue;
-      }
-      String formContent = repo.readFile(getFormPath(fileResponse.getName()));
-      forms.add(FormResponse.builder()
-          .name(fileResponse.getName())
-          .path(fileResponse.getPath())
-          .status(fileResponse.getStatus())
-          .created(fileResponse.getCreated())
-          .updated(fileResponse.getUpdated())
-          .title(getTitleFromFormContent(formContent))
-          .build());
-    }
-    return forms;
+    return getFormListByVersion(versionName, FileStatus.DELETED);
+  }
+
+  @Override
+  public List<FormResponse> getChangedFormsListByVersion(String versionName) throws Exception {
+    return getFormListByVersion(versionName, FileStatus.CURRENT);
   }
 
   @Override
@@ -81,5 +69,26 @@ public class FormServiceImpl implements FormService {
 
   private String getTitleFromFormContent(String formContent) {
     return JsonPath.read(formContent, FORM_TITLE_PATH);
+  }
+
+  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus) throws Exception {
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
+    List<FormResponse> forms = new ArrayList<>();
+    for (FileResponse fileResponse : fileList) {
+      if (fileResponse.getStatus().equals(skippedStatus)) {
+        continue;
+      }
+      String formContent = repo.readFile(getFormPath(fileResponse.getName()));
+      forms.add(FormResponse.builder()
+          .name(fileResponse.getName())
+          .path(fileResponse.getPath())
+          .status(fileResponse.getStatus())
+          .created(fileResponse.getCreated())
+          .updated(fileResponse.getUpdated())
+          .title(getTitleFromFormContent(formContent))
+          .build());
+    }
+    return forms;
   }
 }

@@ -24,6 +24,8 @@ public interface BusinessProcessService {
 
   List<BusinessProcessResponse> getProcessesByVersion(String versionName);
 
+  List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName);
+
   void createProcess(String processName, String content, String versionName) throws Exception;
 
   String getProcessContent(String processName, String versionName);
