@@ -225,8 +225,32 @@ public class CandidateVersionController {
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }
 
+  @Operation(summary = "Get version changes by id",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = VersionChanges.class))),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))
+      })
   @GetMapping("/{versionCandidateId}/changes")
-  public ResponseEntity<VersionChanges> getVersionChanges(@PathVariable String versionCandidateId) {
+  public ResponseEntity<VersionChanges> getVersionChanges(@PathVariable String versionCandidateId) throws Exception {
     return ResponseEntity.ok().body(versionManagementService.getVersionChanges(versionCandidateId));
   }
 
