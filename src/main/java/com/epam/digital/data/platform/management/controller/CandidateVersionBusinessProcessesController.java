@@ -96,7 +96,7 @@ public class CandidateVersionBusinessProcessesController {
       responses = {
           @ApiResponse(responseCode = "201",
               description = "Created",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE)),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -125,7 +125,7 @@ public class CandidateVersionBusinessProcessesController {
     businessProcessService.createProcess(businessProcessName, businessProcess, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId, businessProcessName)))
-        .contentType(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.TEXT_XML)
         .body(businessProcess);
   }
 
@@ -136,7 +136,7 @@ public class CandidateVersionBusinessProcessesController {
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE)),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -154,7 +154,7 @@ public class CandidateVersionBusinessProcessesController {
   public ResponseEntity<String> getBusinessProcess(@PathVariable String versionCandidateId,
       @PathVariable String businessProcessName) {
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.TEXT_XML)
         .body(businessProcessService.getProcessContent(businessProcessName, versionCandidateId));
   }
 
@@ -165,7 +165,7 @@ public class CandidateVersionBusinessProcessesController {
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE)),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -189,7 +189,7 @@ public class CandidateVersionBusinessProcessesController {
       @PathVariable String versionCandidateId, @PathVariable String businessProcessName) {
     businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.TEXT_XML)
         .body(businessProcess);
   }
 
