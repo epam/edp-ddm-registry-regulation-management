@@ -88,7 +88,7 @@ public class MasterVersionBusinessProcessesController {
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE,
                   schema = @Schema(implementation = Map.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
@@ -108,7 +108,7 @@ public class MasterVersionBusinessProcessesController {
   public ResponseEntity<String> getBusinessProcess(@PathVariable String businessProcessName) {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.TEXT_XML)
         .body(businessProcessService.getProcessContent(businessProcessName, masterVersionId));
   }
 }
