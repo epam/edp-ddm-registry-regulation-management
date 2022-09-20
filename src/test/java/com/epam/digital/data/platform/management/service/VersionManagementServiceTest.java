@@ -240,4 +240,10 @@ class VersionManagementServiceTest {
         .isNull();
     Mockito.verify(gerritService).getLastMergedMR();
   }
+
+  @Test
+  @SneakyThrows
+  void getVersionChanges() {
+
+  }
 }

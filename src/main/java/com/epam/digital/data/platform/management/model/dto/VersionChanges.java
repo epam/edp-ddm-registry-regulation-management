@@ -31,7 +31,7 @@ import java.util.List;
 @EqualsAndHashCode
 public class VersionChanges {
 
-  private List<ChangeFormInfo> changedForms;
-  private List<ChangeBusinessProcessInfo> changedBusinessProcesses;
+  private List<FormChangesInfo> changedForms;
+  private List<BusinessProcessChangesInfo> changedBusinessProcesses;
 
 }

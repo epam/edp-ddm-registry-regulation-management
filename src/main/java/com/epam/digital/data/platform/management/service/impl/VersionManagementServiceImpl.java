@@ -1,13 +1,18 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.ChangeBusinessProcessInfo;
-import com.epam.digital.data.platform.management.model.dto.ChangeFormInfo;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
+import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
+import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
@@ -17,13 +22,11 @@ import com.google.gerrit.extensions.restapi.RestApiException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +34,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class VersionManagementServiceImpl implements VersionManagementService {
 
+  private final FormService formService;
+  private final BusinessProcessService businessProcessService;
   private final GerritService gerritService;
   private final JGitService jGitService;
   private final GerritPropertiesConfig config;
@@ -77,7 +82,6 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     return gerritService.vote(voteRequestDto, label);
   }
 
-
   @Override
   public List<VersionedFileInfo> getVersionFileList(String versionName) throws Exception {
     return gerritService.getListOfChangesInMR(versionName).entrySet().stream()
@@ -107,21 +111,17 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  @SneakyThrows
-  public VersionChanges getVersionChanges(String versionCandidateId) {
-    List<VersionedFileInfo> changedFiles = getVersionFileList(versionCandidateId);
-    return getVersionChanges(changedFiles);
-  }
-
-  private VersionChanges getVersionChanges(List<VersionedFileInfo> changedFiles) {
-    List<ChangeFormInfo> changedForms = new ArrayList<>();
-    List<ChangeBusinessProcessInfo> changeBusinessProcesses = new ArrayList<>();
-    for (VersionedFileInfo fileInfo : changedFiles) {
-//      if (fileInfo.)
-    }
+  public VersionChanges getVersionChanges(String versionCandidateId) throws Exception {
+    List<FormResponse> formsList = formService.getChangedFormsListByVersion(versionCandidateId);
+    List<BusinessProcessResponse> businessProcessesList = businessProcessService.getChangedProcessesByVersion(versionCandidateId);
     return VersionChanges.builder()
-        .changedForms(changedForms)
-        .changedBusinessProcesses(changeBusinessProcesses)
+        .changedBusinessProcesses(businessProcessesList.stream()
+            .filter(businessProcessResponse -> !businessProcessResponse.getStatus().equals(FileStatus.CURRENT))
+            .map(this::toChangeInfo)
+            .collect(Collectors.toList()))
+        .changedForms(formsList.stream()
+            .filter(e -> !e.getStatus().equals(FileStatus.CURRENT))
+            .map(this::toChangeInfo).collect(Collectors.toList()))
         .build();
   }
 
@@ -157,5 +157,21 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     return labels.entrySet()
         .stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().approved != null));
+  }
+
+  private BusinessProcessChangesInfo toChangeInfo(BusinessProcessResponse businessProcessResponse) {
+    return BusinessProcessChangesInfo.builder()
+        .name(businessProcessResponse.getName())
+        .title(businessProcessResponse.getTitle())
+        .status(businessProcessResponse.getStatus())
+        .build();
+  }
+
+  private FormChangesInfo toChangeInfo(FormResponse formResponse) {
+    return FormChangesInfo.builder()
+        .name(formResponse.getName())
+        .title(formResponse.getTitle())
+        .status(formResponse.getStatus())
+        .build();
   }
 }
