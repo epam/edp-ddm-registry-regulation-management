@@ -61,7 +61,7 @@ public interface VersionManagementService {
 //     */
     boolean vote(String versionName, String label, short value) throws RestApiException;
 
-    VersionChanges getVersionChanges(String versionCandidateId);
+    VersionChanges getVersionChanges(String versionCandidateId) throws Exception;
 //
 //    /**
 //     * Add robot comment
