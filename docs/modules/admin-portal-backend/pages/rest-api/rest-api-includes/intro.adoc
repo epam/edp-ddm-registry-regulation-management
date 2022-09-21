@@ -7,11 +7,11 @@ API includes managing operations over registry regulations entities:
 - Business processes
 - Data model
 - Global settings
-- Report templates
-
-=== Authorisation
 
 === RestAPI structure
+
+image::rest-api-structure.svg[admin-portal-backend RestAPI structure]
+
 
 === Optimistic locking
 
