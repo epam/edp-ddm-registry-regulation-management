@@ -104,7 +104,7 @@ public class MasterVersionBusinessProcessesController {
               description = "Internal server error",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
-  @GetMapping("/{businessProcess}")
+  @GetMapping("/{businessProcessName}")
   public ResponseEntity<String> getBusinessProcess(@PathVariable String businessProcessName) {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok()
