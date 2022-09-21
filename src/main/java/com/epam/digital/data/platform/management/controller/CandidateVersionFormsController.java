@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Candidate version forms Rest API")
+@Tag(name = "Registry regulations version-candidate Forms management Rest API")
 @RestController
 @RequestMapping("/versions/candidates/{versionCandidateId}/forms")
 @RequiredArgsConstructor
@@ -49,7 +49,7 @@ public class CandidateVersionFormsController {
 
   private final FormService formService;
 
-  @Operation(description = "Get forms list for specific version",
+  @Operation(description = "Acquire list of forms for specific version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -88,7 +88,7 @@ public class CandidateVersionFormsController {
             .collect(Collectors.toList()));
   }
 
-  @Operation(description = "Create new form",
+  @Operation(description = "Create new form within specific version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -123,7 +123,7 @@ public class CandidateVersionFormsController {
   @PostMapping("/{formName}")
   public ResponseEntity<String> formCreate(@RequestBody String form,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
+      @PathVariable @Parameter(description = "Name of the new form to be created", required = true) String formName) throws Exception {
     formService.createForm(formName, form, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
@@ -131,7 +131,7 @@ public class CandidateVersionFormsController {
         .body(formService.getFormContent(formName, versionCandidateId));
   }
 
-  @Operation(description = "Get form",
+  @Operation(description = "Get full details of the specific form within version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -162,7 +162,7 @@ public class CandidateVersionFormsController {
         .body(formService.getFormContent(formName, versionCandidateId));
   }
 
-  @Operation(description = "Update form",
+  @Operation(description = "Update existing form within version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -193,14 +193,14 @@ public class CandidateVersionFormsController {
   @PutMapping(value = "/{formName}")
   public ResponseEntity<String> updateForm(@RequestBody String form,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
+      @PathVariable @Parameter(description = "Name of the form to be updated", required = true) String formName) throws Exception {
     formService.updateForm(String.valueOf(form), formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(formService.getFormContent(formName, versionCandidateId));
   }
 
-  @Operation(description = "Delete form",
+  @Operation(description = "Delete existing form within version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -226,7 +226,7 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @DeleteMapping("/{formName}")
   public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws Exception {
+      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName) throws Exception {
     formService.deleteForm(formName, versionCandidateId);
     return ResponseEntity.noContent().build();
   }

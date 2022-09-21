@@ -23,8 +23,329 @@ include::{specDir}intro.adoc[opts=optional]
 == Endpoints
 
 
-[.CandidateVersionFormsRestAPI]
-=== CandidateVersionFormsRestAPI
+[.RegistryRegulationsMasterVersionFormsManagementRestAPI]
+=== RegistryRegulationsMasterVersionFormsManagementRestAPI
+
+
+[.getForm]
+==== GET /versions/master/forms/{formName}
+
+Operation Id:: getForm
+
+
+
+
+===== Description
+
+Get specific form full details
+
+
+// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| formName
+| Form name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+<<String>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<String>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/forms/\{formName\}/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/forms/\{formName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/forms/{formName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getFormsFromMaster]
+==== GET /versions/master/forms
+
+Operation Id:: getFormsFromMaster
+
+
+
+
+===== Description
+
+Get lest of forms for master version
+
+
+// markup not found, no include::{specDir}versions/master/forms/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<FormDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<FormDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/forms/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/forms/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/forms/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/forms/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.RegistryRegulationsMasterVersionManagementRestAPI]
+=== RegistryRegulationsMasterVersionManagementRestAPI
+
+
+[.getMasterVersionInfo]
+==== GET /versions/master
+
+Operation Id:: getMasterVersionInfo
+
+
+
+
+===== Description
+
+Acquire master version full details
+
+
+// markup not found, no include::{specDir}versions/master/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<MasterVersionInfoDetailed>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<MasterVersionInfoDetailed>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/master/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/master/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.RegistryRegulationsVersionCandidateFormsManagementRestAPI]
+=== RegistryRegulationsVersionCandidateFormsManagementRestAPI
 
 
 [.deleteForm]
@@ -37,10 +358,10 @@ Operation Id:: deleteForm
 
 ===== Description
 
-Delete form
+Delete existing form within version-candidate
 
 
-include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/spec.adoc[opts=optional]
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/DELETE/spec.adoc[opts=optional]
 
 
 
@@ -59,7 +380,7 @@ include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/
 | 
 
 | formName
-| Form name 
+| Name of the form to be deleted 
 | X
 | null
 | 
@@ -160,7 +481,7 @@ Operation Id:: formCreate
 
 ===== Description
 
-Create new form
+Create new form within specific version-candidate
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/POST/spec.adoc[opts=optional]
@@ -182,7 +503,7 @@ Create new form
 | 
 
 | formName
-| Form name 
+| Name of the new form to be created 
 | X
 | null
 | 
@@ -306,7 +627,7 @@ Operation Id:: getForm1
 
 ===== Description
 
-Get form
+Get full details of the specific form within version-candidate
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/GET/spec.adoc[opts=optional]
@@ -429,7 +750,7 @@ Operation Id:: getFormsByVersionId
 
 ===== Description
 
-Get forms list for specific version
+Acquire list of forms for specific version-candidate
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/GET/spec.adoc[opts=optional]
@@ -545,7 +866,7 @@ Operation Id:: updateForm
 
 ===== Description
 
-Update form
+Update existing form within version-candidate
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/forms/\{formName\}/PUT/spec.adoc[opts=optional]
@@ -567,7 +888,7 @@ Update form
 | 
 
 | formName
-| Form name 
+| Name of the form to be updated 
 | X
 | null
 | 
@@ -676,8 +997,8 @@ ifdef::internal-generation[]
 endif::internal-generation[]
 
 
-[.CandidateVersionRestAPI]
-=== CandidateVersionRestAPI
+[.RegistryRegulationsVersionCandidateManagementRestAPI]
+=== RegistryRegulationsVersionCandidateManagementRestAPI
 
 
 [.createNewVersion]
@@ -690,7 +1011,7 @@ Operation Id:: createNewVersion
 
 ===== Description
 
-Endpoint to create new version candidate.
+Create new version-candidate from current state of master version.
 
 
 // markup not found, no include::{specDir}versions/candidates/POST/spec.adoc[opts=optional]
@@ -806,7 +1127,7 @@ Operation Id:: declineVersionCandidate
 
 ===== Description
 
-Abandon version candidate by id
+Abandon the existing opened version-candidate. After this operation the version-candidate won't take any changes anymore.
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/decline/POST/spec.adoc[opts=optional]
@@ -822,7 +1143,7 @@ Abandon version candidate by id
 |Name| Description| Required| Default| Pattern
 
 | versionCandidateId
-| Version candidate identifier 
+| Version candidate identifier to abandon 
 | X
 | null
 | 
@@ -923,7 +1244,7 @@ Operation Id:: getVersionDetails
 
 ===== Description
 
-Get version details by id
+Acquire version-candidate full details
 
 
 // markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/GET/spec.adoc[opts=optional]
@@ -939,7 +1260,7 @@ Get version details by id
 |Name| Description| Required| Default| Pattern
 
 | versionCandidateId
-| Version candidate identifier 
+| Version-candidate identifier 
 | X
 | null
 | 
@@ -1039,7 +1360,7 @@ Operation Id:: getVersionsList
 
 ===== Description
 
-Get versions list
+Get list of existing opened version-candidates
 
 
 // markup not found, no include::{specDir}versions/candidates/GET/spec.adoc[opts=optional]
@@ -1137,10 +1458,10 @@ Operation Id:: submitVersionCandidate
 
 ===== Description
 
-Submit version candidate by id
+Integrate version-candidate changes into master version of registry regulation
 
 
-// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/submit/POST/spec.adoc[opts=optional]
+include::{specDir}versions/candidates/\{versionCandidateId\}/submit/POST/spec.adoc[opts=optional]
 
 
 
@@ -1153,7 +1474,7 @@ Submit version candidate by id
 |Name| Description| Required| Default| Pattern
 
 | versionCandidateId
-| Version candidate identifier 
+| Version candidate identifier to be merged into master version 
 | X
 | null
 | 
@@ -1249,329 +1570,8 @@ ifdef::internal-generation[]
 endif::internal-generation[]
 
 
-[.MasterVersionFormsRestAPI]
-=== MasterVersionFormsRestAPI
-
-
-[.getForm]
-==== GET /versions/master/forms/{formName}
-
-Operation Id:: getForm
-
-
-
-
-===== Description
-
-Get form
-
-
-// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/spec.adoc[opts=optional]
-
-
-
-===== Parameters
-
-
-[cols="2,3,1,1,1"]
-.Path Parameters
-|===
-|Name| Description| Required| Default| Pattern
-
-| formName
-| Form name 
-| X
-| null
-| 
-
-|===
-
-
-
-
-[cols="2,3,1,1,1"]
-.Header Parameters
-|===
-|Name| Description| Required| Default| Pattern
-
-| X-Access-Token
-| Token used for endpoint security 
-| X
-| null
-| 
-
-|===
-
-
-
-===== Return Type
-
-
-<<String>>
-
-
-===== Content Type
-
-* application/json
-
-===== Responses
-
-.http response codes
-[cols="2,3,1"]
-|===
-| Code | Message | Datatype
-
-
-| 200
-| OK
-|  <<String>>
-
-
-| 401
-| Unauthorized
-|  <<>>
-
-
-| 403
-| Forbidden
-|  <<>>
-
-
-| 404
-| Not Found
-|  <<DetailedErrorResponse>>
-
-
-| 500
-| Internal server error
-|  <<DetailedErrorResponse>>
-
-|===
-
-===== Samples
-
-
-include::{snippetDir}versions/master/forms/\{formName\}/GET/http-request.adoc[opts=optional]
-
-
-include::{snippetDir}versions/master/forms/\{formName\}/GET/http-response.adoc[opts=optional]
-
-
-
-// file not found, no * wiremock data link :versions/master/forms/{formName}/GET/GET.json[]
-
-
-ifdef::internal-generation[]
-===== Implementation
-
-// markup not found, no include::{specDir}versions/master/forms/\{formName\}/GET/implementation.adoc[opts=optional]
-
-
-endif::internal-generation[]
-
-
-[.getFormsFromMaster]
-==== GET /versions/master/forms
-
-Operation Id:: getFormsFromMaster
-
-
-
-
-===== Description
-
-Get forms list for master version
-
-
-// markup not found, no include::{specDir}versions/master/forms/GET/spec.adoc[opts=optional]
-
-
-
-===== Parameters
-
-
-
-
-
-[cols="2,3,1,1,1"]
-.Header Parameters
-|===
-|Name| Description| Required| Default| Pattern
-
-| X-Access-Token
-| Token used for endpoint security 
-| X
-| null
-| 
-
-|===
-
-
-
-===== Return Type
-
-array[<<FormDetailsShort>>]
-
-
-===== Content Type
-
-* application/json
-
-===== Responses
-
-.http response codes
-[cols="2,3,1"]
-|===
-| Code | Message | Datatype
-
-
-| 200
-| OK
-| List[<<FormDetailsShort>>] 
-
-
-| 401
-| Unauthorized
-|  <<>>
-
-
-| 403
-| Forbidden
-|  <<>>
-
-
-| 500
-| Internal server error
-|  <<DetailedErrorResponse>>
-
-|===
-
-===== Samples
-
-
-include::{snippetDir}versions/master/forms/GET/http-request.adoc[opts=optional]
-
-
-include::{snippetDir}versions/master/forms/GET/http-response.adoc[opts=optional]
-
-
-
-// file not found, no * wiremock data link :versions/master/forms/GET/GET.json[]
-
-
-ifdef::internal-generation[]
-===== Implementation
-
-// markup not found, no include::{specDir}versions/master/forms/GET/implementation.adoc[opts=optional]
-
-
-endif::internal-generation[]
-
-
-[.MasterVersionRestAPI]
-=== MasterVersionRestAPI
-
-
-[.getMasterVersionInfo]
-==== GET /versions/master
-
-Operation Id:: getMasterVersionInfo
-
-
-
-
-===== Description
-
-Get master version
-
-
-// markup not found, no include::{specDir}versions/master/GET/spec.adoc[opts=optional]
-
-
-
-===== Parameters
-
-
-
-
-
-[cols="2,3,1,1,1"]
-.Header Parameters
-|===
-|Name| Description| Required| Default| Pattern
-
-| X-Access-Token
-| Token used for endpoint security 
-| X
-| null
-| 
-
-|===
-
-
-
-===== Return Type
-
-<<MasterVersionInfoDetailed>>
-
-
-===== Content Type
-
-* application/json
-
-===== Responses
-
-.http response codes
-[cols="2,3,1"]
-|===
-| Code | Message | Datatype
-
-
-| 200
-| OK
-|  <<MasterVersionInfoDetailed>>
-
-
-| 401
-| Unauthorized
-|  <<>>
-
-
-| 403
-| Forbidden
-|  <<>>
-
-
-| 500
-| Internal server error
-|  <<DetailedErrorResponse>>
-
-|===
-
-===== Samples
-
-
-include::{snippetDir}versions/master/GET/http-request.adoc[opts=optional]
-
-
-include::{snippetDir}versions/master/GET/http-response.adoc[opts=optional]
-
-
-
-// file not found, no * wiremock data link :versions/master/GET/GET.json[]
-
-
-ifdef::internal-generation[]
-===== Implementation
-
-// markup not found, no include::{specDir}versions/master/GET/implementation.adoc[opts=optional]
-
-
-endif::internal-generation[]
-
-
-[.UserImportController]
-=== UserImportController
+[.UsersBulkUploadRestAPI]
+=== UsersBulkUploadRestAPI
 
 
 [.deleteFile]
