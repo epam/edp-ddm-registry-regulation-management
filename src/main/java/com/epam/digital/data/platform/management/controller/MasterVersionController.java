@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Master version Rest API")
+@Tag(name = "Registry regulations master version management Rest API")
 @RestController
 @RequestMapping("/versions/master")
 @RequiredArgsConstructor
@@ -41,7 +41,7 @@ public class MasterVersionController {
 
   private final VersionManagementService versionManagementService;
 
-  @Operation(description = "Get master version",
+  @Operation(description = "Acquire master version full details",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
