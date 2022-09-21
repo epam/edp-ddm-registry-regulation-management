@@ -22,5 +22,10 @@ Check `src/main/resources/bootstrap.yaml` and replace if needed:
 2. Add `--spring.profiles.active=local` to application run arguments
 3. Run application with your favourite IDE or via `java -jar ...` with jar file, created above
 
+###### RestAPI documentation generation
+
+To generate document describing RestAPI definition separate maven profile should be used called _generate-rest-api-docs_. Call `mvn -Pgenerate-rest-api-docs clean install` to generate rest api documentation from scratch. After this generated documentation should be commited and pushed into git together with potential other changes about RestAPI.  
+
+
 ### License
 registry-regulation-management is Open Source software released under the Apache 2.0 license.

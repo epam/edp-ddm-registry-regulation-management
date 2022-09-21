@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Candidate version Rest API")
+@Tag(name = "Registry regulations version-candidate management Rest API")
 @RestController
 @RequestMapping("/versions/candidates")
 @RequiredArgsConstructor
@@ -51,7 +51,7 @@ public class CandidateVersionController {
 
   private final VersionManagementService versionManagementService;
 
-  @Operation(description = "Get versions list",
+  @Operation(description = "Get list of existing opened version-candidates",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -87,7 +87,7 @@ public class CandidateVersionController {
   }
 
 
-  @Operation(description = "Abandon version candidate by id",
+  @Operation(description = "Abandon the existing opened version-candidate. After this operation the version-candidate won't take any changes anymore.",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -114,12 +114,12 @@ public class CandidateVersionController {
       })
   @PostMapping("/{versionCandidateId}/decline")
   public ResponseEntity<String> declineVersionCandidate(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
+      @PathVariable @Parameter(description = "Version candidate identifier to abandon", required = true) String versionCandidateId) {
     versionManagementService.decline(versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
-  @Operation(description = "Submit version candidate by id",
+  @Operation(description = "Integrate version-candidate changes into master version of registry regulation",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -150,14 +150,14 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @PostMapping("/{versionCandidateId}/submit")
-  public ResponseEntity<String> submitVersionCandidate(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
+  public ResponseEntity<String> submitVersionCandidate(@PathVariable @Parameter(description = "Version candidate identifier to be merged into master version", required = true) String versionCandidateId) {
     versionManagementService.markReviewed(versionCandidateId);
     versionManagementService.submit(versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
 
-  @Operation(description = "Endpoint to create new version candidate.",
+  @Operation(description = "Create new version-candidate from current state of master version.",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -192,7 +192,7 @@ public class CandidateVersionController {
         .body(mapToVersionInfoDetailed(changeInfo));
   }
 
-  @Operation(description = "Get version details by id",
+  @Operation(description = "Acquire version-candidate full details",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -220,7 +220,7 @@ public class CandidateVersionController {
       })
   @GetMapping("/{versionCandidateId}")
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) throws Exception {
+      @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId) throws Exception {
     ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(versionCandidateId);
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }

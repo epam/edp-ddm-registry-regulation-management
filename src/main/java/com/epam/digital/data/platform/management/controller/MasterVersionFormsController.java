@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Master version forms Rest API")
+@Tag(name = "Registry regulations Master version Forms management Rest API")
 @RestController
 @RequestMapping("/versions/master/forms")
 @RequiredArgsConstructor
@@ -47,7 +47,7 @@ public class MasterVersionFormsController {
   private final FormService formService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
-  @Operation(description = "Get forms list for master version", parameters = {
+  @Operation(description = "Get lest of forms for master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
@@ -81,7 +81,7 @@ public class MasterVersionFormsController {
         .collect(Collectors.toList()));
   }
 
-  @Operation(description = "Get form",
+  @Operation(description = "Get specific form full details",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
