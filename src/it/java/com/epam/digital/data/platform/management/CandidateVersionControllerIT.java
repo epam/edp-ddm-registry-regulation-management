@@ -17,10 +17,12 @@ package com.epam.digital.data.platform.management;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -28,15 +30,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.*;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class CandidateVersionControllerIT extends BaseIT {
 
   private static final String BASE_REQUEST = "/versions/candidates/";
-
   @Test
   @SneakyThrows
   public void getVersionsList() {
@@ -163,26 +163,62 @@ public class CandidateVersionControllerIT extends BaseIT {
 
   @Test
   @SneakyThrows
-  public void getVersionChanges() {
+  public void getVersionChanges_noChanges() {
     String candidateId = "id1";
-    String formName = "formName";
-    CreateVersionRequest subject = new CreateVersionRequest();
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    subject.setDescription("request description");
-    subject.setName("request name");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(candidateId);
-    changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = candidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(candidateId);
-    gerritApiMock.mockGetMRByNumber(String.valueOf(changeInfo._number), changeInfo);
-    gerritApiMock.mockCreateChanges(changeInfo, subject);
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    revisionInfo.ref = "id1";
+    changeInfo.currentRevision = candidateId;
+    changeInfo.revisions = new HashMap<>();
+    changeInfo.revisions.put(candidateId, revisionInfo);
+    gerritApiMock.mockGetMRByNumber(candidateId, changeInfo);
+    jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId + "/changes")
             .accept(MediaType.APPLICATION_JSON_VALUE))
-        .andExpectAll(status().isOk());
+        .andExpectAll(
+            status().isOk(),
+            content().contentType("application/json"),
+            jsonPath("$.changedForms", hasSize(0)),
+            jsonPath("changedBusinessProcesses", hasSize(0)));
+  }
+
+  @Disabled
+  @Test
+  @SneakyThrows
+  public void getVersionChanges() {
+    String versionCandidateId = "id1";
+    String formName = "formName";
+    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
+    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+    FormDetailsShort formDetails = initFormDetails(formName, "title");
+
+
+    changeInfo.revisions = new HashMap<>();
+    RevisionInfo revisionInfo = new RevisionInfo();
+    revisionInfo.ref = versionCandidateId;
+    changeInfo.revisions.put(formName, revisionInfo);
+    changeInfo.currentRevision = formName;
+    changeInfoDto.setRefs(versionCandidateId);
+
+    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    jGitWrapperMock.mockGetForm(formDetails);
+    jGitWrapperMock.mockCheckoutCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
+    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    String candidateId = "id1";
+    revisionInfo.ref = "id1";
+    changeInfo.currentRevision = candidateId;
+    changeInfo.revisions = new HashMap<>();
+    changeInfo.revisions.put(candidateId, revisionInfo);
+    gerritApiMock.mockGetMRByNumber(candidateId, changeInfo);
+    jGitWrapperMock.mockPullCommand();
+    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId + "/changes")
+            .accept(MediaType.APPLICATION_JSON_VALUE))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType("application/json"),
+            jsonPath("$.changedForms", hasSize(1)),
+            jsonPath("changedBusinessProcesses", hasSize(0)));
   }
 }

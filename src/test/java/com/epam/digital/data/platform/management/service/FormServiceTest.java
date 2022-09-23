@@ -3,6 +3,7 @@ package com.epam.digital.data.platform.management.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
@@ -38,6 +39,8 @@ class FormServiceTest {
   private VersionedFileRepositoryFactory repositoryFactory;
   @Mock
   private VersionedFileRepository repository;
+  @Mock
+  private GerritPropertiesConfig gerritPropertiesConfig;
   @InjectMocks
   private FormServiceImpl formService;
 
