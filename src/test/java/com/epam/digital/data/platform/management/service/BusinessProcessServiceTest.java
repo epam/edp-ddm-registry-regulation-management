@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
@@ -63,6 +64,8 @@ public class BusinessProcessServiceTest {
   private VersionedFileRepositoryFactory repositoryFactory;
   @Mock
   private VersionedFileRepository repository;
+  @Mock
+  private GerritPropertiesConfig gerritPropertiesConfig;
   @Autowired
   private DocumentBuilder documentBuilder;
   private BusinessProcessServiceImpl businessProcessService;
@@ -70,7 +73,7 @@ public class BusinessProcessServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, documentBuilder);
+    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, gerritPropertiesConfig, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 
