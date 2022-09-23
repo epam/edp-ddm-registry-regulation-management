@@ -16,7 +16,9 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
+import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -44,9 +46,9 @@ import java.util.List;
 public class BusinessProcessServiceImpl implements BusinessProcessService {
   private static final String DIRECTORY_PATH = "bpmn";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
-
   private final VersionedFileRepositoryFactory repoFactory;
 
+  private final GerritPropertiesConfig gerritPropertiesConfig;
   private final DocumentBuilder documentBuilder;
 
   @Override
@@ -136,10 +138,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private List<BusinessProcessResponse> getProcessesByVersion(String versionName, FileStatus skippedStatus) {
     VersionedFileRepository repo;
+    VersionedFileRepository masterRepo;
     List<FileResponse> fileList;
     try {
       repo = repoFactory.getRepoByVersion(versionName);
       fileList = repo.getFileList(DIRECTORY_PATH);
+      masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to get process", e);
     }
@@ -149,7 +153,15 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         continue;
       }
       String processContent;
-      processContent = getProcessContent(repo, fileResponse);
+      try {
+        if (fileResponse.getStatus() == FileStatus.DELETED) {
+          processContent = masterRepo.readFile(getProcessPath(fileResponse.getName()));
+        } else {
+          processContent = getProcessContent(fileResponse.getName(), versionName);
+        }
+      } catch (Exception e) {
+        throw new GerritCommunicationException("Could not read file from master", e);
+      }
       processes.add(BusinessProcessResponse.builder()
           .name(fileResponse.getName())
           .path(fileResponse.getPath())
