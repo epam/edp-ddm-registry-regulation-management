@@ -73,6 +73,8 @@ public class BusinessProcessServiceTest {
   private VersionedFileRepositoryFactory repositoryFactory;
   @Mock
   private VersionedFileRepository repository;
+  @Mock
+  private GerritPropertiesConfig gerritPropertiesConfig;
   @Autowired
   private DocumentBuilder documentBuilder;
   private BusinessProcessServiceImpl businessProcessService;
@@ -80,7 +82,7 @@ public class BusinessProcessServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, documentBuilder);
+    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, gerritPropertiesConfig, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 

@@ -1,5 +1,22 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.service.impl;
 
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
@@ -23,6 +40,7 @@ public class FormServiceImpl implements FormService {
   public static final String FORM_TITLE_PATH = "$.title";
 
   private final VersionedFileRepositoryFactory repoFactory;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Override
   public List<FormResponse> getFormListByVersion(String versionName) throws Exception {
@@ -73,13 +91,19 @@ public class FormServiceImpl implements FormService {
 
   private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus) throws Exception {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
     List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormResponse> forms = new ArrayList<>();
     for (FileResponse fileResponse : fileList) {
       if (fileResponse.getStatus().equals(skippedStatus)) {
         continue;
       }
-      String formContent = repo.readFile(getFormPath(fileResponse.getName()));
+      String formContent;
+      if(fileResponse.getStatus() == FileStatus.DELETED) {
+        formContent = masterRepo.readFile(getFormPath(fileResponse.getName()));
+      } else {
+        formContent = repo.readFile(getFormPath(fileResponse.getName()));
+      }
       forms.add(FormResponse.builder()
           .name(fileResponse.getName())
           .path(fileResponse.getPath())
