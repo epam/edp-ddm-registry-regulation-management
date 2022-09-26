@@ -1,26 +1,31 @@
 @startuml
 participant "Web клієнт" as client order 1
-participant "Модуль роботи з бізнес-процесами" as businessProcessModule order 2
+participant "Модуль роботи з\nбізнес-процесами" as businessProcessModule order 2
 participant "Модуль роботи з файлами" as fileModule order 3
-participant "Файловий сервіс" as fileService order 4
-collections "Список бізнес-процесів" as businessProcessList order 5
+participant "Файловий\nсервіс" as fileService order 4
+collections "Список\nбізнес-процесів" as businessProcessList order 5
 entity "Сутність з \nінформацією\n про бізнес-процес" as businessProcessDto order 6
 
 skinparam responseMessageBelowArrow true
 
 title Отримання переліку доступних бізнес-процесів регламенту
 
-client -> businessProcessModule: Отримати перелік доступних\nбізнес-процесів регламенту
+client -> businessProcessModule: отримати перелік доступних\nбізнес-процесів вказаної\nверсії регламенту
 activate businessProcessModule
-  businessProcessModule -> fileModule: Отримати файловий\nсервіс для обраної версії
+  businessProcessModule -> fileModule: отримати файловий\nсервіс для вказаної версії
   activate fileModule
     create fileService
     fileModule -> fileService: ініціалізувати
+    alt вказана версія кандидат не існує
+      fileModule <-- fileService: помилка ініціалізації
+      businessProcessModule <-- fileModule: помилка ініціалізації\nфайлового сервісу
+      client <-- businessProcessModule: помилка зі статусом\n404 Not Found
+    end
     fileModule <-- fileService
     return файловий сервіс
   deactivate fileModule
 
-  businessProcessModule -> fileService: Отримати список\nфайлів за шляхом /bpmn
+  businessProcessModule -> fileService: отримати список\nфайлів за шляхом /bpmn
   activate fileService
     return список файлів
   deactivate fileService
@@ -35,19 +40,20 @@ activate businessProcessModule
     return контент бізнес-процесу
     deactivate fileService
 
-    businessProcessModule -> businessProcessModule: зчитати назву бізнес-процесу\nта дати створення та останнього\n оновлення з контенту бізнес-процесу
+    businessProcessModule -> businessProcessModule: зчитати назву та дати\nстворення та останнього\nоновлення з контенту\nбізнес-процесу
     note right
     Назва бізнес-процесу зчитується з XML документу бізнес-процесу за XPath
     **///bpmn:definitions/bpmn:process[1]/@name//**
     Дата створення - **///bpmn:definitions/@dates:created//**
-    Дата останнього оновлення - **///bpmn:definitions/@dates:updated//**
+    Дата останнього оновлення - **///bpmn:definitions/@dates:modified//**
     end note
 
     alt Дати створення та останнього оновлення не представлені в контенті бізнес-процесу
-    businessProcessModule -> businessProcessModule: Визначити дати створення\nта останнього оновлення з Git log
+    businessProcessModule -> businessProcessModule: визначити дати створення\nта останнього оновлення з Git log
     note right
     Дата створення - це дата першого комміту з Git log по цьому файлу
-    Дата останнього оновлення - це дата останнього комміту з Git log по цьому файлу
+    Дата останнього оновлення - це дата останнього комміту з Git log
+    по цьому файлу
     end note
     end
 
@@ -56,7 +62,7 @@ activate businessProcessModule
     return
 
     businessProcessModule -> businessProcessDto: ініціалізувати назву, системну назву та дати створення та останнього оновлення бізнес-процесу
-    note right
+    note left of businessProcessDto
     Системна назва бізнес-процесу це ім'я файлу
     бізнес-процесу та воно повинно бути таким
     самим як і поле

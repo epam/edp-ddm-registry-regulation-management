@@ -10,13 +10,52 @@
 
 ==== Отримання списку всіх бізнес-процесів регламенту
 
-Повертає список всіх бізнес-процесів регламенту, їх назви, системні назви та дати створення та останнього оновлення бізнес-процесів.
+Повертає список всіх бізнес-процесів вказаної версії регламенту, їх назви, системні назви та дати створення та останнього оновлення бізнес-процесів.
 
-Діаграма послідовності отримання списку доступних бізнес-процесів:
-
+.Діаграма послідовності отримання списку доступних бізнес-процесів
 [plantuml]
 ----
 include::partial$business-processes/get-business-process-list.puml[]
+----
+
+==== Створення бізнес-процесу регламенту
+
+Додає бізнес-процес з переданим контентом у версії-кандидаті.
+
+.Діаграма послідовності створення бізнес-процесу у вказаній версії-кандидаті
+[plantuml]
+----
+include::partial$business-processes/create-business-process.puml[]
+----
+
+==== Читання бізнес-процесу регламенту
+
+Повертає контент бізнес-процесу версії (майстер, чи кандидату).
+
+.Діаграма послідовності читання бізнес-процесу з вказаної версії
+[plantuml]
+----
+include::partial$business-processes/read-business-process.puml[]
+----
+
+==== Оновлення бізнес-процесу регламенту
+
+Оновлює бізнес-процес, або створює новий бізнес-процес якщо той не існує, з переданим контентом у версії-кандидаті.
+
+.Діаграма послідовності оновлення бізнес-процесу у вказаній версії-кандидаті
+[plantuml]
+----
+include::partial$business-processes/update-business-process.puml[]
+----
+
+==== Видалення бізнес-процесу регламенту
+
+Видаляє файл бізнес-процесу з версії-кандидата.
+
+.Діаграма послідовності видалення бізнес-процесу з вказаної версії-кандидата
+[plantuml]
+----
+include::partial$business-processes/delete-business-process.puml[]
 ----
 
 === Робота з датами створення та останнього оновлення бізнес-процесів
@@ -28,7 +67,7 @@ include::partial$business-processes/get-business-process-list.puml[]
 .Зчитування дат бізнес-процесів
 * Дати створення та останнього оновлення бізнес-процесу можуть знаходитися у XML контенті бізнес-процесу:
 ** XPath дати створення бізнес-процесу - `**__/bpmn:definitions/@dates:created__**`
-** XPath дати останнього оновлення бізнес-процесу - `**__/bpmn:definitions/@dates:updated__**`
+** XPath дати останнього оновлення бізнес-процесу - `**__/bpmn:definitions/@dates:modified__**`
 * Якщо в контенті бізнес-процесу не представлена дата створення або останнього оновлення то вона зчитується з `**__git log__**`
 ** Дата створення бізнес-процесу - це дата першого комміту з `**__git log__**` по файлу цього бізнес-процесу
 ** Дата останнього оновлення бізнес-процесу - це дата останнього комміту з `**__git log__**` по файлу цього бізнес-процесу
@@ -66,7 +105,7 @@ include::partial$business-processes/get-business-process-list.puml[]
     exporterVersion="4.6.0"
     xlmns:rrm="http://registry-regulation-management"
     rrm:created="2022-09-20T15:26:13.136Z"
-    rrm:updated="2022-10-15T07:11:54.588Z">
+    rrm:modified="2022-10-15T07:11:54.588Z">
   <bpmn:process id="auto_process_1TBE" name="BPMN-1-task-before-error" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Початок БП" camunda:initiator="initiator">
       <bpmn:outgoing>Flow_0m372ld</bpmn:outgoing>
@@ -91,6 +130,6 @@ include::partial$business-processes/get-business-process-list.puml[]
   <xsd:import namespace="http://www.omg.org/spec/BPMN/20100524/MODEL" schemaLocation="BPMN20.xsd"/>
 
   <xsd:attribute name="created" type="xsd:dateTime"/>
-  <xsd:attribute name="updated" type="xsd:dateTime"/>
+  <xsd:attribute name="modified" type="xsd:dateTime"/>
 </xsd:schema>
 ----
