@@ -66,6 +66,12 @@ spec:
             - mountPath: /app/secrets/gerritcreds
               name: {{ .Chart.Name }}-gerrit-credentials
               readOnly: true
+            - mountPath: /app/secrets/dbcredentials-public
+              name: {{ .Chart.Name }}-db-credentials-public
+              readOnly: true
+            - mountPath: /app/secrets/dbcredentials-registry
+              name: {{ .Chart.Name }}-db-credentials-registry
+              readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:
@@ -117,3 +123,19 @@ spec:
                 path: gerrit.user
               - key: password
                 path: gerrit.password
+        - name: {{ .Chart.Name }}-db-credentials-public
+          secret:
+            secretName: {{ .Values.db.secret }}
+            items:
+              - key: username
+                path: spring.public-datasource.username
+              - key: password
+                path: spring.public-datasource.password
+        - name: {{ .Chart.Name }}-db-credentials-registry
+          secret:
+            secretName: {{ .Values.db.secret }}
+            items:
+              - key: username
+                path: spring.registry-datasource.username
+              - key: password
+                path: spring.registry-datasource.password
