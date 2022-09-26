@@ -82,3 +82,11 @@ scheduled:
   repositoryRefreshTimezone: UTC
   cleanRepositoriesCron: '0 */5 * ? * *'
   cleanRepositoriesTimezone: UTC
+  dataModelSnapshotCron: '0 */5 * ? * *'
+  dataModelSnapshotTimeZone: UTC
+
+db:
+  url: citus-master
+  secret: citus-secrets
+  port: 5432
+  connectionTimeout: 4000
