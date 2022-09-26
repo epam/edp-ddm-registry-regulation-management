@@ -34,3 +34,11 @@ data:
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
       cleanRepositoriesCron: {{ .Values.scheduled.cleanRepositoriesCron }}
       cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
+
+    spring:
+      registry-datasource:
+        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
+        connection-timeout: {{.Values.db.connectionTimeout}}
+      public-datasource:
+        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
+        connection-timeout: {{.Values.db.connectionTimeout}}

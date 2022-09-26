@@ -83,6 +83,11 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
+    jGitWrapperMock.mockCloneMasterCommand();
+    jGitWrapperMock.mockCheckoutCommand();
+    jGitWrapperMock.mockPullCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
