@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.config;
 
-import com.google.gerrit.extensions.api.GerritApi;
+import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import com.urswolfer.gerrit.client.rest.GerritAuthData;
 import com.urswolfer.gerrit.client.rest.GerritRestApiFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +30,8 @@ public class GerritConfig {
 
   @Bean
   @ConditionalOnMissingBean
-  public GerritApi gerritApi() {
-    return new GerritRestApiFactory()
+  public GerritApiImpl gerritApi() {
+    return (GerritApiImpl) new GerritRestApiFactory()
         .create(new GerritAuthData.Basic(config.getUrl(), config.getUser(), config.getPassword()));
   }
 }

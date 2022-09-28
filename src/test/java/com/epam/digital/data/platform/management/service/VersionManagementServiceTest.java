@@ -246,4 +246,13 @@ class VersionManagementServiceTest {
   void getVersionChanges() {
 
   }
+
+  @Test
+  @SneakyThrows
+  void rebaseTest() {
+    final String changeId = "1";
+    Mockito.doNothing().when(gerritService).rebase(changeId);
+    managementService.rebase(changeId);
+    Mockito.verify(gerritService).rebase(changeId);
+  }
 }

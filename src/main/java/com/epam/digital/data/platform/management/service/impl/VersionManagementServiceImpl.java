@@ -75,6 +75,11 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
+  public void rebase(String versionName) throws RestApiException {
+    gerritService.rebase(versionName);
+  }
+
+  @Override
   public boolean vote(String versionName, String label, short value) throws RestApiException {
     var voteRequestDto = new VoteRequestDto();
     voteRequestDto.setLabel(label);
