@@ -25,7 +25,6 @@ import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
-import com.google.gerrit.extensions.api.GerritApi;
 import com.google.gerrit.extensions.api.accounts.AccountInput;
 import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.api.changes.Changes;
@@ -49,12 +48,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class GerritServiceImpl implements GerritService {
   public static final String CODE_REVIEW_LABEL = "Code-Review";
   public static final short CODE_REVIEW_VALUE = 2;
@@ -65,7 +66,7 @@ public class GerritServiceImpl implements GerritService {
   private GerritPropertiesConfig gerritPropertiesConfig;
 
   @Autowired
-  private GerritApi gerritApi;
+  private GerritApiImpl gerritApi;
 
   @Override
   public List<ChangeInfo> getMRList() throws RestApiException {
@@ -135,7 +136,7 @@ public class GerritServiceImpl implements GerritService {
       String currentRevision = gerritApi.changes().id(changeId).get().currentRevision;
       String request = String.format("/changes/%s/revisions/%s/files/%s/content", changeId,
           currentRevision, filePath.replace("/", "%2F"));
-      JsonElement response = ((GerritApiImpl) gerritApi).restClient().getRequest(request);
+      JsonElement response = gerritApi.restClient().getRequest(request);
       return response.getAsString();
     }
     return null;
@@ -242,8 +243,14 @@ public class GerritServiceImpl implements GerritService {
     if(changeId != null) {
       String request = String.format("/changes/%s/rebase", changeId);
       Gson gson = new Gson();
-      ((GerritApiImpl) gerritApi).restClient()
-              .postRequest(request, gson.toJson(new RebaseInput(), RebaseInput.class));
+      try {
+        gerritApi.restClient().postRequest(request, gson.toJson(new RebaseInput(), RebaseInput.class));
+      } catch (HttpStatusException ex) {
+        if(ex.getStatusCode() != HttpStatus.CONFLICT.value()) {
+          throw ex;
+        }
+        log.info(ex.getMessage());
+      }
     }
   }
 

@@ -9,17 +9,19 @@ import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
 import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
-import com.google.gerrit.extensions.api.GerritApi;
 import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.api.changes.Changes;
+import com.google.gerrit.extensions.api.changes.RebaseInput;
 import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.api.changes.RevisionApi;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
+import com.google.gson.Gson;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import com.urswolfer.gerrit.client.rest.http.GerritRestClient;
+import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangeApiRestClient;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangesRestClient;
 import java.util.ArrayList;
@@ -44,8 +46,6 @@ class GerritServiceTest {
     @Mock
     public GerritPropertiesConfig gerritPropertiesConfig;
     @Mock
-    public GerritApi gerritApi;
-    @Mock
     public GerritApiImpl gerritApiImpl;
     @InjectMocks
     private GerritServiceImpl gerritService;
@@ -66,7 +66,7 @@ class GerritServiceTest {
     void initChanges() {
         changeInfo._number = 5;
         changeInfos.add(changeInfo);
-        Mockito.lenient().when(gerritApi.changes()).thenReturn(changes);
+        Mockito.lenient().when(gerritApiImpl.changes()).thenReturn(changes);
     }
 
     @Test
@@ -338,5 +338,37 @@ class GerritServiceTest {
         Mockito.verify(request).withLimit(1);
         Mockito.verify(changes).query("project:repo+status:merged+owner:user");
         Mockito.verify(gerritPropertiesConfig).getRepository();
+    }
+
+    @Test
+    @SneakyThrows
+    void rebaseTest() {
+        String changeId = "1";
+        String request = String.format("/changes/%s/rebase", changeId);
+        Mockito.when(gerritApiImpl.restClient()).thenReturn(gerritRestClient);
+        final String requestBody = new Gson().toJson(new RebaseInput(), RebaseInput.class);
+        Mockito.when(gerritRestClient.postRequest(request, requestBody)).thenReturn(null);
+
+        org.assertj.core.api.Assertions.assertThatCode(() -> gerritService.rebase(changeId))
+            .doesNotThrowAnyException();
+
+        Mockito.verify(gerritRestClient).postRequest(request, requestBody);
+
+    }
+
+    @Test
+    @SneakyThrows
+    void rebaseConflictTest() {
+        String changeId = "1";
+        String request = String.format("/changes/%s/rebase", changeId);
+        Mockito.when(gerritApiImpl.restClient()).thenReturn(gerritRestClient);
+        final String requestBody = new Gson().toJson(new RebaseInput(), RebaseInput.class);
+        Mockito.when(gerritRestClient.postRequest(request, requestBody)).thenThrow(
+            new HttpStatusException(409, "",""));
+
+        org.assertj.core.api.Assertions.assertThatCode(() -> gerritService.rebase(changeId))
+            .doesNotThrowAnyException();
+
+        Mockito.verify(gerritRestClient).postRequest(request, requestBody);
     }
 }
