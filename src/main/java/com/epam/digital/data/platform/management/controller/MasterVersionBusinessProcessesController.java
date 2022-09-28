@@ -49,9 +49,11 @@ public class MasterVersionBusinessProcessesController {
   private final BusinessProcessService businessProcessService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
-  @Operation(summary = "Get business processes list for master version", parameters = {
+  @Operation(description = "Get business processes list for master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string"))},
       responses = {
           @ApiResponse(responseCode = "200",
@@ -81,9 +83,11 @@ public class MasterVersionBusinessProcessesController {
         .collect(Collectors.toList()));
   }
 
-  @Operation(summary = "Get business process",
+  @Operation(description = "Get business process",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -105,7 +109,8 @@ public class MasterVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{businessProcessName}")
-  public ResponseEntity<String> getBusinessProcess(@PathVariable String businessProcessName) {
+  public ResponseEntity<String> getBusinessProcess(
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)

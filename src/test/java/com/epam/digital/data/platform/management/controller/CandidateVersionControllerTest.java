@@ -182,9 +182,9 @@ class CandidateVersionControllerTest {
   @SneakyThrows
   void getChangesTest() {
     List<FormChangesInfo> changedForms = List.of(FormChangesInfo.builder()
-        .name("newForm")
+        .name("formToBeUpdated")
         .title("JohnDoe's form")
-        .status(FileStatus.NEW)
+        .status(FileStatus.CHANGED)
         .build());
     List<BusinessProcessChangesInfo> changedProcesses = List.of(BusinessProcessChangesInfo.builder()
         .name("newProcess")
