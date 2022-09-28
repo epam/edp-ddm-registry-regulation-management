@@ -18,7 +18,6 @@ package com.epam.digital.data.platform.management.mock;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.google.gerrit.extensions.api.GerritApi;
 import com.google.gerrit.extensions.api.accounts.AccountInput;
 import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.api.changes.Changes;
@@ -31,6 +30,7 @@ import com.google.gerrit.extensions.client.ReviewerState;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.ChangeInput;
 import com.google.gerrit.extensions.common.MergeableInfo;
+import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -52,7 +52,7 @@ public class GerritApiMock {
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Getter
-  private final GerritApi gerritApi = Mockito.mock(GerritApi.class);
+  private final GerritApiImpl gerritApi = Mockito.mock(GerritApiImpl.class);
   private final Changes changes = Mockito.mock(Changes.class);
   private RevisionApi revisionApi;
   private static final String CODE_REVIEW_LABEL = "Code-Review";
