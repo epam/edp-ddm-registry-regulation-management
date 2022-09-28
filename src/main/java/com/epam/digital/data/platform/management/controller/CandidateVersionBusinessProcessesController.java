@@ -52,9 +52,11 @@ public class CandidateVersionBusinessProcessesController {
   private final BusinessProcessService businessProcessService;
 
 
-  @Operation(summary = "Get business processes list",
+  @Operation(description = "Get business processes list",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -77,7 +79,7 @@ public class CandidateVersionBusinessProcessesController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<BusinessProcessDetailsShort>> getBusinessProcessesBuVersionId(
-      @PathVariable String versionCandidateId) {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     return ResponseEntity.ok().body(
         businessProcessService.getProcessesByVersion(versionCandidateId).stream()
             .map(e -> BusinessProcessDetailsShort.builder()
@@ -89,9 +91,11 @@ public class CandidateVersionBusinessProcessesController {
             .collect(Collectors.toList()));
   }
 
-  @Operation(summary = "Create new business process",
+  @Operation(description = "Create new business process",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "201",
@@ -121,7 +125,8 @@ public class CandidateVersionBusinessProcessesController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PostMapping("/{businessProcessName}")
   public ResponseEntity<String> createBusinessProcess(@RequestBody String businessProcess,
-      @PathVariable String versionCandidateId, @PathVariable String businessProcessName) throws Exception {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName) throws Exception {
     businessProcessService.createProcess(businessProcessName, businessProcess, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId, businessProcessName)))
@@ -129,9 +134,11 @@ public class CandidateVersionBusinessProcessesController {
         .body(businessProcess);
   }
 
-  @Operation(summary = "Get business process",
+  @Operation(description = "Get business process",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -151,16 +158,19 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
 
   @GetMapping("/{businessProcessName}")
-  public ResponseEntity<String> getBusinessProcess(@PathVariable String versionCandidateId,
-      @PathVariable String businessProcessName) {
+  public ResponseEntity<String> getBusinessProcess(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
         .body(businessProcessService.getProcessContent(businessProcessName, versionCandidateId));
   }
 
-  @Operation(summary = "Update business process",
+  @Operation(description = "Update business process",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -186,16 +196,19 @@ public class CandidateVersionBusinessProcessesController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping("/{businessProcessName}")
   public ResponseEntity<String> updateBusinessProcess(@RequestBody String businessProcess,
-      @PathVariable String versionCandidateId, @PathVariable String businessProcessName) {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
         .body(businessProcess);
   }
 
-  @Operation(summary = "Delete business process",
+  @Operation(description = "Delete business process",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "204",
@@ -216,8 +229,9 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @DeleteMapping("/{businessProcessName}")
-  public ResponseEntity<String> deleteBusinessProcess(@PathVariable String versionCandidateId,
-      @PathVariable String businessProcessName) {
+  public ResponseEntity<String> deleteBusinessProcess(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     businessProcessService.deleteProcess(businessProcessName, versionCandidateId);
     return ResponseEntity.noContent().build();
   }
