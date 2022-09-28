@@ -30,6 +30,7 @@ import com.google.gerrit.extensions.client.ChangeStatus;
 import com.google.gerrit.extensions.client.ReviewerState;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.ChangeInput;
+import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -154,6 +156,11 @@ public class GerritApiMock {
     ChangeApi changeApi = Mockito.mock(ChangeApi.class);
     Mockito.when(changes.create(Mockito.refEq(changeInput, "author"))).thenReturn(changeApi);
     Mockito.when(changeApi.get()).thenReturn(info);
+  }
+
+  @SneakyThrows
+  public void mockGetChangesInMr(Map<String, FileInfo> changedFiles) {
+    Mockito.when(revisionApi.files()).thenReturn(changedFiles);
   }
 
   @SneakyThrows
