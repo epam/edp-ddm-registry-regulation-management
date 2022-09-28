@@ -1,6 +1,7 @@
 package com.epam.digital.data.platform.management.util;
 
 import com.epam.digital.data.platform.management.BaseIT;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.google.gerrit.extensions.common.AccountInfo;
@@ -48,6 +49,17 @@ public class InitialisationUtils extends BaseIT {
     return filePath;
   }
 
+  @SneakyThrows
+  public static String createProcessXml(String content, String versionName, String processName) {
+    String filePath = tempRepoDirectory.getPath() + "/" + versionName + "/bpmn/" + processName + ".bpmn";
+    Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName, "bpmn"));
+    Files.createFile(Paths.get(filePath));
+    FileWriter fileWriter = new FileWriter(filePath);
+    fileWriter.write(content);
+    fileWriter.close();
+    return filePath;
+  }
+
   public static ChangeInfo initChangeInfo(int number, String ownerName, String ownerEmail, String ownerUsername) {
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.id = "id" + number;
@@ -66,10 +78,18 @@ public class InitialisationUtils extends BaseIT {
 
   public static FormDetailsShort initFormDetails(String name, String title) {
     return FormDetailsShort.builder()
-          .name(name).title(title)
-          .created(LocalDateTime.now())
-          .updated(LocalDateTime.now())
+        .name(name).title(title)
+        .created(LocalDateTime.now())
+        .updated(LocalDateTime.now())
         .build();
   }
 
+  public static BusinessProcessDetailsShort initBusinessProcessDetails(String name, String title) {
+    return BusinessProcessDetailsShort.builder()
+        .name(name)
+        .title(title)
+        .created(LocalDateTime.now())
+        .updated(LocalDateTime.now())
+        .build();
+  }
 }

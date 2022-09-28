@@ -15,21 +15,11 @@
  */
 package com.epam.digital.data.platform.management.mock;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createTempRepo;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
 import com.google.gson.Gson;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -59,6 +49,17 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.Configuration;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.createTempRepo;
+import static org.mockito.ArgumentMatchers.*;
 
 @Slf4j
 @Configuration
@@ -94,6 +95,11 @@ public class JGitWrapperMock {
   private final Gson gson = new Gson();
 
   public void init() {
+    git = Mockito.mock(Git.class);
+    repository = Mockito.mock(Repository.class);
+    revTree = Mockito.mock(RevTree.class);
+    treeWalk = Mockito.mock(TreeWalk.class);
+    dirWalk = Mockito.mock(TreeWalk.class);
     mockCloneCommand(gerritPropertiesConfig.getHeadBranch());
   }
 
@@ -107,12 +113,7 @@ public class JGitWrapperMock {
     createTempRepo(versionName);
     ObjectId objectId = Mockito.mock(ObjectId.class);
     cloneCommand = Mockito.mock(CloneCommand.class);
-    git = Mockito.mock(Git.class);
-    repository = Mockito.mock(Repository.class);
-    revTree = Mockito.mock(RevTree.class);
-    treeWalk = Mockito.mock(TreeWalk.class);
     loader = Mockito.mock(ObjectLoader.class);
-    dirWalk = Mockito.mock(TreeWalk.class);
 
     var repoURI = gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository();
     var credentialsProvider = new UsernamePasswordCredentialsProvider(
@@ -216,6 +217,13 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
+  public void mockGetBusinessProcess(String content) {
+    Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
+    Mockito.when(treeWalk.next()).thenReturn(true);
+    Mockito.when(loader.getBytes()).thenReturn(content.getBytes(StandardCharsets.UTF_8));
+  }
+
+  @SneakyThrows
   public void mockGetForm(FormDetailsShort formDetails) {
     Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true);
@@ -228,38 +236,46 @@ public class JGitWrapperMock {
     Mockito.when(jGitWrapper.getTreeWalk(eq(repository), anyString(), eq(revTree)))
         .thenReturn(treeWalk);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(dirWalk);
-    Mockito.when(dirWalk.next()).thenAnswer(new Answer<Boolean>() {
-      int count = 0;
+    Mockito.when(dirWalk.next()).thenAnswer(
+        new Answer<Boolean>() {
+          Iterator<FormDetailsShort> iterator = list.iterator();
+          @Override
+          public Boolean answer(InvocationOnMock invocation) {
+            if (iterator.hasNext()) {
+              var next = iterator.next();
+              Mockito.when(dirWalk.getPathString()).thenReturn("forms/" + next.getName());
+              Mockito.when(loader.getBytes()).thenReturn(gson.toJson(next).getBytes(StandardCharsets.UTF_8));
+              return true;
+            } else {
+              iterator = list.iterator();
+              return false;
+            }
+          }
+        });
+  }
 
-      @Override
-      public Boolean answer(InvocationOnMock invocation) {
-        if (count++ < list.size()) {
-          return true;
-        }
-        count = 0;
-        return false;
-      }
-    });
-    Mockito.when(dirWalk.getPathString()).thenAnswer(new Answer<String>() {
-      int count = 0;
+  @SneakyThrows
+  public void mockGetBusinessProcessList(Map<String, String> processContentMap) {
+    Mockito.when(jGitWrapper.getTreeWalk(eq(repository), anyString(), eq(revTree)))
+        .thenReturn(treeWalk);
+    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(dirWalk);
 
-      @Override
-      public String answer(InvocationOnMock invocation) {
-        return "forms/" + list.get(count++).getName();
-      }
-    });
-
-    Mockito.when(loader.getBytes()).thenAnswer(new Answer<byte[]>() {
-      int count = 0;
-
-      @Override
-      public byte[] answer(InvocationOnMock invocation) {
-        if (count < list.size()) {
-          return gson.toJson(list.get(count++)).getBytes(StandardCharsets.UTF_8);
-        }
-        return null;
-      }
-    });
+    Mockito.when(dirWalk.next()).thenAnswer(
+        new Answer<Boolean>() {
+          Iterator<Map.Entry<String, String>> iterator = processContentMap.entrySet().iterator();
+          @Override
+          public Boolean answer(InvocationOnMock invocation) {
+            if (iterator.hasNext()) {
+              var next = iterator.next();
+              Mockito.when(dirWalk.getPathString()).thenReturn("/bpmn/" + next.getKey());
+              Mockito.when(loader.getBytes()).thenReturn(next.getValue().getBytes(StandardCharsets.UTF_8));
+              return true;
+            } else {
+              iterator = processContentMap.entrySet().iterator();
+              return false;
+            }
+          }
+        });
   }
 
   @SneakyThrows

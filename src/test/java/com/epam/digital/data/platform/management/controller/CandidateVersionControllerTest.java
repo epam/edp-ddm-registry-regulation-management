@@ -1,7 +1,7 @@
 package com.epam.digital.data.platform.management.controller;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
@@ -11,10 +11,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
+import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -28,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -161,4 +167,35 @@ class CandidateVersionControllerTest {
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/submit/POST"));
   }
+
+  @Test
+  @SneakyThrows
+  void getChangesTest() {
+    List<FormChangesInfo> changedForms = List.of(FormChangesInfo.builder()
+        .name("newForm")
+        .title("JohnDoe's form")
+        .status(FileStatus.NEW)
+        .build());
+    List<BusinessProcessChangesInfo> changedProcesses = List.of(BusinessProcessChangesInfo.builder()
+        .name("newProcess")
+        .title("JohnDoe's process")
+        .status(FileStatus.NEW)
+        .build());
+    VersionChanges expected = VersionChanges.builder()
+        .changedForms(changedForms)
+        .changedBusinessProcesses(changedProcesses)
+        .build();
+
+    Mockito.when(service.getVersionChanges("1")).thenReturn(expected);
+
+    mockMvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/1/changes")
+            .accept(MediaType.APPLICATION_JSON_VALUE))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType("application/json"),
+            jsonPath("$.changedForms", hasSize(1)),
+            jsonPath("changedBusinessProcesses", hasSize(1)))
+        .andDo(document("versions/candidates/{versionCandidateId}/changes/GET"));
+  }
+
 }

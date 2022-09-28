@@ -1,120 +1,125 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createFormJson;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.deleteFormJson;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initFormDetails;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
-import com.google.gson.Gson;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class CandidateVersionFormsControllerIT extends BaseIT {
+import java.util.HashMap;
+import java.util.Map;
 
-  private static final String BASE_REQUEST = "/versions/candidates/{versionCandidateId}/forms";
-  private final Gson gson = new Gson();
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+public class CandidateVersionBPControllerIT extends BaseIT {
+
+  private static final String BASE_REQUEST = "/versions/candidates/{versionCandidateId}/business-processes";
 
   @Test
   @SneakyThrows
-  public void getForm() {
+  public void getBusinessProcess() {
     String versionCandidateId = "id1";
-    String formName = "formName";
+    String businessProcessName = "name";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    FormDetailsShort formDetails = initFormDetails(formName, "title");
+    BusinessProcessDetailsShort businessProcessDetails = initBusinessProcessDetails(businessProcessName, "title");
 
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
 
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetForm(formDetails);
+    jGitWrapperMock.mockGetBusinessProcess(businessProcess);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + "/{formName}", versionCandidateId, formName)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
+
+
+    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
+        .accept(MediaType.TEXT_XML)).andExpectAll(
         status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$.name", is(formDetails.getName())),
-        jsonPath("$.title", is(formDetails.getTitle()))
+        content().contentType("text/xml"),
+        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(businessProcessDetails.getName()),
+        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(businessProcessDetails.getTitle())
     );
   }
 
   @Test
   @SneakyThrows
-  public void getFormsByVersionId() {
+  public void getBusinessProcessesByVersionId() {
     String versionCandidateId = "id1";
-    String formName = "formName";
+    String businessProcessName = "businessProcessName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
 
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
+    revisionInfo.ref = versionCandidateId;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
-    List<FormDetailsShort> list = new ArrayList<>();
-    list.add(initFormDetails("name", "title"));
-    list.add(initFormDetails("name2", "title2"));
 
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetFormsList(list);
-    jGitWrapperMock.mockLogCommand();
+    jGitWrapperMock.mockGetBusinessProcessList(Map.of("name", businessProcess));
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
+    jGitWrapperMock.mockLogCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
+    jGitWrapperMock.mockCheckoutCommand();
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
+        .accept(MediaType.APPLICATION_JSON)).andExpectAll(
         status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$[0].name", is("name")),
-        jsonPath("$[0].title", is("title")),
-        jsonPath("$[1].name", is("name2")),
-        jsonPath("$[1].title", is("title2"))
-    );
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$", hasSize(1)));
   }
 
   @Test
   @SneakyThrows
-  public void getFormsByVersionIdNoForms() {
+  public void getBusinessProcessesByVersionId_NoBusinessProcesses() {
     String versionCandidateId = "-1";
-    String formName = "formName";
+    String businessProcessName = "businessProcessName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
 
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = "-1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
 
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetFormsList(new ArrayList<>());
+    jGitWrapperMock.mockGetBusinessProcessList(Map.of());
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
@@ -126,91 +131,88 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
 
   @Test
   @SneakyThrows
-  public void createForm() {
+  public void createBusinessProcess() {
     String versionCandidateId = "id1";
-    Gson gson = new Gson();
-    String formName = "formName";
+    String businessProcessName = "businessProcessName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = "-1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
-    FormDetailsShort form = initFormDetails(formName, "title");
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+
     mockMvc.perform(MockMvcRequestBuilders.post(
-            BASE_REQUEST + "/{formName}", versionCandidateId, formName).contentType(MediaType.APPLICATION_JSON_VALUE).content(gson.toJson(form))
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
+        .contentType(MediaType.TEXT_XML).content(businessProcess)
+        .accept(MediaType.TEXT_XML)).andExpectAll(
         status().isCreated(),
-        content().contentType("application/json"),
-        jsonPath("$.name", is("formName")),
-        jsonPath("$.title", is("title"))
-    );
+        content().contentType("text/xml"),
+        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("name"),
+        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("title"));
   }
 
   @Test
   @SneakyThrows
-  public void updateForm() {
-
+  public void updateBusinessProcess() {
     String versionCandidateId = "id1";
-    String formName = "formName";
+    String businessProcessName = "businessProcessName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    FormDetailsShort form = initFormDetails(formName, "title");
 
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.revisions.put(versionCandidateId, revisionInfo);
-    changeInfo.currentRevision = versionCandidateId;
+    revisionInfo.ref = versionCandidateId;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
 
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
-    String filePath = createFormJson(form, versionCandidateId);
+    createProcessXml(businessProcess, versionCandidateId, businessProcessName);
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockAddCommand();
     jGitWrapperMock.mockStatusCommand();
     jGitWrapperMock.mockRemoteAddCommand();
     jGitWrapperMock.mockPushCommand();
     jGitWrapperMock.mockCommitCommand();
-    jGitWrapperMock.mockGetForm(initFormDetails(formName, "title"));
     mockMvc.perform(MockMvcRequestBuilders.put(
-            BASE_REQUEST + "/{formName}", versionCandidateId, formName)
-        .contentType(MediaType.APPLICATION_JSON_VALUE).content(gson.toJson(form))
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
+        .contentType(MediaType.TEXT_XML).content(businessProcess)
+        .accept(MediaType.TEXT_XML)).andExpectAll(
         status().isOk(),
-        content().contentType("application/json"));
-    deleteFormJson(filePath);
+        content().contentType("text/xml"),
+        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("name"),
+        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("title"));
   }
 
   @Test
   @SneakyThrows
-  public void deleteForm() {
+  public void deleteBusinessProcess() {
     String versionCandidateId = "id1";
-    String formName = "formName";
+    String businessProcessName = "businessProcessName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = "-1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
+    changeInfo.revisions.put(businessProcessName, revisionInfo);
+    changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(revisionInfo.ref);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetFormsList(List.of(initFormDetails(formName, "title")));
+    jGitWrapperMock.mockGetBusinessProcessList(Map.of(businessProcessName, businessProcess));
     jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     mockMvc.perform(MockMvcRequestBuilders.delete(
-            BASE_REQUEST + "/{formName}", versionCandidateId, formName))
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName))
         .andExpect(status().isNoContent());
   }
+
 }
