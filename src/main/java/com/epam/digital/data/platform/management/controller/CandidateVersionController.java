@@ -225,9 +225,11 @@ public class CandidateVersionController {
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }
 
-  @Operation(summary = "Get version changes by id",
+  @Operation(description = "Get version changes by id",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
+          required = true,
+          description = "Token used for endpoint security",
           schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
@@ -250,7 +252,9 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @GetMapping("/{versionCandidateId}/changes")
-  public ResponseEntity<VersionChanges> getVersionChanges(@PathVariable String versionCandidateId) throws Exception {
+  public ResponseEntity<VersionChanges> getVersionChanges(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
+          String versionCandidateId) throws Exception {
     return ResponseEntity.ok().body(versionManagementService.getVersionChanges(versionCandidateId));
   }
 
