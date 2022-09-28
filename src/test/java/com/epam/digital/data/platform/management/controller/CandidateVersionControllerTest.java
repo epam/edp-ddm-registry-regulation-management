@@ -161,4 +161,13 @@ class CandidateVersionControllerTest {
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/submit/POST"));
   }
+
+  @Test
+  @SneakyThrows
+  void rebaseTest() {
+    Mockito.doNothing().when(service).rebase("1");
+    mockMvc.perform(get(String.format("%s/%s/%s", BASE_URL, "1", "rebase")))
+        .andExpect(status().isOk())
+    .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+  }
 }
