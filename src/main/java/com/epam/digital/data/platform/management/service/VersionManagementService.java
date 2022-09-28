@@ -50,11 +50,11 @@ public interface VersionManagementService {
      * Submit version by name
      */
     void submit(String versionName);
-//
-//    /**
-//     * Rebase version
-//     */
-//    void rebase(String versionName);
+
+    /**
+     * Rebase version
+     */
+    void rebase(String versionName) throws RestApiException;
 //
 //    /**
 //     * Put votes to review

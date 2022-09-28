@@ -258,6 +258,40 @@ public class CandidateVersionController {
     return ResponseEntity.ok().body(versionManagementService.getVersionChanges(versionCandidateId));
   }
 
+
+  @Operation(description = "Rebase changes from master version",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          required = true,
+          description = "Token used for endpoint security",
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))
+      })
+  @GetMapping("/{versionCandidateId}/rebase")
+  public ResponseEntity<Void> rebase(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
+          String versionCandidateId) throws Exception {
+    versionManagementService.rebase(versionCandidateId);
+    return ResponseEntity.ok().build();
+  }
+
   private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfoDetailedDto changeInfoDetailedDto) {
     return VersionInfoDetailed.builder()
         .id(String.valueOf(changeInfoDetailedDto.getNumber()))
