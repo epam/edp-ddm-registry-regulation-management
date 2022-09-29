@@ -36,7 +36,8 @@ class CandidateVersionFormsControllerTest {
 
   static final String CANDIDATE_VERSION_ID = "1";
   static final String BASE_URL = "/versions/candidates/1/forms";
-  static final String FORM_CONTENT = "{\"name\":\"John Doe's form\",\"title\":\"John Doe added new component\"}";
+  private static final String FORM_NAME = "John Doe's form";
+  static final String FORM_CONTENT = "{\"name\":\"" + FORM_NAME + "\",\"title\":\"John Doe added new component\"}";
 
   MockMvc mockMvc;
 
@@ -58,7 +59,7 @@ class CandidateVersionFormsControllerTest {
   @SneakyThrows
   void getFormsByVersionIdTest() {
     var fileResponse = FormResponse.builder()
-        .name("John Doe's form")
+        .name(FORM_NAME)
         .title("John Doe added new component")
         .path("/")
         .status(FileStatus.CHANGED)
@@ -72,7 +73,7 @@ class CandidateVersionFormsControllerTest {
         .andExpectAll(
             status().isOk(),
             content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.[0].name", is("John Doe's form")),
+            jsonPath("$.[0].name", is(FORM_NAME)),
             jsonPath("$.[0].title", is("John Doe added new component")),
             jsonPath("$.[0].created", is("2022-07-29T18:55:00.000Z")),
             jsonPath("$.[0].updated", is("2022-07-29T18:56:00.000Z")))
@@ -82,6 +83,7 @@ class CandidateVersionFormsControllerTest {
   @Test
   @SneakyThrows
   void formCreateTest() {
+    Mockito.when(formService.getFormContent("formName", CANDIDATE_VERSION_ID)).thenReturn(FORM_CONTENT);
     mockMvc.perform(post(BASE_URL + "/formName")
             .contentType(MediaType.APPLICATION_JSON)
             .content(FORM_CONTENT))
@@ -111,6 +113,7 @@ class CandidateVersionFormsControllerTest {
   @Test
   @SneakyThrows
   void updateFormTest() {
+    Mockito.when(formService.getFormContent("formName", CANDIDATE_VERSION_ID)).thenReturn(FORM_CONTENT);
     mockMvc.perform(put(BASE_URL + "/formName")
             .contentType(MediaType.APPLICATION_JSON)
             .content(FORM_CONTENT))
