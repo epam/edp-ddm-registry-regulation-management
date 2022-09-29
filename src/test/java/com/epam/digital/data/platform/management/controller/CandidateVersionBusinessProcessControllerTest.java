@@ -122,6 +122,8 @@ public class CandidateVersionBusinessProcessControllerTest {
   @Test
   @SneakyThrows
   public void createBusinessProcess() {
+    Mockito.when(businessProcessService.getProcessContent(BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID))
+        .thenReturn(BUSINESS_PROCESS_CONTENT);
     mockMvc.perform(MockMvcRequestBuilders.post(
             BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
         .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
@@ -138,6 +140,8 @@ public class CandidateVersionBusinessProcessControllerTest {
   @Test
   @SneakyThrows
   public void updateBusinessProcess() {
+    Mockito.when(businessProcessService.getProcessContent(BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID))
+            .thenReturn(BUSINESS_PROCESS_CONTENT);
     mockMvc.perform(MockMvcRequestBuilders.put(
             BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
         .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
