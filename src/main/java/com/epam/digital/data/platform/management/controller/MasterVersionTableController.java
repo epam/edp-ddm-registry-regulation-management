@@ -17,6 +17,7 @@ package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.service.TableService;
 import data.model.snapshot.model.DdmTable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +41,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/versions/master/tables")
 @RequiredArgsConstructor
+@Slf4j
 public class MasterVersionTableController {
 
+  private final TableService tableService;
 
   @Operation(description = "Get tables list from master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -65,7 +69,11 @@ public class MasterVersionTableController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<TableDetailsShort>> getTables() throws Exception {
-    return ResponseEntity.ok().build();
+    log.info("getTables called");
+    final List<TableDetailsShort> master = tableService.list();
+    log.info("There were found {} tables", master.size());
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON).body(master);
   }
 
   @Operation(description = "Get specific table full details",
@@ -97,7 +105,12 @@ public class MasterVersionTableController {
   public ResponseEntity<DdmTable> getTable(
       @PathVariable @Parameter(description = "Table name", required = true) String tableName)
       throws Exception {
-    return ResponseEntity.ok().build();
+    log.info("getTable called");
+    final DdmTable ddmTable = tableService.get(tableName);
+    log.info("Table '{}' was found", tableName);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(ddmTable);
   }
 
 }
