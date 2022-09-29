@@ -110,8 +110,8 @@ public class BusinessProcessServiceTest {
         .title("Really test name")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
         .build();
 
     Assertions.assertThat(expectedBusinessProcessesList).hasSize(1)
@@ -126,14 +126,13 @@ public class BusinessProcessServiceTest {
     Assertions.assertThatCode(
             () -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
-    Mockito.verify(repository)
-        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+    Mockito.verify(repository).writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
     String response = captor.getValue();
     Diff documentDiff = DiffBuilder
         .compare(PROCESS_CONTENT)
         .withTest(response)
-        .withAttributeFilter(
-            attr -> !attr.getName().equals("rrm:modified") && !attr.getName().equals("rrm:created"))
+        .withAttributeFilter(attr -> !attr.getName().equals("modified"))
+        .withAttributeFilter(attr -> !attr.getName().equals("created"))
         .build();
     Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
   }
@@ -170,14 +169,13 @@ public class BusinessProcessServiceTest {
             () -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository)
-        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+    Mockito.verify(repository).writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
     String response = captor.getValue();
     Diff documentDiff = DiffBuilder
         .compare(PROCESS_CONTENT)
         .withTest(response)
-        .withAttributeFilter(
-            attr -> !attr.getName().equals("rrm:modified") && !attr.getName().equals("rrm:created"))
+        .withAttributeFilter(attr -> !attr.getName().equals("modified"))
+        .withAttributeFilter(attr -> !attr.getName().equals("created"))
         .build();
     Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
   }
