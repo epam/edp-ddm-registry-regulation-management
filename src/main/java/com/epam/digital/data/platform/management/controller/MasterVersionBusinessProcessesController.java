@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Tag(name = "Master version business processes Rest API")
+@Tag(name = "Registry regulations master Business processes management Rest API")
 @RestController
 @RequestMapping("/versions/master/business-processes")
 @RequiredArgsConstructor
