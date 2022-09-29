@@ -43,7 +43,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Tag(name = "Candidate version business ")
+@Tag(name = "Registry regulations version-candidate Business processes management Rest API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/versions/candidates/{versionCandidateId}/business-processes")
