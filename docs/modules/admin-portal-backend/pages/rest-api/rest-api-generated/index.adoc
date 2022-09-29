@@ -23,6 +23,226 @@ include::{specDir}intro.adoc[opts=optional]
 == Endpoints
 
 
+[.RegistryRegulationsMasterBusinessProcessesManagementRestAPI]
+=== RegistryRegulationsMasterBusinessProcessesManagementRestAPI
+
+
+[.getBusinessProcess]
+==== GET /versions/master/business-processes/{businessProcessName}
+
+Operation Id:: getBusinessProcess
+
+
+
+
+===== Description
+
+Get business process
+
+
+// markup not found, no include::{specDir}versions/master/business-processes/\{businessProcessName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| businessProcessName
+| Process name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+<<String>>
+
+
+===== Content Type
+
+* text/xml
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<String>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}versions/master/business-processes/\{businessProcessName\}/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}versions/master/business-processes/\{businessProcessName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/business-processes/{businessProcessName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/business-processes/\{businessProcessName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getBusinessProcessesFromMaster]
+==== GET /versions/master/business-processes
+
+Operation Id:: getBusinessProcessesFromMaster
+
+
+
+
+===== Description
+
+Get business processes list for master version
+
+
+// markup not found, no include::{specDir}versions/master/business-processes/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<BusinessProcessDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<BusinessProcessDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}versions/master/business-processes/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}versions/master/business-processes/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/business-processes/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/business-processes/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
 [.RegistryRegulationsMasterVersionFormsManagementRestAPI]
 === RegistryRegulationsMasterVersionFormsManagementRestAPI
 
@@ -339,6 +559,880 @@ ifdef::internal-generation[]
 ===== Implementation
 
 // markup not found, no include::{specDir}versions/master/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.RegistryRegulationsMasterVersionTablesManagementRestAPI]
+=== RegistryRegulationsMasterVersionTablesManagementRestAPI
+
+
+[.getTable]
+==== GET /versions/master/tables/{tableName}
+
+Operation Id:: getTable
+
+
+
+
+===== Description
+
+Get specific table full details
+
+
+// markup not found, no include::{specDir}versions/master/tables/\{tableName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| tableName
+| Table name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<DdmTable>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<DdmTable>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/tables/{tableName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/tables/\{tableName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getTables]
+==== GET /versions/master/tables
+
+Operation Id:: getTables
+
+
+
+
+===== Description
+
+Get tables list from master version
+
+
+// markup not found, no include::{specDir}versions/master/tables/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<TableDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<TableDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}versions/master/tables/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}versions/master/tables/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/master/tables/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/master/tables/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.RegistryRegulationsVersionCandidateBusinessProcessesManagementRestAPI]
+=== RegistryRegulationsVersionCandidateBusinessProcessesManagementRestAPI
+
+
+[.createBusinessProcess]
+==== POST /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}
+
+Operation Id:: createBusinessProcess
+
+
+
+
+===== Description
+
+Create new business process
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| businessProcessName
+| Name of the new process to be created 
+| X
+| null
+| 
+
+|===
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| body
+|  <<string>>
+| X
+| 
+| 
+
+|===
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* text/xml
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 201
+| Created
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 409
+| Conflict
+|  <<DetailedErrorResponse>>
+
+
+| 422
+| Unprocessable Entity
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/POST/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.deleteBusinessProcess]
+==== DELETE /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}
+
+Operation Id:: deleteBusinessProcess
+
+
+
+
+===== Description
+
+Delete business process
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/DELETE/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| businessProcessName
+| Process name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 204
+| No Content
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/DELETE/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/DELETE/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/DELETE/DELETE.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/DELETE/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getBusinessProcess1]
+==== GET /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}
+
+Operation Id:: getBusinessProcess1
+
+
+
+
+===== Description
+
+Get business process
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| businessProcessName
+| Process name 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* text/xml
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getBusinessProcessesBuVersionId]
+==== GET /versions/candidates/{versionCandidateId}/business-processes
+
+Operation Id:: getBusinessProcessesBuVersionId
+
+
+
+
+===== Description
+
+Get business processes list
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+array[<<BusinessProcessDetailsShort>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+| List[<<BusinessProcessDetailsShort>>] 
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/business-processes/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.updateBusinessProcess]
+==== PUT /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}
+
+Operation Id:: updateBusinessProcess
+
+
+
+
+===== Description
+
+Update business process
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/PUT/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+| businessProcessName
+| Process name 
+| X
+| null
+| 
+
+|===
+
+
+[cols="2,3,1,1,1"]
+.Body Parameter
+|===
+|Name| Description| Required| Default| Pattern
+
+| body
+|  <<string>>
+| X
+| 
+| 
+
+|===
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* text/xml
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 422
+| Unprocessable Entity
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/PUT/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/PUT/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/PUT/PUT.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/business-processes/\{businessProcessName\}/PUT/implementation.adoc[opts=optional]
 
 
 endif::internal-generation[]
@@ -1234,6 +2328,122 @@ ifdef::internal-generation[]
 endif::internal-generation[]
 
 
+[.getVersionChanges]
+==== GET /versions/candidates/{versionCandidateId}/changes
+
+Operation Id:: getVersionChanges
+
+
+
+
+===== Description
+
+Get version changes by id
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/changes/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+<<VersionChanges>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<VersionChanges>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/changes/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/changes/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/changes/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/changes/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
 [.getVersionDetails]
 ==== GET /versions/candidates/{versionCandidateId}
 
@@ -1448,6 +2658,123 @@ ifdef::internal-generation[]
 endif::internal-generation[]
 
 
+[.rebase]
+==== GET /versions/candidates/{versionCandidateId}/rebase
+
+Operation Id:: rebase
+
+
+
+
+===== Description
+
+Rebase changes from master version
+
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/rebase/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+
+[cols="2,3,1,1,1"]
+.Path Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| versionCandidateId
+| Version candidate identifier 
+| X
+| null
+| 
+
+|===
+
+
+
+
+[cols="2,3,1,1,1"]
+.Header Parameters
+|===
+|Name| Description| Required| Default| Pattern
+
+| X-Access-Token
+| Token used for endpoint security 
+| X
+| null
+| 
+
+|===
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===
+| Code | Message | Datatype
+
+
+| 200
+| OK
+|  <<>>
+
+
+| 401
+| Unauthorized
+|  <<>>
+
+
+| 403
+| Forbidden
+|  <<>>
+
+
+| 404
+| Not Found
+|  <<DetailedErrorResponse>>
+
+
+| 500
+| Internal server error
+|  <<DetailedErrorResponse>>
+
+|===
+
+===== Samples
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/rebase/GET/http-request.adoc[opts=optional]
+
+
+include::{snippetDir}versions/candidates/\{versionCandidateId\}/rebase/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :versions/candidates/{versionCandidateId}/rebase/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}versions/candidates/\{versionCandidateId\}/rebase/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
 [.submitVersionCandidate]
 ==== POST /versions/candidates/{versionCandidateId}/submit
 
@@ -1638,10 +2965,10 @@ Delete file endpoint
 ===== Samples
 
 
-include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-request.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-request.adoc[opts=optional]
 
 
-include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-response.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/\{id\}/DELETE/http-response.adoc[opts=optional]
 
 
 
@@ -1721,10 +3048,10 @@ Get file information
 ===== Samples
 
 
-include::{snippetDir}batch-loads/users/GET/http-request.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/GET/http-request.adoc[opts=optional]
 
 
-include::{snippetDir}batch-loads/users/GET/http-response.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/GET/http-response.adoc[opts=optional]
 
 
 
@@ -1817,10 +3144,10 @@ Store file endpoint
 ===== Samples
 
 
-include::{snippetDir}batch-loads/users/POST/http-request.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/POST/http-request.adoc[opts=optional]
 
 
-include::{snippetDir}batch-loads/users/POST/http-response.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/POST/http-response.adoc[opts=optional]
 
 
 
@@ -1901,10 +3228,10 @@ Start import endpoint
 ===== Samples
 
 
-include::{snippetDir}batch-loads/users/imports/POST/http-request.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/imports/POST/http-request.adoc[opts=optional]
 
 
-include::{snippetDir}batch-loads/users/imports/POST/http-response.adoc[opts=optional]
+// markup not found, no include::{snippetDir}batch-loads/users/imports/POST/http-response.adoc[opts=optional]
 
 
 
@@ -1922,6 +3249,74 @@ endif::internal-generation[]
 
 [#models]
 == Models
+
+
+[#BusinessProcessChangesInfo]
+=== _BusinessProcessChangesInfo_ 
+
+
+
+[.fields-BusinessProcessChangesInfo]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| title
+| 
+| String 
+| 
+|  
+
+| status
+| 
+| String 
+| 
+|  _Enum:_ NEW, CHANGED, CURRENT, DELETED, 
+
+|===
+
+
+[#BusinessProcessDetailsShort]
+=== _BusinessProcessDetailsShort_ 
+
+
+
+[.fields-BusinessProcessDetailsShort]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| title
+| 
+| String 
+| 
+|  
+
+| created
+| 
+| Date 
+| 
+| date-time 
+
+| updated
+| 
+| Date 
+| 
+| date-time 
+
+|===
 
 
 [#CephFileInfoDto]
@@ -1955,6 +3350,56 @@ endif::internal-generation[]
 |===
 
 
+[#Column]
+=== _Column_ 
+
+
+
+[.fields-Column]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| sorting
+| 
+| String 
+| 
+|  _Enum:_ ASC, DESC, NONE, 
+
+|===
+
+
+[#ColumnPair]
+=== _ColumnPair_ 
+
+
+
+[.fields-ColumnPair]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| sourceColumnName
+| 
+| String 
+| 
+|  
+
+| targetColumnName
+| 
+| String 
+| 
+|  
+
+|===
+
+
 [#CreateVersionRequest]
 === _CreateVersionRequest_ 
 
@@ -1975,6 +3420,252 @@ endif::internal-generation[]
 | X
 | String 
 | Description from request
+|  
+
+|===
+
+
+[#DdmColumn]
+=== _DdmColumn_ 
+
+
+
+[.fields-DdmColumn]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| description
+| 
+| String 
+| 
+|  
+
+| type
+| 
+| String 
+| 
+|  
+
+| defaultValue
+| 
+| String 
+| 
+|  
+
+| notNullFlag
+| 
+| Boolean 
+| 
+|  
+
+| tableName
+| 
+| String 
+| 
+|  
+
+|===
+
+
+[#DdmForeignKey]
+=== _DdmForeignKey_ 
+
+
+
+[.fields-DdmForeignKey]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| targetTable
+| 
+| String 
+| 
+|  
+
+| columnPairs
+| 
+| List  of <<ColumnPair>>
+| 
+|  
+
+| sourceTable
+| 
+| String 
+| 
+|  
+
+|===
+
+
+[#DdmIndex]
+=== _DdmIndex_ 
+
+
+
+[.fields-DdmIndex]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| columns
+| 
+| List  of <<Column>>
+| 
+|  
+
+| tableName
+| 
+| String 
+| 
+|  
+
+|===
+
+
+[#DdmPrimaryKeyConstraint]
+=== _DdmPrimaryKeyConstraint_ 
+
+
+
+[.fields-DdmPrimaryKeyConstraint]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| columns
+| 
+| List  of <<Column>>
+| 
+|  
+
+| tableName
+| 
+| String 
+| 
+|  
+
+|===
+
+
+[#DdmTable]
+=== _DdmTable_ 
+
+
+
+[.fields-DdmTable]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| historyFlag
+| 
+| Boolean 
+| 
+|  
+
+| objectReference
+| 
+| Boolean 
+| 
+|  
+
+| description
+| 
+| String 
+| 
+|  
+
+| columns
+| 
+| Map  of <<DdmColumn>>
+| 
+|  
+
+| foreignKeys
+| 
+| Map  of <<DdmForeignKey>>
+| 
+|  
+
+| primaryKey
+| 
+| DdmPrimaryKeyConstraint 
+| 
+|  
+
+| uniqueConstraints
+| 
+| Map  of <<DdmUniqueConstraint>>
+| 
+|  
+
+| indices
+| 
+| Map  of <<DdmIndex>>
+| 
+|  
+
+|===
+
+
+[#DdmUniqueConstraint]
+=== _DdmUniqueConstraint_ 
+
+
+
+[.fields-DdmUniqueConstraint]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| columns
+| 
+| List  of <<Column>>
+| 
+|  
+
+| tableName
+| 
+| String 
+| 
 |  
 
 |===
@@ -2013,6 +3704,37 @@ endif::internal-generation[]
 | String 
 | Localized error message
 |  
+
+|===
+
+
+[#FormChangesInfo]
+=== _FormChangesInfo_ 
+
+
+
+[.fields-FormChangesInfo]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| title
+| 
+| String 
+| 
+|  
+
+| status
+| 
+| String 
+| 
+|  _Enum:_ NEW, CHANGED, CURRENT, DELETED, 
 
 |===
 
@@ -2196,6 +3918,43 @@ Version candidate inspections
 |===
 
 
+[#TableDetailsShort]
+=== _TableDetailsShort_ 
+
+
+
+[.fields-TableDetailsShort]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| name
+| 
+| String 
+| 
+|  
+
+| description
+| 
+| String 
+| 
+|  
+
+| objectReference
+| 
+| Boolean 
+| 
+|  
+
+| historyFlag
+| 
+| Boolean 
+| 
+|  
+
+|===
+
+
 [#Validation]
 === _Validation_ 
 
@@ -2228,6 +3987,31 @@ Version candidate validations
 | X
 | String 
 | Validation result details
+|  
+
+|===
+
+
+[#VersionChanges]
+=== _VersionChanges_ 
+
+
+
+[.fields-VersionChanges]
+[cols="2,1,2,4,1"]
+|===
+| Field Name| Required| Type| Description| Format
+
+| changedForms
+| 
+| List  of <<FormChangesInfo>>
+| 
+|  
+
+| changedBusinessProcesses
+| 
+| List  of <<BusinessProcessChangesInfo>>
+| 
 |  
 
 |===
