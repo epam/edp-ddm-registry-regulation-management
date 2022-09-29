@@ -16,4 +16,4 @@
 ***** xref:admin-portal-backend:technologies.adoc[Технологічний стек]
 
 ***** xref:admin-portal-backend:rest-api/rest-api-generated/index.adoc[RestAPI]
-****** xref:admin-portal-backend:rest-api/rest-api-partials/optimistic-locking.adoc [Optimistic locking]
+****** xref:admin-portal-backend:rest-api/rest-api-partials/optimistic-locking.adoc[Optimistic locking]
