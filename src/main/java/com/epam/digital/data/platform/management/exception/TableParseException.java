@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package data.model.snapshot.model;
+package com.epam.digital.data.platform.management.exception;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
+/**
+ * Exception that is thrown in any case when table content couldn't be parsed
+ */
+public class TableParseException extends RuntimeException {
 
-@Data
-public class DdmDataBaseSnapshot {
-
-  private Map<String, DdmTable> ddmTables = new HashMap<>();
-  private Map<Integer, DdmRolePermission> ddmRolePermissions = new HashMap<>();
+  public TableParseException(String message) {
+    super(message);
+  }
 }
