@@ -25,6 +25,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import schemacrawler.schema.Catalog;
@@ -34,7 +36,9 @@ import schemacrawler.schema.Catalog;
 @Profile("!test")
 public class DdmSchemaProcessor {
 
-  private final Catalog catalog;
+  @Autowired(required = false)
+  @Lazy
+  private Catalog catalog;
   private final DdmCatalogReader ddmCatalogReader;
 
   private final DdmTableRepository ddmTableRepository;
