@@ -98,5 +98,3 @@ scheduled:
   repositoryRefreshTimezone: UTC
   cleanRepositoriesCron: '0 */5 * ? * *'
   cleanRepositoriesTimezone: UTC
-  dataModelSnapshotCron: '0 * * ? * *'
-  dataModelSnapshotTimeZone: UTC

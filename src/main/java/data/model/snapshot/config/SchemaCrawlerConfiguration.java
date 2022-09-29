@@ -21,6 +21,7 @@ import java.util.Arrays;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import schemacrawler.inclusionrule.InclusionRule;
 import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
@@ -75,6 +76,7 @@ public class SchemaCrawlerConfiguration {
   }
 
   @Bean
+  @Lazy
   public Catalog catalog(DataSource dataSource, SchemaCrawlerOptions options)
       throws SQLException, SchemaCrawlerException {
     return SchemaCrawlerUtility.getCatalog(dataSource.getConnection(), options);

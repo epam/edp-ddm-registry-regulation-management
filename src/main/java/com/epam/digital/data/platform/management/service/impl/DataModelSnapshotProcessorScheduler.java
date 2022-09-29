@@ -16,7 +16,6 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import data.model.snapshot.DdmSchemaProcessor;
-import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,9 +28,8 @@ public class DataModelSnapshotProcessorScheduler {
 
   private final DdmSchemaProcessor ddmSchemaProcessor;
 
-  @PostConstruct
-  @Scheduled(cron = "${scheduled.dataModelSnapshotCron}", zone = "${scheduled.dataModelSnapshotTimeZone}")
-  public void process(){
+  @Scheduled(cron = "${scheduled.dataModelSnapshotCron:-}", zone = "${scheduled.dataModelSnapshotTimeZone:UTC}")
+  public void process() {
     ddmSchemaProcessor.run();
   }
 
