@@ -41,6 +41,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -75,7 +76,8 @@ class UserImportControllerTest {
       RestDocumentationContextProvider restDocumentation) {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
         .apply(documentationConfiguration(restDocumentation))
-        .apply(springSecurity()).build();
+        .apply(springSecurity())
+        .build();
   }
 
   @SneakyThrows
@@ -91,7 +93,8 @@ class UserImportControllerTest {
 
     mockMvc.perform(multipart(BASE_URL).file(file)
             .with(authentication(tokenPath)))
-        .andExpectAll(matchers);
+        .andExpectAll(matchers)
+        .andDo(document("batch-loads/users/POST"));
   }
 
   @Test
@@ -114,7 +117,8 @@ class UserImportControllerTest {
     when(userImportService.getFileInfo(any())).thenReturn(expectedFilesInfo);
 
     mockMvc.perform(get(BASE_URL).with(authentication(tokenPath)))
-        .andExpectAll(matchers);
+        .andExpectAll(matchers)
+        .andDo(document("batch-loads/users/GET"));
 
   }
 
@@ -137,7 +141,8 @@ class UserImportControllerTest {
   void deleteFile(String tokenPath, ResultMatcher... matchers) {
     mockMvc.perform(delete(BASE_URL + "/{id}", CEPH_ENTITY_ID.toString())
             .with(authentication(tokenPath)))
-        .andExpectAll(matchers);
+        .andExpectAll(matchers)
+        .andDo(document("batch-loads/users/{id}/DELETE"));
   }
 
   @Test
@@ -176,7 +181,8 @@ class UserImportControllerTest {
   void startImport(String tokenPath, ResultMatcher... matchers) {
     mockMvc.perform(post(BASE_URL + "/imports")
             .with(authentication(tokenPath)))
-        .andExpectAll(matchers);
+        .andExpectAll(matchers)
+        .andDo(document("batch-loads/users/imports/POST"));
   }
 
   @Test
