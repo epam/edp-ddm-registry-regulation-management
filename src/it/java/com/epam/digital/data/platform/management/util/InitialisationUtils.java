@@ -30,6 +30,8 @@ public class InitialisationUtils extends BaseIT {
   public static void createTempRepo(String versionName) {
     if (Files.notExists(Paths.get(tempRepoDirectory.getPath(), versionName))) {
       Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName));
+      Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName, "forms"));
+      Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName, "bpmn"));
     }
   }
 
@@ -41,7 +43,6 @@ public class InitialisationUtils extends BaseIT {
   @SneakyThrows
   public static String createFormJson(FormDetailsShort form, String versionName) {
     String filePath = tempRepoDirectory.getPath() + "/" + versionName + "/forms/" + form.getName() + ".json";
-    Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName, "forms"));
     Files.createFile(Paths.get(filePath));
     FileWriter fileWriter = new FileWriter(filePath);
     fileWriter.write(gson.toJson(form));
@@ -52,7 +53,6 @@ public class InitialisationUtils extends BaseIT {
   @SneakyThrows
   public static String createProcessXml(String content, String versionName, String processName) {
     String filePath = tempRepoDirectory.getPath() + "/" + versionName + "/bpmn/" + processName + ".bpmn";
-    Files.createDirectory(Paths.get(tempRepoDirectory.getPath(), versionName, "bpmn"));
     Files.createFile(Paths.get(filePath));
     FileWriter fileWriter = new FileWriter(filePath);
     fileWriter.write(content);

@@ -28,16 +28,22 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.Diff;
+
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.xpath.XPath;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 
 @Import(XmlParserConfig.class)
@@ -46,7 +52,7 @@ public class BusinessProcessServiceTest {
 
   private static final String VERSION_ID = "version";
   private static final String PROCESS_CONTENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-      "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:modeler=\"http://camunda.org/schema/modeler/1.0\" id=\"Definitions_0ffpt5r\" targetNamespace=\"http://bpmn.io/schema/bpmn\" exporter=\"Camunda Modeler\" exporterVersion=\"5.1.0\" modeler:executionPlatform=\"Camunda Cloud\" modeler:executionPlatformVersion=\"8.0.0\">" +
+      "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\" xmlns:rrm=\"http://registry-regulation-management\" exporter=\"Camunda Modeler\" exporterVersion=\"4.6.0\" id=\"Definitions_1ifek2y\" rrm:created=\"2022-10-03T14:41:20.128Z\" rrm:modified=\"2022-10-03T14:41:20.128Z\" targetNamespace=\"http://bpmn.io/schema/bpmn\">" +
       "  <bpmn:process id=\"Process_00mzcs7\" name=\"Really test name\" isExecutable=\"true\">" +
       "    <bpmn:startEvent id=\"StartEvent_1\" />" +
       "  </bpmn:process>" +
@@ -59,6 +65,9 @@ public class BusinessProcessServiceTest {
       "  </bpmndi:BPMNDiagram>" +
       "</bpmn:definitions>";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
+
+  @Captor
+  private ArgumentCaptor<String> captor;
 
   @Mock
   private VersionedFileRepositoryFactory repositoryFactory;
@@ -98,8 +107,8 @@ public class BusinessProcessServiceTest {
         .title("Really test name")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
         .build();
 
     Assertions.assertThat(expectedBusinessProcessesList).hasSize(1)
@@ -112,7 +121,15 @@ public class BusinessProcessServiceTest {
     Mockito.when(repository.isFileExists("bpmn/business-process." + BPMN_FILE_EXTENSION)).thenReturn(false);
     Assertions.assertThatCode(() -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
-    Mockito.verify(repository).writeFile("bpmn/business-process." + BPMN_FILE_EXTENSION, PROCESS_CONTENT);
+    Mockito.verify(repository).writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+    String response = captor.getValue();
+    Diff documentDiff = DiffBuilder
+        .compare(PROCESS_CONTENT)
+        .withTest(response)
+        .withAttributeFilter(attr -> !attr.getName().equals("modified"))
+        .withAttributeFilter(attr -> !attr.getName().equals("created"))
+        .build();
+    Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
   }
 
   @Test
@@ -142,7 +159,15 @@ public class BusinessProcessServiceTest {
     Assertions.assertThatCode(() -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).writeFile("bpmn/business-process." + BPMN_FILE_EXTENSION, PROCESS_CONTENT);
+    Mockito.verify(repository).writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+    String response = captor.getValue();
+    Diff documentDiff = DiffBuilder
+        .compare(PROCESS_CONTENT)
+        .withTest(response)
+        .withAttributeFilter(attr -> !attr.getName().equals("modified"))
+        .withAttributeFilter(attr -> !attr.getName().equals("created"))
+        .build();
+    Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
   }
 
   @Test

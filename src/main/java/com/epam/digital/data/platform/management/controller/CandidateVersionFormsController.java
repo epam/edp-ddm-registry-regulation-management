@@ -128,7 +128,7 @@ public class CandidateVersionFormsController {
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
         .contentType(MediaType.APPLICATION_JSON)
-        .body(form);
+        .body(formService.getFormContent(formName, versionCandidateId));
   }
 
   @Operation(description = "Get full details of the specific form within version-candidate",
@@ -197,7 +197,7 @@ public class CandidateVersionFormsController {
     formService.updateForm(String.valueOf(form), formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(form);
+        .body(formService.getFormContent(formName, versionCandidateId));
   }
 
   @Operation(description = "Delete existing form within version-candidate",
