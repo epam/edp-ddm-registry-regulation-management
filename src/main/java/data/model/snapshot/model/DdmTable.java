@@ -18,13 +18,13 @@ package data.model.snapshot.model;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class DdmTable {
 
-  private final String name;
+  private String name;
   private Boolean historyFlag;
   private Boolean objectReference;
   private String description;
@@ -34,4 +34,8 @@ public class DdmTable {
   private DdmPrimaryKeyConstraint primaryKey;
   private Map<String, DdmUniqueConstraint> uniqueConstraints = new HashMap<>();
   private Map<String, DdmIndex> indices = new HashMap<>();
+
+  public DdmTable(String name) {
+    this.name = name;
+  }
 }
