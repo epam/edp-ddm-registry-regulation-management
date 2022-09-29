@@ -40,6 +40,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
   public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
   public static final String FORM_ALREADY_EXISTS_EXCEPTION = "FORM_ALREADY_EXISTS_EXCEPTION";
+  public static final String TABLE_NOT_FOUND_EXCEPTION = "TABLE_NOT_FOUND_EXCEPTION";
+  public static final String TABLE_PARSE_EXCEPTION = "TABLE_PARSE_EXCEPTION";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
@@ -149,6 +151,22 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Form already exists exception", exception);
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(newDetailedResponse(FORM_ALREADY_EXISTS_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(TableNotFoundException.class)
+  public ResponseEntity<DetailedErrorResponse> handleTableNotFoundException(
+      TableNotFoundException exception) {
+    log.warn("Table not found exception", exception);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(TABLE_NOT_FOUND_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(TableParseException.class)
+  public ResponseEntity<DetailedErrorResponse> handleTableParseException(
+      TableParseException exception) {
+    log.error("Table parse exception", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(TABLE_PARSE_EXCEPTION, exception));
   }
 
   @ExceptionHandler

@@ -665,10 +665,10 @@ Get specific table full details
 ===== Samples
 
 
-// markup not found, no include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-request.adoc[opts=optional]
+include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-request.adoc[opts=optional]
 
 
-// markup not found, no include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-response.adoc[opts=optional]
+include::{snippetDir}versions/master/tables/\{tableName\}/GET/http-response.adoc[opts=optional]
 
 
 
@@ -763,10 +763,10 @@ array[<<TableDetailsShort>>]
 ===== Samples
 
 
-// markup not found, no include::{snippetDir}versions/master/tables/GET/http-request.adoc[opts=optional]
+include::{snippetDir}versions/master/tables/GET/http-request.adoc[opts=optional]
 
 
-// markup not found, no include::{snippetDir}versions/master/tables/GET/http-response.adoc[opts=optional]
+include::{snippetDir}versions/master/tables/GET/http-response.adoc[opts=optional]
 
 
 
