@@ -1,6 +1,6 @@
 == Модульна / структурна діаграма
 
-image::low-level-component-structure.svg[admin-portal-backend low level component structure]
+image::low-level-component-structure.svg[admin-portal-backend low-level-component-structure]
 
 === Security
 
