@@ -18,7 +18,6 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.Mockito.never;
 
-import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
@@ -45,14 +44,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class RepositoryRefreshSchedulerTest {
 
-  public static final String MASTER = "master";
-
   @Mock
   private JGitServiceImpl jGitService;
   @Mock
   private GerritServiceImpl gerritService;
-  @Mock
-  private GerritPropertiesConfig gerritPropertiesConfig;
 
   @InjectMocks
   private RepositoryRefreshScheduler repositoryRefreshScheduler;
@@ -62,9 +57,7 @@ public class RepositoryRefreshSchedulerTest {
   void mockMethods() {
     ChangeInfo changeInfo = getChangeInfo();
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(MASTER);
   }
-
 
   @Test
   @SneakyThrows
@@ -77,7 +70,7 @@ public class RepositoryRefreshSchedulerTest {
     repositoryRefreshScheduler.refresh();
     Mockito.verify(gerritService).rebase(changeInfo.changeId);
     Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto);
-    Mockito.verify(jGitService).pull(MASTER);
+    Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
   @Test
@@ -91,7 +84,18 @@ public class RepositoryRefreshSchedulerTest {
     Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
         .doesNotThrowAnyException();
     Mockito.verify(jGitService, never()).fetch(changeInfoDto.getNumber(), changeInfoDto);
-    Mockito.verify(jGitService).pull(MASTER);
+    Mockito.verify(jGitService).resetHeadBranchToRemote();
+  }
+
+  @Test
+  @SneakyThrows
+  void refreshHeadBranchRefreshErrorTest() {
+    Mockito.doThrow(RuntimeException.class).when(jGitService).resetHeadBranchToRemote();
+
+    Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
+        .doesNotThrowAnyException();
+
+    Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
   private ChangeInfoDto getChangeInfoDto() {
