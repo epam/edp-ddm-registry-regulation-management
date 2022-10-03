@@ -16,6 +16,9 @@
 
 package com.epam.digital.data.platform.management.exception;
 
+/**
+ * Thrown in case if it couldn't read repository in any case
+ */
 public class ReadingRepositoryException extends RuntimeException {
 
   public ReadingRepositoryException(String message) {

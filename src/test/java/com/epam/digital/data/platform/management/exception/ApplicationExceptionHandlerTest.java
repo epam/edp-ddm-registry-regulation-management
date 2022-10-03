@@ -17,14 +17,31 @@
 package com.epam.digital.data.platform.management.exception;
 
 
-import com.epam.digital.data.platform.starter.localization.MessageResolver;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.controller.UserImportController;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.validator.Validator;
+import com.epam.digital.data.platform.starter.localization.MessageResolver;
+import java.util.UUID;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,35 +54,28 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-import java.util.UUID;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @WebMvcTest(properties = "spring.cloud.vault.enabled=false")
 @ContextConfiguration(
-        classes = {UserImportController.class, ApplicationExceptionHandler.class}
+    classes = {MasterVersionFormsController.class, UserImportController.class,
+        ApplicationExceptionHandler.class}
 )
 @AutoConfigureMockMvc(addFilters = false)
 class ApplicationExceptionHandlerTest {
 
   static final String BASE_URL = "/batch-loads/users";
-  static MockMultipartFile file = new MockMultipartFile("file", "users.csv", MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
+  static MockMultipartFile file = new MockMultipartFile("file", "users.csv",
+      MediaType.MULTIPART_FORM_DATA_VALUE, "test".getBytes());
 
   @Autowired
   MockMvc mockMvc;
 
   @MockBean
   UserImportServiceImpl userImportService;
+
+  @MockBean
+  FormService formService;
+  @MockBean
+  GerritPropertiesConfig gerritPropertiesConfig;
 
   @MockBean
   OpenShiftService openShiftService;
@@ -79,141 +89,169 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnRuntimeErrorOnGenericException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(RuntimeException.class);
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(RuntimeException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpect(status().isInternalServerError())
-            .andExpectAll(
-                    jsonPath("$.code").value(is("RUNTIME_ERROR")),
-                    jsonPath("$.statusDetails").doesNotExist());
+        .andExpect(status().isInternalServerError())
+        .andExpectAll(
+            jsonPath("$.code").value(is("RUNTIME_ERROR")),
+            jsonPath("$.statusDetails").doesNotExist());
   }
 
   @Test
   @SneakyThrows
   void shouldReturnInternalErrorUploadProcessingException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(new FileLoadProcessingException("ERROR", new RuntimeException()));
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(new FileLoadProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpect(status().isBadRequest())
-            .andExpect(response -> assertTrue(
-                    response.getResolvedException() instanceof FileLoadProcessingException))
-            .andExpect(
-                    jsonPath("$.code").value(is("IMPORT_CEPH_ERROR"))
-            );
+        .andExpectAll(
+            status().isBadRequest(),
+            response -> Assertions.assertThat(response.getResolvedException())
+                .isInstanceOf(FileLoadProcessingException.class),
+            jsonPath("$.code").value(is("IMPORT_CEPH_ERROR")));
   }
 
   @Test
   @SneakyThrows
   void shouldReturnDeleteProcessingException() {
     String id = UUID.randomUUID().toString();
-    doThrow(new CephInvocationException("ERROR", new RuntimeException())).when(userImportService).delete(id);
+    doThrow(new CephInvocationException("ERROR", new RuntimeException()))
+        .when(userImportService).delete(id);
 
     mockMvc.perform(delete(BASE_URL + "/{id}", id))
-            .andExpect(status().isInternalServerError())
-            .andExpect(response -> assertTrue(
-                    response.getResolvedException() instanceof CephInvocationException))
-            .andExpect(
-                    jsonPath("$.code").value(is("RUNTIME_ERROR"))
-            );
+        .andExpectAll(
+            status().isInternalServerError(),
+            response -> Assertions.assertThat(response.getResolvedException())
+                .isInstanceOf(CephInvocationException.class),
+            jsonPath("$.code").value(is("RUNTIME_ERROR"))
+        );
   }
 
   @Test
   @SneakyThrows
   void shouldReturnGetProcessingException() {
-    when(userImportService.getFileInfo(any())).thenThrow(new GetProcessingException("ERROR", new RuntimeException()));
+    when(userImportService.getFileInfo(any())).thenThrow(
+        new GetProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(get(BASE_URL))
-            .andExpect(status().isNotFound())
-            .andExpect(response -> assertTrue(
-                    response.getResolvedException() instanceof GetProcessingException))
-            .andExpect(
-                    jsonPath("$.code").value(is("GET_CEPH_ERROR"))
-            );
+        .andExpectAll(
+            status().isNotFound(),
+            response -> Assertions.assertThat(response.getResolvedException())
+                .isInstanceOf(GetProcessingException.class),
+            jsonPath("$.code").value(is("GET_CEPH_ERROR"))
+        );
   }
 
   @Test
   @SneakyThrows
   void shouldReturn403WhenForbiddenOperation() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(AccessDeniedException.class);
+    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(
+        AccessDeniedException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isForbidden(),
-                    jsonPath("$.code").value(is("FORBIDDEN_OPERATION")));
+        .andExpectAll(
+            status().isForbidden(),
+            jsonPath("$.code").value(is("FORBIDDEN_OPERATION")));
   }
 
   @Test
   @SneakyThrows
   void shouldReturnOpenShiftInvocationException() {
-    doThrow(new OpenShiftInvocationException("ERROR", new RuntimeException())).when(openShiftService).startImport(new SecurityContext());
+    doThrow(new OpenShiftInvocationException("ERROR", new RuntimeException()))
+        .when(openShiftService).startImport(new SecurityContext());
 
     mockMvc.perform(post(BASE_URL + "/imports"))
-            .andExpect(status().isInternalServerError())
-            .andExpect(response -> assertTrue(
-                    response.getResolvedException() instanceof OpenShiftInvocationException))
-            .andExpect(
-                    jsonPath("$.code").value(is("RUNTIME_ERROR"))
-            );
+        .andExpectAll(
+            status().isInternalServerError(),
+            response -> Assertions.assertThat(response.getResolvedException())
+                .isInstanceOf(OpenShiftInvocationException.class),
+            jsonPath("$.code").value(is("RUNTIME_ERROR"))
+        );
   }
 
   @Test
   @SneakyThrows
   void shouldThrowJwtParsingException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(JwtParsingException.class);
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(JwtParsingException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    jsonPath("$.code").value(is("JWT_PARSING_ERROR")));
+        .andExpectAll(
+            status().isBadRequest(),
+            jsonPath("$.code").value(is("JWT_PARSING_ERROR")));
   }
 
   @Test
   @SneakyThrows
   void shouldThrowVaultInvocationException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(VaultInvocationException.class);
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(VaultInvocationException.class);
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isInternalServerError(),
-                    jsonPath("$.code").value(is("RUNTIME_ERROR")));
+        .andExpectAll(
+            status().isInternalServerError(),
+            jsonPath("$.code").value(is("RUNTIME_ERROR")));
   }
 
   @Test
   @SneakyThrows
   void shouldThrowMaxUploadSizeExceededException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(MaxUploadSizeExceededException.class);
-    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.SIZE)).thenReturn("Файл занадто великого розміру.");
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(MaxUploadSizeExceededException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.SIZE)).thenReturn(
+        "Файл занадто великого розміру.");
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    jsonPath("$.code").value(is("FILE_SIZE_ERROR")),
-                    jsonPath("$.localizedMessage").value(is("Файл занадто великого розміру.")));
+        .andExpectAll(
+            status().isBadRequest(),
+            jsonPath("$.code").value(is("FILE_SIZE_ERROR")),
+            jsonPath("$.localizedMessage").value(is("Файл занадто великого розміру.")));
   }
 
   @Test
   @SneakyThrows
   void shouldThrowFileEncodingException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(FileEncodingException.class);
-    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.ENCODING)).thenReturn("Файл невідповідного кодування.");
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(FileEncodingException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.ENCODING)).thenReturn(
+        "Файл невідповідного кодування.");
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    jsonPath("$.code").value(is("FILE_ENCODING_EXCEPTION")),
-                    jsonPath("$.localizedMessage").value(is("Файл невідповідного кодування.")));
+        .andExpectAll(
+            status().isBadRequest(),
+            jsonPath("$.code").value(is("FILE_ENCODING_EXCEPTION")),
+            jsonPath("$.localizedMessage").value(is("Файл невідповідного кодування.")));
   }
 
   @Test
   @SneakyThrows
   void shouldThrowFileExtensionException() {
-    when(userImportService.storeFile(file, new SecurityContext())).thenThrow(FileExtensionException.class);
-    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.EXTENSION)).thenReturn("Невідповідний формат файлу.");
+    when(userImportService.storeFile(file, new SecurityContext()))
+        .thenThrow(FileExtensionException.class);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.EXTENSION)).thenReturn(
+        "Невідповідний формат файлу.");
 
     mockMvc.perform(multipart(BASE_URL).file(file))
-            .andExpectAll(
-                    status().isBadRequest(),
-                    jsonPath("$.code").value(is("FILE_EXTENSION_ERROR")),
-                    jsonPath("$.localizedMessage").value(is("Невідповідний формат файлу.")));
+        .andExpectAll(
+            status().isBadRequest(),
+            jsonPath("$.code").value(is("FILE_EXTENSION_ERROR")),
+            jsonPath("$.localizedMessage").value(is("Невідповідний формат файлу.")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnRuntimeErrorOnReadingRepositoryException() {
+    var repoName = RandomString.make();
+    when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
+    when(formService.getFormListByVersion(repoName))
+        .thenThrow(ReadingRepositoryException.class);
+
+    mockMvc.perform(get("/versions/master/forms"))
+        .andExpect(status().isInternalServerError())
+        .andExpectAll(
+            jsonPath("$.code").value(is("READING_REPOSITORY_EXCEPTION")),
+            jsonPath("$.statusDetails").doesNotExist());
   }
 }

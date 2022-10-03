@@ -20,6 +20,7 @@ import static com.epam.digital.data.platform.management.config.CacheCustomizer.D
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GitCommandException;
+import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
@@ -34,21 +35,30 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.RefSpec;
@@ -59,8 +69,11 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JGitServiceImpl implements JGitService {
@@ -76,14 +89,14 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public void cloneRepo(String versionName) throws Exception {
-    File directory = getRepositoryDir(versionName);
+    var directory = getRepositoryDir(versionName);
     if (directory.exists()) {
-      pull(versionName);
+      // TODO throw exception if repository already exists
       return;
     }
     Lock lock = getLock(versionName);
     lock.lock();
-    try (Git call = jGitWrapper.cloneRepository()
+    try (var call = jGitWrapper.cloneRepository()
         .setURI(getRepositoryUrl())
         .setCredentialsProvider(getCredentialsProvider())
         .setDirectory(directory)
@@ -95,47 +108,54 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
-  public void pull(String versionName) throws Exception {
-    File repositoryDirectory = getRepositoryDir(versionName);
+  public void resetHeadBranchToRemote() {
+    var repositoryName = gerritPropertiesConfig.getHeadBranch();
+    log.debug("Trying to reset repository {} to remote state", repositoryName);
+    var repositoryDirectory = getRepositoryDir(repositoryName);
     if (!repositoryDirectory.exists()) {
-      return;
+      throw new ReadingRepositoryException(
+          String.format("Repository %s doesn't exists", repositoryName));
     }
-    Lock lock = getLock(versionName);
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
     lock.lock();
-    try (Git git = jGitWrapper.open(repositoryDirectory)) {
-      git.checkout().setName("refs/heads/" + gerritPropertiesConfig.getHeadBranch()).call();
-      git.pull().setCredentialsProvider(getCredentialsProvider()).setRebase(true).call();
+    try (var git = openRepo(repositoryDirectory)) {
+      log.trace("Fetching repo {}", repositoryName);
+      fetchAll(git);
+
+      log.trace("Hard reset {} on {}/{}", repositoryName, Constants.DEFAULT_REMOTE_NAME,
+          repositoryName);
+      hardResetOnOriginHeadBranch(git);
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
     }
+    log.debug("Repository {} was successfully reset to remote state", repositoryName);
   }
 
   @Override
-  public void fetch(String versionName, ChangeInfoDto changeInfoDto) throws Exception {
+  public void fetch(@NonNull String versionName, @NonNull ChangeInfoDto changeInfoDto) {
+    var refs = changeInfoDto.getRefs();
+    log.debug("Trying to fetch and checkout repository {} to ref {}", versionName, refs);
     var repositoryDirectory = getRepositoryDir(versionName);
     if (!repositoryDirectory.exists()) {
-      return;
+      throw new ReadingRepositoryException(
+          String.format("Repository %s doesn't exists", versionName));
     }
-    Lock lock = getLock(versionName);
+    log.trace("Synchronizing repo {}", versionName);
+    var lock = getLock(versionName);
     lock.lock();
-    try (Git git = jGitWrapper.open(repositoryDirectory)) {
-      fetch(git, changeInfoDto);
+    try (var git = openRepo(repositoryDirectory)) {
+      log.trace("Fetching repo {} on ref specs {}", versionName, refs);
+      fetch(git, refs);
+
+      log.trace("Checkout repo {} on {}", versionName, Constants.FETCH_HEAD);
+      checkoutFetchHead(git);
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", versionName);
     }
-  }
-
-  /**
-   * Fetch method that needs opened {@link Git}
-   */
-  private void fetch(Git git, ChangeInfoDto changeInfoDto) throws GitAPIException {
-    git.fetch()
-        .setCredentialsProvider(getCredentialsProvider())
-        .setRefSpecs(changeInfoDto.getRefs())
-        .call();
-    git.checkout()
-        .setName("FETCH_HEAD")
-        .call();
+    log.debug("Repository {} was successfully fetched and checkout to ref {}", versionName, refs);
   }
 
   @Override
@@ -147,7 +167,7 @@ public class JGitServiceImpl implements JGitService {
     List<String> items = new ArrayList<>();
     Lock lock = getLock(versionName);
     lock.lock();
-    try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
+    try (var repository = openRepo(repositoryDirectory).getRepository()) {
       RevTree tree = jGitWrapper.getRevTree(repository);
       if (path != null && !path.isEmpty()) {
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
@@ -183,7 +203,7 @@ public class JGitServiceImpl implements JGitService {
       return null;
     }
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-    try(Git git = getGit(repositoryDirectory)) {
+    try (var git = openRepo(repositoryDirectory)) {
       LogCommand log = git.log();
       log.addPath(filePath);
       Iterable<RevCommit> call = getRevCommits(log);
@@ -215,7 +235,7 @@ public class JGitServiceImpl implements JGitService {
     }
     Lock lock = getLock(versionName);
     lock.lock();
-    try (Repository repository = jGitWrapper.open(repositoryDirectory).getRepository()) {
+    try (var repository = openRepo(repositoryDirectory).getRepository()) {
       if (filePath != null && !filePath.isEmpty()) {
         RevTree tree = jGitWrapper.getRevTree(repository);
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
@@ -244,8 +264,9 @@ public class JGitServiceImpl implements JGitService {
     }
     Lock lock = getLock(requestDto.getVersionName());
     lock.lock();
-    try (Git git = jGitWrapper.open(repositoryFile)) {
-      fetch(git, changeInfoDto);
+    try (var git = openRepo(repositoryFile)) {
+      fetch(git, changeInfoDto.getRefs());
+      checkoutFetchHead(git);
       File file = requestToFileConverter.convert(requestDto);
       if (file != null) {
         return doAmend(file, changeInfoDto, git);
@@ -265,8 +286,9 @@ public class JGitServiceImpl implements JGitService {
     }
     Lock lock = getLock(changeInfoDto.getNumber());
     lock.lock();
-    try (Git git = jGitWrapper.open(repositoryFile)) {
-      fetch(git, changeInfoDto);
+    try (var git = openRepo(repositoryFile)) {
+      fetch(git, changeInfoDto.getRefs());
+      checkoutFetchHead(git);
 
       var repoDir = FilenameUtils.normalizeNoEndSeparator(
           gerritPropertiesConfig.getRepositoryDirectory());
@@ -290,6 +312,79 @@ public class JGitServiceImpl implements JGitService {
     }
 
     FileUtils.delete(repositoryFile, FileUtils.RECURSIVE);
+  }
+
+  private Git openRepo(File repositoryDirectory) {
+    try {
+      return jGitWrapper.open(repositoryDirectory);
+    } catch (IOException e) {
+      throw new ReadingRepositoryException(
+          String.format("Exception occurred during repository opening: %s", e.getMessage()), e);
+    }
+  }
+
+  /**
+   * Fetch method that needs opened {@link Git}
+   */
+  private void fetchAll(Git git) {
+    fetch(git, null);
+  }
+
+  /**
+   * Fetch specific refs with opened {@link Git}
+   */
+  private void fetch(@NonNull Git git, @Nullable String refs) {
+    var fetchCommand = git.fetch()
+        .setCredentialsProvider(getCredentialsProvider());
+    if (Objects.nonNull(refs)) {
+      fetchCommand.setRefSpecs(refs);
+    }
+    try {
+      fetchCommand.call();
+    } catch (InvalidRemoteException e) {
+      throw new IllegalStateException("Default remote \"origin\" cannot be invalid", e);
+    } catch (TransportException e) {
+      // TODO add retry for TransportException
+      throw new RuntimeException(
+          String.format("Transport exception occurred while fetching: %s", e.getMessage()), e);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred while fetching: %s", e.getMessage()), e);
+    }
+  }
+
+  private void checkoutFetchHead(@NonNull Git git) {
+    var checkoutCommand = git.checkout()
+        .setName(Constants.FETCH_HEAD);
+    try {
+      checkoutCommand.call();
+    } catch (RefAlreadyExistsException | RefNotFoundException | InvalidRefNameException |
+             CheckoutConflictException e) {
+      // Checkout on FETCH_HEAD must not create any new refs, ref FETCH_HEAD must always exist
+      // ref FETCH_HEAD must be always valid and there must not be any conflicts during such checkout
+      throw new IllegalStateException(
+          String.format("Checkout on FETCH_HEAD must not throw such exception: %s", e.getMessage()),
+          e);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred while checkout: %s", e.getMessage()), e);
+    }
+  }
+
+  private void hardResetOnOriginHeadBranch(@NonNull Git git) {
+    var resetCommand = git.reset()
+        .setMode(ResetType.HARD)
+        .setRef(Constants.DEFAULT_REMOTE_NAME + "/" + gerritPropertiesConfig.getHeadBranch());
+    try {
+      resetCommand.call();
+    } catch (CheckoutConflictException e) {
+      throw new IllegalStateException(
+          String.format("Hard reset must not face any conflicts: %s", e.getMessage()), e);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during hard reset on origin %s: %s",
+              gerritPropertiesConfig.getHeadBranch(), e.getMessage()), e);
+    }
   }
 
   private String doAmend(File file, ChangeInfoDto changeInfoDto, Git git)
@@ -322,14 +417,6 @@ public class JGitServiceImpl implements JGitService {
       return log.call();
     } catch (GitAPIException e) {
       throw new GitCommandException("Could not execute call command", e);
-    }
-  }
-
-  private Git getGit(File repositoryDirectory) {
-    try {
-      return jGitWrapper.open(repositoryDirectory);
-    } catch (IOException e) {
-      throw new GitCommandException("Could not open repo", e);
     }
   }
 
