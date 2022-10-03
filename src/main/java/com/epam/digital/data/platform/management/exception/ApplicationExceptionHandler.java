@@ -51,6 +51,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
 
+  private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
+
   private final MessageResolver messageResolver;
 
   public ApplicationExceptionHandler(MessageResolver messageResolver) {
@@ -175,6 +177,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(CONFLICT_ERROR, exception));
   }
 
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleReadingRepositoryException(
+      ReadingRepositoryException exception) {
+    log.error("Something went wrong with git repository opening", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(READING_REPOSITORY_EXCEPTION, exception));
+  }
+
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {
     var response = new DetailedErrorResponse();
     response.setTraceId(MDC.get(TRACE_ID.getHeaderName()));
@@ -182,7 +192,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     response.setDetails(exception.getMessage());
 
     var titleKey = FileValidatorErrorMessageTitle.from(code);
-    response.setLocalizedMessage(Objects.isNull(titleKey) ? null : messageResolver.getMessage(titleKey));
+    response.setLocalizedMessage(
+        Objects.isNull(titleKey) ? null : messageResolver.getMessage(titleKey));
 
     return response;
   }
