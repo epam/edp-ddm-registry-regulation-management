@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
@@ -35,16 +34,17 @@ public class RepositoryRefreshScheduler {
 
   private final GerritService gerritService;
   private final JGitService jGitService;
-  private final GerritPropertiesConfig config;
 
   @Scheduled(cron = "${scheduled.repositoryRefreshCron}", zone = "${scheduled.repositoryRefreshTimezone}")
   public void refresh() throws Exception {
+    log.debug("Refreshing repositories started");
     List<ChangeInfo> mrList = gerritService.getMRList().stream()
         .filter(mr -> !mr.mergeable).collect(Collectors.toList());
 
     for (ChangeInfo changeInfo : mrList) {
       try {
         String changeId = changeInfo.changeId;
+        log.debug("Refreshing repository {}", changeInfo._number);
         gerritService.rebase(changeId);
         ChangeInfoDto changeInfoDto = gerritService.getChangeInfo(changeId);
         jGitService.fetch(changeInfoDto.getNumber(), changeInfoDto);
@@ -52,6 +52,14 @@ public class RepositoryRefreshScheduler {
         log.error("Error during repository refresh", e);
       }
     }
-    jGitService.pull(config.getHeadBranch());
+
+    log.debug("Refreshing head branch repository");
+    try {
+      jGitService.resetHeadBranchToRemote();
+    } catch (Exception e) {
+      log.error("Error during head branch repository refresh", e);
+    }
+
+    log.debug("Refreshing repositories finished");
   }
 }
