@@ -198,6 +198,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockRemoteAddCommand();
     jGitWrapperMock.mockPushCommand();
     jGitWrapperMock.mockCommitCommand();
+    jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockGetForm(form);
     jGitWrapperMock.mockGetFormsList(List.of(form));
     mockMvc.perform(MockMvcRequestBuilders.put(
