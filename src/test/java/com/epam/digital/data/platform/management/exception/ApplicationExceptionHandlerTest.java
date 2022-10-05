@@ -29,10 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.controller.CandidateVersionBusinessProcessesController;
+import com.epam.digital.data.platform.management.controller.CandidateVersionFormsController;
 import com.epam.digital.data.platform.management.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.controller.UserImportController;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
@@ -57,7 +60,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @WebMvcTest(properties = "spring.cloud.vault.enabled=false")
 @ContextConfiguration(
     classes = {MasterVersionFormsController.class, UserImportController.class,
-        ApplicationExceptionHandler.class}
+        ApplicationExceptionHandler.class, CandidateVersionBusinessProcessesController.class,
+        CandidateVersionFormsController.class}
 )
 @AutoConfigureMockMvc(addFilters = false)
 class ApplicationExceptionHandlerTest {
@@ -74,6 +78,8 @@ class ApplicationExceptionHandlerTest {
 
   @MockBean
   FormService formService;
+  @MockBean
+  BusinessProcessService businessProcessService;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
 
@@ -253,5 +259,41 @@ class ApplicationExceptionHandlerTest {
         .andExpectAll(
             jsonPath("$.code").value(is("READING_REPOSITORY_EXCEPTION")),
             jsonPath("$.statusDetails").doesNotExist());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowFormAlreadyExistsException() {
+    var formName = RandomString.make();
+    var versionName = RandomString.make();
+    var content = RandomString.make();
+    doThrow(FormAlreadyExistsException.class).when(formService).createForm(formName, content, versionName);
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.FORM_ALREADY_EXISTS)).thenReturn(
+        "Неунікальна службова назва форми");
+
+    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/forms/{formName}", versionName, formName).content(content))
+        .andExpect(status().isConflict())
+        .andExpectAll(
+            jsonPath("$.code").value("FORM_ALREADY_EXISTS_EXCEPTION"),
+            jsonPath("$.statusDetails").doesNotExist(),
+            jsonPath("$.localizedMessage").value(is("Неунікальна службова назва форми")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowBusinessProcessAlreadyExistsException() {
+    var bpName = RandomString.make();
+    var versionName = RandomString.make();
+    var content = RandomString.make();
+    doThrow(BusinessProcessAlreadyExists.class).when(businessProcessService).createProcess(bpName, content, versionName);
+
+    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.BUSINESS_PROCESS_ALREADY_EXISTS)).thenReturn(
+        "Бізнес-процес з такою службовою назвою вже існує");
+    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}", versionName, bpName).content(content))
+        .andExpect(status().isConflict())
+        .andExpectAll(
+            jsonPath("$.code").value("BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION"),
+            jsonPath("$.statusDetails").doesNotExist(),
+            jsonPath("$.localizedMessage").value(is("Бізнес-процес з такою службовою назвою вже існує")));
   }
 }

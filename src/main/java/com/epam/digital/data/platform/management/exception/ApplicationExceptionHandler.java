@@ -40,6 +40,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
   public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
   public static final String FORM_ALREADY_EXISTS_EXCEPTION = "FORM_ALREADY_EXISTS_EXCEPTION";
+  public static final String BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION = "BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION";
   public static final String TABLE_NOT_FOUND_EXCEPTION = "TABLE_NOT_FOUND_EXCEPTION";
   public static final String TABLE_PARSE_EXCEPTION = "TABLE_PARSE_EXCEPTION";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
@@ -52,7 +53,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GERRIT_COMMUNICATION_EXCEPTION = "GERRIT_COMMUNICATION_EXCEPTION";
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
-
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
 
   private final MessageResolver messageResolver;
@@ -193,6 +193,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Conflict occurred on version candidate submission", exception);
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(newDetailedResponse(CONFLICT_ERROR, exception));
+  }
+
+  @ExceptionHandler(BusinessProcessAlreadyExists.class)
+  public ResponseEntity<DetailedErrorResponse> handleBusinessProcessAlreadyExistsException(
+      BusinessProcessAlreadyExists exception) {
+    log.error("Business process already exists exception", exception);
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(newDetailedResponse(BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION, exception));
   }
 
   @ExceptionHandler

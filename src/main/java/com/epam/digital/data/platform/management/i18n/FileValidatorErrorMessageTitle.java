@@ -39,8 +39,9 @@ public enum FileValidatorErrorMessageTitle implements MessageTitle {
   TABLE_PARSE_EXCEPTION(ApplicationExceptionHandler.TABLE_PARSE_EXCEPTION,
       "file-validator.error.table-read"),
   TABLE_NOT_FOUND_EXCEPTION(ApplicationExceptionHandler.TABLE_NOT_FOUND_EXCEPTION,
-      "file-validator.error.table-not-found");
-
+      "file-validator.error.table-not-found"),
+  BUSINESS_PROCESS_ALREADY_EXISTS(ApplicationExceptionHandler.BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION,
+      "file-validator.error.tittle.bp-already-exists");
   private final String errorCode;
   private final String titleKey;
 

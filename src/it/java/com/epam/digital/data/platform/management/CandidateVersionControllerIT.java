@@ -178,17 +178,32 @@ public class CandidateVersionControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void getVersionChanges_noChanges() {
-    String candidateId = "id1";
+    String versionCandidateId = "id1";
+    String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.currentRevision = candidateId;
+    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+    FormDetailsShort formDetails = initFormDetails(formName, "title");
+    FileInfo fileInfo = new FileInfo();
+    fileInfo.status = 'A';
     changeInfo.revisions = new HashMap<>();
-    changeInfo.revisions.put(candidateId, revisionInfo);
-    gerritApiMock.mockGetMRByNumber(candidateId, changeInfo);
+    RevisionInfo revisionInfo = new RevisionInfo();
+    revisionInfo.ref = versionCandidateId;
+    changeInfo.revisions.put(formName, revisionInfo);
+    changeInfo.currentRevision = formName;
+    changeInfoDto.setRefs(versionCandidateId);
+    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    jGitWrapperMock.mockGetForm(formDetails);
     jGitWrapperMock.mockCheckoutCommand();
+    jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId + "/changes")
+    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    revisionInfo.ref = "id1";
+    changeInfo.currentRevision = versionCandidateId;
+    changeInfo.revisions = new HashMap<>();
+    changeInfo.revisions.put(versionCandidateId, revisionInfo);
+    jGitWrapperMock.mockGetFormsList(List.of(formDetails));
+    jGitWrapperMock.mockLogCommand();
+    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + versionCandidateId + "/changes")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
             status().isOk(),
