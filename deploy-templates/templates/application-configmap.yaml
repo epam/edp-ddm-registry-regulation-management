@@ -39,8 +39,9 @@ data:
 
     spring:
       registry-datasource:
-        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
+        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
         connection-timeout: {{.Values.db.connectionTimeout}}
+
       public-datasource:
-        url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
+        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
         connection-timeout: {{.Values.db.connectionTimeout}}
