@@ -16,25 +16,25 @@
 
 package com.epam.digital.data.platform.management.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class XmlParserConfig {
 
   @Bean
   public DocumentBuilder documentBuilder() throws ParserConfigurationException {
-    DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder db = null;
+    var documentBuilderFactory = DocumentBuilderFactory.newInstance();
     documentBuilderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-general-entities",
+        false);
+    documentBuilderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities",
+        false);
+    documentBuilderFactory.setNamespaceAware(true);
     documentBuilderFactory.setExpandEntityReferences(false);
-    db = documentBuilderFactory.newDocumentBuilder();
-    return db;
+    return documentBuilderFactory.newDocumentBuilder();
   }
 }
