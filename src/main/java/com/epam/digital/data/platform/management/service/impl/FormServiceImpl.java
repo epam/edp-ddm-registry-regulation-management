@@ -83,11 +83,12 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void updateForm(String content, String formName, String versionName) throws Exception {
+    String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-    String oldContent = repo.readFile(getFormPath(formName));
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-    if (oldContent != null) {
+    if (repo.isFileExists(formPath)) {
+      String oldContent = repo.readFile(formPath);
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
@@ -96,7 +97,7 @@ public class FormServiceImpl implements FormService {
           .findFirst().map(FileResponse::getCreated).orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-    repo.writeFile(getFormPath(formName), content);
+    repo.writeFile(formPath, content);
   }
 
   @Override

@@ -105,11 +105,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   @Override
   public void updateProcess(String content, String processName, String versionName) {
     try {
-      var time = LocalDateTime.now();
       VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-      String oldContent = repo.readFile(getProcessPath(processName));
+      String processPath = getProcessPath(processName);
+      var time = LocalDateTime.now();
       FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-      if (oldContent != null) {
+      if (repo.isFileExists(processPath)) {
+        String oldContent = repo.readFile(processPath);
         fileDatesDto = getDatesFromContent(oldContent);
       }
       if (fileDatesDto.getCreate() == null) {
@@ -118,7 +119,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
             .findFirst().map(FileResponse::getCreated).orElse(time));
       }
       content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-      repo.writeFile(getProcessPath(processName), content);
+      repo.writeFile(processPath, content);
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to update process", e);
     }

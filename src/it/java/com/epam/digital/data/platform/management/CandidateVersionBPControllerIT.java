@@ -194,6 +194,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     jGitWrapperMock.mockRemoteAddCommand();
     jGitWrapperMock.mockPushCommand();
     jGitWrapperMock.mockCommitCommand();
+    jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockGetBusinessProcess(businessProcess);
     jGitWrapperMock.mockGetBusinessProcessList(Map.of("name", businessProcess));
     mockMvc.perform(MockMvcRequestBuilders.put(
