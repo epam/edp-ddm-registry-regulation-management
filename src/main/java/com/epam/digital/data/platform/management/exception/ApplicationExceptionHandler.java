@@ -54,6 +54,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
+  private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
+  private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
 
   private final MessageResolver messageResolver;
 
@@ -209,6 +211,22 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Something went wrong with git repository opening", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(READING_REPOSITORY_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
+      WritingRepositoryException exception) {
+    log.error("Could not write file to repository");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(WRITING_REPOSITORY_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
+      SettingsProcessingException exception) {
+    log.error("Could not parse settings files");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(SETTINGS_PROCESSING_EXCEPTION, exception));
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

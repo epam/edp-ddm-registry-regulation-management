@@ -4,7 +4,7 @@ import java.util.Map;
 
 public interface VersionedFileRepositoryFactory {
 
-    VersionedFileRepository getRepoByVersion(String versionName) throws Exception;
+    VersionedFileRepository getRepoByVersion(String versionName);
 
     Map<String, VersionedFileRepository> getAvailableRepos();
 }

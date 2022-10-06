@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -182,7 +183,7 @@ public class CandidateVersionControllerIT extends BaseIT {
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    FormDetailsShort formDetails = initFormDetails(formName, "title");
+    TestFormDetailsShort formDetails = initFormDetails(formName, "title", "{\"name\":\"name\", \"title\":\"title\"}");
     FileInfo fileInfo = new FileInfo();
     fileInfo.status = 'A';
     changeInfo.revisions = new HashMap<>();
