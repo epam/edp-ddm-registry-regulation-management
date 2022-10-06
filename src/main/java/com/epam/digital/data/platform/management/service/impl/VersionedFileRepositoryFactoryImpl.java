@@ -1,6 +1,7 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
@@ -10,7 +11,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,8 +30,8 @@ public class VersionedFileRepositoryFactoryImpl implements VersionedFileReposito
     private final Map<String, VersionedFileRepository> repositoryMap = new HashMap<>();
 
     @Override
-    public VersionedFileRepository getRepoByVersion(String versionName) throws Exception {
-        VersionedFileRepository repo = null;
+    public VersionedFileRepository getRepoByVersion(String versionName) {
+        VersionedFileRepository repo;
         boolean isNeedInit = false;
         synchronized (repositoryMap) {
             repo = repositoryMap.get(versionName);
@@ -42,7 +42,11 @@ public class VersionedFileRepositoryFactoryImpl implements VersionedFileReposito
             }
         }
         if (isNeedInit) {
-            repo.pullRepository();
+            try {
+                repo.pullRepository();
+            } catch (Exception e) {
+                throw new ReadingRepositoryException("Could not get repo for "+ versionName + " candidate", e);
+            }
         }
         return repo;
     }

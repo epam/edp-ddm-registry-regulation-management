@@ -23,6 +23,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
+import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -228,6 +230,14 @@ public class JGitWrapperMock {
     Mockito.when(treeWalk.next()).thenReturn(true);
     Mockito.when(loader.getBytes())
         .thenReturn(formDetails.getContent().getBytes(StandardCharsets.UTF_8));
+  }
+
+  @SneakyThrows
+  public void mockGetSettings(String settings, String globalVars) {
+    Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
+    Mockito.when(treeWalk.next()).thenReturn(true);
+    Mockito.when(loader.getBytes())
+        .thenReturn(globalVars.getBytes(StandardCharsets.UTF_8), settings.getBytes(StandardCharsets.UTF_8));
   }
 
   @SneakyThrows
