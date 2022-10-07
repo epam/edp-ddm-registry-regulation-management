@@ -171,11 +171,13 @@ public class JGitServiceImpl implements JGitService {
       RevTree tree = jGitWrapper.getRevTree(repository);
       if (path != null && !path.isEmpty()) {
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
-          try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
-            dirWalk.addTree(treeWalk.getObjectId(0));
-            dirWalk.setRecursive(true);
-            while (dirWalk.next()) {
-              items.add(dirWalk.getPathString());
+          if(treeWalk != null) {
+            try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
+              dirWalk.addTree(treeWalk.getObjectId(0));
+              dirWalk.setRecursive(true);
+              while (dirWalk.next()) {
+                items.add(dirWalk.getPathString());
+              }
             }
           }
         }
