@@ -11,8 +11,6 @@ import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.impl.FormServiceImpl;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import liquibase.pro.packaged.S;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +42,8 @@ class FormServiceTest {
       "  \"name\": \"add-fizfactors1\",\n" +
       "  \"display\": \"form\",\n" +
       "  \"submissionAccess\": [],\n" +
-      "  \"created\": \"" + LocalDateTime.now() + "\",\n" +
-      "  \"modified\": \"" + LocalDateTime.now() + "\"\n" +
+      "  \"created\": \"2022-12-21T13:52:31.357Z\",\n" +
+      "  \"modified\": \"2022-12-22T14:52:23.745Z\"\n" +
       "}";
 
   @Mock
@@ -83,8 +81,8 @@ class FormServiceTest {
         .name("form")
         .path("forms/form.json")
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+        .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
         .title("Внести фізичні фактори1")
         .build();
     Assertions.assertThat(resultList)

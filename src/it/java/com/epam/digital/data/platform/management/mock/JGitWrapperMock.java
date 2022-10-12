@@ -15,11 +15,22 @@
  */
 package com.epam.digital.data.platform.management.mock;
 
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.createTempRepo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
-import com.google.gson.Gson;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -49,17 +60,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.Configuration;
-
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
-
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createTempRepo;
-import static org.mockito.ArgumentMatchers.*;
 
 @Slf4j
 @Configuration
@@ -92,7 +92,6 @@ public class JGitWrapperMock {
   private TreeWalk treeWalk;
   private TreeWalk dirWalk;
   private ObjectLoader loader;
-  private final Gson gson = new Gson();
 
   public void init() {
     git = Mockito.mock(Git.class);
@@ -224,27 +223,29 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
-  public void mockGetForm(FormDetailsShort formDetails) {
+  public void mockGetForm(TestFormDetailsShort formDetails) {
     Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true);
     Mockito.when(loader.getBytes())
-        .thenReturn((gson.toJson(formDetails).getBytes(StandardCharsets.UTF_8)));
+        .thenReturn(formDetails.getContent().getBytes(StandardCharsets.UTF_8));
   }
 
   @SneakyThrows
-  public void mockGetFormsList(List<FormDetailsShort> list) {
+  public void mockGetFormsList(List<TestFormDetailsShort> list) {
     Mockito.when(jGitWrapper.getTreeWalk(eq(repository), anyString(), eq(revTree)))
         .thenReturn(treeWalk);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(dirWalk);
     Mockito.when(dirWalk.next()).thenAnswer(
         new Answer<Boolean>() {
-          Iterator<FormDetailsShort> iterator = list.iterator();
+          Iterator<TestFormDetailsShort> iterator = list.iterator();
+
           @Override
           public Boolean answer(InvocationOnMock invocation) {
             if (iterator.hasNext()) {
               var next = iterator.next();
               Mockito.when(dirWalk.getPathString()).thenReturn("forms/" + next.getName());
-              Mockito.when(loader.getBytes()).thenReturn(gson.toJson(next).getBytes(StandardCharsets.UTF_8));
+              Mockito.when(loader.getBytes())
+                  .thenReturn(next.getContent().getBytes(StandardCharsets.UTF_8));
               return true;
             } else {
               iterator = list.iterator();
@@ -263,12 +264,14 @@ public class JGitWrapperMock {
     Mockito.when(dirWalk.next()).thenAnswer(
         new Answer<Boolean>() {
           Iterator<Map.Entry<String, String>> iterator = processContentMap.entrySet().iterator();
+
           @Override
           public Boolean answer(InvocationOnMock invocation) {
             if (iterator.hasNext()) {
               var next = iterator.next();
               Mockito.when(dirWalk.getPathString()).thenReturn("/bpmn/" + next.getKey());
-              Mockito.when(loader.getBytes()).thenReturn(next.getValue().getBytes(StandardCharsets.UTF_8));
+              Mockito.when(loader.getBytes())
+                  .thenReturn(next.getValue().getBytes(StandardCharsets.UTF_8));
               return true;
             } else {
               iterator = processContentMap.entrySet().iterator();
