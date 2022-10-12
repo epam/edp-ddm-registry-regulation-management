@@ -37,8 +37,6 @@ public interface JGitService {
 
   FileDatesDto getDates(String versionName, String filePath);
 
-  void formDatesCacheEvict();
-
   String getFileContent(String versionName, String filePath) throws Exception;
 
   String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception;

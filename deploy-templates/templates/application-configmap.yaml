@@ -36,12 +36,17 @@ data:
       cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
       dataModelSnapshotCron: {{ .Values.scheduled.dataModelSnapshotCron }}
       dataModelSnapshotTimeZone: {{ .Values.scheduled.dataModelSnapshotTimeZone }}
+      formDatesCacheEvictCron: {{ .Values.scheduled.formDatesCacheEvictCron }}
+      formDatesCacheEvictTimeZone: {{ .Values.scheduled.formDatesCacheEvictTimeZone }}
 
     spring:
       registry-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
         connection-timeout: {{.Values.db.connectionTimeout}}
-
       public-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
         connection-timeout: {{.Values.db.connectionTimeout}}
+      cache:
+        cache-names: {{.Values.cache.names}}
+        caffeine:
+          spec: {{.Values.cache.spec}}

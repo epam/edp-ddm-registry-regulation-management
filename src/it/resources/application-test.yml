@@ -9,3 +9,7 @@ spring:
   cloud:
     vault:
       enabled: false
+  cache:
+    cache-names: dates
+    caffeine:
+      spec: expireAfterAccess=10s
