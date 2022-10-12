@@ -15,31 +15,35 @@
  */
 package com.epam.digital.data.platform.management;
 
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initFormDetails;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.*;
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class CandidateVersionControllerIT extends BaseIT {
 
   private static final String BASE_REQUEST = "/versions/candidates/";
+
   @Test
   @SneakyThrows
   public void getVersionsList() {
@@ -74,7 +78,8 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void getVersionDetails() {
     String candidateId = "candidateId";
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockGetMRByNumber(candidateId,
+        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId)
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
@@ -98,8 +103,10 @@ public class CandidateVersionControllerIT extends BaseIT {
     subject.setName("request name");
     gerritApiMock.mockGetMRByNumber(String.valueOf(changeInfo._number), changeInfo);
     gerritApiMock.mockCreateChanges(changeInfo, subject);
-    mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST).contentType(MediaType.APPLICATION_JSON_VALUE).content(mapper.writeValueAsString(subject))
-            .accept(MediaType.APPLICATION_JSON_VALUE))
+    mockMvc.perform(
+            MockMvcRequestBuilders.post(BASE_REQUEST).contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(subject))
+                .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
             status().isCreated(),
             content().contentType("application/json"),
@@ -125,7 +132,8 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void submitVersion() {
     String candidateId = "id1";
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockGetMRByNumber(candidateId,
+        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     gerritApiMock.mockSubmit();
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/submit")
             .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -136,7 +144,8 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void declineCandidate() {
     String candidateId = "id1";
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockGetMRByNumber(candidateId,
+        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/decline")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(status().isOk());
@@ -146,7 +155,8 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void declineCandidate_NoSuchVersion() {
     String candidateId = "noSuchVersion";
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockGetMRByNumber(candidateId,
+        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     gerritApiMock.mockNotFound(candidateId);
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/decline")
             .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -157,7 +167,8 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void submitVersion_NoSuchVersion() {
     String candidateId = "noSuchVersion";
-    gerritApiMock.mockGetMRByNumber(candidateId, initChangeInfo(1, "admin", "admin@epam.com", "admin"));
+    gerritApiMock.mockGetMRByNumber(candidateId,
+        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     gerritApiMock.mockNotFound(candidateId);
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/submit")
             .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -193,7 +204,8 @@ public class CandidateVersionControllerIT extends BaseIT {
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    FormDetailsShort formDetails = initFormDetails(formName, "title");
+    var formDetails = initFormDetails(formName, "title",
+        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
     FileInfo fileInfo = new FileInfo();
     fileInfo.status = 'A';
     changeInfo.revisions = new HashMap<>();

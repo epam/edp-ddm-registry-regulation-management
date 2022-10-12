@@ -1,5 +1,6 @@
 package com.epam.digital.data.platform.management;
 
+import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.service.JGitService;
@@ -25,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class MasterVersionFormsControllerIT extends BaseIT {
+
   private static final String BASE_REQUEST = "/versions/master/forms";
   @Autowired
   private CacheManager cacheManager;
@@ -39,7 +41,8 @@ public class MasterVersionFormsControllerIT extends BaseIT {
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    FormDetailsShort formDetails = initFormDetails(formName, "title");
+    var formDetails = initFormDetails(formName, "title",
+        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
 
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
@@ -77,9 +80,9 @@ public class MasterVersionFormsControllerIT extends BaseIT {
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
-    List<FormDetailsShort> list = new ArrayList<>();
-    list.add(initFormDetails("name", "title"));
-    list.add(initFormDetails("name2", "title2"));
+    var list = new ArrayList<TestFormDetailsShort>();
+    list.add(initFormDetails("name", "title", "{\"name\":\"name\", \"title\":\"title\"}"));
+    list.add(initFormDetails("name2", "title2", "{\"name\":\"name2\", \"title\":\"title2\"}"));
 
     jGitWrapperMock.mockCloneMasterCommand();
     jGitWrapperMock.mockGetFormsList(list);

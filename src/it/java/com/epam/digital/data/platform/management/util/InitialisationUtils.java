@@ -1,12 +1,11 @@
 package com.epam.digital.data.platform.management.util;
 
 import com.epam.digital.data.platform.management.BaseIT;
+import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gson.Gson;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,7 +16,6 @@ import java.util.Map;
 import lombok.SneakyThrows;
 
 public class InitialisationUtils extends BaseIT {
-  private static final Gson gson = new Gson();
 
   @SneakyThrows
   public static ChangeInfoDto initChangeInfoDto(String refs) {
@@ -41,18 +39,20 @@ public class InitialisationUtils extends BaseIT {
   }
 
   @SneakyThrows
-  public static String createFormJson(FormDetailsShort form, String versionName) {
-    String filePath = tempRepoDirectory.getPath() + "/" + versionName + "/forms/" + form.getName() + ".json";
+  public static String createFormJson(TestFormDetailsShort form, String versionName) {
+    String filePath =
+        tempRepoDirectory.getPath() + "/" + versionName + "/forms/" + form.getName() + ".json";
     Files.createFile(Paths.get(filePath));
     FileWriter fileWriter = new FileWriter(filePath);
-    fileWriter.write(gson.toJson(form));
+    fileWriter.write(form.getContent());
     fileWriter.close();
     return filePath;
   }
 
   @SneakyThrows
   public static String createProcessXml(String content, String versionName, String processName) {
-    String filePath = tempRepoDirectory.getPath() + "/" + versionName + "/bpmn/" + processName + ".bpmn";
+    String filePath =
+        tempRepoDirectory.getPath() + "/" + versionName + "/bpmn/" + processName + ".bpmn";
     Files.createFile(Paths.get(filePath));
     FileWriter fileWriter = new FileWriter(filePath);
     fileWriter.write(content);
@@ -60,7 +60,8 @@ public class InitialisationUtils extends BaseIT {
     return filePath;
   }
 
-  public static ChangeInfo initChangeInfo(int number, String ownerName, String ownerEmail, String ownerUsername) {
+  public static ChangeInfo initChangeInfo(int number, String ownerName, String ownerEmail,
+      String ownerUsername) {
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.id = "id" + number;
     changeInfo.changeId = "id" + number;
@@ -76,11 +77,12 @@ public class InitialisationUtils extends BaseIT {
     return changeInfo;
   }
 
-  public static FormDetailsShort initFormDetails(String name, String title) {
-    return FormDetailsShort.builder()
+  public static TestFormDetailsShort initFormDetails(String name, String title, String content) {
+    return TestFormDetailsShort.builder()
         .name(name).title(title)
         .created(LocalDateTime.now())
         .updated(LocalDateTime.now())
+        .content(content)
         .build();
   }
 
