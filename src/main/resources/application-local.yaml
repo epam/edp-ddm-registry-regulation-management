@@ -9,6 +9,10 @@ spring:
     deserialization:
       fail-on-missing-creator-properties: true
       fail-on-null-creator-properties: true
+  cache:
+    cache-names: dates
+    caffeine:
+      spec: expireAfterAccess=1d
 
 server:
   port: 7070
