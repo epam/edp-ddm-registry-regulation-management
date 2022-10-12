@@ -82,3 +82,7 @@ scheduled:
   repositoryRefreshTimezone: UTC
   cleanRepositoriesCron: '0 */5 * ? * *'
   cleanRepositoriesTimezone: UTC
+
+cache:
+  names: dates
+  spec: expireAfterAccess=1d

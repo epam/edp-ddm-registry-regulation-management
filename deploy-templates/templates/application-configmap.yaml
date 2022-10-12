@@ -22,7 +22,7 @@ data:
 
     data:
       jobName: {{ .Values.data.jobName }}
-    
+
     gerrit:
       url: {{ .Values.gerrit.url }}
       repository: {{ .Values.gerrit.repository }}
@@ -34,3 +34,9 @@ data:
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
       cleanRepositoriesCron: {{ .Values.scheduled.cleanRepositoriesCron }}
       cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
+
+    spring:
+      cache:
+        cache-names: {{.Values.cache.names}}
+        caffeine:
+          spec: {{.Values.cache.spec}}

@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.epam.digital.data.platform.management.config.CacheCustomizer.DATE_CACHE_NAME;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -33,6 +32,7 @@ public class MasterVersionFormsControllerIT extends BaseIT {
 
   @Autowired
   private JGitService jGitService;
+  private static final String DATE_CACHE_NAME = "dates";
 
   @Test
   @SneakyThrows
@@ -118,7 +118,7 @@ public class MasterVersionFormsControllerIT extends BaseIT {
     Cache.ValueWrapper valueWrapper = dates.get(cacheKey);
     assertThat(valueWrapper).isNotNull();
 
-    jGitService.formDatesCacheEvict();
+    Thread.sleep(10000);
     dates = cacheManager.getCache(DATE_CACHE_NAME);
     assertThat(dates.get(cacheKey)).isNull();
   }
