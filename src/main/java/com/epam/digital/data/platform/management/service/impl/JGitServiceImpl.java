@@ -16,8 +16,6 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import static com.epam.digital.data.platform.management.config.CacheCustomizer.DATE_CACHE_NAME;
-
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GitCommandException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
@@ -67,7 +65,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FileUtils;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -80,6 +77,7 @@ public class JGitServiceImpl implements JGitService {
 
   private static final String ORIGIN = "origin";
   private static final String REPOSITORY_DOES_NOT_EXIST = "Repository does not exist";
+  public static final String DATE_CACHE_NAME = "dates";
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final RequestToFileConverter requestToFileConverter;
@@ -222,11 +220,6 @@ public class JGitServiceImpl implements JGitService {
       fileDatesDto.setCreate(createDate);
     }
     return fileDatesDto;
-  }
-
-  @CacheEvict(value = DATE_CACHE_NAME, allEntries = true)
-  @Override
-  public void formDatesCacheEvict() {
   }
 
   @Override

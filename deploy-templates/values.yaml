@@ -90,3 +90,7 @@ db:
   secret: citus-secrets
   port: 5432
   connectionTimeout: 4000
+
+cache:
+  names: dates
+  spec: expireAfterAccess=1d

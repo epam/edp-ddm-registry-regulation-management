@@ -21,6 +21,10 @@ spring:
     jdbc-url: jdbc:postgresql://localhost:5432/public
     username: postgres
     password: password
+  cache:
+    cache-names: dates
+    caffeine:
+      spec: expireAfterAccess=1d
 
 hibernate:
   dialect: org.hibernate.dialect.H2Dialect
