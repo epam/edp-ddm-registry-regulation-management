@@ -15,16 +15,22 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class CreateVersionRequest {
+
   @Schema(description = "Name from request", required = true)
   private String name;
   @Schema(description = "Description from request", required = true)
