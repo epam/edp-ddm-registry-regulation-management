@@ -86,12 +86,14 @@ public class JGitServiceImpl implements JGitService {
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
   @Override
-  public void cloneRepo(String versionName) throws Exception {
+  public void cloneRepo(String versionName) {
+    log.debug("Trying to clone repository {}", versionName);
     var directory = getRepositoryDir(versionName);
     if (directory.exists()) {
       // TODO throw exception if repository already exists
       return;
     }
+    log.trace("Synchronizing repo {}", versionName);
     Lock lock = getLock(versionName);
     lock.lock();
     try (var call = jGitWrapper.cloneRepository()
@@ -100,8 +102,14 @@ public class JGitServiceImpl implements JGitService {
         .setDirectory(directory)
         .setCloneAllBranches(true)
         .call()) {
+      log.debug("Repository {} was successfully cloned.", versionName);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during cloning repository %s: %s",
+              versionName, e.getMessage()), e);
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", versionName);
     }
   }
 
@@ -169,7 +177,7 @@ public class JGitServiceImpl implements JGitService {
       RevTree tree = jGitWrapper.getRevTree(repository);
       if (path != null && !path.isEmpty()) {
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
-          if(treeWalk != null) {
+          if (treeWalk != null) {
             try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
               dirWalk.addTree(treeWalk.getObjectId(0));
               dirWalk.setRecursive(true);
