@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management;
+package com.epam.digital.data.platform.management.event;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
 
-@SpringBootApplication
-@EnableScheduling
-@EnableCaching
-@EnableAsync
-public class UserImportApplication {
+/**
+ * Application event that has to be published when new version candidate is created
+ */
+public class VersionCandidateCreatedEvent extends ApplicationEvent {
 
-	public static void main(String[] args) {
-		SpringApplication.run(UserImportApplication.class, args);
-	}
+  @Getter
+  private final String versionCandidateNumber;
 
+  public VersionCandidateCreatedEvent(Object source, String versionCandidateNumber) {
+    super(source);
+    this.versionCandidateNumber = versionCandidateNumber;
+  }
 }

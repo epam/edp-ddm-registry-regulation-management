@@ -34,6 +34,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Tag(name = "Candidate version Rest API")
 @RestController
 @RequestMapping("/versions/candidates")
@@ -150,7 +152,8 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @PostMapping("/{versionCandidateId}/submit")
-  public ResponseEntity<String> submitVersionCandidate(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
+  public ResponseEntity<String> submitVersionCandidate(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     versionManagementService.markReviewed(versionCandidateId);
     versionManagementService.submit(versionCandidateId);
     return ResponseEntity.ok().build();
@@ -186,8 +189,11 @@ public class CandidateVersionController {
   @PostMapping
   public ResponseEntity<VersionInfoDetailed> createNewVersion(
       @RequestBody CreateVersionRequest requestDto) throws Exception {
+    log.info("Creating new version cwith name {}", requestDto.getName());
     var versionId = versionManagementService.createNewVersion(requestDto);
     var changeInfo = versionManagementService.getVersionDetails(versionId);
+    log.info("Version candidate with name {} was created: version id - {}", requestDto.getName(),
+        versionId);
     return ResponseEntity.created(URI.create("/versions/candidates/" + versionId))
         .body(mapToVersionInfoDetailed(changeInfo));
   }
@@ -220,8 +226,10 @@ public class CandidateVersionController {
       })
   @GetMapping("/{versionCandidateId}")
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) throws Exception {
-    ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(versionCandidateId);
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId)
+      throws Exception {
+    ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(
+        versionCandidateId);
     return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
   }
 
@@ -254,8 +262,11 @@ public class CandidateVersionController {
   @GetMapping("/{versionCandidateId}/changes")
   public ResponseEntity<VersionChanges> getVersionChanges(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-          String versionCandidateId) throws Exception {
-    return ResponseEntity.ok().body(versionManagementService.getVersionChanges(versionCandidateId));
+      String versionCandidateId) throws Exception {
+    log.info("Getting changes for version {}", versionCandidateId);
+    var versionChanges = versionManagementService.getVersionChanges(versionCandidateId);
+    log.info("Version changes for version {} found", versionCandidateId);
+    return ResponseEntity.ok().body(versionChanges);
   }
 
 
@@ -287,12 +298,15 @@ public class CandidateVersionController {
   @GetMapping("/{versionCandidateId}/rebase")
   public ResponseEntity<Void> rebase(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-          String versionCandidateId) throws Exception {
+      String versionCandidateId) throws Exception {
+    log.info("Started version candidate {} rebase", versionCandidateId);
     versionManagementService.rebase(versionCandidateId);
+    log.info("Version candidate {} successfully rebased", versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
-  private VersionInfoDetailed mapToVersionInfoDetailed(ChangeInfoDetailedDto changeInfoDetailedDto) {
+  private VersionInfoDetailed mapToVersionInfoDetailed(
+      ChangeInfoDetailedDto changeInfoDetailedDto) {
     return VersionInfoDetailed.builder()
         .id(String.valueOf(changeInfoDetailedDto.getNumber()))
         .author(changeInfoDetailedDto.getOwner())
