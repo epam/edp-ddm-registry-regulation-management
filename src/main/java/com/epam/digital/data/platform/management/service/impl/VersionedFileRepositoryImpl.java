@@ -173,7 +173,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
   private FileStatus getStatus(FileInfo fileInfo) {
     Character status = fileInfo.status;
-    if (status == null) {
+    if (Objects.isNull(status) || status.toString().equals("R")) {
       return FileStatus.CHANGED;
     }
     if (status.toString().equals("A")) {
