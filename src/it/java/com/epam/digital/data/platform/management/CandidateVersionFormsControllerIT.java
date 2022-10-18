@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management;
 
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.createFormJson;
@@ -13,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.util.InitialisationUtils;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
 import com.google.gson.Gson;
@@ -20,8 +37,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import lombok.SneakyThrows;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -33,7 +52,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void getForm() {
-    String versionCandidateId = "id1";
+    final var versionCandidateId = RandomString.make();
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
@@ -47,7 +66,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
 
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetForm(formDetails);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
@@ -61,12 +80,14 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
         jsonPath("$.name", is(formDetails.getName())),
         jsonPath("$.title", is(formDetails.getTitle()))
     );
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 
   @Test
   @SneakyThrows
   public void getFormsByVersionId() {
-    String versionCandidateId = "id1";
+    final var versionCandidateId = RandomString.make();
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
@@ -81,13 +102,12 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     list.add(initFormDetails("name", "title", "{\"name\":\"name\", \"title\":\"title\"}"));
     list.add(initFormDetails("name2", "title2", "{\"name\":\"name2\", \"title\":\"title2\"}"));
 
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(list);
     jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockCloneMasterCommand();
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
@@ -101,6 +121,8 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
         jsonPath("$[1].name", is("name2")),
         jsonPath("$[1].title", is("title2"))
     );
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 
   @Test
@@ -118,7 +140,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
 
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(new ArrayList<>());
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
@@ -130,6 +152,8 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
         content().contentType("application/json"),
         jsonPath("$", hasSize(0))
     );
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 
   @Disabled
@@ -150,7 +174,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfoDto.setRefs(versionCandidateId);
     var form = initFormDetails(formName, "title",
         "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
@@ -172,13 +196,14 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
         jsonPath("$.name", is("formName")),
         jsonPath("$.title", is("title"))
     );
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 
   @Test
   @SneakyThrows
   public void updateForm() {
-
-    String versionCandidateId = "id1";
+    final var versionCandidateId = RandomString.make();
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
@@ -192,10 +217,10 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.revisions.put(versionCandidateId, revisionInfo);
     changeInfo.currentRevision = versionCandidateId;
     changeInfoDto.setRefs(versionCandidateId);
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
+    InitialisationUtils.createTempRepo(versionCandidateId);
     String filePath = createFormJson(form, versionCandidateId);
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockAddCommand();
@@ -218,7 +243,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void deleteForm() {
-    String versionCandidateId = "id1";
+    final var versionCandidateId = RandomString.make();
     String formName = "formName";
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
@@ -229,7 +254,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(revisionInfo.ref);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(List.of(initFormDetails(formName, "title",
         "{\"name\":\"" + formName + "\", \"title\":\"title\"}")));
     jGitWrapperMock.mockLogCommand();
@@ -239,5 +264,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     mockMvc.perform(MockMvcRequestBuilders.delete(
             BASE_REQUEST + "/{formName}", versionCandidateId, formName))
         .andExpect(status().isNoContent());
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 }

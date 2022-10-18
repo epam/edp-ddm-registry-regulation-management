@@ -52,7 +52,6 @@ public class MasterVersionBPControllerIT extends BaseIT {
     changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
 
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetBusinessProcess(businessProcess);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
@@ -83,7 +82,6 @@ public class MasterVersionBPControllerIT extends BaseIT {
     changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
 
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetBusinessProcessList(Map.of("name", businessProcess));
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();

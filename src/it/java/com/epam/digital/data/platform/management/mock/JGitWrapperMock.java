@@ -15,7 +15,6 @@
  */
 package com.epam.digital.data.platform.management.mock;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createTempRepo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,8 +22,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +34,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
@@ -61,10 +59,10 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class JGitWrapperMock {
 
@@ -84,8 +82,6 @@ public class JGitWrapperMock {
   @Getter
   private final JGitWrapper jGitWrapper = Mockito.mock(JGitWrapper.class);
   @Getter
-  private CloneCommand cloneCommand;
-  @Getter
   private Git git;
   @Getter
   private Repository repository;
@@ -95,50 +91,44 @@ public class JGitWrapperMock {
   private TreeWalk dirWalk;
   private ObjectLoader loader;
 
+  @SneakyThrows
   public void init() {
+    initCloneCommand();
+
     git = Mockito.mock(Git.class);
     repository = Mockito.mock(Repository.class);
     revTree = Mockito.mock(RevTree.class);
     treeWalk = Mockito.mock(TreeWalk.class);
     dirWalk = Mockito.mock(TreeWalk.class);
-    mockCloneCommand(gerritPropertiesConfig.getHeadBranch());
-  }
-
-  @SneakyThrows
-  public void mockCloneMasterCommand() {
-    mockCloneCommand(gerritPropertiesConfig.getHeadBranch());
-  }
-
-  @SneakyThrows
-  public void mockCloneCommand(String versionName) {
-    createTempRepo(versionName);
-    ObjectId objectId = Mockito.mock(ObjectId.class);
-    cloneCommand = Mockito.mock(CloneCommand.class);
     loader = Mockito.mock(ObjectLoader.class);
 
-    var repoURI = gerritPropertiesConfig.getUrl() + "/" + gerritPropertiesConfig.getRepository();
-    var credentialsProvider = new UsernamePasswordCredentialsProvider(
-        gerritPropertiesConfig.getUser(), gerritPropertiesConfig.getPassword());
-    var directory = new File(gerritPropertiesConfig.getRepositoryDirectory(), versionName);
+    ObjectId objectId = Mockito.mock(ObjectId.class);
+    Mockito.when(git.getRepository()).thenReturn(repository);
+    Mockito.when(jGitWrapper.open(any())).thenReturn(git);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
+    Mockito.when(treeWalk.getObjectId(0)).thenReturn(objectId);
 
-    Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setURI(repoURI)).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCredentialsProvider(Mockito.refEq(credentialsProvider)))
-        .thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
+    Mockito.when(repository.open(any())).thenReturn(loader);
+    Mockito.when(loader.getCachedBytes()).thenReturn(new byte[]{});
+  }
+
+  @SneakyThrows
+  public Git mockCloneCommand(String versionName) {
+    var generalCloneCommand = jGitWrapper.cloneRepository();
+
+    final var directory = new File(gerritPropertiesConfig.getRepositoryDirectory(), versionName);
+    final var callResult = Mockito.mock(Git.class);
+
+    final var directoryCloneCommand = Mockito.mock(CloneCommand.class);
+    Mockito.when(generalCloneCommand.setDirectory(directory)).thenReturn(directoryCloneCommand);
     Mockito.doAnswer(invocationOnMock -> {
       log.info("Called clone command for {} version", versionName);
-      directory.mkdirs();
-      return null;
-    }).when(cloneCommand).call();
-    Mockito.when(git.getRepository()).thenReturn(repository);
-    Mockito.when(jGitWrapper.open(directory)).thenReturn(git);
-    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
-    Mockito.when(loader.getCachedBytes())
-        .thenReturn("This is our response".getBytes(StandardCharsets.UTF_8));
-    Mockito.when(treeWalk.getObjectId(0)).thenReturn(objectId);
-    Mockito.when(repository.open(any())).thenReturn(loader);
-    Mockito.when(cloneCommand.setDirectory(any())).thenReturn(cloneCommand);
+      Assertions.assertThat(directory.mkdirs()).isTrue();
+      Assertions.assertThat(new File(directory, "forms").mkdir()).isTrue();
+      Assertions.assertThat(new File(directory, "bpmn").mkdir()).isTrue();
+      return callResult;
+    }).when(directoryCloneCommand).call();
+    return callResult;
   }
 
   @SneakyThrows
@@ -237,7 +227,8 @@ public class JGitWrapperMock {
     Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(true);
     Mockito.when(loader.getBytes())
-        .thenReturn(globalVars.getBytes(StandardCharsets.UTF_8), settings.getBytes(StandardCharsets.UTF_8));
+        .thenReturn(globalVars.getBytes(StandardCharsets.UTF_8),
+            settings.getBytes(StandardCharsets.UTF_8));
   }
 
   @SneakyThrows
@@ -317,10 +308,27 @@ public class JGitWrapperMock {
   }
 
   public void resetAll() {
-    Stream.of(jGitWrapper, cloneCommand, git, repository, checkoutCommand, revTree, treeWalk,
+    Stream.of(jGitWrapper, git, repository, checkoutCommand, revTree, treeWalk,
             dirWalk, loader)
         .filter(Objects::nonNull)
         .forEach(Mockito::reset);
+  }
+
+  private void initCloneCommand() {
+    final var url = gerritPropertiesConfig.getUrl();
+    final var repo = gerritPropertiesConfig.getRepository();
+    final var user = gerritPropertiesConfig.getUser();
+    final var password = gerritPropertiesConfig.getPassword();
+
+    final var repoURI = String.format("%s/%s", url, repo);
+    final var credentialsProvider = new UsernamePasswordCredentialsProvider(user, password);
+
+    final var cloneCommand = Mockito.mock(CloneCommand.class);
+    Mockito.when(cloneCommand.setURI(repoURI)).thenReturn(cloneCommand);
+    Mockito.when(cloneCommand.setCredentialsProvider(Mockito.refEq(credentialsProvider)))
+        .thenReturn(cloneCommand);
+    Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
+    Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
   }
 }
 

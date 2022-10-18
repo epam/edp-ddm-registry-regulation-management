@@ -99,8 +99,8 @@ public class JGitServiceImpl implements JGitService {
     try (var call = jGitWrapper.cloneRepository()
         .setURI(getRepositoryUrl())
         .setCredentialsProvider(getCredentialsProvider())
-        .setDirectory(directory)
         .setCloneAllBranches(true)
+        .setDirectory(directory)
         .call()) {
       log.debug("Repository {} was successfully cloned.", versionName);
     } catch (GitAPIException e) {
