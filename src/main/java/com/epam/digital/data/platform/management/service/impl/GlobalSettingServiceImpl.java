@@ -26,6 +26,7 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -45,25 +46,21 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
 
   @Override
   public GlobalSettingsInfo getGlobalSettings(String versionCandidateId) {
-    String camundaGlobalVarsContent;
-    String settingsContent;
-    VersionedFileRepository repo;
     log.debug("Trying to get repo");
-    repo = repoFactory.getRepoByVersion(versionCandidateId);
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
     log.debug("Finished getting repo for {} version", versionCandidateId);
-    camundaGlobalVarsContent = getCamundaGlobalSettingsContent(repo);
-    settingsContent = getSettingsContent(repo);
+    String camundaGlobalVarsContent = getCamundaGlobalSettingsContent(repo);
+    String settingsContent = getSettingsContent(repo);
     log.debug("Completed settings files reading");
     return parseSettingsFiles(camundaGlobalVarsContent, settingsContent);
   }
 
   @Override
   public void updateSettings(String versionCandidateId, GlobalSettingsInfo settings) {
-    VersionedFileRepository repo;
     YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
     log.debug("YAMLMapper was initialized");
     log.debug("Trying to get repo");
-    repo = repoFactory.getRepoByVersion(versionCandidateId);
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     GlobalVarsDto globalVarsDto = new GlobalVarsDto(settings.getThemeFile(), settings.getSupportEmail());
     SettingDto settingDto = new SettingDto(settings.getTitleFull(), settings.getTitle(), settings.getBlacklistedDomains());
@@ -74,6 +71,7 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
   private static GlobalSettingsInfo parseSettingsFiles(String camundaGlobalVarsContent, String settingsContent) {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory())
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .enable(JsonGenerator.Feature.IGNORE_UNKNOWN);
     log.debug("ObjectMapper was initialized");
     try {
@@ -125,7 +123,7 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
   private void writeGlobalVarsContent(VersionedFileRepository repo, ObjectMapper mapper, GlobalVarsDto globalVars) {
     try {
       log.debug("Writing global vars to file");
-      repo.writeFile(VERSION_SETTINGS_PATH, mapper.writeValueAsString(globalVars));
+      repo.writeFile(GLOBAL_SETTINGS_PATH, mapper.writeValueAsString(globalVars));
       log.debug("Finished writing global vars");
     } catch (JsonProcessingException e) {
       throw new SettingsProcessingException("Could not process global vars file", e);
