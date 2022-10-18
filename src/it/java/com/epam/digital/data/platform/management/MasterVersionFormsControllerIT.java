@@ -1,11 +1,21 @@
 package com.epam.digital.data.platform.management;
 
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
+import static com.epam.digital.data.platform.management.util.InitialisationUtils.initFormDetails;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
+import java.util.ArrayList;
+import java.util.HashMap;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +24,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class MasterVersionFormsControllerIT extends BaseIT {
 
@@ -51,7 +52,6 @@ public class MasterVersionFormsControllerIT extends BaseIT {
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
 
-    jGitWrapperMock.mockCloneMasterCommand();
     jGitWrapperMock.mockGetForm(formDetails);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
@@ -84,7 +84,6 @@ public class MasterVersionFormsControllerIT extends BaseIT {
     list.add(initFormDetails("name", "title", "{\"name\":\"name\", \"title\":\"title\"}"));
     list.add(initFormDetails("name2", "title2", "{\"name\":\"name2\", \"title\":\"title2\"}"));
 
-    jGitWrapperMock.mockCloneMasterCommand();
     jGitWrapperMock.mockGetFormsList(list);
     gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
     jGitWrapperMock.mockLogCommand();
@@ -120,7 +119,7 @@ public class MasterVersionFormsControllerIT extends BaseIT {
 
     Thread.sleep(10000);
     dates = cacheManager.getCache(DATE_CACHE_NAME);
+    assertThat(dates).isNotNull();
     assertThat(dates.get(cacheKey)).isNull();
   }
-
 }

@@ -16,30 +16,31 @@
 
 package com.epam.digital.data.platform.management;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.HashMap;
-
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.common.RevisionInfo;
+import java.util.HashMap;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class CandidateVersionSettingsControllerIT extends BaseIT {
 
   private static final String BASE_REQUEST = "/versions/candidates/";
 
-  private static final String GLOBAL_SETTINGS_VALUE = "supportEmail: \"support@registry.gov.ua\"\n" +
-      "themeFile: \"white-theme.js\"\n";
+  private static final String GLOBAL_SETTINGS_VALUE =
+      "supportEmail: \"support@registry.gov.ua\"\n" +
+          "themeFile: \"white-theme.js\"\n";
   private static final String SETTINGS_VALUE = "settings:\n" +
       "  general:\n" +
       "    validation:\n" +
@@ -59,18 +60,14 @@ public class CandidateVersionSettingsControllerIT extends BaseIT {
 
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    GlobalSettingsInfo globalSettingsInfo = GlobalSettingsInfo.builder()
-        .titleFull("<Version name>")
-        .supportEmail("rrm.support.gob@gmail.com")
-        .build();
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = versionCandidateId;
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE,  GLOBAL_SETTINGS_VALUE);
+    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
+    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE, GLOBAL_SETTINGS_VALUE);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();
@@ -85,5 +82,7 @@ public class CandidateVersionSettingsControllerIT extends BaseIT {
             jsonPath("$.titleFull", is("<Registry name>")),
             jsonPath("$.blacklistedDomains", hasSize(2)),
             jsonPath("title", is("mdtuddm")));
+
+    Mockito.verify(versionCandidateCloneResult).close();
   }
 }

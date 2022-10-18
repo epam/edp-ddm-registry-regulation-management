@@ -16,23 +16,23 @@
 
 package com.epam.digital.data.platform.management;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.HashMap;
-
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.common.RevisionInfo;
+import java.util.HashMap;
+import lombok.SneakyThrows;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class MasterVersionSettingsControllerIT extends BaseIT {
   private static final String BASE_REQUEST = "/versions/master/settings";
@@ -52,22 +52,17 @@ public class MasterVersionSettingsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   void getSettings() {
-    String versionCandidateId = "1";
+    final var versionCandidateId = RandomString.make();
     String formName = "formName";
 
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    GlobalSettingsInfo globalSettingsInfo = GlobalSettingsInfo.builder()
-        .titleFull("<Version name>")
-        .supportEmail("rrm.support.gob@gmail.com")
-        .build();
     changeInfo.revisions = new HashMap<>();
     RevisionInfo revisionInfo = new RevisionInfo();
     revisionInfo.ref = versionCandidateId;
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
-    jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetSettings(SETTINGS_VALUE,  GLOBAL_SETTINGS_VALUE);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
