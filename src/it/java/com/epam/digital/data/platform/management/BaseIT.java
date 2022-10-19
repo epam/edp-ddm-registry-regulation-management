@@ -63,6 +63,8 @@ public abstract class BaseIT {
   protected ObjectMapper objectMapper;
 
   protected final String testProcessFormat = getResource("test-process-format.bpmn");
+  protected final String testProcessFormatWithDates = getResource(
+      "test-process-format-with-dates.bpmn");
   protected final String businessProcess = getResource("test-process.bpmn");
   protected final static Map<String, String> BPMN_NAMESPACES = Map.of(
       "bpmn", "http://www.omg.org/spec/BPMN/20100524/MODEL",
