@@ -95,6 +95,7 @@ class MasterVersionControllerTest {
             jsonPath("$.inspector", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/master/GET"));
+    Mockito.verify(versionManagementService).getMasterInfo();
   }
 
   @Test
@@ -115,5 +116,6 @@ class MasterVersionControllerTest {
             jsonPath("$.inspector", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/master/GET"));
+    Mockito.verify(versionManagementService).getMasterInfo();
   }
 }

@@ -90,6 +90,7 @@ public class MasterVersionTableControllerTest {
             jsonPath("$.[0].objectReference", is(true)),
             jsonPath("$.[0].historyFlag", is(false)))
         .andDo(document("versions/master/tables/GET"));
+    Mockito.verify(tableService).list();
   }
 
   @Test
@@ -113,6 +114,7 @@ public class MasterVersionTableControllerTest {
             jsonPath("$.objectReference", is(true)),
             jsonPath("$.historyFlag", is(false)))
         .andDo(document("versions/master/tables/{tableName}/GET"));
+    Mockito.verify(tableService).get(name);
   }
 
   @Test
@@ -127,6 +129,7 @@ public class MasterVersionTableControllerTest {
             jsonPath("$.code").value(is("TABLE_NOT_FOUND_EXCEPTION")),
             content().contentType(MediaType.APPLICATION_JSON)
         );
+    Mockito.verify(tableService).get(name);
   }
 
   @Test
@@ -141,6 +144,7 @@ public class MasterVersionTableControllerTest {
             jsonPath("$.code").value(is("TABLE_PARSE_EXCEPTION")),
             content().contentType(MediaType.APPLICATION_JSON)
         );
+    Mockito.verify(tableService).get(name);
   }
 
 }

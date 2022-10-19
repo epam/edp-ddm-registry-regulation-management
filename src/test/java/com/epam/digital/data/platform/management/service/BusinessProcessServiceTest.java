@@ -16,8 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
@@ -162,6 +161,16 @@ public class BusinessProcessServiceTest {
 
     Assertions.assertThat(actualBusinessProcessContent)
         .isEqualTo(PROCESS_CONTENT);
+  }
+
+  @Test
+  @SneakyThrows
+  void updateBusinessProcessNoErrorTest() {
+    Assertions.assertThatCode(() -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
+        .doesNotThrowAnyException();
+    Mockito.verify(repository).isFileExists("bpmn/business-process.bpmn");
+    Mockito.verify(repository)
+        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), anyString());
   }
 
   @Test
