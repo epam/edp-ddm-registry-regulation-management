@@ -1,7 +1,25 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
@@ -17,14 +35,15 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class VersionManagementServiceTest {
 
   @Mock
@@ -33,6 +52,8 @@ class VersionManagementServiceTest {
   private JGitService jGitService;
   @Mock
   private GerritPropertiesConfig config;
+  @Mock
+  private RegistryRegulationManagementEventPublisher publisher;
 
   @InjectMocks
   private VersionManagementServiceImpl managementService;
@@ -145,15 +166,25 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void createNewVersionTest() {
-    var createVersionRequest = new CreateVersionRequest();
-    createVersionRequest.setName("version");
-    createVersionRequest.setDescription("description");
-    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn("changeId");
+    final var versionName = RandomString.make();
+    final var versionDescription = RandomString.make();
+    final var versionNumber = RandomString.make();
 
-    var actualVersion = managementService.createNewVersion(createVersionRequest);
+    final var createVersionRequest = CreateVersionRequest.builder()
+        .name(versionName)
+        .description(versionDescription)
+        .build();
+    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn(versionNumber);
+
+    Mockito.doNothing().when(publisher).publishVersionCandidateCreatedEvent(versionNumber);
+
+    final var actualVersion = managementService.createNewVersion(createVersionRequest);
 
     Assertions.assertThat(actualVersion)
-        .isEqualTo("changeId");
+        .isEqualTo(versionNumber);
+
+    Mockito.verify(gerritService).createChanges(createVersionRequest);
+    Mockito.verify(publisher).publishVersionCandidateCreatedEvent(versionNumber);
   }
 
   @Test
@@ -245,5 +276,34 @@ class VersionManagementServiceTest {
   @SneakyThrows
   void getVersionChanges() {
 
+  }
+
+  @Test
+  @SneakyThrows
+  void rebaseTest() {
+    final var version = RandomString.make();
+    final var changeId = RandomString.make();
+    final var refs = RandomString.make();
+
+    final var changeInfo = new ChangeInfo();
+    changeInfo.changeId = changeId;
+    Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
+
+    Mockito.doNothing().when(gerritService).rebase(changeId);
+
+    final var changeInfoDto = new ChangeInfoDto();
+    changeInfoDto.setChangeId(changeId);
+    changeInfoDto.setRefs(refs);
+    changeInfoDto.setNumber(version);
+    Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
+
+    Mockito.doNothing().when(jGitService).fetch(version, changeInfoDto);
+
+    managementService.rebase(version);
+
+    Mockito.verify(gerritService).getMRByNumber(version);
+    Mockito.verify(gerritService).rebase(changeId);
+    Mockito.verify(gerritService).getChangeInfo(changeId);
+    Mockito.verify(jGitService).fetch(version, changeInfoDto);
   }
 }

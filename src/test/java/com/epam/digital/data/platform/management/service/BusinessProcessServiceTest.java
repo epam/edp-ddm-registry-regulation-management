@@ -82,7 +82,8 @@ public class BusinessProcessServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory, gerritPropertiesConfig, documentBuilder);
+    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory,
+        gerritPropertiesConfig, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 
@@ -110,8 +111,8 @@ public class BusinessProcessServiceTest {
         .title("Really test name")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
         .build();
 
     Assertions.assertThat(expectedBusinessProcessesList).hasSize(1)

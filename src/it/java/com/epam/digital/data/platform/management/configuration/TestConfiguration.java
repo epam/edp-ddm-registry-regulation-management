@@ -4,7 +4,7 @@ import com.epam.digital.data.platform.management.mock.GerritApiMock;
 import com.epam.digital.data.platform.management.mock.JGitWrapperMock;
 import com.epam.digital.data.platform.management.mock.VaultOperationsMock;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
-import com.google.gerrit.extensions.api.GerritApi;
+import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ public class TestConfiguration {
 
   @Bean
   @Primary
-  public GerritApi gerritApi() {
+  public GerritApiImpl gerritApi() {
     return gerritApiMock.getGerritApi();
   }
 

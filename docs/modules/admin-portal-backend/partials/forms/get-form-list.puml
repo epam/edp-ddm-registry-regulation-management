@@ -2,7 +2,7 @@
 participant "Web клієнт" as client order 1
 participant "Модуль роботи з формами" as formModule order 2
 participant "Модуль роботи з файлами" as fileModule order 3
-participant "Файловий сервіс" as fileService order 4
+participant "Файловий\nсервіс" as fileService order 4
 collections "Список форм" as formList order 5
 entity "Сутність з \nінформацією\n про форму" as formDto order 6
 
@@ -10,17 +10,22 @@ skinparam responseMessageBelowArrow true
 
 title Отримання переліку доступних форм регламенту
 
-client -> formModule: Отримати перелік доступних\nформ регламенту
+client -> formModule: отримати перелік доступних\nформ регламенту
 activate formModule
-  formModule -> fileModule: Отримати файловий\nсервіс для обраної версії
+  formModule -> fileModule: отримати файловий\nсервіс для вказаної версії
   activate fileModule
     create fileService
     fileModule -> fileService: ініціалізувати
+    alt вказана версія кандидат не існує
+      fileModule <-- fileService: помилка ініціалізації
+      formModule <-- fileModule: помилка ініціалізації\nфайлового сервісу
+      client <-- formModule: помилка зі статусом\n404 Not Found
+    end
     fileModule <-- fileService
     return файловий сервіс
   deactivate fileModule
 
-  formModule -> fileService: Отримати список\nфайлів за шляхом /forms
+  formModule -> fileService: отримати список\nфайлів за шляхом /forms
   activate fileService
     return список файлів
   deactivate fileService
@@ -35,22 +40,33 @@ activate formModule
     return контент форми
     deactivate fileService
 
-    formModule -> formModule: зчитати назву форми та дати створення \nта останнього оновлення з контенту форми
+    formModule -> formModule: зчитати назву форми\nта дати створення та\nостаннього оновлення\nз контенту форми
     note right
     Назва форми зчитується з JSON документу форми за JSON шляхом **//$.title//**
     Дата створення - **//$.created//**
-    Дата останнього оновлення - **//$.updated//**
+    Дата останнього оновлення - **//$.modified//**
     end note
+
+    alt Дати створення та останнього оновлення не представлені в контенті форми
+    formModule -> formModule: визначити дати створення\nта останнього оновлення з Git log
+    note right
+    Дата створення - це дата першого комміту з Git log по цьому файлу
+    Дата останнього оновлення - це дата останнього комміту з Git log
+    по цьому файлу
+    end note
+    end
 
     create formDto
     formModule -> formDto: створити сутність з інформацією про форму
     return
 
-    formModule -> formDto: ініціалізувати назву, технічну назву та дати створення та останнього оновлення форми
-    note right
-    Технічна назва форми це ім'я файлу форми
-    та воно повинно бути таким самим як і поле
-    **//name//** у JSON документі форми
+    formModule -> formDto: ініціалізувати назву, системну назву та дати створення та останнього оновлення форми
+    note left of formDto
+    Системна назва форми це
+    ім'я файлу форми та воно
+    повинно бути таким самим як
+    і поле **//name//** у JSON документі
+    форми
     end note
     activate formDto
     return
@@ -65,6 +81,4 @@ activate formModule
   client <-- formModule: список форм
 
 deactivate formModule
-
-
 @enduml
