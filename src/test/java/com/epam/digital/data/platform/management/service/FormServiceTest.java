@@ -110,10 +110,15 @@ class FormServiceTest {
   @SneakyThrows
   void createFormTestNoErrorTest() {
     Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(false);
-
     Assertions.assertThatCode(() -> formService.createForm("form", FORM_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
+  }
 
+  @Test
+  @SneakyThrows
+  void createFormTest() {
+    Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(false);
+    formService.createForm("form", FORM_CONTENT, VERSION_ID);
     Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
     JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
@@ -150,7 +155,12 @@ class FormServiceTest {
   void updateFormTestNoErrorTest() {
     Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID))
         .doesNotThrowAnyException();
+  }
 
+  @Test
+  @SneakyThrows
+  void updateFormTest() {
+    formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
     Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
     JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,

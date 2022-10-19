@@ -98,6 +98,7 @@ class CandidateVersionControllerTest {
             jsonPath("$.[0].name", is(VERSION_CANDIDATE_NAME)),
             jsonPath("$.[0].description", is(VERSION_CANDIDATE_DESCRIPTION)))
         .andDo(document("versions/candidates/GET"));
+    Mockito.verify(versionManagementService).getVersionsList();
   }
 
   @Test
@@ -136,6 +137,7 @@ class CandidateVersionControllerTest {
             jsonPath("$.inspections", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/candidates/POST"));
+    Mockito.verify(versionManagementService).getVersionDetails("1");
   }
 
   @Test
@@ -166,6 +168,7 @@ class CandidateVersionControllerTest {
             jsonPath("$.inspections", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/candidates/{versionCandidateId}/GET"));
+    Mockito.verify(versionManagementService).getVersionDetails("1");
   }
 
   @Test
@@ -175,6 +178,7 @@ class CandidateVersionControllerTest {
     mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1","decline")))
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/decline/POST"));
+    Mockito.verify(versionManagementService).decline("1");
   }
 
   @Test
@@ -184,6 +188,7 @@ class CandidateVersionControllerTest {
     mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1", "submit")))
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/submit/POST"));
+    Mockito.verify(versionManagementService).submit("1");
   }
 
   @Test
@@ -193,6 +198,7 @@ class CandidateVersionControllerTest {
     mockMvc.perform(get(String.format("%s/%s/%s", BASE_URL, "1", "rebase")))
         .andExpect(status().isOk())
     .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+    Mockito.verify(versionManagementService).rebase("1");
   }
 
   @Test
@@ -223,5 +229,6 @@ class CandidateVersionControllerTest {
             jsonPath("$.changedForms", hasSize(1)),
             jsonPath("changedBusinessProcesses", hasSize(1)))
         .andDo(document("versions/candidates/{versionCandidateId}/changes/GET"));
+    Mockito.verify(versionManagementService).getVersionChanges("1");
   }
 }

@@ -91,5 +91,6 @@ class MasterVersionSettingsControllerTest {
             jsonPath("$.blacklistedDomains", hasSize(2))
         )
         .andDo(document("versions/master/settings/GET"));
+    Mockito.verify(globalSettingServiceImpl).getGlobalSettings("head-branch");
   }
 }

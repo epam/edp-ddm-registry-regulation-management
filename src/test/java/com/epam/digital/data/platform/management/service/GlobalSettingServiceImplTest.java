@@ -26,15 +26,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
+import org.assertj.core.api.Assertions;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 class GlobalSettingServiceImplTest {
 
   private static final String VERSION_ID = "version";
+  private static final String GLOBAL_VARS_PATH = "global-vars/camunda-global-system-vars.yml";
+  private static final String SETTINGS_PATH = "settings/settings.yml";
 
   @Mock
   private VersionedFileRepositoryFactory repositoryFactory;
@@ -62,13 +63,12 @@ class GlobalSettingServiceImplTest {
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 
-
   @Test
   @SneakyThrows
   void setSettingsTest() {
-    Mockito.when(repository.readFile("global-vars/camunda-global-system-vars.yml"))
+    Mockito.when(repository.readFile(GLOBAL_VARS_PATH))
         .thenReturn(GLOBAL_SETTINGS_VALUE);
-    Mockito.when(repository.readFile("settings/settings.yml")).thenReturn(SETTINGS_VALUE);
+    Mockito.when(repository.readFile(SETTINGS_PATH)).thenReturn(SETTINGS_VALUE);
     GlobalSettingsInfo expected = GlobalSettingsInfo.builder()
         .supportEmail("support@registry.gov.ua")
         .title("mdtuddm")
@@ -83,10 +83,18 @@ class GlobalSettingServiceImplTest {
 
   @Test
   @SneakyThrows
+  void setSettingsNoErrorTest() {
+    var settings = GlobalSettingsInfo.builder().build();
+    Assertions.assertThatCode(() -> settingServiceImpl.updateSettings(VERSION_ID, settings))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @SneakyThrows
   void getSettings() {
-    Mockito.when(repository.readFile("global-vars/camunda-global-system-vars.yml"))
+    Mockito.when(repository.readFile(GLOBAL_VARS_PATH))
       .thenReturn(GLOBAL_SETTINGS_VALUE);
-    Mockito.when(repository.readFile("settings/settings.yml")).thenReturn(SETTINGS_VALUE);
+    Mockito.when(repository.readFile(SETTINGS_PATH)).thenReturn(SETTINGS_VALUE);
     GlobalSettingsInfo expected = GlobalSettingsInfo.builder()
         .supportEmail("support@registry.gov.ua")
         .title("mdtuddm")

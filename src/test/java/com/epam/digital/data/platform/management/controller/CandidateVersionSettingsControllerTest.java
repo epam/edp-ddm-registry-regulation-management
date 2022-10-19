@@ -89,6 +89,7 @@ class CandidateVersionSettingsControllerTest {
             jsonPath("$.blacklistedDomains", hasSize(2))
         )
         .andDo(document("versions/candidates/{versionCandidateId}/settings/GET"));
+    Mockito.verify(globalSettingService).getGlobalSettings("1");
   }
 
   @Test
@@ -117,5 +118,7 @@ class CandidateVersionSettingsControllerTest {
             jsonPath("$.blacklistedDomains", hasSize(2))
         )
         .andDo(document("versions/candidates/{versionCandidateId}/settings/PUT"));
+    Mockito.verify(globalSettingService).getGlobalSettings("1");
+    Mockito.verify(globalSettingService).updateSettings("1", expected);
   }
 }

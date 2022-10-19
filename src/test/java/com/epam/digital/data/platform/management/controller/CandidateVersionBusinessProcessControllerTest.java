@@ -153,7 +153,6 @@ public class CandidateVersionBusinessProcessControllerTest {
         .andDo(document("versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/PUT"));
 
     Mockito.verify(businessProcessService).updateProcess(BUSINESS_PROCESS_CONTENT, BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID);
-
   }
 
   @Test
