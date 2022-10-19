@@ -47,18 +47,22 @@ import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectLoader.SmallObject;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -93,7 +97,8 @@ public class JGitWrapperMock {
 
   @SneakyThrows
   public void init() {
-    initCloneCommand();
+    final var cloneCommand = createCloneCommand();
+    Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
 
     git = Mockito.mock(Git.class);
     repository = Mockito.mock(Repository.class);
@@ -114,12 +119,12 @@ public class JGitWrapperMock {
 
   @SneakyThrows
   public Git mockCloneCommand(String versionName) {
-    var generalCloneCommand = jGitWrapper.cloneRepository();
+    final var generalCloneCommand = jGitWrapper.cloneRepository();
 
     final var directory = new File(gerritPropertiesConfig.getRepositoryDirectory(), versionName);
     final var callResult = Mockito.mock(Git.class);
 
-    final var directoryCloneCommand = Mockito.mock(CloneCommand.class);
+    final var directoryCloneCommand = createCloneCommand();
     Mockito.when(generalCloneCommand.setDirectory(directory)).thenReturn(directoryCloneCommand);
     Mockito.doAnswer(invocationOnMock -> {
       log.info("Called clone command for {} version", versionName);
@@ -150,6 +155,28 @@ public class JGitWrapperMock {
         .thenReturn(pullCommand);
     Mockito.when(pullCommand.setRebase(true)).thenReturn(pullCommand);
     Mockito.when(git.pull()).thenReturn(pullCommand);
+  }
+
+  @SneakyThrows
+  public Git mockOpenGit(String versionName) {
+    final var directory = new File(gerritPropertiesConfig.getRepositoryDirectory(), versionName);
+
+    final var git = Mockito.mock(Git.class);
+    Mockito.when(jGitWrapper.open(directory)).thenReturn(git);
+
+    final var repository = Mockito.mock(Repository.class);
+    Mockito.when(git.getRepository()).thenReturn(repository);
+
+    return git;
+  }
+
+  @SneakyThrows
+  public FetchCommand mockFetchCommand(@NonNull final Git git,
+      @NonNull final ChangeInfoDto changeInfoDto) {
+    final var fetchCommand = createFetchCommand();
+    Mockito.when(fetchCommand.setRefSpecs(changeInfoDto.getRefs())).thenReturn(fetchCommand);
+    Mockito.when(git.fetch()).thenReturn(fetchCommand);
+    return fetchCommand;
   }
 
   @SneakyThrows
@@ -199,12 +226,43 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
+  public CheckoutCommand mockCheckoutCommand(@NonNull final Git git) {
+    final var checkoutCommand = createCheckoutCommand();
+    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
+    return checkoutCommand;
+  }
+
+  @SneakyThrows
   public void mockCheckoutCommand() {
     checkoutCommand = Mockito.mock(CheckoutCommand.class);
     Mockito.when(checkoutCommand.setName("refs/heads/" + gerritPropertiesConfig.getHeadBranch()))
         .thenReturn(checkoutCommand);
     Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
+  }
+
+  @SneakyThrows
+  public void mockGetFileContent(@NonNull final Git git, @NonNull final String path,
+      @NonNull final String content) {
+    final var repository = git.getRepository();
+
+    final var treeWalk = Mockito.mock(TreeWalk.class);
+    Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
+
+    Mockito.doAnswer(invocation -> {
+      Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
+
+      final var objectId = Mockito.mock(ObjectId.class);
+      Mockito.when(treeWalk.getObjectId(0)).thenReturn(objectId).thenReturn(null);
+
+      final var loader = Mockito.mock(ObjectLoader.class);
+      Mockito.when(repository.open(objectId)).thenReturn(loader).thenReturn(null);
+
+      final var bytes = content.getBytes(StandardCharsets.UTF_8);
+      Mockito.when(loader.getCachedBytes()).thenReturn(bytes);
+      Mockito.when(loader.getBytes()).thenReturn(bytes).thenReturn(null);
+      return null;
+    }).when(treeWalk).setFilter(Mockito.refEq(PathFilter.create(path)));
   }
 
   @SneakyThrows
@@ -314,21 +372,44 @@ public class JGitWrapperMock {
         .forEach(Mockito::reset);
   }
 
-  private void initCloneCommand() {
+  private String getRepoUri() {
     final var url = gerritPropertiesConfig.getUrl();
     final var repo = gerritPropertiesConfig.getRepository();
+    return String.format("%s/%s", url, repo);
+  }
+
+  private CredentialsProvider getCredentialsProvider() {
     final var user = gerritPropertiesConfig.getUser();
     final var password = gerritPropertiesConfig.getPassword();
+    return new UsernamePasswordCredentialsProvider(user, password);
+  }
 
-    final var repoURI = String.format("%s/%s", url, repo);
-    final var credentialsProvider = new UsernamePasswordCredentialsProvider(user, password);
+  private CloneCommand createCloneCommand() {
+    final var repoURI = getRepoUri();
+    final var credentialsProvider = getCredentialsProvider();
 
     final var cloneCommand = Mockito.mock(CloneCommand.class);
-    Mockito.when(cloneCommand.setURI(repoURI)).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCredentialsProvider(Mockito.refEq(credentialsProvider)))
+    Mockito.lenient().when(cloneCommand.setURI(repoURI)).thenReturn(cloneCommand);
+    Mockito.lenient().when(cloneCommand.setCredentialsProvider(Mockito.refEq(credentialsProvider)))
         .thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
-    Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
+    Mockito.lenient().when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
+    return cloneCommand;
+  }
+
+  private FetchCommand createFetchCommand() {
+    final var credentialsProvider = getCredentialsProvider();
+
+    final var fetchCommand = Mockito.mock(FetchCommand.class);
+    Mockito.lenient().when(fetchCommand.setCredentialsProvider(Mockito.refEq(credentialsProvider)))
+        .thenReturn(fetchCommand);
+    return fetchCommand;
+  }
+
+  private CheckoutCommand createCheckoutCommand() {
+    final var checkoutCommand = Mockito.mock(CheckoutCommand.class);
+    Mockito.lenient().when(checkoutCommand.setName(Constants.FETCH_HEAD))
+        .thenReturn(checkoutCommand);
+    return checkoutCommand;
   }
 }
 

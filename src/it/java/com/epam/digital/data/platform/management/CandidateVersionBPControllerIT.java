@@ -17,22 +17,22 @@
 package com.epam.digital.data.platform.management;
 
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.createProcessXml;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initBusinessProcessDetails;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.util.InitialisationUtils;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import lombok.SneakyThrows;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Disabled;
@@ -48,40 +48,35 @@ public class CandidateVersionBPControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void getBusinessProcess() {
-    final var versionCandidateId = RandomString.make();
-    String businessProcessName = "name";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    BusinessProcessDetailsShort businessProcessDetails = initBusinessProcessDetails(
-        businessProcessName, "title");
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+    final var bpName = RandomString.make();
+    final var bpTitle = RandomString.make();
+    final var bpmnPath = String.format("bpmn/%s.bpmn", bpName);
+    final var bpContent = String.format(testProcessFormat, bpName, bpTitle);
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    final var changeInfoDto = initChangeInfoDto(changeInfo);
 
     final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetBusinessProcess(businessProcess);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
+    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
+    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
+    jGitWrapperMock.mockGetFileContent(openRepoResult, bpmnPath, bpContent);
 
-    mockMvc.perform(
-        MockMvcRequestBuilders.get(BASE_REQUEST + "/{businessProcessName}", versionCandidateId,
-                businessProcessName)
-            .accept(MediaType.TEXT_XML)).andExpectAll(
-        status().isOk(),
-        content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(
-            businessProcessDetails.getName()),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
-            businessProcessDetails.getTitle())
-    );
+    mockMvc.perform(get(BASE_REQUEST + "/{businessProcessName}", versionCandidateId, bpName)
+            .accept(MediaType.TEXT_XML))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType("text/xml"),
+            xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(bpName),
+            xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(bpTitle)
+        );
 
     Mockito.verify(versionCandidateCloneResult).close();
+    Mockito.verify(fetchCommand).call();
+    Mockito.verify(checkoutCommand).call();
   }
 
   @Test
@@ -106,8 +101,8 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockCheckoutCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+    mockMvc.perform(get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON)).andExpectAll(
         status().isOk(),
         content().contentType(MediaType.APPLICATION_JSON),
@@ -136,8 +131,8 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+    mockMvc.perform(get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
         status().isOk(),
         content().contentType("application/json"),
@@ -162,7 +157,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     changeInfo.revisions.put(businessProcessName, revisionInfo);
     changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(versionCandidateId);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
@@ -203,7 +198,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     changeInfoDto.setRefs(versionCandidateId);
 
     InitialisationUtils.createTempRepo(versionCandidateId);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     createProcessXml(businessProcess, versionCandidateId, businessProcessName);
@@ -239,7 +234,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     changeInfo.revisions.put(businessProcessName, revisionInfo);
     changeInfo.currentRevision = businessProcessName;
     changeInfoDto.setRefs(revisionInfo.ref);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetBusinessProcessList(Map.of(businessProcessName, businessProcess));
     jGitWrapperMock.mockLogCommand();

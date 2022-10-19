@@ -71,7 +71,7 @@ public class CandidateVersionSettingsControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + versionCandidateId + "/settings")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(

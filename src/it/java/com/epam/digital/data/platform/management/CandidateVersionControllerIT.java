@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import lombok.SneakyThrows;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
@@ -79,18 +80,22 @@ public class CandidateVersionControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void getVersionDetails() {
-    String candidateId = "candidateId";
-    gerritApiMock.mockGetMRByNumber(candidateId,
-        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId)
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+
+    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + versionCandidateId)
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
             status().isOk(),
             content().contentType("application/json"),
-            jsonPath("$.id", is("1")),
+            jsonPath("$.id", is(versionCandidateId)),
             jsonPath("$.author", is("admin")),
-            jsonPath("$.description", is("this is description for version candidate 1")),
-            jsonPath("$.name", is("commit message")),
+            jsonPath("$.description",
+                is("this is description for version candidate " + versionCandidateId)),
+            jsonPath("$.name", is(changeInfo.subject)),
             jsonPath("$.validations", nullValue())
         );
   }
@@ -105,7 +110,7 @@ public class CandidateVersionControllerIT extends BaseIT {
     final var changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
     final var versionCloneResult = jGitWrapperMock.mockCloneCommand("1");
 
-    gerritApiMock.mockGetMRByNumber(String.valueOf(changeInfo._number), changeInfo);
+    gerritApiMock.mockGetChangeInfo(String.valueOf(changeInfo._number), changeInfo);
     gerritApiMock.mockCreateChanges(changeInfo, request);
     mockMvc.perform(
             MockMvcRequestBuilders.post(BASE_REQUEST).contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -117,7 +122,7 @@ public class CandidateVersionControllerIT extends BaseIT {
             jsonPath("$.id", is("1")),
             jsonPath("$.author", is("admin")),
             jsonPath("$.description", is("this is description for version candidate 1")),
-            jsonPath("$.name", is("commit message")),
+            jsonPath("$.name", is(changeInfo.subject)),
             jsonPath("$.validations", nullValue())
         );
 
@@ -128,7 +133,7 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void getVersionDetails_noSuchVersion() {
     String candidateId = "id1";
-    gerritApiMock.mockGetMRByNumber(candidateId, null);
+    gerritApiMock.mockGetChangeInfo(candidateId, null);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId)
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(status().isInternalServerError());
@@ -137,11 +142,15 @@ public class CandidateVersionControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void submitVersion() {
-    String candidateId = "id1";
-    gerritApiMock.mockGetMRByNumber(candidateId,
-        initChangeInfo(1, "admin", "admin@epam.com", "admin"));
-    gerritApiMock.mockSubmit();
-    mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/submit")
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+    gerritApiMock.mockSubmit(versionCandidateId);
+
+    mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + versionCandidateId + "/submit")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(status().isOk());
   }
@@ -150,7 +159,7 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void declineCandidate() {
     String candidateId = "id1";
-    gerritApiMock.mockGetMRByNumber(candidateId,
+    gerritApiMock.mockGetChangeInfo(candidateId,
         initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/decline")
             .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -161,7 +170,7 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void declineCandidate_NoSuchVersion() {
     String candidateId = "noSuchVersion";
-    gerritApiMock.mockGetMRByNumber(candidateId,
+    gerritApiMock.mockGetChangeInfo(candidateId,
         initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     gerritApiMock.mockNotFound(candidateId);
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/decline")
@@ -173,7 +182,7 @@ public class CandidateVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void submitVersion_NoSuchVersion() {
     String candidateId = "noSuchVersion";
-    gerritApiMock.mockGetMRByNumber(candidateId,
+    gerritApiMock.mockGetChangeInfo(candidateId,
         initChangeInfo(1, "admin", "admin@epam.com", "admin"));
     gerritApiMock.mockNotFound(candidateId);
     mockMvc.perform(MockMvcRequestBuilders.post(BASE_REQUEST + candidateId + "/submit")
@@ -201,7 +210,7 @@ public class CandidateVersionControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     revisionInfo.ref = "id1";
     changeInfo.currentRevision = versionCandidateId;
     changeInfo.revisions = new HashMap<>();
@@ -241,14 +250,14 @@ public class CandidateVersionControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     revisionInfo.ref = "id1";
     changeInfo.currentRevision = versionCandidateId;
     changeInfo.revisions = new HashMap<>();
     changeInfo.revisions.put(versionCandidateId, revisionInfo);
     jGitWrapperMock.mockGetFormsList(List.of(formDetails));
     jGitWrapperMock.mockLogCommand();
-    gerritApiMock.mockGetChangesInMr(Map.of("forms/formName.json", fileInfo));
+    gerritApiMock.mockGetChangesInMr(changeInfo.changeId, Map.of("forms/formName.json", fileInfo));
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + versionCandidateId + "/changes")
             .accept(MediaType.APPLICATION_JSON_VALUE))
         .andExpectAll(
