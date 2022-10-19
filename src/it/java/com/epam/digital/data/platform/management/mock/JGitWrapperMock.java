@@ -25,10 +25,13 @@ import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +67,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @Slf4j
 @Component
@@ -167,16 +171,36 @@ public class JGitWrapperMock {
     final var repository = Mockito.mock(Repository.class);
     Mockito.when(git.getRepository()).thenReturn(repository);
 
+    final var revTree = Mockito.mock(RevTree.class);
+    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
+
+    final var dirWalk = Mockito.mock(TreeWalk.class);
+    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(dirWalk);
+
+    final var fetchCommand = createFetchCommand();
+    Mockito.when(git.fetch()).thenReturn(fetchCommand);
+
+    final var checkoutCommand = createCheckoutCommand();
+    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
+
+    final var logCommand = createLogCommand();
+    Mockito.when(git.log()).thenReturn(logCommand);
+
     return git;
   }
 
   @SneakyThrows
   public FetchCommand mockFetchCommand(@NonNull final Git git,
       @NonNull final ChangeInfoDto changeInfoDto) {
-    final var fetchCommand = createFetchCommand();
-    Mockito.when(fetchCommand.setRefSpecs(changeInfoDto.getRefs())).thenReturn(fetchCommand);
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    return fetchCommand;
+    final var refs = changeInfoDto.getRefs();
+    final var generalFetchCommand = git.fetch();
+
+    final var refsFetchCommand = createFetchCommand();
+    Mockito.doAnswer(invocation -> {
+      Mockito.doAnswer(i -> refsFetchCommand.call()).when(generalFetchCommand).call();
+      return refsFetchCommand;
+    }).when(generalFetchCommand).setRefSpecs(refs);
+    return refsFetchCommand;
   }
 
   @SneakyThrows
@@ -186,6 +210,30 @@ public class JGitWrapperMock {
     Mockito.when(fetchCommand.setRefSpecs(changeInfoDto.getRefs()))
         .thenReturn(fetchCommand);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
+  }
+
+  @SneakyThrows
+  public void mockGitFileDates(@NonNull final Git git, @NonNull final String filePath,
+      @NonNull final LocalDateTime created, @NonNull final LocalDateTime updated) {
+    final var generalLogCommand = git.log();
+
+    final var filePathLogCommand = Mockito.mock(LogCommand.class);
+    Mockito.doAnswer(invocation -> {
+      Mockito.doAnswer(i -> filePathLogCommand.call()).when(generalLogCommand).call();
+      return filePathLogCommand;
+    }).when(generalLogCommand).addPath(filePath);
+
+    final var firstCommit = new RevCommit(Mockito.mock(ObjectId.class)) {
+    };
+    ReflectionTestUtils.setField(firstCommit, "commitTime",
+        (int) created.toEpochSecond(ZoneOffset.UTC));
+    final var lastCommit = new RevCommit(Mockito.mock(ObjectId.class)) {
+    };
+    ReflectionTestUtils.setField(lastCommit, "commitTime",
+        (int) updated.toEpochSecond(ZoneOffset.UTC));
+
+    Mockito.when(filePathLogCommand.call())
+        .thenReturn(List.of(lastCommit, Mockito.mock(RevCommit.class), firstCommit));
   }
 
   @SneakyThrows
@@ -227,9 +275,7 @@ public class JGitWrapperMock {
 
   @SneakyThrows
   public CheckoutCommand mockCheckoutCommand(@NonNull final Git git) {
-    final var checkoutCommand = createCheckoutCommand();
-    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-    return checkoutCommand;
+    return git.checkout();
   }
 
   @SneakyThrows
@@ -246,8 +292,7 @@ public class JGitWrapperMock {
       @NonNull final String content) {
     final var repository = git.getRepository();
 
-    final var treeWalk = Mockito.mock(TreeWalk.class);
-    Mockito.when(jGitWrapper.getTreeWalk(eq(repository))).thenReturn(treeWalk);
+    final var treeWalk = jGitWrapper.getTreeWalk(repository);
 
     Mockito.doAnswer(invocation -> {
       Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
@@ -312,6 +357,35 @@ public class JGitWrapperMock {
             }
           }
         });
+  }
+
+  @SneakyThrows
+  public void mockGetFileList(@NonNull final Git git, @NonNull final String filesPath,
+      @NonNull final List<String> fileList) {
+    final var repository = git.getRepository();
+    final var revTree = jGitWrapper.getRevTree(repository);
+
+    final var treeWalk = Mockito.mock(TreeWalk.class);
+    Mockito.when(jGitWrapper.getTreeWalk(repository, filesPath, revTree)).thenReturn(treeWalk);
+    final var objectId = Mockito.mock(ObjectId.class);
+    Mockito.when(treeWalk.getObjectId(0)).thenReturn(objectId);
+
+    final var dirWalk = jGitWrapper.getTreeWalk(repository);
+
+    final var atomicIterator = new AtomicReference<>(fileList.iterator());
+
+    Mockito.when(dirWalk.addTree(objectId)).thenAnswer(i -> {
+      Mockito.when(dirWalk.next()).thenAnswer(invocation -> {
+        final var iterator = atomicIterator.get();
+        if (iterator.hasNext()) {
+          final var next = iterator.next();
+          Mockito.when(dirWalk.getPathString()).thenReturn(next);
+          return true;
+        }
+        return false;
+      });
+      return null;
+    });
   }
 
   @SneakyThrows
@@ -410,6 +484,10 @@ public class JGitWrapperMock {
     Mockito.lenient().when(checkoutCommand.setName(Constants.FETCH_HEAD))
         .thenReturn(checkoutCommand);
     return checkoutCommand;
+  }
+
+  private LogCommand createLogCommand() {
+    return Mockito.mock(LogCommand.class);
   }
 }
 
