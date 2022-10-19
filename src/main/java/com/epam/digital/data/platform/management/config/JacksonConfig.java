@@ -14,13 +14,15 @@ public class JacksonConfig {
 
   private static final String DATE_FORMAT = "yyyy-MM-dd";
   private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+  public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer jackson2ObjectMapperBuilderCustomizer() {
     return builder -> builder.simpleDateFormat(DATE_TIME_FORMAT)
-        .serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_FORMAT)),
-            new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
-        .deserializers(new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_FORMAT)),
-            new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)));
+        .serializers(new LocalDateSerializer(DATE_FORMATTER),
+            new LocalDateTimeSerializer(DATE_TIME_FORMATTER))
+        .deserializers(new LocalDateDeserializer(DATE_FORMATTER),
+            new LocalDateTimeDeserializer(DATE_TIME_FORMATTER));
   }
 }

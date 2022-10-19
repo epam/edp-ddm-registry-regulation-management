@@ -1,16 +1,32 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
-import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.GerritService;
@@ -27,9 +43,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class VersionManagementServiceImpl implements VersionManagementService {
@@ -39,6 +57,8 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final GerritService gerritService;
   private final JGitService jGitService;
   private final GerritPropertiesConfig config;
+
+  private final RegistryRegulationManagementEventPublisher eventPublisher;
 
   @Override
   public List<ChangeInfoDetailedDto> getVersionsList() throws RestApiException {
@@ -75,11 +95,14 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  public boolean vote(String versionName, String label, short value) throws RestApiException {
-    var voteRequestDto = new VoteRequestDto();
-    voteRequestDto.setLabel(label);
-    voteRequestDto.setValue(value);
-    return gerritService.vote(voteRequestDto, label);
+  public void rebase(String versionName) throws RestApiException {
+    log.debug("Rebasing {} version candidate", versionName);
+    var mr = gerritService.getMRByNumber(versionName);
+    gerritService.rebase(mr.changeId);
+
+    log.debug("Fetching {} version candidate on remote ref", versionName);
+    var changeInfoDto = gerritService.getChangeInfo(mr.changeId);
+    jGitService.fetch(versionName, changeInfoDto);
   }
 
   @Override
@@ -98,7 +121,9 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
   @Override
   public String createNewVersion(CreateVersionRequest subject) throws RestApiException {
-    return gerritService.createChanges(subject);
+    var versionNumber = gerritService.createChanges(subject);
+    eventPublisher.publishVersionCandidateCreatedEvent(versionNumber);
+    return versionNumber;
   }
 
   @Override
@@ -112,16 +137,24 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
   @Override
   public VersionChanges getVersionChanges(String versionCandidateId) throws Exception {
-    List<FormResponse> formsList = formService.getChangedFormsListByVersion(versionCandidateId);
-    List<BusinessProcessResponse> businessProcessesList = businessProcessService.getChangedProcessesByVersion(versionCandidateId);
+    log.debug("Selecting form changes for version candidate {}", versionCandidateId);
+    var forms = formService.getChangedFormsListByVersion(versionCandidateId)
+        .stream()
+        .filter(e -> !e.getStatus().equals(FileStatus.CURRENT))
+        .map(this::toChangeInfo)
+        .collect(Collectors.toList());
+
+    log.debug("Selecting business-process changes for version candidate {}", versionCandidateId);
+    var businessProcesses = businessProcessService.getChangedProcessesByVersion(versionCandidateId)
+        .stream()
+        .filter(businessProcessResponse -> !businessProcessResponse.getStatus()
+            .equals(FileStatus.CURRENT))
+        .map(this::toChangeInfo)
+        .collect(Collectors.toList());
+    log.debug("Changed: {} forms and {} business-processes", forms.size(), businessProcesses.size());
     return VersionChanges.builder()
-        .changedBusinessProcesses(businessProcessesList.stream()
-            .filter(businessProcessResponse -> !businessProcessResponse.getStatus().equals(FileStatus.CURRENT))
-            .map(this::toChangeInfo)
-            .collect(Collectors.toList()))
-        .changedForms(formsList.stream()
-            .filter(e -> !e.getStatus().equals(FileStatus.CURRENT))
-            .map(this::toChangeInfo).collect(Collectors.toList()))
+        .changedBusinessProcesses(businessProcesses)
+        .changedForms(forms)
         .build();
   }
 

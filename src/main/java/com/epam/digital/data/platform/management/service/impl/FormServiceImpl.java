@@ -17,16 +17,24 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
+import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.jayway.jsonpath.JsonPath;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
@@ -38,9 +46,11 @@ public class FormServiceImpl implements FormService {
   private static final String DIRECTORY_PATH = "forms";
   private static final String JSON_FILE_EXTENSION = "json";
   public static final String FORM_TITLE_PATH = "$.title";
-
+  public static final String FORM_CREATED_FIELD = "created";
+  public static final String FORM_MODIFIED_FIELD = "modified";
   private final VersionedFileRepositoryFactory repoFactory;
   private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   @Override
   public List<FormResponse> getFormListByVersion(String versionName) throws Exception {
@@ -54,11 +64,14 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void createForm(String formName, String content, String versionName) throws Exception {
+    var time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     String formPath = getFormPath(formName);
-    if(repo.isFileExists(formPath)) {
-      throw new FormAlreadyExistsException(String.format("Form with path '%s' already exists", formPath));
+    if (repo.isFileExists(formPath)) {
+      throw new FormAlreadyExistsException(
+          String.format("Form with path '%s' already exists", formPath));
     }
+    content = addDatesToContent(content, time, time);
     repo.writeFile(formPath, content);
   }
 
@@ -70,8 +83,21 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void updateForm(String content, String formName, String versionName) throws Exception {
+    String formPath = getFormPath(formName);
+    LocalDateTime time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-    repo.writeFile(getFormPath(formName), content);
+    FileDatesDto fileDatesDto = FileDatesDto.builder().build();
+    if (repo.isFileExists(formPath)) {
+      String oldContent = repo.readFile(formPath);
+      fileDatesDto = getDatesFromContent(oldContent);
+    }
+    if (fileDatesDto.getCreate() == null) {
+      fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
+          .filter(fileResponse -> fileResponse.getName().equals(formName))
+          .findFirst().map(FileResponse::getCreated).orElse(time));
+    }
+    content = addDatesToContent(content, fileDatesDto.getCreate(), time);
+    repo.writeFile(formPath, content);
   }
 
   @Override
@@ -89,9 +115,11 @@ public class FormServiceImpl implements FormService {
     return JsonPath.read(formContent, FORM_TITLE_PATH);
   }
 
-  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus) throws Exception {
+  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus)
+      throws Exception {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-    VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
+    VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(
+        gerritPropertiesConfig.getHeadBranch());
     List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormResponse> forms = new ArrayList<>();
     for (FileResponse fileResponse : fileList) {
@@ -99,20 +127,49 @@ public class FormServiceImpl implements FormService {
         continue;
       }
       String formContent;
-      if(fileResponse.getStatus() == FileStatus.DELETED) {
+      if (fileResponse.getStatus() == FileStatus.DELETED) {
         formContent = masterRepo.readFile(getFormPath(fileResponse.getName()));
       } else {
         formContent = repo.readFile(getFormPath(fileResponse.getName()));
       }
+      FileDatesDto fileDatesDto = getDatesFromContent(formContent);
       forms.add(FormResponse.builder()
           .name(fileResponse.getName())
           .path(fileResponse.getPath())
           .status(fileResponse.getStatus())
-          .created(fileResponse.getCreated())
-          .updated(fileResponse.getUpdated())
+          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(fileResponse.getCreated()))
+          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(fileResponse.getUpdated()))
           .title(getTitleFromFormContent(formContent))
           .build());
     }
     return forms;
+  }
+
+  private FileDatesDto getDatesFromContent(String formContent) {
+    LocalDateTime create = null;
+    LocalDateTime update = null;
+    var form = JsonParser.parseString(formContent).getAsJsonObject();
+    if (form.has(FORM_CREATED_FIELD)) {
+      create = parseDate(form.get(FORM_CREATED_FIELD));
+    }
+    if (form.has(FORM_MODIFIED_FIELD)) {
+      update = parseDate(form.get(FORM_MODIFIED_FIELD));
+    }
+    return FileDatesDto.builder()
+        .create(create)
+        .update(update)
+        .build();
+  }
+
+  private String addDatesToContent(String content, LocalDateTime created, LocalDateTime modified) {
+    var formJson = JsonParser.parseString(content).getAsJsonObject();
+    formJson.addProperty(FORM_CREATED_FIELD, created.format(JacksonConfig.DATE_TIME_FORMATTER));
+    formJson.addProperty(FORM_MODIFIED_FIELD, modified.format(JacksonConfig.DATE_TIME_FORMATTER));
+    return gson.toJson(formJson);
+  }
+
+  private LocalDateTime parseDate(JsonElement dateElement) {
+    return dateElement.isJsonNull() ? null
+        : LocalDateTime.parse(dateElement.getAsString(), JacksonConfig.DATE_TIME_FORMATTER);
   }
 }

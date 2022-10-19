@@ -131,7 +131,7 @@ public class CandidateVersionBusinessProcessesController {
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId, businessProcessName)))
         .contentType(MediaType.TEXT_XML)
-        .body(businessProcess);
+        .body(businessProcessService.getProcessContent(businessProcessName, versionCandidateId));
   }
 
   @Operation(description = "Get business process",
@@ -201,7 +201,7 @@ public class CandidateVersionBusinessProcessesController {
     businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
-        .body(businessProcess);
+        .body(businessProcessService.getProcessContent(businessProcessName, versionCandidateId));
   }
 
   @Operation(description = "Delete business process",

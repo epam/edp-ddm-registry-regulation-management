@@ -170,6 +170,15 @@ class CandidateVersionControllerTest {
 
   @Test
   @SneakyThrows
+  void rebaseTest() {
+    Mockito.doNothing().when(service).rebase("1");
+    mockMvc.perform(get(String.format("%s/%s/%s", BASE_URL, "1", "rebase")))
+        .andExpect(status().isOk())
+    .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+  }
+
+  @Test
+  @SneakyThrows
   void getChangesTest() {
     List<FormChangesInfo> changedForms = List.of(FormChangesInfo.builder()
         .name("formToBeUpdated")

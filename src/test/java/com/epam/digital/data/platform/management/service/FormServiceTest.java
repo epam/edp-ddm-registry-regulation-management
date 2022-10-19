@@ -16,15 +16,24 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyscreamer.jsonassert.Customization;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.skyscreamer.jsonassert.comparator.CustomComparator;
 
 @ExtendWith(MockitoExtension.class)
 class FormServiceTest {
 
   private static final String VERSION_ID = "version";
+
+  @Captor
+  private ArgumentCaptor<String> captor;
   private static final String FORM_CONTENT = "{\n" +
       "  \"type\": \"form\",\n" +
       "  \"components\": [],\n" +
@@ -32,7 +41,9 @@ class FormServiceTest {
       "  \"path\": \"add-fizfactors1\",\n" +
       "  \"name\": \"add-fizfactors1\",\n" +
       "  \"display\": \"form\",\n" +
-      "  \"submissionAccess\": []\n" +
+      "  \"submissionAccess\": [],\n" +
+      "  \"created\": \"2022-12-21T13:52:31.357Z\",\n" +
+      "  \"modified\": \"2022-12-22T14:52:23.745Z\"\n" +
       "}";
 
   @Mock
@@ -70,8 +81,8 @@ class FormServiceTest {
         .name("form")
         .path("forms/form.json")
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+        .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
         .title("Внести фізичні фактори1")
         .build();
     Assertions.assertThat(resultList)
@@ -87,8 +98,14 @@ class FormServiceTest {
     Assertions.assertThatCode(() -> formService.createForm("form", FORM_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).writeFile("forms/form.json", FORM_CONTENT);
+    Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
+    var response = captor.getValue();
+    JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
+        new Customization("modified", (o1, o2) -> true),
+        new Customization("created", (o1, o2) -> true)
+    ));
   }
+
 
   @Test
   @SneakyThrows
@@ -118,7 +135,12 @@ class FormServiceTest {
     Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).writeFile("forms/form.json", FORM_CONTENT);
+    Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
+    var response = captor.getValue();
+    JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
+        new Customization("modified", (o1, o2) -> true),
+        new Customization("created", (o1, o2) -> true)
+    ));
   }
 
   @Test

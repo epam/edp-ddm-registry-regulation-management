@@ -9,6 +9,10 @@ spring:
     deserialization:
       fail-on-missing-creator-properties: true
       fail-on-null-creator-properties: true
+  cache:
+    cache-names: dates
+    caffeine:
+      spec: expireAfterAccess=1d
 
 server:
   port: 7070
@@ -64,5 +68,7 @@ gerrit:
   head-branch: master
 
 scheduled:
-  repositoryRefreshCron: '0 * * ? * *'
+  repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
+  cleanRepositoriesCron: '0 */5 * ? * *'
+  cleanRepositoriesTimezone: UTC
