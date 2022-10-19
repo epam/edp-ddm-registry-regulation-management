@@ -71,7 +71,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(
         MockMvcRequestBuilders.get(BASE_REQUEST + "/{formName}", versionCandidateId, formName)
             .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
@@ -111,7 +111,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
         status().isOk(),
@@ -145,7 +145,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
         status().isOk(),
@@ -186,7 +186,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     jGitWrapperMock.mockRemoteAddCommand();
     jGitWrapperMock.mockPushCommand();
     jGitWrapperMock.mockCommitCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.post(
             BASE_REQUEST + "/{formName}", versionCandidateId, formName)
         .contentType(MediaType.APPLICATION_JSON_VALUE).content(gson.toJson(form))
@@ -217,7 +217,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.revisions.put(versionCandidateId, revisionInfo);
     changeInfo.currentRevision = versionCandidateId;
     changeInfoDto.setRefs(versionCandidateId);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     InitialisationUtils.createTempRepo(versionCandidateId);
@@ -253,7 +253,7 @@ public class CandidateVersionFormsControllerIT extends BaseIT {
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(revisionInfo.ref);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
     jGitWrapperMock.mockGetFormsList(List.of(initFormDetails(formName, "title",
         "{\"name\":\"" + formName + "\", \"title\":\"title\"}")));

@@ -56,7 +56,7 @@ public class MasterVersionBPControllerIT extends BaseIT {
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockPullCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
 
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
         .accept(MediaType.TEXT_XML)).andExpectAll(
@@ -88,7 +88,7 @@ public class MasterVersionBPControllerIT extends BaseIT {
     jGitWrapperMock.mockLogCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockCheckoutCommand();
-    gerritApiMock.mockGetMRByNumber(versionCandidateId, changeInfo);
+    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON)).andExpectAll(
         status().isOk(),
