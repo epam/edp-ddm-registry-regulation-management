@@ -1,3 +1,4 @@
+{{- if eq .Values.global.deploymentMode "development" }}
 {{- if .Values.ingress.required }}
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -13,7 +14,7 @@ spec:
     termination: edge
   {{- if .Values.ingress.site }}
   host: {{ .Values.ingress.site }}-{{ .Values.namespace }}.{{ .Values.dnsWildcard }}
-  {{end}}
+  {{- end }}
   path: {{ .Values.ingress.path }}
   port:
     targetPort: 8080
@@ -24,4 +25,5 @@ spec:
   wildcardPolicy: None
 status:
   ingress: []
-  {{end}}
+  {{- end }}
+{{- end }}
