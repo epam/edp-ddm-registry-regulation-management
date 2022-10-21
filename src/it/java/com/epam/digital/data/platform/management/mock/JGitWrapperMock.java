@@ -27,6 +27,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
+import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.lib.Constants;
@@ -58,6 +60,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -141,6 +144,26 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
+  public CommitCommand mockCommitCommand(@NonNull final Git git, @NonNull final String commitId,
+      @NonNull ChangeInfoDto changeInfoDto) {
+    final var generalCommitCommand = git.commit();
+
+    final var commitMessageCommitCommand = createCommitCommand();
+    final var commitMessage = String.format("%s\n\nChange-Id: %s", changeInfoDto.getSubject(),
+        changeInfoDto.getChangeId());
+
+    Mockito.when(generalCommitCommand.setMessage(commitMessage))
+        .thenReturn(commitMessageCommitCommand);
+
+    final var objectId = Mockito.mock(ObjectId.class);
+    final var revCommit = createRevCommit(objectId);
+    Mockito.when(commitMessageCommitCommand.call()).thenReturn(revCommit);
+    Mockito.when(objectId.toString()).thenReturn(commitId);
+
+    return commitMessageCommitCommand;
+  }
+
+  @SneakyThrows
   public void mockCommitCommand() {
     CommitCommand commitCommand = Mockito.mock(CommitCommand.class);
     RevCommit revCommit = Mockito.mock(RevCommit.class);
@@ -186,6 +209,26 @@ public class JGitWrapperMock {
     final var logCommand = createLogCommand();
     Mockito.when(git.log()).thenReturn(logCommand);
 
+    final var addCommand = createAddCommand();
+    Mockito.when(git.add()).thenReturn(addCommand);
+
+    final var rmCommand = createRmCommand();
+    Mockito.when(git.rm()).thenReturn(rmCommand);
+
+    final var statusCommand = createStatusCommand();
+    Mockito.when(git.status()).thenReturn(statusCommand);
+    final var status = Mockito.mock(Status.class);
+    Mockito.when(statusCommand.call()).thenReturn(status);
+
+    final var commitCommand = createCommitCommand();
+    Mockito.when(git.commit()).thenReturn(commitCommand);
+
+    final var remoteAddCommand = createRemoteAddCommand();
+    Mockito.when(git.remoteAdd()).thenReturn(remoteAddCommand);
+
+    final var pushCommand = createPushCommand();
+    Mockito.when(git.push()).thenReturn(pushCommand);
+
     return git;
   }
 
@@ -222,12 +265,10 @@ public class JGitWrapperMock {
       return filePathLogCommand;
     }).when(generalLogCommand).addPath(filePath);
 
-    final var firstCommit = new RevCommit(Mockito.mock(ObjectId.class)) {
-    };
+    final var firstCommit = createRevCommit(Mockito.mock(ObjectId.class));
     ReflectionTestUtils.setField(firstCommit, "commitTime",
         (int) created.toEpochSecond(ZoneOffset.UTC));
-    final var lastCommit = new RevCommit(Mockito.mock(ObjectId.class)) {
-    };
+    final var lastCommit = createRevCommit(Mockito.mock(ObjectId.class));
     ReflectionTestUtils.setField(lastCommit, "commitTime",
         (int) updated.toEpochSecond(ZoneOffset.UTC));
 
@@ -246,10 +287,35 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
+  public RmCommand mockRmCommand(@NonNull final Git git, @NonNull final String filePath) {
+    final var generalRmCommand = git.rm();
+
+    final var filePathRmCommand = createRmCommand();
+    Mockito.when(generalRmCommand.addFilepattern(filePath)).thenReturn(filePathRmCommand);
+
+    return filePathRmCommand;
+  }
+
+  @SneakyThrows
+  public AddCommand mockAddCommand(@NonNull final Git git, @NonNull final String filePath) {
+    final var generalAddCommand = git.add();
+
+    final var filePathAddCommand = createAddCommand();
+    Mockito.when(generalAddCommand.addFilepattern(filePath)).thenReturn(filePathAddCommand);
+
+    return filePathAddCommand;
+  }
+
+  @SneakyThrows
   public void mockAddCommand() {
     AddCommand addCommand = Mockito.mock(AddCommand.class);
     Mockito.when(git.add()).thenReturn(addCommand);
     Mockito.when(addCommand.addFilepattern(anyString())).thenReturn(addCommand);
+  }
+
+  @SneakyThrows
+  public RemoteAddCommand mockRemoteAddCommand(@NonNull final Git git) {
+    return git.remoteAdd();
   }
 
   @SneakyThrows
@@ -260,11 +326,29 @@ public class JGitWrapperMock {
   }
 
   @SneakyThrows
+  public Status mockStatusCommand(@NonNull final Git git, Boolean... isCleanStatuses) {
+    final var status = git.status().call();
+
+    if (isCleanStatuses.length == 1) {
+      Mockito.when(status.isClean()).thenReturn(isCleanStatuses[0]);
+    } else {
+      Mockito.when(status.isClean()).thenReturn(isCleanStatuses[0],
+          Arrays.copyOfRange(isCleanStatuses, 1, isCleanStatuses.length - 1));
+    }
+
+    return status;
+  }
+
+  @SneakyThrows
   public void mockStatusCommand() {
     StatusCommand statusCommand = Mockito.mock(StatusCommand.class);
     Status status = Mockito.mock(Status.class);
     Mockito.when(git.status()).thenReturn(statusCommand);
     Mockito.when(statusCommand.call()).thenReturn(status);
+  }
+
+  public PushCommand mockPushCommand(@NonNull final Git git) {
+    return git.push();
   }
 
   public void mockPushCommand() {
@@ -294,7 +378,7 @@ public class JGitWrapperMock {
     final var treeWalk = jGitWrapper.getTreeWalk(repository);
 
     Mockito.doAnswer(invocation -> {
-      Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
+      Mockito.doReturn(true, false).when(treeWalk).next();
 
       final var objectId = Mockito.mock(ObjectId.class);
       Mockito.when(treeWalk.getObjectId(0)).thenReturn(objectId).thenReturn(null);
@@ -374,15 +458,16 @@ public class JGitWrapperMock {
     final var atomicIterator = new AtomicReference<>(fileList.iterator());
 
     Mockito.when(dirWalk.addTree(objectId)).thenAnswer(i -> {
-      Mockito.when(dirWalk.next()).thenAnswer(invocation -> {
+      Mockito.doAnswer(invocation -> {
         final var iterator = atomicIterator.get();
         if (iterator.hasNext()) {
           final var next = iterator.next();
-          Mockito.when(dirWalk.getPathString()).thenReturn(next);
+          Mockito.doReturn(next).when(dirWalk).getPathString();
           return true;
         }
+        atomicIterator.set(fileList.iterator());
         return false;
-      });
+      }).when(dirWalk).next();
       return null;
     });
   }
@@ -487,6 +572,61 @@ public class JGitWrapperMock {
 
   private LogCommand createLogCommand() {
     return Mockito.mock(LogCommand.class);
+  }
+
+  private AddCommand createAddCommand() {
+    return Mockito.mock(AddCommand.class);
+  }
+
+  private RmCommand createRmCommand() {
+    return Mockito.mock(RmCommand.class);
+  }
+
+  private StatusCommand createStatusCommand() {
+    return Mockito.mock(StatusCommand.class);
+  }
+
+  private CommitCommand createCommitCommand() {
+    final var commitCommand = Mockito.mock(CommitCommand.class);
+    Mockito.lenient().when(commitCommand.setAmend(true)).thenReturn(commitCommand);
+    return commitCommand;
+  }
+
+  @SneakyThrows
+  private RemoteAddCommand createRemoteAddCommand() {
+    final var repoUri = getRepoUri();
+    final var user = gerritPropertiesConfig.getUser();
+    final var password = gerritPropertiesConfig.getPassword();
+
+    final var uriish = new URIish(repoUri).setUser(user).setPass(password);
+
+    final var remoteAddCommand = Mockito.mock(RemoteAddCommand.class);
+    Mockito.lenient().when(remoteAddCommand.setUri(uriish)).thenReturn(remoteAddCommand);
+    Mockito.lenient().when(remoteAddCommand.setName(Constants.DEFAULT_REMOTE_NAME))
+        .thenReturn(remoteAddCommand);
+    return remoteAddCommand;
+  }
+
+  @SneakyThrows
+  private PushCommand createPushCommand() {
+    final var credProvider = getCredentialsProvider();
+    final var refSpec = new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch());
+
+    final var pushCommand = Mockito.mock(PushCommand.class);
+    Mockito.lenient().when(pushCommand.setCredentialsProvider(Mockito.refEq(credProvider)))
+        .thenReturn(pushCommand);
+    Mockito.lenient().when(pushCommand.setRemote(Constants.DEFAULT_REMOTE_NAME))
+        .thenReturn(pushCommand);
+    Mockito.lenient()
+        .when(pushCommand.setRefSpecs(Mockito.refEq(refSpec)))
+        .thenReturn(pushCommand);
+
+    return pushCommand;
+  }
+
+  private static RevCommit createRevCommit(ObjectId objectId) {
+    return new RevCommit(objectId) {
+    };
   }
 }
 
