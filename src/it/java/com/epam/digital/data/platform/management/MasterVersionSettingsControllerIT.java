@@ -35,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 public class MasterVersionSettingsControllerIT extends BaseIT {
+
   private static final String BASE_REQUEST = "/versions/master/settings";
   private static final String GLOBAL_SETTINGS_VALUE = "supportEmail: \"support@registry.gov.ua\"\n" +
       "themeFile: \"white-theme.js\"\n";
@@ -63,7 +64,7 @@ public class MasterVersionSettingsControllerIT extends BaseIT {
     changeInfo.revisions.put(formName, revisionInfo);
     changeInfo.currentRevision = formName;
     changeInfoDto.setRefs(versionCandidateId);
-    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE,  GLOBAL_SETTINGS_VALUE);
+    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE, GLOBAL_SETTINGS_VALUE);
     jGitWrapperMock.mockCheckoutCommand();
     jGitWrapperMock.mockFetchCommand(changeInfoDto);
     jGitWrapperMock.mockPullCommand();

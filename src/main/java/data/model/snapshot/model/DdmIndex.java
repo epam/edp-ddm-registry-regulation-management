@@ -23,7 +23,6 @@ public class DdmIndex {
 
   private String name;
   private List<Column> columns;
-
   private String tableName;
 
   @Data

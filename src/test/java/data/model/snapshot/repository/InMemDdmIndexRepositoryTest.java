@@ -32,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class InMemDdmIndexRepositoryTest {
+
   @Mock
   InMemDdmTableRepository tableRepository;
   @Mock
@@ -45,7 +46,7 @@ public class InMemDdmIndexRepositoryTest {
   InMemDdmIndexRepository indexRepository;
 
   @Test
-  void saveIndexTest(){
+  void saveIndexTest() {
     final DdmIndex index = getIndex();
     Mockito.when(tableRepository.get(index.getTableName())).thenReturn(table);
     Mockito.when(table.getIndices()).thenReturn(indexMap);
@@ -55,7 +56,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void savePkTest(){
+  void savePkTest() {
     final DdmPrimaryKeyConstraint pk = getPk();
     Mockito.when(tableRepository.get(pk.getTableName())).thenReturn(table);
     indexRepository.save(pk);
@@ -64,7 +65,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void saveUniqueConstraintTest(){
+  void saveUniqueConstraintTest() {
     final DdmUniqueConstraint uk = getUk();
     Mockito.when(tableRepository.get(uk.getTableName())).thenReturn(table);
     Mockito.when(table.getUniqueConstraints()).thenReturn(uniqueConstraints);
@@ -74,7 +75,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void getPkTest(){
+  void getPkTest() {
     final DdmPrimaryKeyConstraint pk = getPk();
     Mockito.when(tableRepository.get(pk.getTableName())).thenReturn(table);
     Mockito.when(table.getPrimaryKey()).thenReturn(pk);
@@ -83,7 +84,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void getUniqueTest(){
+  void getUniqueTest() {
     final DdmUniqueConstraint uk = getUk();
     Mockito.when(tableRepository.get(uk.getTableName())).thenReturn(table);
     Mockito.when(table.getUniqueConstraints()).thenReturn(uniqueConstraints);
@@ -95,7 +96,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void getIndexTest(){
+  void getIndexTest() {
     final DdmIndex index = getIndex();
     Mockito.when(tableRepository.get(index.getTableName())).thenReturn(table);
 
@@ -106,7 +107,7 @@ public class InMemDdmIndexRepositoryTest {
   }
 
   @Test
-  void deleteTest(){
+  void deleteTest() {
     final DdmPrimaryKeyConstraint pk = getPk();
     Mockito.when(tableRepository.get(pk.getTableName())).thenReturn(table);
     Mockito.when(table.getPrimaryKey()).thenReturn(pk);
@@ -120,21 +121,21 @@ public class InMemDdmIndexRepositoryTest {
     Mockito.verify(indexMap).remove(pk.getName());
   }
 
-  private DdmPrimaryKeyConstraint getPk(){
+  private DdmPrimaryKeyConstraint getPk() {
     DdmPrimaryKeyConstraint pk = new DdmPrimaryKeyConstraint();
     pk.setName("primaryKey");
     pk.setTableName("table");
     return pk;
   }
 
-  private DdmUniqueConstraint getUk(){
+  private DdmUniqueConstraint getUk() {
     DdmUniqueConstraint uk = new DdmUniqueConstraint();
     uk.setName("uniqueConstraint");
     uk.setTableName("table");
     return uk;
   }
 
-  private DdmIndex getIndex(){
+  private DdmIndex getIndex() {
     DdmIndex index = new DdmIndex();
     index.setName("index");
     index.setTableName("table");

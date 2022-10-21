@@ -43,7 +43,7 @@ public class InMemDdmForeignKeyRepositoryTest {
   InMemDdmForeignKeyRepository ddmForeignKeyRepository;
 
   @BeforeEach
-  void setup(){
+  void setup() {
     final DdmForeignKey foreignKey = getForeignKey();
     Mockito.when(tableRepository.get(foreignKey.getSourceTable())).thenReturn(table);
     Mockito.when(table.getForeignKeys()).thenReturn(foreignKeyMap);
@@ -73,7 +73,7 @@ public class InMemDdmForeignKeyRepositoryTest {
     Mockito.verify(foreignKeyMap).remove(foreignKey.getName());
   }
 
-  private DdmForeignKey getForeignKey(){
+  private DdmForeignKey getForeignKey() {
     DdmForeignKey fk = new DdmForeignKey();
     fk.setName("foreignKey");
     fk.setTargetTable("targetTable");

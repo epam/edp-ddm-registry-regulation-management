@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import static com.epam.digital.data.platform.management.util.TestUtils.getContent;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 
@@ -49,20 +50,7 @@ import org.xmlunit.diff.Diff;
 public class BusinessProcessServiceTest {
 
   private static final String VERSION_ID = "version";
-  private static final String PROCESS_CONTENT = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-      "<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:camunda=\"http://camunda.org/schema/1.0/bpmn\" xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\" xmlns:rrm=\"http://registry-regulation-management\" exporter=\"Camunda Modeler\" exporterVersion=\"4.6.0\" id=\"Definitions_1ifek2y\" rrm:created=\"2022-10-03T14:41:20.128Z\" rrm:modified=\"2022-10-03T14:41:20.128Z\" targetNamespace=\"http://bpmn.io/schema/bpmn\">"
-      +
-      "  <bpmn:process id=\"Process_00mzcs7\" name=\"Really test name\" isExecutable=\"true\">" +
-      "    <bpmn:startEvent id=\"StartEvent_1\" />" +
-      "  </bpmn:process>" +
-      "  <bpmndi:BPMNDiagram id=\"BPMNDiagram_1\">" +
-      "    <bpmndi:BPMNPlane id=\"BPMNPlane_1\" bpmnElement=\"Process_00mzcs7\">" +
-      "      <bpmndi:BPMNShape id=\"_BPMNShape_StartEvent_2\" bpmnElement=\"StartEvent_1\">" +
-      "        <dc:Bounds x=\"179\" y=\"79\" width=\"36\" height=\"36\" />" +
-      "      </bpmndi:BPMNShape>" +
-      "    </bpmndi:BPMNPlane>" +
-      "  </bpmndi:BPMNDiagram>" +
-      "</bpmn:definitions>";
+  private static final String PROCESS_CONTENT = getContent("bp-sample.bpmn");
   private static final String BPMN_FILE_EXTENSION = "bpmn";
 
   @Captor

@@ -27,7 +27,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import data.model.snapshot.model.DdmTable;
 import java.io.File;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -56,7 +55,7 @@ public class TableServiceTest {
 
   @BeforeAll
   @SneakyThrows
-  static void beforeAll(){
+  static void beforeAll() {
     Files.createDirectories(Paths.get(DATA_MODEL_SNAPSHOT_DIRECTORY));
   }
 
@@ -105,7 +104,7 @@ public class TableServiceTest {
 
   @Test
   @SneakyThrows
-  void getTableParseExceptionTest(){
+  void getTableParseExceptionTest() {
     final String tableName = "table_sample";
     Mockito.when(objectMapper.readValue(anyString(), eq(DdmTable.class))).thenThrow(
         JsonProcessingException.class);

@@ -78,7 +78,7 @@ public class CandidateVersionBusinessProcessControllerTest {
 
   @BeforeEach
   public void setUp(WebApplicationContext webApplicationContext,
-                    RestDocumentationContextProvider restDocumentation) {
+      RestDocumentationContextProvider restDocumentation) {
 
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
         .apply(documentationConfiguration(restDocumentation)).build();
@@ -104,18 +104,19 @@ public class CandidateVersionBusinessProcessControllerTest {
   public void getBusinessProcessesByVersionId() {
     Mockito.when(businessProcessService.getProcessesByVersion(CANDIDATE_VERSION_ID))
         .thenReturn(List.of(BusinessProcessResponse.builder()
-                .path("/bpmn/" + BUSINESS_PROCESS_ID + ".bpmn")
-                .name(BUSINESS_PROCESS_ID)
-                .title(BUSINESS_PROCESS_NAME)
-                .created(LocalDateTime.now())
-                .updated(LocalDateTime.now())
+            .path("/bpmn/" + BUSINESS_PROCESS_ID + ".bpmn")
+            .name(BUSINESS_PROCESS_ID)
+            .title(BUSINESS_PROCESS_NAME)
+            .created(LocalDateTime.now())
+            .updated(LocalDateTime.now())
             .build()));
 
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, CANDIDATE_VERSION_ID)
-        .accept(MediaType.APPLICATION_JSON)).andExpectAll(
-        status().isOk(),
-        content().contentType(MediaType.APPLICATION_JSON),
-        jsonPath("$", hasSize(1)))
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$", hasSize(1)))
         .andDo(document("versions/candidates/{versionCandidateId}/business-processes/GET"));
   }
 
@@ -125,13 +126,13 @@ public class CandidateVersionBusinessProcessControllerTest {
     Mockito.when(businessProcessService.getProcessContent(BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID))
         .thenReturn(BUSINESS_PROCESS_CONTENT);
     mockMvc.perform(MockMvcRequestBuilders.post(
-            BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
-        .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
-        .accept(MediaType.TEXT_XML)).andExpectAll(
-        status().isCreated(),
-        content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(BUSINESS_PROCESS_ID),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(BUSINESS_PROCESS_NAME))
+                BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
+            .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
+            .accept(MediaType.TEXT_XML)).andExpectAll(
+            status().isCreated(),
+            content().contentType("text/xml"),
+            xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(BUSINESS_PROCESS_ID),
+            xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(BUSINESS_PROCESS_NAME))
         .andDo(document("versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/POST"));
 
     Mockito.verify(businessProcessService).createProcess(BUSINESS_PROCESS_ID, BUSINESS_PROCESS_CONTENT, CANDIDATE_VERSION_ID);
@@ -141,15 +142,15 @@ public class CandidateVersionBusinessProcessControllerTest {
   @SneakyThrows
   public void updateBusinessProcess() {
     Mockito.when(businessProcessService.getProcessContent(BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID))
-            .thenReturn(BUSINESS_PROCESS_CONTENT);
+        .thenReturn(BUSINESS_PROCESS_CONTENT);
     mockMvc.perform(MockMvcRequestBuilders.put(
-            BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
-        .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
-        .accept(MediaType.TEXT_XML)).andExpectAll(
-        status().isOk(),
-        content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(BUSINESS_PROCESS_ID),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(BUSINESS_PROCESS_NAME))
+                BASE_REQUEST + "/{businessProcessName}", BUSINESS_PROCESS_ID)
+            .contentType(MediaType.TEXT_XML).content(BUSINESS_PROCESS_CONTENT)
+            .accept(MediaType.TEXT_XML)).andExpectAll(
+            status().isOk(),
+            content().contentType("text/xml"),
+            xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(BUSINESS_PROCESS_ID),
+            xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(BUSINESS_PROCESS_NAME))
         .andDo(document("versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/PUT"));
 
     Mockito.verify(businessProcessService).updateProcess(BUSINESS_PROCESS_CONTENT, BUSINESS_PROCESS_ID, CANDIDATE_VERSION_ID);

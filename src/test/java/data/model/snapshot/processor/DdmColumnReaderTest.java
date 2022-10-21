@@ -39,8 +39,7 @@ public class DdmColumnReaderTest {
   DdmColumnReader columnReader;
 
   @Test
-  void readNamedObjectTest(){
-
+  void readNamedObjectTest() {
     Column column = Mockito.mock(Column.class);
     Table table = Mockito.mock(Table.class);
     Mockito.when(column.getParent()).thenReturn(table);
@@ -51,10 +50,10 @@ public class DdmColumnReaderTest {
     columnReader.readNamedObject(column);
 
     Mockito.verify(columnRepository, Mockito.never()).save(any());
-
   }
+
   @Test
-  void readNamedObjectSuccessTest(){
+  void readNamedObjectSuccessTest() {
     Column column = Mockito.mock(Column.class);
     Table table = Mockito.mock(Table.class);
     final ColumnDataType dataType = Mockito.mock(ColumnDataType.class);
@@ -64,7 +63,6 @@ public class DdmColumnReaderTest {
 
     columnReader.readNamedObject(column);
     Mockito.verify(columnRepository).save(any());
-
   }
 
 }

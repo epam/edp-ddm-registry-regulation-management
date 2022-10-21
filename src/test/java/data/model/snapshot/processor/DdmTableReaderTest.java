@@ -78,9 +78,8 @@ public class DdmTableReaderTest {
   void readNamedObjectSuccessTest() {
     final String tableName = "table";
     List<Column> columnList = List.of(column);
-    List<ForeignKey> foreignKeyList= List.of(foreignKey);
-    List<Index> indexList= List.of(index);
-
+    List<ForeignKey> foreignKeyList = List.of(foreignKey);
+    List<Index> indexList = List.of(index);
 
     Mockito.when(table.getName()).thenReturn(tableName);
     Mockito.when(table.getColumns()).thenReturn(columnList);

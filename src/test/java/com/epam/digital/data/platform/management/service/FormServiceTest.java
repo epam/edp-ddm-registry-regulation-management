@@ -16,7 +16,10 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import static com.epam.digital.data.platform.management.util.TestUtils.getContent;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
@@ -50,17 +53,7 @@ class FormServiceTest {
 
   @Captor
   private ArgumentCaptor<String> captor;
-  private static final String FORM_CONTENT = "{\n" +
-      "  \"type\": \"form\",\n" +
-      "  \"components\": [],\n" +
-      "  \"title\": \"Внести фізичні фактори1\",\n" +
-      "  \"path\": \"add-fizfactors1\",\n" +
-      "  \"name\": \"add-fizfactors1\",\n" +
-      "  \"display\": \"form\",\n" +
-      "  \"submissionAccess\": [],\n" +
-      "  \"created\": \"2022-12-21T13:52:31.357Z\",\n" +
-      "  \"modified\": \"2022-12-22T14:52:23.745Z\"\n" +
-      "}";
+  private final String FORM_CONTENT = getContent("form-sample.json");
 
   @Mock
   private VersionedFileRepositoryFactory repositoryFactory;
@@ -80,30 +73,20 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void getFormListByVersionTest() {
-    var newForm = FileResponse.builder()
-        .name("form")
-        .path("forms/form.json")
-        .status(FileStatus.NEW)
+    var newForm = FileResponse.builder().name("form").path("forms/form.json").status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
-        .build();
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
     var deletedForm = FileResponse.builder().status(FileStatus.DELETED).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm, deletedForm));
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
 
     var resultList = formService.getFormListByVersion(VERSION_ID);
 
-    var expectedFormResponseDto = FormResponse.builder()
-        .name("form")
-        .path("forms/form.json")
-        .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+    var expectedFormResponseDto = FormResponse.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
-        .title("Внести фізичні фактори1")
-        .build();
-    Assertions.assertThat(resultList)
-        .hasSize(1)
-        .element(0).isEqualTo(expectedFormResponseDto);
+        .title("Внести фізичні фактори1").build();
+    Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 
   @Test
@@ -112,6 +95,8 @@ class FormServiceTest {
     Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(false);
     Assertions.assertThatCode(() -> formService.createForm("form", FORM_CONTENT, VERSION_ID))
         .doesNotThrowAnyException();
+    Mockito.verify(repository).isFileExists("forms/form.json");
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString());
   }
 
   @Test
@@ -119,12 +104,11 @@ class FormServiceTest {
   void createFormTest() {
     Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(false);
     formService.createForm("form", FORM_CONTENT, VERSION_ID);
-    Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
     JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
         new Customization("modified", (o1, o2) -> true),
-        new Customization("created", (o1, o2) -> true)
-    ));
+        new Customization("created", (o1, o2) -> true)));
   }
 
 
@@ -146,8 +130,7 @@ class FormServiceTest {
 
     var actualFormContent = formService.getFormContent("form", VERSION_ID);
 
-    Assertions.assertThat(actualFormContent)
-        .isEqualTo(FORM_CONTENT);
+    Assertions.assertThat(actualFormContent).isEqualTo(FORM_CONTENT);
   }
 
   @Test
@@ -155,18 +138,19 @@ class FormServiceTest {
   void updateFormTestNoErrorTest() {
     Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID))
         .doesNotThrowAnyException();
+    Mockito.verify(repository).isFileExists("forms/form.json");
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString());
   }
 
   @Test
   @SneakyThrows
   void updateFormTest() {
     formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
-    Mockito.verify(repository).writeFile(Mockito.eq("forms/form.json"), captor.capture());
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
     JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
         new Customization("modified", (o1, o2) -> true),
-        new Customization("created", (o1, o2) -> true)
-    ));
+        new Customization("created", (o1, o2) -> true)));
   }
 
   @Test

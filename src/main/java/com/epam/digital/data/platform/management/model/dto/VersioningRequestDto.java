@@ -1,5 +1,3 @@
-package com.epam.digital.data.platform.management.model.dto;
-
 /*
  * Copyright 2022 EPAM Systems.
  *
@@ -7,7 +5,7 @@ package com.epam.digital.data.platform.management.model.dto;
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,6 +13,8 @@ package com.epam.digital.data.platform.management.model.dto;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.epam.digital.data.platform.management.model.dto;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

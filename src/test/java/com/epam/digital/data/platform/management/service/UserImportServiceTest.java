@@ -59,6 +59,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserImportServiceTest {
+
   static final UUID CEPH_ENTITY_ID = UUID.fromString("10e23e2a-6830-42a6-bf21-d0a4a90b5706");
   static final String CEPH_OBJECT_CONTENT_TYPE = "application/octet-stream";
   static final String FILE_BUCKET = "FILE_BUCKET";
@@ -103,10 +104,10 @@ class UserImportServiceTest {
   @Test
   void storeFileShouldThrowUploadProcessingExceptionWithEmptyFile() {
     when(validatorService.validate(file))
-            .thenThrow(new FileLoadProcessingException("File cannot be saved to Ceph - file is null or empty"));
+        .thenThrow(new FileLoadProcessingException("File cannot be saved to Ceph - file is null or empty"));
 
     var exception = assertThrows(FileLoadProcessingException.class,
-            () -> userImportService.storeFile(file, new SecurityContext()));
+        () -> userImportService.storeFile(file, new SecurityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
   }
@@ -126,7 +127,7 @@ class UserImportServiceTest {
     doThrow(RuntimeException.class).when(cephService).delete(FILE_BUCKET, Set.of(stringCephEntity));
 
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.delete(stringCephEntity));
+        () -> userImportService.delete(stringCephEntity));
 
     assertThat(exception.getMessage()).isEqualTo("Failed delete file to ceph, cephKey: " + stringCephEntity);
   }
@@ -138,9 +139,10 @@ class UserImportServiceTest {
     final var expectedFilesInfo = new CephFileInfoDto(stringCephEntity, "users.csv", 1L);
     final CephObjectMetadata cephObjectMetadata = new CephObjectMetadata();
     cephObjectMetadata.setUserMetadata(Map.of("id", stringCephEntity,
-            "name", new String(Base64.getEncoder().encode("users.csv".getBytes(StandardCharsets.UTF_8))),
-            "username", "userName",
-            "size", "1"));
+        "name",
+        new String(Base64.getEncoder().encode("users.csv".getBytes(StandardCharsets.UTF_8))),
+        "username", "userName",
+        "size", "1"));
     when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenReturn(setOfKeys);
     when(cephService.getMetadata(FILE_BUCKET, setOfKeys)).thenReturn(Collections.singletonList(cephObjectMetadata));
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
@@ -158,7 +160,7 @@ class UserImportServiceTest {
     when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenThrow(new RuntimeException());
 
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.getFileInfo(new SecurityContext("userToken")));
+        () -> userImportService.getFileInfo(new SecurityContext("userToken")));
 
     assertThat(exception.getMessage()).isEqualTo("Failed retrieve files info");
   }
@@ -170,11 +172,11 @@ class UserImportServiceTest {
     final String fileName = "test.csv";
     final String encodedFileName = new String(Base64.getEncoder().encode(fileName.getBytes(StandardCharsets.UTF_8)));
     var cephServiceResponse = CephObject.builder()
-            .content(new ByteArrayInputStream(contentBytes))
-            .metadata(CephObjectMetadata.builder().userMetadata(Map.of("name", encodedFileName)).build())
-            .build();
+        .content(new ByteArrayInputStream(contentBytes))
+        .metadata(CephObjectMetadata.builder().userMetadata(Map.of("name", encodedFileName)).build())
+        .build();
     when(cephService.get(FILE_BUCKET, CEPH_ENTITY_ID.toString()))
-            .thenReturn(Optional.of(cephServiceResponse));
+        .thenReturn(Optional.of(cephServiceResponse));
     when(vaultService.decrypt("test")).thenReturn("test");
 
     CephFileDto cephFileDto = userImportService.downloadFile(CEPH_ENTITY_ID.toString());
@@ -190,7 +192,7 @@ class UserImportServiceTest {
     when(cephService.get(FILE_BUCKET, stringCephEntity)).thenThrow(RuntimeException.class);
 
     var exception = assertThrows(CephInvocationException.class,
-            () -> userImportService.downloadFile(stringCephEntity));
+        () -> userImportService.downloadFile(stringCephEntity));
 
     assertThat(exception.getMessage()).isEqualTo("Failed download file from ceph, cephKey: " + stringCephEntity);
   }
@@ -199,16 +201,16 @@ class UserImportServiceTest {
   void downloadShouldThrowGetProcessingExceptionWhenNoFilenameInMetadata() {
     String stringCephEntity = CEPH_ENTITY_ID.toString();
     var cephServiceResponse = CephObject.builder()
-            .content(new ByteArrayInputStream("test".getBytes()))
-            .metadata(CephObjectMetadata.builder().userMetadata(Collections.emptyMap()).build())
-            .build();
+        .content(new ByteArrayInputStream("test".getBytes()))
+        .metadata(CephObjectMetadata.builder().userMetadata(Collections.emptyMap()).build())
+        .build();
     when(cephService.get(FILE_BUCKET, stringCephEntity)).thenReturn(Optional.of(cephServiceResponse));
 
     var exception = assertThrows(GetProcessingException.class,
-            () -> userImportService.downloadFile(stringCephEntity));
+        () -> userImportService.downloadFile(stringCephEntity));
 
     assertThat(exception.getMessage())
-            .isEqualTo("Failed download file from ceph - missed file name, cephKey: " + stringCephEntity);
+        .isEqualTo("Failed download file from ceph - missed file name, cephKey: " + stringCephEntity);
   }
 
   @Test
@@ -219,7 +221,7 @@ class UserImportServiceTest {
     when(validatorService.validate(file)).thenReturn(validationResult);
 
     var exception = assertThrows(VaultInvocationException.class,
-            () -> userImportService.storeFile(file, new SecurityContext()));
+        () -> userImportService.storeFile(file, new SecurityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("Exception during Vault content encryption");
   }
