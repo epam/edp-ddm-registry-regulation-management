@@ -16,9 +16,9 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createProcessXml;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -28,25 +28,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.management.config.JacksonConfig;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.util.InitialisationUtils;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathFactory;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.junit.jupiter.api.Disabled;
+import org.eclipse.jgit.transport.RefSpec;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.xml.sax.InputSource;
+import org.xmlunit.builder.DiffBuilder;
 
 public class CandidateVersionBPControllerIT extends BaseIT {
 
@@ -152,24 +156,20 @@ public class CandidateVersionBPControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   public void getBusinessProcessesByVersionId_NoBusinessProcesses() {
-    final var versionCandidateId = RandomString.make();
-    String businessProcessName = "businessProcessName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+    final var bpmnPath = "bpmn";
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "-1";
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    final var changeInfoDto = initChangeInfoDto(changeInfo);
 
     final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetBusinessProcessList(Map.of());
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
     gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
+    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
+    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
+    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
+    jGitWrapperMock.mockGetFileList(openRepoResult, bpmnPath, List.of());
+
     mockMvc.perform(get(BASE_REQUEST, versionCandidateId)
         .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
         status().isOk(),
@@ -178,111 +178,212 @@ public class CandidateVersionBPControllerIT extends BaseIT {
     );
 
     Mockito.verify(versionCandidateCloneResult).close();
+    Mockito.verify(fetchCommand).call();
+    Mockito.verify(checkoutCommand).call();
   }
 
-  @Disabled
   @Test
   @SneakyThrows
   public void createBusinessProcess() {
-    //todo fix this test
-    String versionCandidateId = "id1";
-    String businessProcessName = "name";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+    final var bpName = RandomString.make();
+    final var bpTitle = RandomString.make();
+    final var bpmnPath = "bpmn";
+    final var bpFileName = String.format("%s.bpmn", bpName);
+    final var bpFileRelativePath = String.format("%s/%s", bpmnPath, bpFileName);
+    final var commitId = RandomString.make();
+    final var bpFileContent = String.format(testProcessFormat, bpName, bpTitle);
+
+    InitialisationUtils.createTempRepo(versionCandidateId);
+    final var bpFileFullPath = Path.of(tempRepoDirectory.getPath(), versionCandidateId, bpmnPath,
+        bpFileName);
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isFalse();
+
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    final var changeInfoDto = initChangeInfoDto(changeInfo);
+
     gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockAddCommand();
-    jGitWrapperMock.mockStatusCommand();
-    jGitWrapperMock.mockRemoteAddCommand();
-    jGitWrapperMock.mockPushCommand();
-    jGitWrapperMock.mockCommitCommand();
-    jGitWrapperMock.mockGetBusinessProcess(businessProcess);
-    jGitWrapperMock.mockGetBusinessProcessList(Map.of());
+    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
+    jGitWrapperMock.mockGetFileList(openRepoResult, bpmnPath, List.of());
+    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
+    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
+    final var addCommand = jGitWrapperMock.mockAddCommand(openRepoResult, bpFileRelativePath);
+    final var status = jGitWrapperMock.mockStatusCommand(openRepoResult, false);
+    final var commitCommand = jGitWrapperMock.mockCommitCommand(openRepoResult, commitId,
+        changeInfoDto);
+    final var remoteAdd = jGitWrapperMock.mockRemoteAddCommand(openRepoResult);
+    final var pushCommand = jGitWrapperMock.mockPushCommand(openRepoResult);
+    jGitWrapperMock.mockGetFileContent(openRepoResult, bpFileRelativePath, bpFileContent);
+
     mockMvc.perform(MockMvcRequestBuilders.post(
-            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
-        .contentType(MediaType.TEXT_XML).content(businessProcess)
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, bpName)
+        .contentType(MediaType.TEXT_XML).content(bpFileContent)
         .accept(MediaType.TEXT_XML)).andExpectAll(
         status().isCreated(),
         content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("name"),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("title"));
+        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(bpName),
+        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(bpTitle));
 
-    Mockito.verify(versionCandidateCloneResult).close();
+    Mockito.verify(fetchCommand, Mockito.times(2)).call();
+    Mockito.verify(checkoutCommand, Mockito.times(2)).call();
+    Mockito.verify(addCommand).call();
+    Mockito.verify(status).isClean();
+    Mockito.verify(commitCommand).call();
+    Mockito.verify(remoteAdd).call();
+    Mockito.verify(pushCommand).call();
+    Mockito.verify(pushCommand)
+        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isTrue();
+
+    final var actualContent = Files.readString(bpFileFullPath);
+    assertNoDifferences(bpFileContent, actualContent);
+
+    final var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+        .parse(new InputSource(new StringReader(actualContent)));
+    final var createdXpath = XPathFactory.newInstance().newXPath();
+    final var created = createdXpath.compile("/definitions/@created").evaluate(document);
+    final var updated = createdXpath.compile("/definitions/@modified").evaluate(document);
+    Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+        .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+        .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
   }
 
   @Test
   @SneakyThrows
   public void updateBusinessProcess() {
-    final var versionCandidateId = RandomString.make();
-    String businessProcessName = "businessProcessName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+    final var bpName = RandomString.make();
+    final var bpTitle = RandomString.make();
+    final var bpmnPath = "bpmn";
+    final var bpFileName = String.format("%s.bpmn", bpName);
+    final var bpFileRelativePath = String.format("%s/%s", bpmnPath, bpFileName);
+    final var commitId = RandomString.make();
+    final var bpFileContent = String.format(testProcessFormat, bpName, bpTitle);
+    final var createdDate = LocalDateTime.of(2022, 10, 20, 15, 12);
+    final var updatedDate = LocalDateTime.of(2022, 10, 20, 18, 25);
 
     InitialisationUtils.createTempRepo(versionCandidateId);
+    InitialisationUtils.createProcessXml(String.format(testProcessFormat, bpName, "oldTitle"),
+        versionCandidateId, bpName);
+    final var bpFileFullPath = Path.of(tempRepoDirectory.getPath(), versionCandidateId, bpmnPath,
+        bpFileName);
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isTrue();
+
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    final var changeInfoDto = initChangeInfoDto(changeInfo);
+
     gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    createProcessXml(businessProcess, versionCandidateId, businessProcessName);
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockAddCommand();
-    jGitWrapperMock.mockStatusCommand();
-    jGitWrapperMock.mockRemoteAddCommand();
-    jGitWrapperMock.mockPushCommand();
-    jGitWrapperMock.mockCommitCommand();
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockGetBusinessProcess(businessProcess);
-    jGitWrapperMock.mockGetBusinessProcessList(Map.of("name", businessProcess));
+    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
+    jGitWrapperMock.mockGetFileList(openRepoResult, bpmnPath, List.of(bpFileName));
+    jGitWrapperMock.mockGitFileDates(openRepoResult, bpFileRelativePath, createdDate, updatedDate);
+    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
+    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
+    final var addCommand = jGitWrapperMock.mockAddCommand(openRepoResult, bpFileRelativePath);
+    final var status = jGitWrapperMock.mockStatusCommand(openRepoResult, false);
+    final var commitCommand = jGitWrapperMock.mockCommitCommand(openRepoResult, commitId,
+        changeInfoDto);
+    final var remoteAdd = jGitWrapperMock.mockRemoteAddCommand(openRepoResult);
+    final var pushCommand = jGitWrapperMock.mockPushCommand(openRepoResult);
+    jGitWrapperMock.mockGetFileContent(openRepoResult, bpFileRelativePath, bpFileContent);
+
     mockMvc.perform(MockMvcRequestBuilders.put(
-            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName)
-        .contentType(MediaType.TEXT_XML).content(businessProcess)
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, bpName)
+        .contentType(MediaType.TEXT_XML).content(bpFileContent)
         .accept(MediaType.TEXT_XML)).andExpectAll(
         status().isOk(),
         content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("name"),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("title"));
+        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(bpName),
+        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(bpTitle));
+
+    Mockito.verify(fetchCommand, Mockito.times(2)).call();
+    Mockito.verify(checkoutCommand, Mockito.times(2)).call();
+    Mockito.verify(addCommand).call();
+    Mockito.verify(status).isClean();
+    Mockito.verify(commitCommand).call();
+    Mockito.verify(remoteAdd).call();
+    Mockito.verify(pushCommand).call();
+    Mockito.verify(pushCommand)
+        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isTrue();
+
+    final var actualContent = Files.readString(bpFileFullPath);
+    assertNoDifferences(bpFileContent, actualContent);
+
+    final var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+        .parse(new InputSource(new StringReader(actualContent)));
+    final var createdXpath = XPathFactory.newInstance().newXPath();
+    final var created = createdXpath.compile("/definitions/@created").evaluate(document);
+    final var updated = createdXpath.compile("/definitions/@modified").evaluate(document);
+    Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+        .isEqualTo(createdDate);
+    Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+        .isNotEqualTo(updatedDate)
+        .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
   }
 
   @Test
   @SneakyThrows
   public void deleteBusinessProcess() {
-    final var versionCandidateId = RandomString.make();
-    String businessProcessName = "businessProcessName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "-1";
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(revisionInfo.ref);
+    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
+    final var versionCandidateId = String.valueOf(versionCandidateNumber);
+    final var bpName = RandomString.make();
+    final var bpmnPath = "bpmn";
+    final var bpFileName = String.format("%s.bpmn", bpName);
+    final var bpFileRelativePath = String.format("%s/%s", bpmnPath, bpFileName);
+    final var commitId = RandomString.make();
+
+    InitialisationUtils.createTempRepo(versionCandidateId);
+    InitialisationUtils.createProcessXml(RandomString.make(), versionCandidateId, bpName);
+    final var bpFileFullPath = Path.of(tempRepoDirectory.getPath(), versionCandidateId, bpmnPath,
+        bpFileName);
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isTrue();
+
+    final var changeInfo = initChangeInfo(versionCandidateNumber);
+    final var changeInfoDto = initChangeInfoDto(changeInfo);
+
     gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetBusinessProcessList(Map.of(businessProcessName, businessProcess));
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
+    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
+    jGitWrapperMock.mockGetFileList(openRepoResult, bpmnPath, List.of(bpFileName));
+    jGitWrapperMock.mockGitFileDates(openRepoResult, bpFileRelativePath, LocalDateTime.now(),
+        LocalDateTime.now());
+    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
+    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
+    final var rmCommand = jGitWrapperMock.mockRmCommand(openRepoResult, bpFileRelativePath);
+    final var status = jGitWrapperMock.mockStatusCommand(openRepoResult, false);
+    final var commitCommand = jGitWrapperMock.mockCommitCommand(openRepoResult, commitId,
+        changeInfoDto);
+    final var remoteAdd = jGitWrapperMock.mockRemoteAddCommand(openRepoResult);
+    final var pushCommand = jGitWrapperMock.mockPushCommand(openRepoResult);
+
     mockMvc.perform(MockMvcRequestBuilders.delete(
-            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, businessProcessName))
+            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, bpName))
         .andExpect(status().isNoContent());
 
-    Mockito.verify(versionCandidateCloneResult).close();
+    Mockito.verify(fetchCommand, Mockito.times(2)).call();
+    Mockito.verify(checkoutCommand, Mockito.times(2)).call();
+    Mockito.verify(rmCommand).call();
+    Mockito.verify(status).isClean();
+    Mockito.verify(commitCommand).call();
+    Mockito.verify(remoteAdd).call();
+    Mockito.verify(pushCommand).call();
+    Mockito.verify(pushCommand)
+        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+
+    Assertions.assertThat(bpFileFullPath.toFile().exists()).isFalse();
+  }
+
+  private static void assertNoDifferences(String bpFileContent, String actualContent) {
+    final var documentDiff = DiffBuilder
+        .compare(actualContent)
+        .withTest(bpFileContent)
+        .withAttributeFilter(
+            attr -> !attr.getName().equals("rrm:modified") && !attr.getName().equals("rrm:created"))
+        .build();
+    Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
   }
 }
