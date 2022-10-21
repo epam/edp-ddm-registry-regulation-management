@@ -1,0 +1,11 @@
+{
+  "type": "form",
+  "components": [],
+  "title": "Внести фізичні фактори1",
+  "path": "add-fizfactors1",
+  "name": "add-fizfactors1",
+  "display": "form",
+  "submissionAccess": [],
+  "created": "2022-12-21T13:52:31.357Z",
+  "modified": "2022-12-22T14:52:23.745Z"
+}

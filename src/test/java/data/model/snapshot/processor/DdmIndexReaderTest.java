@@ -45,14 +45,14 @@ public class DdmIndexReaderTest {
   DdmIndexReader indexReader;
 
   @Test
-  void readNamedObjectTest(){
+  void readNamedObjectTest() {
     Mockito.when(index.getName()).thenReturn(SUFFIX_M2M);
     indexReader.readNamedObject(index);
     Mockito.verify(ddmIndexRepository, Mockito.never()).save(any());
   }
 
   @Test
-  void readNamedObjectSaveCalledTest(){
+  void readNamedObjectSaveCalledTest() {
     Mockito.when(index.getName()).thenReturn("index");
     Mockito.when(index.getParent()).thenReturn(table);
     Mockito.when(table.getPrimaryKey()).thenReturn(primaryKey);

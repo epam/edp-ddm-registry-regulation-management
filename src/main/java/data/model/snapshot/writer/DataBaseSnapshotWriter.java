@@ -56,7 +56,7 @@ public class DataBaseSnapshotWriter {
     var dataModelSnapshotDirectoryPath = SNAPSHOTS_PATH + entity;
     var file = new File(FilenameUtils.normalizeNoEndSeparator(dataModelSnapshotDirectoryPath), FilenameUtils.getName(filename));
     var directory = file.getParentFile();
-    if(directory != null) {
+    if (directory != null) {
       createDirectory(directory);
     }
     try (var writer = new FileWriter(file)) {

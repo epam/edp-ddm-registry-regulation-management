@@ -44,7 +44,6 @@ public class PersistencePublicConfiguration {
     return DataSourceBuilder.create().build();
   }
 
-
   @Bean
   public JpaVendorAdapter hibernateJpaVendorAdapter() {
     return new HibernateJpaVendorAdapter();

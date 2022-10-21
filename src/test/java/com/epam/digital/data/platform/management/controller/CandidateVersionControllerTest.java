@@ -16,8 +16,9 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
@@ -36,10 +37,8 @@ import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -175,7 +174,7 @@ class CandidateVersionControllerTest {
   @SneakyThrows
   void declineTest() {
     Mockito.doNothing().when(versionManagementService).decline("1");
-    mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1","decline")))
+    mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1", "decline")))
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/decline/POST"));
     Mockito.verify(versionManagementService).decline("1");
@@ -197,7 +196,7 @@ class CandidateVersionControllerTest {
     Mockito.doNothing().when(versionManagementService).rebase("1");
     mockMvc.perform(get(String.format("%s/%s/%s", BASE_URL, "1", "rebase")))
         .andExpect(status().isOk())
-    .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+        .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
     Mockito.verify(versionManagementService).rebase("1");
   }
 

@@ -151,7 +151,8 @@ public class VersionManagementServiceImpl implements VersionManagementService {
             .equals(FileStatus.CURRENT))
         .map(this::toChangeInfo)
         .collect(Collectors.toList());
-    log.debug("Changed: {} forms and {} business-processes", forms.size(), businessProcesses.size());
+    log.debug("Changed: {} forms and {} business-processes", forms.size(),
+        businessProcesses.size());
     return VersionChanges.builder()
         .changedBusinessProcesses(businessProcesses)
         .changedForms(forms)

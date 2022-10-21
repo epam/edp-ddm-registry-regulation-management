@@ -70,13 +70,13 @@ class OpenShiftServiceTest {
 
     Job exampleJob = createJobBuilder().build();
     server.expect()
-            .withPath("/apis/batch/v1/namespaces/test/jobs")
-            .andReturn(HttpURLConnection.HTTP_OK, new JobListBuilder().addNewItemLike(exampleJob).and().build())
-            .always();
+        .withPath("/apis/batch/v1/namespaces/test/jobs")
+        .andReturn(HttpURLConnection.HTTP_OK, new JobListBuilder().addNewItemLike(exampleJob).and().build())
+        .always();
     server.expect()
-            .withPath("/apis/batch/v1/namespaces/test/jobs")
-            .andReturn(HttpURLConnection.HTTP_OK, exampleJob)
-            .once();
+        .withPath("/apis/batch/v1/namespaces/test/jobs")
+        .andReturn(HttpURLConnection.HTTP_OK, exampleJob)
+        .once();
     when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
 
     openShiftService.startImport(securityContext());
@@ -91,7 +91,7 @@ class OpenShiftServiceTest {
     when(userImportService.getFileInfo(any())).thenReturn(new CephFileInfoDto());
 
     var exception = assertThrows(GetProcessingException.class,
-            () -> openShiftService.startImport(securityContext()));
+        () -> openShiftService.startImport(securityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("Bucket is empty, nothing to import");
   }
@@ -101,32 +101,32 @@ class OpenShiftServiceTest {
     var cephEntityReadDto = new CephFileInfoDto(UUID.randomUUID().toString(), "test.txt", 1L);
     when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
     var exception = assertThrows(OpenShiftInvocationException.class,
-            () -> openShiftService.startImport(securityContext()));
+        () -> openShiftService.startImport(securityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("Unable to create Job");
   }
 
   private JobBuilder createJobBuilder() {
     return new JobBuilder()
-            .withApiVersion("batch/v1")
-            .withNewMetadata()
-            .withName("example")
-            .withUid("3Dc4c8746c-94fd-47a7-ac01-11047c0323b4")
-            .withLabels(Collections.singletonMap("name", "example"))
-            .withAnnotations(Collections.singletonMap("annotation1", "some-very-long-annotation"))
-            .endMetadata()
-            .withNewSpec()
-            .withNewTemplate()
-            .withNewSpec()
-            .addNewContainer()
-            .withName("pi")
-            .withImage("perl")
-            .withArgs("perl", "-Mbignum=bpi", "-wle", "print bpi(2000)")
-            .endContainer()
-            .withRestartPolicy("Never")
-            .endSpec()
-            .endTemplate()
-            .endSpec();
+        .withApiVersion("batch/v1")
+        .withNewMetadata()
+        .withName("example")
+        .withUid("3Dc4c8746c-94fd-47a7-ac01-11047c0323b4")
+        .withLabels(Collections.singletonMap("name", "example"))
+        .withAnnotations(Collections.singletonMap("annotation1", "some-very-long-annotation"))
+        .endMetadata()
+        .withNewSpec()
+        .withNewTemplate()
+        .withNewSpec()
+        .addNewContainer()
+        .withName("pi")
+        .withImage("perl")
+        .withArgs("perl", "-Mbignum=bpi", "-wle", "print bpi(2000)")
+        .endContainer()
+        .withRestartPolicy("Never")
+        .endSpec()
+        .endTemplate()
+        .endSpec();
   }
 
   private SecurityContext securityContext() {

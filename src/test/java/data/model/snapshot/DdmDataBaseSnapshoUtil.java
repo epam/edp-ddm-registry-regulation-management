@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class DdmDataBaseSnapshoUtil {
 
-  public static DdmDataBaseSnapshot getSnapshot(){
+  public static DdmDataBaseSnapshot getSnapshot() {
     DdmDataBaseSnapshot snapshot = new DdmDataBaseSnapshot();
     snapshot.setDdmRolePermissions(getDdmRolePermissions());
     snapshot.setDdmTables(getDdmTables());

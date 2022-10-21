@@ -25,6 +25,5 @@ public class DdmColumn {
   private String type; // enum with possible types
   private String defaultValue;
   private Boolean notNullFlag;
-
   private String tableName;
 }

@@ -47,7 +47,7 @@ public class InMemDdmColumnRepositoryTest {
   InMemDdmColumnRepository columnRepository;
 
   @BeforeEach
-  void setup(){
+  void setup() {
     final DdmColumn column = getTableColumns().get("column");
     Mockito.when(tableRepository.get(column.getTableName())).thenReturn(table);
     Mockito.when(table.getColumns()).thenReturn(columnMap);

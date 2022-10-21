@@ -34,9 +34,9 @@ public class JwtClaims {
 
   @JsonCreator
   public JwtClaims(@JsonProperty("sub") String subject,
-                   @JsonProperty("edrpou") String edrpou,
-                   @JsonProperty("drfo") String drfo,
-                   @JsonProperty("fullName") String fullName) {
+      @JsonProperty("edrpou") String edrpou,
+      @JsonProperty("drfo") String drfo,
+      @JsonProperty("fullName") String fullName) {
     this.subject = subject;
     this.edrpou = edrpou;
     this.drfo = drfo;

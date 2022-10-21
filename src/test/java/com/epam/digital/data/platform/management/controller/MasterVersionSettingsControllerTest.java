@@ -60,7 +60,7 @@ class MasterVersionSettingsControllerTest {
 
   @BeforeEach
   public void setUp(WebApplicationContext webApplicationContext,
-                    RestDocumentationContextProvider restDocumentation) {
+      RestDocumentationContextProvider restDocumentation) {
 
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
         .apply(documentationConfiguration(restDocumentation)).build();

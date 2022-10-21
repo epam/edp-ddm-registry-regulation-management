@@ -29,6 +29,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.assertj.core.api.Assertions;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(SpringExtension.class)
 class GlobalSettingServiceImplTest {
@@ -87,13 +89,17 @@ class GlobalSettingServiceImplTest {
     var settings = GlobalSettingsInfo.builder().build();
     Assertions.assertThatCode(() -> settingServiceImpl.updateSettings(VERSION_ID, settings))
         .doesNotThrowAnyException();
+    Mockito.verify(repository)
+        .writeFile(eq("settings/settings.yml"), anyString());
+    Mockito.verify(repository)
+        .writeFile(eq("global-vars/camunda-global-system-vars.yml"), anyString());
   }
 
   @Test
   @SneakyThrows
   void getSettings() {
     Mockito.when(repository.readFile(GLOBAL_VARS_PATH))
-      .thenReturn(GLOBAL_SETTINGS_VALUE);
+        .thenReturn(GLOBAL_SETTINGS_VALUE);
     Mockito.when(repository.readFile(SETTINGS_PATH)).thenReturn(SETTINGS_VALUE);
     GlobalSettingsInfo expected = GlobalSettingsInfo.builder()
         .supportEmail("support@registry.gov.ua")

@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -41,7 +40,7 @@ public class MasterVersionTableControllerIT extends BaseIT {
 
   @BeforeAll
   @SneakyThrows
-  static void beforeAll(){
+  static void beforeAll() {
     Files.createDirectories(Paths.get(DATA_MODEL_SNAPSHOT_DIRECTORY));
   }
 

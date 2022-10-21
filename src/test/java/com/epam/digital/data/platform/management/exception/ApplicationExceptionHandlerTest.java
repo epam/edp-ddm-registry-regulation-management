@@ -267,11 +267,13 @@ class ApplicationExceptionHandlerTest {
     var formName = RandomString.make();
     var versionName = RandomString.make();
     var content = RandomString.make();
-    doThrow(FormAlreadyExistsException.class).when(formService).createForm(formName, content, versionName);
+    doThrow(FormAlreadyExistsException.class).when(formService)
+        .createForm(formName, content, versionName);
     when(messageResolver.getMessage(FileValidatorErrorMessageTitle.FORM_ALREADY_EXISTS)).thenReturn(
         "Неунікальна службова назва форми");
 
-    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/forms/{formName}", versionName, formName).content(content))
+    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/forms/{formName}", versionName,
+            formName).content(content))
         .andExpect(status().isConflict())
         .andExpectAll(
             jsonPath("$.code").value("FORM_ALREADY_EXISTS_EXCEPTION"),
