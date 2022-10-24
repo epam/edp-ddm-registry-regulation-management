@@ -18,7 +18,6 @@ package com.epam.digital.data.platform.management;
 
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
 import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,6 +28,7 @@ import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
 import java.util.HashMap;
 import lombok.SneakyThrows;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
@@ -55,7 +55,7 @@ public class CandidateVersionSettingsControllerIT extends BaseIT {
   @Test
   @SneakyThrows
   void getSettings() {
-    String versionCandidateId = "1";
+    String versionCandidateId = RandomString.make();
     String formName = "formName";
 
     ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");

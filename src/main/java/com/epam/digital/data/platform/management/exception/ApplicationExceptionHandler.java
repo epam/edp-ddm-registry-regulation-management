@@ -56,6 +56,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
   private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
   private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
+  private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
 
   private final MessageResolver messageResolver;
 
@@ -227,6 +228,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Could not parse settings files");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(SETTINGS_PROCESSING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleRepositoryNotFoundException(
+      RepositoryNotFoundException exception) {
+    log.error("Repository {} not found", exception.getVersionId());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(REPOSITORY_NOT_FOUND_EXCEPTION, exception));
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

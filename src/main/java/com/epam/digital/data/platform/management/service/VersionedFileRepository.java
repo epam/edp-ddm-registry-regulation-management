@@ -32,7 +32,7 @@ public interface VersionedFileRepository {
 
   boolean isFileExists(String path) throws Exception;
 
-  String deleteFile(String path) throws Exception;
+  void deleteFile(String path) throws Exception;
 
   String getVersionId();
 
