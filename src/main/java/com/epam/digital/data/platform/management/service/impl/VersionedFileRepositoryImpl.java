@@ -146,17 +146,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public String deleteFile(String path) throws Exception {
-    if (!isFileExists(path)) {
-      return FILE_DOES_NOT_EXIST;
-    }
-
+  public void deleteFile(String path) throws Exception {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
-      return jGitService.delete(changeInfo, path);
+      jGitService.delete(changeInfo, path);
     }
-    return FILE_DOES_NOT_EXIST;
   }
 
   @Override

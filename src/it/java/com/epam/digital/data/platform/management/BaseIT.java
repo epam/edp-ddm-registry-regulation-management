@@ -63,6 +63,7 @@ public abstract class BaseIT {
   protected ObjectMapper objectMapper;
 
   protected final String testProcessFormat = getResource("test-process-format.bpmn");
+  protected final String testForm = getResource("test-form-sample.json");
   protected final String testProcessFormatWithDates = getResource(
       "test-process-format-with-dates.bpmn");
   protected final String businessProcess = getResource("test-process.bpmn");

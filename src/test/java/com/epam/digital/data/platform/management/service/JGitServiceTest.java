@@ -24,6 +24,7 @@ import static org.mockito.Mockito.times;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GitCommandException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
+import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
@@ -589,10 +590,9 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void testAmendRepositoryNotExist() {
-    String amend = jGitService.amend(VersioningRequestDto.builder()
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.amend(VersioningRequestDto.builder()
         .versionName("1")
-        .build(), new ChangeInfoDto());
-    Assertions.assertThat(amend).isNull();
+        .build(), new ChangeInfoDto()));
   }
 
   @Test
@@ -613,8 +613,7 @@ class JGitServiceTest {
 
     ChangeInfoDto changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setRefs("refs");
-    String amend = jGitService.amend(requestDto, changeInfoDto);
-    Assertions.assertThat(amend).isNull();
+    jGitService.amend(requestDto, changeInfoDto);
     Mockito.verify(git, never()).add();
     Mockito.verify(git, never()).rm();
   }
@@ -622,9 +621,7 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void getFileContentRepoNotExistTest() {
-    String version = jGitService.getFileContent("version", "/");
-    Assertions.assertThat(version)
-        .isEqualTo("Repository does not exist");
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.getFileContent("version", "/"));
   }
 
   @Test
@@ -634,14 +631,8 @@ class JGitServiceTest {
     Assertions.assertThat(repo.createNewFile()).isTrue();
 
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
-    String version = jGitService.getFileContent("version", "");
-    Assertions.assertThat(version)
-        .isEqualTo("Repository does not exist");
-
-    version = jGitService.getFileContent("version", null);
-    Assertions.assertThat(version)
-        .isEqualTo("Repository does not exist");
-
+    Assertions.assertThat(jGitService.getFileContent("version", "")).isNull();
+    Assertions.assertThat(jGitService.getFileContent("version", null)).isNull();
     Mockito.verify(jGitWrapper, times(2)).open(repo);
   }
 
@@ -657,9 +648,7 @@ class JGitServiceTest {
     Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
     Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
     Mockito.when(treeWalk.next()).thenReturn(false);
-    String version = jGitService.getFileContent("version", "/forms");
-    Assertions.assertThat(version)
-        .isEqualTo("Repository does not exist");
+    Assertions.assertThat(jGitService.getFileContent("version", "/forms")).isNull();
     Mockito.verify(treeWalk).next();
   }
 
@@ -679,8 +668,7 @@ class JGitServiceTest {
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
     Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    String formNotDeleted = jGitService.delete(dto, "form");
-    Assertions.assertThat(formNotDeleted).isNull();
+    jGitService.delete(dto, "form");
     Mockito.verify(checkoutCommand).call();
     Mockito.verify(git, never()).add();
     Mockito.verify(git, never()).rm();
@@ -691,7 +679,6 @@ class JGitServiceTest {
   void deleteRepoNotExistTest() {
     var changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setNumber("1");
-    String formNotDeleted = jGitService.delete(changeInfoDto, "form");
-    Assertions.assertThat(formNotDeleted).isNull();
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.delete(changeInfoDto, "form"));
   }
 }

@@ -83,7 +83,7 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public String deleteFile(String path) throws Exception {
+  public void deleteFile(String path) throws Exception {
     throw new OperationNotSupportedException();
   }
 

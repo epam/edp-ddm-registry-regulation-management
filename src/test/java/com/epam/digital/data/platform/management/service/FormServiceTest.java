@@ -85,7 +85,7 @@ class FormServiceTest {
     var expectedFormResponseDto = FormResponse.builder().name("form").path("forms/form.json")
         .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
-        .title("Внести фізичні фактори1").build();
+        .title("Update physical factors").build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 

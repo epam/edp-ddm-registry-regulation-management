@@ -61,9 +61,9 @@ public interface JGitService {
 
   String getFileContent(String versionName, String filePath) throws Exception;
 
-  String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception;
+  void amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception;
 
-  String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception;
+  void delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception;
 
   void deleteRepo(String repoName) throws IOException;
 }
