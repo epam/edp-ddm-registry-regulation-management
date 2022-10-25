@@ -63,7 +63,7 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     GlobalVarsDto globalVarsDto = new GlobalVarsDto(settings.getThemeFile(), settings.getSupportEmail());
-    SettingDto settingDto = new SettingDto(settings.getTitleFull(), settings.getTitle(), settings.getBlacklistedDomains());
+    SettingDto settingDto = new SettingDto(settings.getTitleFull(), settings.getTitle()/*, settings.getBlacklistedDomains()*/); // TODO uncomment after validator-cli update
     writeSettingsContent(repo, mapper, settingDto);
     writeGlobalVarsContent(repo, mapper, globalVarsDto);
   }
@@ -81,7 +81,7 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
       GlobalVarsDto globalVarsDto = mapper.readValue(camundaGlobalVarsContent, GlobalVarsDto.class);
       log.debug("Parsed global var file");
       return GlobalSettingsInfo.builder()
-          .blacklistedDomains(settingDto.getBlacklistedDomains())
+//          .blacklistedDomains(settingDto.getBlacklistedDomains()) TODO uncomment after validator-cli update
           .titleFull(settingDto.getTitleFull())
           .supportEmail(globalVarsDto.getSupportEmail())
           .themeFile(globalVarsDto.getThemeFile())

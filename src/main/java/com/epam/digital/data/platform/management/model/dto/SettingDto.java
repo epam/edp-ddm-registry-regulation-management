@@ -35,16 +35,17 @@ public class SettingDto {
   public SettingDto() {
   }
 
-  public SettingDto(String titleFull, String title, List<String> domains) {
-    settings.getGeneral().getValidation().getEmail().getBlacklist().setDomains(domains);
+  public SettingDto(String titleFull, String title/*, List<String> domains*/) {
+//TODO uncomment after validator-cli update
+//    settings.getGeneral().getValidation().getEmail().getBlacklist().setDomains(domains);
     settings.getGeneral().setTitleFull(titleFull);
     settings.getGeneral().setTitle(title);
   }
-
-  @JsonIgnore
-  public List<String> getBlacklistedDomains() {
-    return settings.general.validation.email.blacklist.domains;
-  }
+//TODO uncomment after validator-cli update
+//  @JsonIgnore
+//  public List<String> getBlacklistedDomains() {
+//    return settings.general.validation.email.blacklist.domains;
+//  }
 
   @JsonIgnore
   public String getTitleFull() {
@@ -65,11 +66,13 @@ public class SettingDto {
   @Getter
   @Setter
   private static class General {
-    private Validation validation = new Validation();
+//TODO uncomment after validator-cli update
+//    private Validation validation = new Validation();
     private String titleFull;
     private String title;
   }
 
+/* TODO uncomment after validator-cli update
   @Getter
   @Setter
   private static class Validation {
@@ -87,4 +90,6 @@ public class SettingDto {
   private static class Email {
     private Blacklist blacklist = new Blacklist();
   }
+
+ */
 }

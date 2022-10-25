@@ -75,7 +75,7 @@ class GlobalSettingServiceImplTest {
         .supportEmail("support@registry.gov.ua")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
-        .blacklistedDomains(List.of("ya.ua", "ya.ru"))
+//        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .themeFile("white-theme.js")
         .build();
     settingServiceImpl.updateSettings(VERSION_ID, expected);
@@ -105,7 +105,7 @@ class GlobalSettingServiceImplTest {
         .supportEmail("support@registry.gov.ua")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
-        .blacklistedDomains(List.of("ya.ua", "ya.ru"))
+//        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .themeFile("white-theme.js")
         .build();
     GlobalSettingsInfo actual = settingServiceImpl.getGlobalSettings(VERSION_ID);

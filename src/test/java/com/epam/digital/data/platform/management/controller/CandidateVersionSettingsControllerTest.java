@@ -73,7 +73,7 @@ class CandidateVersionSettingsControllerTest {
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
         .supportEmail("support@registry.gov.ua")
-        .blacklistedDomains(List.of("ya.ua", "ya.ru"))
+//        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.when(globalSettingService.getGlobalSettings("1")).thenReturn(expected);
 
@@ -85,8 +85,8 @@ class CandidateVersionSettingsControllerTest {
             jsonPath("$.titleFull", is("<Назва реєстру>")),
             jsonPath("$.title", is("mdtuddm")),
             jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua")),
-            jsonPath("$.blacklistedDomains", hasSize(2))
+            jsonPath("$.supportEmail", is("support@registry.gov.ua"))
+//            jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
         )
         .andDo(document("versions/candidates/{versionCandidateId}/settings/GET"));
     Mockito.verify(globalSettingService).getGlobalSettings("1");
@@ -100,7 +100,7 @@ class CandidateVersionSettingsControllerTest {
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
         .supportEmail("support@registry.gov.ua")
-        .blacklistedDomains(List.of("ya.ua", "ya.ru"))
+//        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.when(globalSettingService.getGlobalSettings("1")).thenReturn(expected);
 
@@ -114,8 +114,8 @@ class CandidateVersionSettingsControllerTest {
             jsonPath("$.titleFull", is("<Назва реєстру>")),
             jsonPath("$.title", is("mdtuddm")),
             jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua")),
-            jsonPath("$.blacklistedDomains", hasSize(2))
+            jsonPath("$.supportEmail", is("support@registry.gov.ua"))
+//            jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
         )
         .andDo(document("versions/candidates/{versionCandidateId}/settings/PUT"));
     Mockito.verify(globalSettingService).getGlobalSettings("1");
