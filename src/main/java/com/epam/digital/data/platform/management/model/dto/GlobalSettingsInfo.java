@@ -34,7 +34,7 @@ public class GlobalSettingsInfo {
   private String title;
   private String themeFile;
   private String supportEmail;
-  private List<String> blacklistedDomains;
+//  private List<String> blacklistedDomains; TODO uncomment after validator-cli update
 
 
 }

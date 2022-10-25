@@ -74,7 +74,7 @@ class MasterVersionSettingsControllerTest {
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
         .supportEmail("support@registry.gov.ua")
-        .blacklistedDomains(List.of("ya.ua", "ya.ru"))
+//        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("head-branch");
     Mockito.when(globalSettingServiceImpl.getGlobalSettings("head-branch")).thenReturn(expected);
@@ -87,8 +87,8 @@ class MasterVersionSettingsControllerTest {
             jsonPath("$.titleFull", is("<Назва реєстру>")),
             jsonPath("$.title", is("mdtuddm")),
             jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua")),
-            jsonPath("$.blacklistedDomains", hasSize(2))
+            jsonPath("$.supportEmail", is("support@registry.gov.ua"))
+//            jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
         )
         .andDo(document("versions/master/settings/GET"));
     Mockito.verify(globalSettingServiceImpl).getGlobalSettings("head-branch");
