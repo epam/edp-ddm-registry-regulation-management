@@ -37,3 +37,7 @@ image::low-level-component-structure.svg[admin-portal-backend low-level-componen
 - Spring Cloud Kubernetes - можливість конфігурувати сервіс через Config Map, Secrets
 - Spring Boot Actuator - monitoring
 - SLF4/Log4J 2 (ddm-starter-logger) - логування
+
+=== Мульти-модульна структура компоненту
+
+image::module-structure.svg[admin-portal-backend multi module component structure]
