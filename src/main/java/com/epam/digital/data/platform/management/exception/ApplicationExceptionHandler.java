@@ -16,9 +16,12 @@
 
 package com.epam.digital.data.platform.management.exception;
 
+import com.epam.digital.data.platform.management.controller.BusinessProcess;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
+import java.lang.annotation.Annotation;
+import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -56,6 +59,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
   private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
   private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
+  private static final String BUSINESS_PROCESS_CONTENT_EXCEPTION = "BUSINESS_PROCESS_CONTENT_EXCEPTION";
+  private static final String CONSTRAINT_VIOLATION_EXCEPTION = "CONSTRAINT_VIOLATION_EXCEPTION";
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
   private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
@@ -254,6 +259,30 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Repository {} not found", exception.getVersionId());
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(REPOSITORY_NOT_FOUND_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleConstraintViolationException(
+      ConstraintViolationException exception) {
+    if (getAnnotationFromConstraintViolationException(exception) instanceof BusinessProcess) {
+      log.warn("Business process content has errors");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(newDetailedResponse(BUSINESS_PROCESS_CONTENT_EXCEPTION, exception));
+    }
+    log.error("Constraint violation exception");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(CONSTRAINT_VIOLATION_EXCEPTION, exception));
+  }
+
+  private Annotation getAnnotationFromConstraintViolationException(ConstraintViolationException exception) {
+    var constraintViolations = exception.getConstraintViolations();
+    if (constraintViolations != null && !constraintViolations.isEmpty()) {
+      var next = constraintViolations.iterator().next();
+      if(next != null && next.getConstraintDescriptor() != null) {
+        return next.getConstraintDescriptor().getAnnotation();
+      }
+    }
+    return null;
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

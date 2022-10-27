@@ -187,7 +187,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
   public void createBusinessProcess() {
     final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
     final var versionCandidateId = String.valueOf(versionCandidateNumber);
-    final var bpName = RandomString.make();
+    final var bpName = "bp-" + RandomString.make();
     final var bpTitle = RandomString.make();
     final var bpmnPath = "bpmn";
     final var bpFileName = String.format("%s.bpmn", bpName);
@@ -256,7 +256,7 @@ public class CandidateVersionBPControllerIT extends BaseIT {
   public void updateBusinessProcess() {
     final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
     final var versionCandidateId = String.valueOf(versionCandidateNumber);
-    final var bpName = RandomString.make();
+    final var bpName = "bp-" + RandomString.make();
     final var bpTitle = RandomString.make();
     final var bpmnPath = "bpmn";
     final var bpFileName = String.format("%s.bpmn", bpName);
