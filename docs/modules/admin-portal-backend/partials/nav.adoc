@@ -2,15 +2,19 @@
 
 ***** xref:admin-portal-backend:context.adoc[Опис контексту компоненту]
 
+***** xref:admin-portal-backend:integration.adoc[Взаємодія з іншими сервісами платформи та користувачами]
+
 ***** xref:admin-portal-backend:structure.adoc[Структура компоненту]
 ****** xref:admin-portal-backend:forms/summary.adoc[Форми]
 ****** xref:admin-portal-backend:business-processes/summary.adoc[Бізнес-процеси]
 ****** xref:admin-portal-backend:data-model/summary.adoc[Модель даних]
+****** xref:admin-portal-backend:versions/summary.adoc[Версії регламенту]
 
-***** xref:admin-portal-backend:integration.adoc[Взаємодія з іншими сервісами платформи та користувачами]
+***** xref:admin-portal-backend:git-approach.adoc[Синхронізація з gerrit]
 
 ***** xref:admin-portal-backend:deployment.adoc[Діаграма розгортання]
 
 ***** xref:admin-portal-backend:technologies.adoc[Технологічний стек]
 
 ***** xref:admin-portal-backend:rest-api/rest-api-generated/index.adoc[RestAPI]
+****** xref:admin-portal-backend:rest-api/rest-api-partials/optimistic-locking.adoc[Optimistic locking]

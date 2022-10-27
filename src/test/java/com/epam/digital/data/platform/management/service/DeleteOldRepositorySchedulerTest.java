@@ -36,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class DeleteOldRepositorySchedulerTest {
+
   @Mock
   private JGitServiceImpl jGitService;
   @Mock
@@ -46,7 +47,7 @@ public class DeleteOldRepositorySchedulerTest {
 
   @Test
   @SneakyThrows
-  void deleteOldRepositoriesSuccessTest(){
+  void deleteOldRepositoriesSuccessTest() {
     String repo = "1";
     List<String> ids = List.of(repo);
     Mockito.when(gerritService.getClosedMrIds()).thenReturn(ids);
@@ -56,7 +57,7 @@ public class DeleteOldRepositorySchedulerTest {
 
   @Test
   @SneakyThrows
-  void noClosedMrsTest(){
+  void noClosedMrsTest() {
     List<String> ids = new ArrayList<>();
     Mockito.when(gerritService.getClosedMrIds()).thenReturn(ids);
     scheduler.deleteOldRepositories();

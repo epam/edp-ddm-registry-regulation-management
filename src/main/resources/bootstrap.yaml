@@ -19,6 +19,8 @@ spring:
           - /app/secrets/userimportceph
           - /app/secrets/gerritcreds
           - /app/secrets/openshift
+          - /app/secrets/dbcredentials-public
+          - /app/secrets/dbcredentials-registry
     vault:
       uri: ${VAULT_URI}
       authentication: KUBERNETES
@@ -36,6 +38,20 @@ spring:
   config:
     activate:
       on-profile: local
+
+logging:
+  config: ''
+---
+spring:
+  cloud:
+    kubernetes:
+      config:
+        enabled: false
+    vault:
+      enabled: false
+  config:
+    activate:
+      on-profile: test
 
 logging:
   config: ''

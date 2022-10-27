@@ -1,0 +1,8 @@
+[source,http,options="nowrap"]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 143
+
+[{"name":"John_Does_process","title":"John Doe added new component","created":"2022-09-29T12:43:48.656Z","updated":"2022-09-29T12:43:48.657Z"}]
+----

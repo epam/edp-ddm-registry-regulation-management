@@ -51,7 +51,7 @@ class TokenParserServiceTest {
   @Test
   void shouldThrowJwtParsingExceptionDueToParsingException() {
     var exception = assertThrows(JwtParsingException.class,
-            () -> tokenParserService.parseClaims("qwert"));
+        () -> tokenParserService.parseClaims("qwert"));
 
     assertThat(exception.getMessage()).isEqualTo("Error while JWT parsing");
   }

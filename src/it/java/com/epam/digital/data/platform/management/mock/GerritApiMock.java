@@ -32,20 +32,17 @@ import com.google.gerrit.extensions.common.ChangeInput;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mockito.Mockito;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import static org.mockito.ArgumentMatchers.any;
 
 @Component
 @RequiredArgsConstructor
@@ -56,7 +53,6 @@ public class GerritApiMock {
   @Getter
   private final GerritApiImpl gerritApi = Mockito.mock(GerritApiImpl.class);
   private final Changes changes = Mockito.mock(Changes.class);
-  private RevisionApi revisionApi;
   private static final String CODE_REVIEW_LABEL = "Code-Review";
   private static final short CODE_REVIEW_VALUE = 2;
   private static final String VERIFIED_LABEL = "Verified";
@@ -102,7 +98,7 @@ public class GerritApiMock {
 
     for (ChangeInfo changeInfo : changeInfoList) {
       ChangeApi changeApi = Mockito.mock(ChangeApi.class);
-      revisionApi = Mockito.mock(RevisionApi.class);
+      final var revisionApi = Mockito.mock(RevisionApi.class);
       Mockito.when(changes.id(changeInfo.changeId)).thenReturn(changeApi);
       Mockito.when(changeApi.get()).thenReturn(changeInfo);
       Mockito.when(changeApi.current()).thenReturn(revisionApi);
@@ -116,12 +112,12 @@ public class GerritApiMock {
   }
 
   @SneakyThrows
-  public void mockGetMRByNumber(String number, @Nullable ChangeInfo changeInfo) {
-    var query = Mockito.mock(QueryRequest.class);
-    var queryString = String.format("project:%s+%s", gerritPropertiesConfig.getRepository(), number);
-    ChangeApi changeApi = Mockito.mock(ChangeApi.class);
+  public void mockGetChangeInfo(final String number, @Nullable final ChangeInfo changeInfo) {
+    final var repo = gerritPropertiesConfig.getRepository();
+    final var queryString = String.format("project:%s+%s", repo, number);
+
+    final var query = Mockito.mock(QueryRequest.class);
     Mockito.when(changes.query(queryString)).thenReturn(query);
-    revisionApi = Mockito.mock(RevisionApi.class);
     if (Objects.isNull(changeInfo)) {
       Mockito.when(query.get()).thenReturn(List.of());
       return;
@@ -130,24 +126,36 @@ public class GerritApiMock {
       changeInfo.changeId = UUID.randomUUID().toString();
     }
     Mockito.when(query.get()).thenReturn(List.of(changeInfo));
-    var mergeableInfo = new MergeableInfo();
-    mergeableInfo.mergeable = true;
+
+    final var changeApi = Mockito.mock(ChangeApi.class);
     Mockito.when(changes.id(changeInfo.changeId)).thenReturn(changeApi);
     Mockito.when(changeApi.get()).thenReturn(changeInfo);
+
+    final var revisionApi = Mockito.mock(RevisionApi.class);
     Mockito.when(changeApi.current()).thenReturn(revisionApi);
+
+    final var mergeableInfo = new MergeableInfo();
+    mergeableInfo.mergeable = changeInfo.mergeable;
     Mockito.when(revisionApi.mergeable()).thenReturn(mergeableInfo);
   }
 
   @SneakyThrows
-  public void mockSubmit() {
-    ReviewResult review = new ReviewResult();
-    review.ready = true;
-    ReviewInput reviewInput = new ReviewInput();
-    reviewInput.reviewer(gerritPropertiesConfig.getUser(), ReviewerState.REVIEWER, true);
-    reviewInput.label(CODE_REVIEW_LABEL, CODE_REVIEW_VALUE);
-    reviewInput.label(VERIFIED_LABEL, VERIFIED_VALUE);
-    reviewInput.ready = true;
-    Mockito.when(revisionApi.review(any(ReviewInput.class))).thenReturn(review);
+  public void mockSubmit(final String versionName) {
+    final var changeApi = Mockito.mock(ChangeApi.class);
+    Mockito.when(changes.id(versionName)).thenReturn(changeApi);
+
+    final var revisionApi = Mockito.mock(RevisionApi.class);
+    Mockito.when(changeApi.current()).thenReturn(revisionApi);
+
+    final var reviewInput = new ReviewInput()
+        .reviewer(gerritPropertiesConfig.getUser(), ReviewerState.REVIEWER, true)
+        .label(CODE_REVIEW_LABEL, CODE_REVIEW_VALUE)
+        .label(VERIFIED_LABEL, VERIFIED_VALUE)
+        .setReady(true);
+    final var reviewResult = new ReviewResult();
+    reviewResult.ready = true;
+    Mockito.when(revisionApi.review(Mockito.refEq(reviewInput, "reviewers")))
+        .thenReturn(reviewResult);
   }
 
   @SneakyThrows
@@ -159,7 +167,8 @@ public class GerritApiMock {
   }
 
   @SneakyThrows
-  public void mockGetChangesInMr(Map<String, FileInfo> changedFiles) {
+  public void mockGetChangesInMr(String changeId, Map<String, FileInfo> changedFiles) {
+    final var revisionApi = changes.id(changeId).current();
     Mockito.when(revisionApi.files()).thenReturn(changedFiles);
   }
 

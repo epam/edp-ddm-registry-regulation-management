@@ -1,6 +1,6 @@
 == Модульна / структурна діаграма
 
-image::low-level-component-structure.svg[admin-portal-backend low level component structure]
+image::low-level-component-structure.svg[admin-portal-backend low-level-component-structure]
 
 === Security
 
@@ -22,8 +22,7 @@ image::low-level-component-structure.svg[admin-portal-backend low level componen
 - Version management - модуль для організації роботи з версіями-кандидатами регламенту реєстру
 - Forms management - модуль для організації роботи з над формами під час конфігурації регламенту
 - User management - модуль для забезпечення пакетного завантаження користувачів реєстру в keycloak
-- Business process management - модуль для організації роботи з над бізнес процесами під час конфігурації регламенту
-- Report templates management - модель для отримання шаблонів звітів з Redash
+- Business process management - модуль для організації роботи з над бізнес-процесами під час конфігурації регламенту
 - Scheduled services - сервіси, що запускаються періодично
 
 === Інтеграція
@@ -34,7 +33,11 @@ image::low-level-component-structure.svg[admin-portal-backend low level componen
 
 === Зовнішні залежності
 
-- Spring Cloud Sleuth - розподілений трейсинг
+- Spring Cloud Sleuth - distributed tracing
 - Spring Cloud Kubernetes - можливість конфігурувати сервіс через Config Map, Secrets
-- Spring Boot Actuator - моніторинг
+- Spring Boot Actuator - monitoring
 - SLF4/Log4J 2 (ddm-starter-logger) - логування
+
+=== Мульти-модульна структура компоненту
+
+image::module-structure.svg[admin-portal-backend multi module component structure]

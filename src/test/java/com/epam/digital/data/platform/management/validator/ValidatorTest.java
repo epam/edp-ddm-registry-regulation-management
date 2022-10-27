@@ -63,8 +63,8 @@ class ValidatorTest {
     validator = new FileExistenceValidator();
 
     validator.linkWith(new FileNameValidator())
-            .linkWith(new FileEncodingValidator(encodingDetector, "UTF-8"))
-            .linkWith(new FileExtensionValidator("csv"));
+        .linkWith(new FileEncodingValidator(encodingDetector, "UTF-8"))
+        .linkWith(new FileExtensionValidator("csv"));
 
     validationResult = new ValidationResult();
   }
@@ -114,7 +114,7 @@ class ValidatorTest {
     @Test
     void shouldThrowFileLoadProcessingException() {
       var exception = assertThrows(FileLoadProcessingException.class,
-              () -> validator.validate(file, new ValidationResult()));
+          () -> validator.validate(file, new ValidationResult()));
 
       assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file name is missed");
     }
@@ -122,6 +122,7 @@ class ValidatorTest {
 
   @Nested
   class FileExistenceValidatorTest {
+
     @BeforeEach
     void init() {
       validator = new FileExistenceValidator();
@@ -141,7 +142,7 @@ class ValidatorTest {
       when(file.isEmpty()).thenReturn(true);
 
       var exception = assertThrows(FileLoadProcessingException.class,
-              () -> validator.validate(file, new ValidationResult()));
+          () -> validator.validate(file, new ValidationResult()));
 
       assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
     }
@@ -167,7 +168,7 @@ class ValidatorTest {
       when(file.getInputStream()).thenReturn(stream);
       when(encodingDetector.guessEncoding(stream)).thenReturn(encoding);
 
-      validator.validate(file,validationResult);
+      validator.validate(file, validationResult);
 
       verify(file).getInputStream();
       assertEquals(encoding, validationResult.getEncoding());
@@ -181,7 +182,7 @@ class ValidatorTest {
       when(encodingDetector.guessEncoding(stream)).thenReturn("ISO_8859_1");
 
       var exception = assertThrows(FileEncodingException.class,
-              () -> validator.validate(file, new ValidationResult()));
+          () -> validator.validate(file, new ValidationResult()));
 
       verify(file).getInputStream();
       assertThat(exception.getMessage()).isEqualTo("Wrong file encoding, should be UTF-8");
@@ -195,7 +196,7 @@ class ValidatorTest {
       when(encodingDetector.guessEncoding(stream)).thenThrow(new RuntimeException());
 
       var exception = assertThrows(FileLoadProcessingException.class,
-              () -> validator.validate(file, new ValidationResult()));
+          () -> validator.validate(file, new ValidationResult()));
 
       verify(file).getInputStream();
       assertThat(exception.getMessage()).isEqualTo("Error during encoding validation");
@@ -204,6 +205,7 @@ class ValidatorTest {
 
   @Nested
   class FileExtensionValidatorTest {
+
     @BeforeEach
     void init() {
       validator = new FileExtensionValidator("csv");
@@ -226,8 +228,7 @@ class ValidatorTest {
       when(file.getOriginalFilename()).thenReturn("test.txt");
 
       var exception = assertThrows(FileExtensionException.class,
-              () -> validator.validate(file, new ValidationResult()));
-
+          () -> validator.validate(file, new ValidationResult()));
 
       assertThat(exception.getMessage()).isEqualTo("Wrong or missed file extension, should be: csv");
     }

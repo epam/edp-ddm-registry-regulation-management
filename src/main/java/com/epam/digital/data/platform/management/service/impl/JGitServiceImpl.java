@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.GitCommandException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
+import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
@@ -86,22 +87,30 @@ public class JGitServiceImpl implements JGitService {
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
   @Override
-  public void cloneRepo(String versionName) throws Exception {
+  public void cloneRepo(String versionName) {
+    log.debug("Trying to clone repository {}", versionName);
     var directory = getRepositoryDir(versionName);
     if (directory.exists()) {
       // TODO throw exception if repository already exists
       return;
     }
+    log.trace("Synchronizing repo {}", versionName);
     Lock lock = getLock(versionName);
     lock.lock();
     try (var call = jGitWrapper.cloneRepository()
         .setURI(getRepositoryUrl())
         .setCredentialsProvider(getCredentialsProvider())
-        .setDirectory(directory)
         .setCloneAllBranches(true)
+        .setDirectory(directory)
         .call()) {
+      log.debug("Repository {} was successfully cloned.", versionName);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during cloning repository %s: %s",
+              versionName, e.getMessage()), e);
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", versionName);
     }
   }
 
@@ -169,11 +178,13 @@ public class JGitServiceImpl implements JGitService {
       RevTree tree = jGitWrapper.getRevTree(repository);
       if (path != null && !path.isEmpty()) {
         try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
-          try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
-            dirWalk.addTree(treeWalk.getObjectId(0));
-            dirWalk.setRecursive(true);
-            while (dirWalk.next()) {
-              items.add(dirWalk.getPathString());
+          if (treeWalk != null) {
+            try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
+              dirWalk.addTree(treeWalk.getObjectId(0));
+              dirWalk.setRecursive(true);
+              while (dirWalk.next()) {
+                items.add(dirWalk.getPathString());
+              }
             }
           }
         }
@@ -224,7 +235,7 @@ public class JGitServiceImpl implements JGitService {
   public String getFileContent(String versionName, String filePath) throws Exception {
     File repositoryDirectory = getRepositoryDir(versionName);
     if (!repositoryDirectory.exists()) {
-      return REPOSITORY_DOES_NOT_EXIST;
+      throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, versionName);
     }
     Lock lock = getLock(versionName);
     lock.lock();
@@ -245,15 +256,15 @@ public class JGitServiceImpl implements JGitService {
     } finally {
       lock.unlock();
     }
-    return REPOSITORY_DOES_NOT_EXIST;
+    return null;
   }
 
   @Override
-  public String amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto)
+  public void amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto)
       throws Exception {
     File repositoryFile = getRepositoryDir(requestDto.getVersionName());
     if (!repositoryFile.exists()) {
-      return null;
+      throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, requestDto.getVersionName());
     }
     Lock lock = getLock(requestDto.getVersionName());
     lock.lock();
@@ -262,20 +273,19 @@ public class JGitServiceImpl implements JGitService {
       checkoutFetchHead(git);
       File file = requestToFileConverter.convert(requestDto);
       if (file != null) {
-        return doAmend(file, changeInfoDto, git);
+        doAmend(file, changeInfoDto, git);
       }
     } finally {
       lock.unlock();
     }
-    return null;
   }
 
   @Override
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public String delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
+  public void delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
     File repositoryFile = getRepositoryDir(changeInfoDto.getNumber());
     if (!repositoryFile.exists()) {
-      return null;
+      throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, changeInfoDto.getNumber());
     }
     Lock lock = getLock(changeInfoDto.getNumber());
     lock.lock();
@@ -290,12 +300,11 @@ public class JGitServiceImpl implements JGitService {
       File fileToDelete = new File(FilenameUtils.getFullPathNoEndSeparator(fileDirectory),
           FilenameUtils.getName(fileName));
       if (fileToDelete.delete()) {
-        return doAmend(fileToDelete, changeInfoDto, git);
+        doAmend(fileToDelete, changeInfoDto, git);
       }
     } finally {
       lock.unlock();
     }
-    return null;
   }
 
   public void deleteRepo(String repoName) throws IOException {
@@ -380,18 +389,16 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  private String doAmend(File file, ChangeInfoDto changeInfoDto, Git git)
+  private void doAmend(File file, ChangeInfoDto changeInfoDto, Git git)
       throws GitAPIException, URISyntaxException {
     addFileToGit(file, git);
     Status gitStatus = git.status().call();
 
     if (!gitStatus.isClean()) {
-      RevCommit commit = git.commit().setMessage(commitMessageWithChangeId(changeInfoDto))
+      git.commit().setMessage(commitMessageWithChangeId(changeInfoDto))
           .setAmend(true).call();
       pushChanges(git);
-      return commit.getId().toString();
     }
-    return REPOSITORY_DOES_NOT_EXIST;
   }
 
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")

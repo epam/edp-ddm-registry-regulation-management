@@ -38,6 +38,7 @@
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
     <json-path.version>2.6.0</json-path.version>
+    <schemacrawler.version>16.11.5</schemacrawler.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
@@ -210,6 +211,27 @@
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
       <version>${json-path.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>liquibase-ddm-ext</artifactId>
+      <version>1.6.0.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>us.fatehi</groupId>
+      <artifactId>schemacrawler</artifactId>
+      <version>${schemacrawler.version}</version>
     </dependency>
   </dependencies>
 

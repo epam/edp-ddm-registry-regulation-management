@@ -30,7 +30,7 @@ public class SleuthConfig {
   CurrentTraceContext.ScopeDecorator legacyIds() {
     return MDCScopeDecorator.newBuilder()
         .clear()
-          .add(SingleCorrelationField.newBuilder(BaggageFields.TRACE_ID)
+        .add(SingleCorrelationField.newBuilder(BaggageFields.TRACE_ID)
             .name("X-B3-TraceId").build())
         .add(SingleCorrelationField.newBuilder(BaggageFields.PARENT_ID)
             .name("X-B3-ParentSpanId").build())

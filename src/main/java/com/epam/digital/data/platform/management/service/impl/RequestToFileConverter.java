@@ -33,7 +33,7 @@ public class RequestToFileConverter {
 
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
   public File convert(VersioningRequestDto requestDto) throws IOException {
-    if(requestDto != null && requestDto.getContent() != null) {
+    if (requestDto != null && requestDto.getContent() != null) {
       var repositoryDirectory = FilenameUtils.normalizeNoEndSeparator(
           config.getRepositoryDirectory());
       var fileDirectory = FilenameUtils.getPathNoEndSeparator(requestDto.getFormName());

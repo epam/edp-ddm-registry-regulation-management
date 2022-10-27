@@ -32,12 +32,12 @@ public class ValidatorConfig {
 
   @Bean
   public Validator fileValidator(@Value("${file-validator.encoding}") String encoding,
-                                 @Value("${file-validator.extension}") String extension) {
+      @Value("${file-validator.extension}") String extension) {
     var validator = new FileExistenceValidator();
 
     validator.linkWith(new FileNameValidator())
-            .linkWith(new FileEncodingValidator(encodingDetector(), encoding))
-            .linkWith(new FileExtensionValidator(extension));
+        .linkWith(new FileEncodingValidator(encodingDetector(), encoding))
+        .linkWith(new FileExtensionValidator(extension));
 
     return validator;
   }

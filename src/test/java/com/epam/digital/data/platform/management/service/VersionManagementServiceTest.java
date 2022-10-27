@@ -275,7 +275,45 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionChanges() {
-
+    final var version = RandomString.make();
+    final var changeInfo = new ChangeInfo();
+    changeInfo.id = "changeInfoId";
+    changeInfo._number = 1;
+    changeInfo.changeId = "changeInfoChangeId";
+    changeInfo.branch = "changeInfoBranch";
+    changeInfo.created = Timestamp.from(
+        LocalDateTime.of(2022, 8, 10, 17, 15).toInstant(ZoneOffset.ofHours(3)));
+    changeInfo.subject = "changeInfoSubject";
+    changeInfo.topic = "changeInfoTopic";
+    changeInfo.project = "changeInfoProject";
+    changeInfo.submitted = Timestamp.from(
+        LocalDateTime.of(2022, 8, 10, 17, 25).toInstant(ZoneOffset.ofHours(3)));
+    changeInfo.updated = Timestamp.from(
+        LocalDateTime.of(2022, 8, 10, 17, 35).toInstant(ZoneOffset.ofHours(3)));
+    changeInfo.owner = new AccountInfo(1);
+    changeInfo.owner.username = "changeInfoOwnerUsername";
+    changeInfo.mergeable = true;
+    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
+    changeInfo.labels.get("label1").approved = new AccountInfo(2);
+    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
+    Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
+    var expected = ChangeInfoDetailedDto.builder()
+        .id("changeInfoId")
+        .number(1)
+        .changeId("changeInfoChangeId")
+        .branch("changeInfoBranch")
+        .created(LocalDateTime.of(2022, 8, 10, 14, 15))
+        .subject("changeInfoSubject")
+        .description("changeInfoTopic")
+        .project("changeInfoProject")
+        .submitted(LocalDateTime.of(2022, 8, 10, 14, 25))
+        .updated(LocalDateTime.of(2022, 8, 10, 14, 35))
+        .owner("changeInfoOwnerUsername")
+        .mergeable(true)
+        .labels(Map.of("label1", false, "label2", false))
+        .build();
+    var actual = managementService.getVersionDetails(version);
+    Assertions.assertThat(actual).isEqualTo(expected);
   }
 
   @Test
