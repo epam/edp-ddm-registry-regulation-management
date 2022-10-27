@@ -39,9 +39,11 @@ import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.util.TestUtils;
 import com.epam.digital.data.platform.management.validator.Validator;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.util.UUID;
+import javax.validation.ConstraintViolationException;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
@@ -286,7 +288,7 @@ class ApplicationExceptionHandlerTest {
   void shouldThrowBusinessProcessAlreadyExistsException() {
     var bpName = RandomString.make();
     var versionName = RandomString.make();
-    var content = RandomString.make();
+    var content = TestUtils.getContent("bp-correct.xml");
     doThrow(BusinessProcessAlreadyExists.class).when(businessProcessService)
         .createProcess(bpName, content, versionName);
 
@@ -302,5 +304,40 @@ class ApplicationExceptionHandlerTest {
             jsonPath("$.statusDetails").doesNotExist(),
             jsonPath("$.localizedMessage").value(
                 is("Бізнес-процес з такою службовою назвою вже існує")));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowConstraintViolationExceptionDuringBpValidation() {
+    var bpName = RandomString.make();
+    var versionName = RandomString.make();
+    var content = TestUtils.getContent("bp-incorrect-tag.xml");
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
+                versionName, bpName).content(content))
+        .andExpect(status().isInternalServerError())
+        .andExpectAll(
+            jsonPath("$.code").value("BUSINESS_PROCESS_CONTENT_EXCEPTION"),
+            jsonPath("$.statusDetails").doesNotExist(),
+            jsonPath("$.localizedMessage").doesNotExist());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowConstraintViolationException() {
+    var bpName = RandomString.make();
+    var versionName = RandomString.make();
+    var content = TestUtils.getContent("bp-correct.xml");
+    doThrow(ConstraintViolationException.class).when(businessProcessService)
+        .createProcess(bpName, content, versionName);
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
+                versionName, bpName).content(content))
+        .andExpect(status().isInternalServerError())
+        .andExpectAll(
+            jsonPath("$.code").value("CONSTRAINT_VIOLATION_EXCEPTION"),
+            jsonPath("$.statusDetails").doesNotExist(),
+            jsonPath("$.localizedMessage").doesNotExist());
   }
 }

@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 @Tag(name = "Registry regulations version-candidate Business processes management Rest API")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/versions/candidates/{versionCandidateId}/business-processes")
 public class CandidateVersionBusinessProcessesController {
 
@@ -128,7 +130,7 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PostMapping("/{businessProcessName}")
-  public ResponseEntity<String> createBusinessProcess(@RequestBody String businessProcess,
+  public ResponseEntity<String> createBusinessProcess(@RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName)
       throws GitAPIException, URISyntaxException, IOException, RestApiException {
@@ -200,7 +202,7 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping("/{businessProcessName}")
-  public ResponseEntity<String> updateBusinessProcess(@RequestBody String businessProcess,
+  public ResponseEntity<String> updateBusinessProcess(@RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);

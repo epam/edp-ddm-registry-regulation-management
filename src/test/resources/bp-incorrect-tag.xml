@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions
+  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  id="Definitions_1ifek2y"
+  targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler"
+  exporterVersion="4.6.0"
+  xmlns:rrm="http://registry-regulation-management"
+  rrm:created="2022-09-20T15:26:13.136Z"
+  rrm:modified="2022-10-15T07:11:54.588Z">
+
+  <bpmn:process id="auto_process_1TBE" name="process_name" someTag="SomeValue" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Початок БП" camunda:initiator="initiator">
+      <bpmn:outgoing>Flow_0m372ld</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:endEvent id="Event_1lmfrox" name="Кінець БП">
+      <bpmn:incoming>Flow_077gjd3</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>
