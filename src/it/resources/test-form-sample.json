@@ -1,0 +1,9 @@
+{
+  "type": "form",
+  "components": [],
+  "title": "Update physical factors",
+  "path": "add-fizfactors1",
+  "name": "add-fizfactors1",
+  "display": "form",
+  "submissionAccess": []
+}

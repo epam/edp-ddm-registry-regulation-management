@@ -34,7 +34,7 @@ public class FileExtensionValidator extends Validator {
   @Override
   public void selfValidate(MultipartFile inputFile, ValidationResult validationResult) {
     if (!StringUtils.equalsIgnoreCase(
-            FilenameUtils.getExtension(inputFile.getOriginalFilename()), fileExtension)) {
+        FilenameUtils.getExtension(inputFile.getOriginalFilename()), fileExtension)) {
       throw new FileExtensionException("Wrong or missed file extension, should be: " + fileExtension);
     }
 

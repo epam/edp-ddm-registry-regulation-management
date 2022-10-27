@@ -18,7 +18,6 @@ package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +28,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +38,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Tag(name = "Registry regulations master Business processes management Rest API")
 @RestController
@@ -73,14 +71,15 @@ public class MasterVersionBusinessProcessesController {
   @GetMapping
   public ResponseEntity<List<BusinessProcessDetailsShort>> getBusinessProcessesFromMaster() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
-    return ResponseEntity.ok().body(businessProcessService.getProcessesByVersion(masterVersionId).stream()
-        .map(e -> BusinessProcessDetailsShort.builder()
-            .name(e.getName())
-            .title(e.getTitle())
-            .created(e.getCreated())
-            .updated(e.getUpdated())
-            .build())
-        .collect(Collectors.toList()));
+    return ResponseEntity.ok()
+        .body(businessProcessService.getProcessesByVersion(masterVersionId).stream()
+            .map(e -> BusinessProcessDetailsShort.builder()
+                .name(e.getName())
+                .title(e.getTitle())
+                .created(e.getCreated())
+                .updated(e.getUpdated())
+                .build())
+            .collect(Collectors.toList()));
   }
 
   @Operation(description = "Get business process",

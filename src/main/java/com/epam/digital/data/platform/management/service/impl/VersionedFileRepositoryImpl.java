@@ -1,6 +1,21 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -12,7 +27,6 @@ import com.epam.digital.data.platform.management.service.VersionedFileRepository
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
-
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -26,7 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 
@@ -133,17 +146,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public String deleteFile(String path) throws Exception {
-    if (!isFileExists(path)) {
-      return FILE_DOES_NOT_EXIST;
-    }
-
+  public void deleteFile(String path) throws Exception {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
-      return jGitService.delete(changeInfo, path);
+      jGitService.delete(changeInfo, path);
     }
-    return FILE_DOES_NOT_EXIST;
   }
 
   @Override
@@ -152,13 +160,17 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public void pullRepository() throws Exception {
+  public void pullRepository() {
     jGitService.cloneRepo(versionName);
 
-    var changeId = getChangeId();
-    if (changeId != null) {
-      var changeInfo = gerritService.getChangeInfo(changeId);
-      jGitService.fetch(versionName, changeInfo);
+    try {
+      var changeId = getChangeId();
+      if (changeId != null) {
+        var changeInfo = gerritService.getChangeInfo(changeId);
+        jGitService.fetch(versionName, changeInfo);
+      }
+    } catch (RestApiException exception) {
+      throw new GerritCommunicationException("Cannot access gerrit.");
     }
   }
 

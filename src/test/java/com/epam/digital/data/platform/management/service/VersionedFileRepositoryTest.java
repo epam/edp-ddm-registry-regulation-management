@@ -1,5 +1,22 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.service;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -18,7 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,7 +66,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList(File.separator);
-    Assertions.assertNotNull(fileList);
+    Assertions.assertThat(fileList).isNotNull();
   }
 
   @Test
@@ -65,7 +82,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList();
-    Assertions.assertNotNull(fileList);
+    Assertions.assertThat(fileList).isNotNull();
   }
 
   @Test
@@ -91,8 +108,8 @@ public class VersionedFileRepositoryTest {
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList("folder");
-    Assertions.assertNotNull(fileList);
-    Assertions.assertEquals(4, fileList.size());
+    Assertions.assertThat(fileList).isNotNull();
+    Assertions.assertThat(fileList.size()).isEqualTo(4);
   }
 
   @Test
@@ -121,13 +138,13 @@ public class VersionedFileRepositoryTest {
         List.of("file1", "file2", "file3"));
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<FileResponse> fileList = repository.getFileList("folder");
-    Assertions.assertNotNull(fileList);
-    Assertions.assertEquals(5, fileList.size());
-    Assertions.assertEquals(FileStatus.CURRENT, getFileStatusByName(fileList, "file1"));
-    Assertions.assertEquals(FileStatus.DELETED, getFileStatusByName(fileList, "file2"));
-    Assertions.assertEquals(FileStatus.CHANGED, getFileStatusByName(fileList, "file3"));
-    Assertions.assertEquals(FileStatus.NEW, getFileStatusByName(fileList, "file12"));
-    Assertions.assertEquals(FileStatus.CHANGED, getFileStatusByName(fileList, "file14"));
+    Assertions.assertThat(fileList).isNotNull();
+    Assertions.assertThat(fileList.size()).isEqualTo(5);
+    Assertions.assertThat(FileStatus.CURRENT).isEqualTo(getFileStatusByName(fileList, "file1"));
+    Assertions.assertThat(FileStatus.DELETED).isEqualTo(getFileStatusByName(fileList, "file2"));
+    Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file3"));
+    Assertions.assertThat(FileStatus.NEW).isEqualTo(getFileStatusByName(fileList, "file12"));
+    Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file14"));
   }
 
   private FileStatus getFileStatusByName(List<FileResponse> files, String name) {
@@ -148,7 +165,6 @@ public class VersionedFileRepositoryTest {
     changeInfo.changeId = "changeId";
     changeInfo._number = 1;
     Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
-    Mockito.when(jGitService.amend(any(), any())).thenReturn("");
     Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
     repository.writeFile("/form", "content");
     Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo("changeId");
@@ -158,13 +174,7 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void deleteTest() {
-    FileDatesDto fileDates = FileDatesDto.builder()
-        .create(LocalDateTime.now())
-        .update(LocalDateTime.now())
-        .build();
     repository.setVersionName("1");
-    String deleted = repository.deleteFile("form");
-    Assertions.assertEquals("File does not exist", deleted);
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.changeId = "changeId";
     changeInfo._number = 1;
@@ -172,11 +182,8 @@ public class VersionedFileRepositoryTest {
     changeInfoDto.setSubject("change");
     Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
     Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
-    Mockito.when(jGitService.getFilesInPath("1", "forms")).thenReturn(List.of("form"));
-    Mockito.when(jGitService.delete(any(), any())).thenReturn("deleted");
-    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    String form = repository.deleteFile("forms/form.json");
-    Assertions.assertEquals("deleted", form);
+    assertThatCode(() -> repository.deleteFile("forms/form.json"))
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -184,7 +191,7 @@ public class VersionedFileRepositoryTest {
   void readFileTest() {
     Mockito.when(jGitService.getFileContent(any(), any())).thenReturn("");
     String file = repository.readFile("/");
-    Assertions.assertNotNull(file);
+    Assertions.assertThat(file).isNotNull();
     Mockito.verify(jGitService).getFileContent(any(), any());
   }
 
@@ -208,6 +215,6 @@ public class VersionedFileRepositoryTest {
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     boolean fileExists = repository.isFileExists("/fileName");
-    Assertions.assertTrue(fileExists);
+    Assertions.assertThat(fileExists).isTrue();
   }
 }

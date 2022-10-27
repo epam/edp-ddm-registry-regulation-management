@@ -18,11 +18,15 @@ package com.epam.digital.data.platform.management;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
+@ComponentScan(basePackages = {"com.epam.digital.data.platform.management",
+		"data.model.snapshot"})
 @EnableScheduling
 @EnableCaching
 @EnableAsync

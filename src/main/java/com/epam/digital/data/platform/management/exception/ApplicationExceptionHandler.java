@@ -41,6 +41,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String FILE_EXTENSION_ERROR = "FILE_EXTENSION_ERROR";
   public static final String FORM_ALREADY_EXISTS_EXCEPTION = "FORM_ALREADY_EXISTS_EXCEPTION";
   public static final String BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION = "BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION";
+  public static final String TABLE_NOT_FOUND_EXCEPTION = "TABLE_NOT_FOUND_EXCEPTION";
+  public static final String TABLE_PARSE_EXCEPTION = "TABLE_PARSE_EXCEPTION";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
@@ -52,6 +54,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
+  private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
+  private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
+  private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
 
   private final MessageResolver messageResolver;
 
@@ -153,6 +158,22 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(FORM_ALREADY_EXISTS_EXCEPTION, exception));
   }
 
+  @ExceptionHandler(TableNotFoundException.class)
+  public ResponseEntity<DetailedErrorResponse> handleTableNotFoundException(
+      TableNotFoundException exception) {
+    log.warn("Table not found exception", exception);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(TABLE_NOT_FOUND_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(TableParseException.class)
+  public ResponseEntity<DetailedErrorResponse> handleTableParseException(
+      TableParseException exception) {
+    log.error("Table parse exception", exception);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(TABLE_PARSE_EXCEPTION, exception));
+  }
+
   @ExceptionHandler
   public ResponseEntity<DetailedErrorResponse> handleGerritChangeNotFoundException(
       GerritChangeNotFoundException exception) {
@@ -191,6 +212,30 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Something went wrong with git repository opening", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(READING_REPOSITORY_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
+      WritingRepositoryException exception) {
+    log.error("Could not write file to repository");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(WRITING_REPOSITORY_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
+      SettingsProcessingException exception) {
+    log.error("Could not parse settings files");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(SETTINGS_PROCESSING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleRepositoryNotFoundException(
+      RepositoryNotFoundException exception) {
+    log.error("Repository {} not found", exception.getVersionId());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(REPOSITORY_NOT_FOUND_EXCEPTION, exception));
   }
 
   private DetailedErrorResponse newDetailedResponse(String code, Exception exception) {

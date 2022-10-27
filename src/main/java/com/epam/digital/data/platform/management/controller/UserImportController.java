@@ -16,9 +16,9 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.security.annotation.PreAuthorizeUserManagementRole;
 import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.UserImportService;
@@ -60,8 +60,8 @@ public class UserImportController {
   @Operation(
       description = "Store file endpoint",
       parameters = @Parameter(in = ParameterIn.QUERY,
-      name = "securityContext",
-      schema = @Schema(type = "string")),
+          name = "securityContext",
+          schema = @Schema(type = "string")),
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
@@ -69,21 +69,21 @@ public class UserImportController {
                   schema = @Schema(implementation = CephFileInfoDto.class)))})
   @PostMapping
   public ResponseEntity<CephFileInfoDto> handleFileUpload(@RequestParam("file") MultipartFile file,
-                                                          @HttpSecurityContext SecurityContext securityContext) {
+      @HttpSecurityContext SecurityContext securityContext) {
     log.info("handleFileUpload called");
     return ResponseEntity.status(HttpStatus.CREATED)
-            .body(userImportService.storeFile(file, securityContext));
+        .body(userImportService.storeFile(file, securityContext));
   }
 
   @Operation(description = "Get file information",
       parameters = @Parameter(in = ParameterIn.QUERY,
-      name = "securityContext",
-      schema = @Schema(type = "string")),
+          name = "securityContext",
+          schema = @Schema(type = "string")),
       responses = {
-        @ApiResponse(responseCode = "200",
-          description = "OK",
-          content = @Content(mediaType = MediaType.ALL_VALUE,
-            schema = @Schema(implementation = CephFileInfoDto.class)))})
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.ALL_VALUE,
+                  schema = @Schema(implementation = CephFileInfoDto.class)))})
   @GetMapping
   public ResponseEntity<CephFileInfoDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
     log.info("getFilesInfo called");

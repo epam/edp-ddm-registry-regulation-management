@@ -267,11 +267,13 @@ class ApplicationExceptionHandlerTest {
     var formName = RandomString.make();
     var versionName = RandomString.make();
     var content = RandomString.make();
-    doThrow(FormAlreadyExistsException.class).when(formService).createForm(formName, content, versionName);
+    doThrow(FormAlreadyExistsException.class).when(formService)
+        .createForm(formName, content, versionName);
     when(messageResolver.getMessage(FileValidatorErrorMessageTitle.FORM_ALREADY_EXISTS)).thenReturn(
         "Неунікальна службова назва форми");
 
-    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/forms/{formName}", versionName, formName).content(content))
+    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/forms/{formName}", versionName,
+            formName).content(content))
         .andExpect(status().isConflict())
         .andExpectAll(
             jsonPath("$.code").value("FORM_ALREADY_EXISTS_EXCEPTION"),
@@ -285,15 +287,20 @@ class ApplicationExceptionHandlerTest {
     var bpName = RandomString.make();
     var versionName = RandomString.make();
     var content = RandomString.make();
-    doThrow(BusinessProcessAlreadyExists.class).when(businessProcessService).createProcess(bpName, content, versionName);
+    doThrow(BusinessProcessAlreadyExists.class).when(businessProcessService)
+        .createProcess(bpName, content, versionName);
 
-    when(messageResolver.getMessage(FileValidatorErrorMessageTitle.BUSINESS_PROCESS_ALREADY_EXISTS)).thenReturn(
+    when(messageResolver.getMessage(
+        FileValidatorErrorMessageTitle.BUSINESS_PROCESS_ALREADY_EXISTS)).thenReturn(
         "Бізнес-процес з такою службовою назвою вже існує");
-    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}", versionName, bpName).content(content))
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
+                versionName, bpName).content(content))
         .andExpect(status().isConflict())
         .andExpectAll(
             jsonPath("$.code").value("BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION"),
             jsonPath("$.statusDetails").doesNotExist(),
-            jsonPath("$.localizedMessage").value(is("Бізнес-процес з такою службовою назвою вже існує")));
+            jsonPath("$.localizedMessage").value(
+                is("Бізнес-процес з такою службовою назвою вже існує")));
   }
 }

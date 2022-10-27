@@ -37,6 +37,7 @@ import java.util.UUID;
 
 @Service
 public class OpenShiftServiceImpl implements OpenShiftService {
+
   private static final String CALL_APP_JAR = ">- \njava -jar app.jar --id='%s' --USER_ACCESS_TOKEN='%s' --REQUEST_ID='%s'";
   private static final String MDC_TRACE_ID_HEADER = "X-B3-TraceId";
   private static final String JOB_NAME_LABEL = "name";
@@ -47,8 +48,8 @@ public class OpenShiftServiceImpl implements OpenShiftService {
   private final String jobName;
 
   public OpenShiftServiceImpl(@Value("${openshift.job.name}") String jobName,
-                              UserImportService userImportService,
-                              Config openShiftConfig) {
+      UserImportService userImportService,
+      Config openShiftConfig) {
     this.userImportService = userImportService;
     this.openShiftConfig = openShiftConfig;
     this.jobName = jobName;
@@ -76,12 +77,12 @@ public class OpenShiftServiceImpl implements OpenShiftService {
   private Job cloneJob(Job job, String fileId, SecurityContext securityContext) {
     JobSpec spec = job.getSpec();
     var container = spec
-            .getTemplate()
-            .getSpec()
-            .getContainers()
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new OpenShiftInvocationException("Missed or broken container job part for job: " + jobName));
+        .getTemplate()
+        .getSpec()
+        .getContainers()
+        .stream()
+        .findFirst()
+        .orElseThrow(() -> new OpenShiftInvocationException("Missed or broken container job part for job: " + jobName));
 
     var callAppJar = String.format(CALL_APP_JAR, fileId, securityContext.getAccessToken(), MDC.get(MDC_TRACE_ID_HEADER));
     var jobCommand = Arrays.asList("sh", "-c", callAppJar);
@@ -98,14 +99,14 @@ public class OpenShiftServiceImpl implements OpenShiftService {
 
   private Job getJob(OpenShiftClient openShiftClient) {
     return openShiftClient
-            .batch()
-            .v1()
-            .jobs()
-            .list()
-            .getItems()
-            .stream()
-            .filter(job -> StringUtils.equals(jobName, job.getMetadata().getLabels().get(JOB_NAME_LABEL)))
-            .findFirst()
-            .orElseThrow(() -> new OpenShiftInvocationException("Missed k8s job with name: " + jobName));
+        .batch()
+        .v1()
+        .jobs()
+        .list()
+        .getItems()
+        .stream()
+        .filter(job -> StringUtils.equals(jobName, job.getMetadata().getLabels().get(JOB_NAME_LABEL)))
+        .findFirst()
+        .orElseThrow(() -> new OpenShiftInvocationException("Missed k8s job with name: " + jobName));
   }
 }

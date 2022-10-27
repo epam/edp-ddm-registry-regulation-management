@@ -103,7 +103,7 @@ public class GerritServiceImpl implements GerritService {
     String query = String.format("project:%s+status:closed+owner:%s",
         gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
     return gerritApi.changes().query(query).get().stream()
-        .map(change->String.valueOf(change._number)).collect(Collectors.toList());
+        .map(change -> String.valueOf(change._number)).collect(Collectors.toList());
   }
 
   @Override
@@ -157,15 +157,19 @@ public class GerritServiceImpl implements GerritService {
       gerritApi.changes().id(changeId).current().submit();
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       }
       if (ex.getStatusCode() == HttpStatus.CONFLICT.value()) {
-        throw new GerritConflictException("Failed to submit 1 change due to the following problems:\nChange" + changeId +
-            ". Project policy requires all submissions to be a fast-forward. Please rebase the change locally and upload again for review");
+        throw new GerritConflictException(
+            "Failed to submit 1 change due to the following problems:\nChange" + changeId +
+                ". Project policy requires all submissions to be a fast-forward. Please rebase the change locally and upload again for review");
       }
-      throw new GerritCommunicationException("Something went wrong wile submitting candidate with id " + changeId, ex);
+      throw new GerritCommunicationException(
+          "Something went wrong wile submitting candidate with id " + changeId, ex);
     } catch (RestApiException ex) {
-      throw new GerritCommunicationException("Something went wrong wile submitting candidate with id " + changeId, ex);
+      throw new GerritCommunicationException(
+          "Something went wrong wile submitting candidate with id " + changeId, ex);
     }
   }
 
@@ -217,11 +221,12 @@ public class GerritServiceImpl implements GerritService {
   public Boolean vote(VoteRequestDto voteRequestDto, String changeId) throws RestApiException {
     String label = voteRequestDto.getLabel();
     Short value = voteRequestDto.getValue();
-    if(label != null && value != null) {
+    if (label != null && value != null) {
       ChangeApi changeApi = gerritApi.changes().id(changeId);
       Map<String, Collection<String>> permittedLabels = changeApi.get().permittedLabels;
       Collection<String> strings = permittedLabels.get(label);
-      if(strings != null && strings.stream().anyMatch(c -> value.equals(Short.parseShort(c.trim())))) {
+      if (strings != null && strings.stream()
+          .anyMatch(c -> value.equals(Short.parseShort(c.trim())))) {
         ReviewInput reviewInput = new ReviewInput();
         reviewInput.reviewer(gerritPropertiesConfig.getUser(), ReviewerState.REVIEWER, true);
         reviewInput.label(label, value);
@@ -249,13 +254,14 @@ public class GerritServiceImpl implements GerritService {
 
   @Override
   public void rebase(String changeId) throws RestApiException {
-    if(changeId != null) {
+    if (changeId != null) {
       String request = String.format("/changes/%s/rebase", changeId);
       Gson gson = new Gson();
       try {
-        gerritApi.restClient().postRequest(request, gson.toJson(new RebaseInput(), RebaseInput.class));
+        gerritApi.restClient()
+            .postRequest(request, gson.toJson(new RebaseInput(), RebaseInput.class));
       } catch (HttpStatusException ex) {
-        if(ex.getStatusCode() != HttpStatus.CONFLICT.value()) {
+        if (ex.getStatusCode() != HttpStatus.CONFLICT.value()) {
           throw ex;
         }
         log.info(ex.getMessage());

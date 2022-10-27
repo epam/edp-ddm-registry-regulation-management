@@ -1,7 +1,24 @@
+/*
+ * Copyright 2022 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.controller;
 
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
@@ -17,9 +34,9 @@ import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
+import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -46,11 +63,11 @@ class CandidateVersionControllerTest {
   public static final String VERSION_CANDIDATE_AUTHOR = "JohnDoe@epam.com";
 
   @MockBean
-  VersionManagementServiceImpl service;
-
+  private VersionManagementServiceImpl versionManagementService;
+  @MockBean
+  private GlobalSettingServiceImpl globalSettingService;
   @RegisterExtension
   final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
-
   MockMvc mockMvc;
   ObjectMapper objectMapper = new ObjectMapper();
 
@@ -70,7 +87,7 @@ class CandidateVersionControllerTest {
         .subject(VERSION_CANDIDATE_NAME)
         .description(VERSION_CANDIDATE_DESCRIPTION)
         .build();
-    Mockito.when(service.getVersionsList()).thenReturn(List.of(changeInfo));
+    Mockito.when(versionManagementService.getVersionsList()).thenReturn(List.of(changeInfo));
     mockMvc.perform(
             get(BASE_URL))
         .andExpectAll(
@@ -80,6 +97,7 @@ class CandidateVersionControllerTest {
             jsonPath("$.[0].name", is(VERSION_CANDIDATE_NAME)),
             jsonPath("$.[0].description", is(VERSION_CANDIDATE_DESCRIPTION)))
         .andDo(document("versions/candidates/GET"));
+    Mockito.verify(versionManagementService).getVersionsList();
   }
 
   @Test
@@ -88,7 +106,7 @@ class CandidateVersionControllerTest {
     var request = new CreateVersionRequest();
     request.setName(VERSION_CANDIDATE_NAME);
     request.setDescription(VERSION_CANDIDATE_DESCRIPTION);
-    Mockito.when(service.createNewVersion(request)).thenReturn("1");
+    Mockito.when(versionManagementService.createNewVersion(request)).thenReturn("1");
 
     var expectedVersionDetails = ChangeInfoDetailedDto.builder()
         .number(1)
@@ -99,7 +117,7 @@ class CandidateVersionControllerTest {
         .updated(LocalDateTime.of(2022, 8, 10, 11, 40))
         .mergeable(true)
         .build();
-    Mockito.when(service.getVersionDetails("1")).thenReturn(expectedVersionDetails);
+    Mockito.when(versionManagementService.getVersionDetails("1")).thenReturn(expectedVersionDetails);
 
     mockMvc.perform(post(BASE_URL)
             .content(objectMapper.writeValueAsString(request))
@@ -118,6 +136,7 @@ class CandidateVersionControllerTest {
             jsonPath("$.inspections", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/candidates/POST"));
+    Mockito.verify(versionManagementService).getVersionDetails("1");
   }
 
   @Test
@@ -132,7 +151,7 @@ class CandidateVersionControllerTest {
         .updated(LocalDateTime.of(2022, 8, 10, 11, 40))
         .mergeable(true)
         .build();
-    Mockito.when(service.getVersionDetails("1")).thenReturn(expectedVersionDetails);
+    Mockito.when(versionManagementService.getVersionDetails("1")).thenReturn(expectedVersionDetails);
 
     mockMvc.perform(get(String.format("%s/%s", BASE_URL, "1")))
         .andExpectAll(
@@ -148,33 +167,37 @@ class CandidateVersionControllerTest {
             jsonPath("$.inspections", nullValue()),
             jsonPath("$.validations", nullValue()))
         .andDo(document("versions/candidates/{versionCandidateId}/GET"));
+    Mockito.verify(versionManagementService).getVersionDetails("1");
   }
 
   @Test
   @SneakyThrows
   void declineTest() {
-    Mockito.doNothing().when(service).decline("1");
-    mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1","decline")))
+    Mockito.doNothing().when(versionManagementService).decline("1");
+    mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1", "decline")))
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/decline/POST"));
+    Mockito.verify(versionManagementService).decline("1");
   }
 
   @Test
   @SneakyThrows
   void submitTest() {
-    Mockito.doNothing().when(service).submit("1");
+    Mockito.doNothing().when(versionManagementService).submit("1");
     mockMvc.perform(post(String.format("%s/%s/%s", BASE_URL, "1", "submit")))
         .andExpect(status().isOk())
         .andDo(document("versions/candidates/{versionCandidateId}/submit/POST"));
+    Mockito.verify(versionManagementService).submit("1");
   }
 
   @Test
   @SneakyThrows
   void rebaseTest() {
-    Mockito.doNothing().when(service).rebase("1");
+    Mockito.doNothing().when(versionManagementService).rebase("1");
     mockMvc.perform(get(String.format("%s/%s/%s", BASE_URL, "1", "rebase")))
         .andExpect(status().isOk())
-    .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+        .andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+    Mockito.verify(versionManagementService).rebase("1");
   }
 
   @Test
@@ -195,7 +218,7 @@ class CandidateVersionControllerTest {
         .changedBusinessProcesses(changedProcesses)
         .build();
 
-    Mockito.when(service.getVersionChanges("1")).thenReturn(expected);
+    Mockito.when(versionManagementService.getVersionChanges("1")).thenReturn(expected);
 
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/1/changes")
             .accept(MediaType.APPLICATION_JSON_VALUE))
@@ -205,6 +228,6 @@ class CandidateVersionControllerTest {
             jsonPath("$.changedForms", hasSize(1)),
             jsonPath("changedBusinessProcesses", hasSize(1)))
         .andDo(document("versions/candidates/{versionCandidateId}/changes/GET"));
+    Mockito.verify(versionManagementService).getVersionChanges("1");
   }
-
 }
