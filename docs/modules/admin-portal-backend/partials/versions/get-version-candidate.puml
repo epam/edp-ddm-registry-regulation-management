@@ -11,6 +11,11 @@ client-> versionModule: запит на отримання інформації\
 activate versionModule
   versionModule -> gerritModule: отримати інформацію про\nchange request за ідентифікатором
   activate gerritModule
+
+    alt версії-кандидата не існує
+      versionModule <-- gerritModule: помилка отримання інформації
+      client <-- versionModule: помилка зі статусом\n404 Not Found
+    end
     versionModule <-- gerritModule: інформацію про change request
   deactivate gerritModule
 

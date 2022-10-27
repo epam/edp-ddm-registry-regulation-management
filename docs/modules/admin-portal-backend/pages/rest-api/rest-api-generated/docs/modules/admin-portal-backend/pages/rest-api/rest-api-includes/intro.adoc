@@ -28,6 +28,9 @@ Statements:
 include::partial$rest-api/rest-api-optimistic-locking.puml[]
 ----
 
+[NOTE]
+Client is not restricted to not use ETag's. In this case optimistic locking mechanism won't be used and owerwrites could happens for a resources. More details could be found xref:admin-portal-backend:rest-api/rest-api-partials/optimistic-locking.adoc [here].
+
 === Version control management usecase
 
 [plantuml, admin-portal-version-management-usecase, svg]
