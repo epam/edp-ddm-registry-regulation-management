@@ -18,6 +18,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "true"
         backup.velero.io/backup-volumes: repositories-data
+        traffic.sidecar.istio.io/excludeOutboundPorts: '5432'
       labels:
         app: {{ .Values.name }}
         version: {{ .Values.version }}
