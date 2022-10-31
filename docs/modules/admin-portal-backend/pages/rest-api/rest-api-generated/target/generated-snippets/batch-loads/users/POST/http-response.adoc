@@ -1,8 +1,0 @@
-[source,http,options="nowrap"]
-----
-HTTP/1.1 201 Created
-Content-Type: application/json
-Content-Length: 73
-
-{"id":"10e23e2a-6830-42a6-bf21-d0a4a90b5706","name":"users.csv","size":4}
-----
