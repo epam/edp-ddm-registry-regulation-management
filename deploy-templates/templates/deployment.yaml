@@ -128,7 +128,7 @@ spec:
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: username
+              - key: user
                 path: spring.public-datasource.username
               - key: password
                 path: spring.public-datasource.password
@@ -136,7 +136,7 @@ spec:
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: username
+              - key: user
                 path: spring.registry-datasource.username
               - key: password
                 path: spring.registry-datasource.password
