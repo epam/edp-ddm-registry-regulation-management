@@ -47,6 +47,8 @@
       <!-- Remove archiver alter -->
       **/UserImportApplication*,
     </sonar.coverage.exclusions>
+    <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
+    <ddm-maven-tails.version>0.0.1-SNAPSHOT</ddm-maven-tails.version>
   </properties>
 
   <dependencies>
@@ -133,6 +135,10 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-sleuth-zipkin</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.camunda.bpm.model</groupId>
+      <artifactId>camunda-bpmn-model</artifactId>
     </dependency>
 
     <dependency>
@@ -310,9 +316,7 @@
     </plugins>
   </build>
 
-
   <profiles>
-
     <profile>
       <id>generate-rest-api-docs</id>
       <activation>
@@ -321,172 +325,19 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>2.3.4.RELEASE</version>
+            <groupId>io.repaint.maven</groupId>
+            <artifactId>tiles-maven-plugin</artifactId>
+            <version>2.32</version>
+            <extensions>true</extensions>
             <configuration>
-              <jvmArguments>-Dspring.application.admin.enabled=true -Dspring.profiles.active=local
-              </jvmArguments>
-              <wait>1000</wait>
-              <maxAttempts>180</maxAttempts>
+              <buildSmells>pluginmanagement</buildSmells>
+              <filtering>true</filtering>
+              <tiles>
+                <tile>com.epam.digital.data.platform:openapi-generator-tile:${ddm-maven-tails.version}</tile>
+                <tile>com.epam.digital.data.platform:rest-api-adoc-generator-tile:${ddm-maven-tails.version}</tile>
+                <tile>com.epam.digital.data.platform:rest-api-adoc-generator-clean-tile:${ddm-maven-tails.version}</tile>
+              </tiles>
             </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>start</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>post-integration-test</id>
-                <phase>post-integration-test</phase>
-                <goals>
-                  <goal>stop</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-maven-plugin</artifactId>
-            <version>0.2</version>
-            <executions>
-              <execution>
-                <phase>integration-test</phase>
-                <goals>
-                  <goal>generate</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
-              <outputFileName>swagger.json</outputFileName>
-              <outputDir>${basedir}/target</outputDir>
-            </configuration>
-          </plugin>
-
-
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <version>3.3.0</version>
-            <executions>
-              <execution>
-                <id>copy-resources</id>
-                <phase>validate</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>
-                    target/asciidoc/docs/modules/admin-portal-backend/pages/rest-api/rest-api-includes/
-                  </outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>
-                        docs/modules/admin-portal-backend/pages/rest-api/rest-api-includes
-                      </directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-
-              <execution>
-                <id>copy-generated-snippets</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${basedir}/target/asciidoc/target/generated-snippets
-                  </outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>${basedir}/target/generated-snippets</directory>
-                      <includes>
-                        <include>**/*.*</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-
-              <execution>
-                <id>copy-generated-rest-api-to-codebase</id>
-                <phase>install</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>
-                    docs/modules/admin-portal-backend/pages/rest-api/rest-api-generated
-                  </outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>${basedir}/target/asciidoc</directory>
-                      <includes>
-                        <include>**/*.*</include>
-                      </includes>
-                      <excludes>
-                        <exclude>**/curl-request.adoc</exclude>
-                        <exclude>**/httpie-request.adoc</exclude>
-                        <exclude>**/request-body.adoc</exclude>
-                        <exclude>**/response-body.adoc</exclude>
-                      </excludes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-
-            </executions>
-          </plugin>
-
-          <plugin>
-            <artifactId>maven-clean-plugin</artifactId>
-            <version>3.2.0</version>
-            <configuration>
-              <filesets>
-                <fileset>
-                  <directory>
-                    ${basedir}/docs/modules/admin-portal-backend/pages/rest-api/rest-api-generated/
-                  </directory>
-                </fileset>
-              </filesets>
-            </configuration>
-          </plugin>
-
-          <plugin>
-            <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator-maven-plugin</artifactId>
-            <version>6.0.1</version>
-            <executions>
-              <execution>
-                <id>generate-ascii-docs</id>
-                <phase>post-integration-test</phase>
-                <goals>
-                  <goal>generate</goal>
-                </goals>
-                <configuration>
-                  <inputSpec>${project.basedir}/target/swagger.json</inputSpec>
-                  <output>${project.basedir}/target/asciidoc/</output>
-                  <generatorName>asciidoc</generatorName>
-                  <configOptions>
-                    <appDescription>MVN app description</appDescription>
-                    <appName>MVN App name</appName>
-                    <ensureUniqueParams>true</ensureUniqueParams>
-                    <infoUrl>MVN info URL</infoUrl>
-                    <licenseInfo>MVN This is license info</licenseInfo>
-                    <prependFormOrBodyParameters>true</prependFormOrBodyParameters>
-                    <snippetDir>target/generated-snippets/</snippetDir>
-                    <specDir>docs/modules/admin-portal-backend/pages/rest-api/rest-api-includes/
-                    </specDir>
-
-                    <useIntroduction>true</useIntroduction>
-                    <useMethodAndPath>true</useMethodAndPath>
-                    <useTableTitles>true</useTableTitles>
-                  </configOptions>
-
-                </configuration>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
