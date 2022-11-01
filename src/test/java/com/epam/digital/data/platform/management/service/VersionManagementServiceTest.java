@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.event.publisher.RegistryRegulationManagementEventPublisher;
+import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
@@ -213,7 +214,7 @@ class VersionManagementServiceTest {
     Mockito.when(gerritService.getMRByNumber("1")).thenReturn(null);
 
     Assertions.assertThatThrownBy(() -> managementService.getVersionDetails("1"))
-        .isInstanceOf(IllegalArgumentException.class);
+        .isInstanceOf(GerritChangeNotFoundException.class);
   }
 
   @Test

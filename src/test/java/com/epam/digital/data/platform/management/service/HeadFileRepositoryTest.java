@@ -27,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.naming.OperationNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,20 +51,19 @@ public class HeadFileRepositoryTest {
 
   @Test
   void writeNotSupportTest() {
-    Assertions.assertThrows(OperationNotSupportedException.class,
+    Assertions.assertThrows(UnsupportedOperationException.class,
         () -> repository.writeFile("/", "content"));
   }
 
   @Test
   void deleteNotSupportTest() {
-    Assertions.assertThrows(OperationNotSupportedException.class,
+    Assertions.assertThrows(UnsupportedOperationException.class,
         () -> repository.deleteFile("/"));
   }
 
   @Test
   @SneakyThrows
   void readFileTest() {
-    List<String> list = new ArrayList<>();
     Mockito.when(jGitService.getFileContent(any(), any())).thenReturn("");
     String fileContent = repository.readFile("/");
     Assertions.assertNotNull(fileContent);
@@ -86,6 +84,6 @@ public class HeadFileRepositoryTest {
     t.add("fileName");
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
     boolean fileExists = repository.isFileExists("/fileName");
-    Assertions.assertEquals(true, fileExists);
+    Assertions.assertTrue(fileExists);
   }
 }

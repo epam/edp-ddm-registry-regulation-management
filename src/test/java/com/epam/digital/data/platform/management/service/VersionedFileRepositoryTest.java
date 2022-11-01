@@ -198,6 +198,9 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void pullRepositoryTest() {
+    ChangeInfo changeInfo = new ChangeInfo();
+    changeInfo.changeId = "1";
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     repository.setVersionName("version");
     repository.pullRepository();
     Mockito.verify(jGitService, Mockito.times(1)).cloneRepo("version");

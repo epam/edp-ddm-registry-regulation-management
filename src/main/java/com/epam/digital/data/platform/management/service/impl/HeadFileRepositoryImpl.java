@@ -20,7 +20,9 @@ import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
+import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.File;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -39,12 +41,12 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
   private JGitService jGitService;
 
   @Override
-  public List<FileResponse> getFileList() throws Exception {
+  public List<FileResponse> getFileList() throws IOException {
     return getFileList(File.pathSeparator);
   }
 
   @Override
-  public List<FileResponse> getFileList(String path) throws Exception {
+  public List<FileResponse> getFileList(String path) throws IOException {
     Map<String, FileResponse> formsInMaster = new HashMap<>();
     List<String> filesInPath = jGitService.getFilesInPath(versionName, path);
     for (String el : filesInPath) {
@@ -66,25 +68,25 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public void writeFile(String path, String content) throws Exception {
-    throw new OperationNotSupportedException();
+  public void writeFile(String path, String content) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
-  public String readFile(String path) throws Exception {
+  public String readFile(String path) throws IOException {
     return jGitService.getFileContent(versionName, URLDecoder.decode(path, Charset.defaultCharset()));
   }
 
   @Override
-  public boolean isFileExists(String path) throws Exception {
+  public boolean isFileExists(String path) throws IOException {
     File theFile = new File(path);
     String parent = theFile.getParent();
     return listFilesInHead(parent).stream().anyMatch(f -> theFile.getName().equals(f));
   }
 
   @Override
-  public void deleteFile(String path) throws Exception {
-    throw new OperationNotSupportedException();
+  public void deleteFile(String path) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -97,7 +99,7 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
     jGitService.cloneRepo(versionName);
   }
 
-  private List<String> listFilesInHead(String path) throws Exception {
+  private List<String> listFilesInHead(String path) throws IOException {
     return jGitService.getFilesInPath(versionName, path);
   }
 }

@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -28,6 +29,8 @@ import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.sql.Timestamp;
@@ -42,6 +45,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 /**
  * This repo is for branches except master branch
@@ -58,12 +62,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   private GerritService gerritService;
 
   @Override
-  public List<FileResponse> getFileList() throws Exception {
+  public List<FileResponse> getFileList() throws IOException, RestApiException {
     return getFileList(File.separator);
   }
 
   @Override
-  public List<FileResponse> getFileList(String path) throws Exception {
+  public List<FileResponse> getFileList(String path) throws IOException, RestApiException {
     //todo update dates from  git log
     Map<String, FileResponse> filesInMaster = jGitService.getFilesInPath(versionName, path)
         .stream()
@@ -110,7 +114,8 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public void writeFile(String path, String content) throws Exception {
+  public void writeFile(String path, String content)
+      throws RestApiException, GitAPIException, URISyntaxException, IOException {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
@@ -123,13 +128,13 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public String readFile(String path) throws Exception {
+  public String readFile(String path) throws IOException {
     return jGitService.getFileContent(versionName,
         URLDecoder.decode(path, Charset.defaultCharset()));
   }
 
   @Override
-  public boolean isFileExists(String path) throws Exception {
+  public boolean isFileExists(String path) throws IOException, RestApiException {
 // TODO check
     //        String changeId = getChangeId();
 //        if (changeId != null) {
@@ -146,7 +151,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public void deleteFile(String path) throws Exception {
+  public void deleteFile(String path) throws RestApiException, GitAPIException, URISyntaxException {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
@@ -161,11 +166,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
   @Override
   public void pullRepository() {
-    jGitService.cloneRepo(versionName);
-
     try {
       var changeId = getChangeId();
-      if (changeId != null) {
+      if (changeId == null) {
+        throw new RepositoryNotFoundException("Version " + versionName + " not found", versionName);
+      } else {
+        jGitService.cloneRepo(versionName);
         var changeInfo = gerritService.getChangeInfo(changeId);
         jGitService.fetch(versionName, changeInfo);
       }

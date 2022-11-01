@@ -18,7 +18,11 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 
+import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 public interface BusinessProcessService {
 
@@ -26,7 +30,8 @@ public interface BusinessProcessService {
 
   List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName);
 
-  void createProcess(String processName, String content, String versionName) throws Exception;
+  void createProcess(String processName, String content, String versionName)
+      throws RestApiException, GitAPIException, URISyntaxException, IOException;
 
   String getProcessContent(String processName, String versionName);
 

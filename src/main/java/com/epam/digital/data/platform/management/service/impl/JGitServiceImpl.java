@@ -166,7 +166,7 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
-  public List<String> getFilesInPath(String versionName, String path) throws Exception {
+  public List<String> getFilesInPath(String versionName, String path) throws IOException {
     File repositoryDirectory = getRepositoryDir(versionName);
     if (!repositoryDirectory.exists()) {
       return List.of();
@@ -232,7 +232,7 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
-  public String getFileContent(String versionName, String filePath) throws Exception {
+  public String getFileContent(String versionName, String filePath) throws IOException {
     File repositoryDirectory = getRepositoryDir(versionName);
     if (!repositoryDirectory.exists()) {
       throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, versionName);
@@ -261,7 +261,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public void amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto)
-      throws Exception {
+      throws GitAPIException, URISyntaxException, IOException {
     File repositoryFile = getRepositoryDir(requestDto.getVersionName());
     if (!repositoryFile.exists()) {
       throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, requestDto.getVersionName());
@@ -282,7 +282,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public void delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception {
+  public void delete(ChangeInfoDto changeInfoDto, String fileName) throws GitAPIException, URISyntaxException {
     File repositoryFile = getRepositoryDir(changeInfoDto.getNumber());
     if (!repositoryFile.exists()) {
       throw new RepositoryNotFoundException(REPOSITORY_DOES_NOT_EXIST, changeInfoDto.getNumber());

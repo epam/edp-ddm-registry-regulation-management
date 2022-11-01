@@ -20,7 +20,9 @@ import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
+import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -28,8 +30,11 @@ import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
+import com.google.gerrit.extensions.restapi.RestApiException;
+import java.net.URISyntaxException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -75,15 +80,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   @Override
-  public void createProcess(String processName, String content, String versionName) throws Exception {
+  public void createProcess(String processName, String content, String versionName)
+      throws RestApiException, GitAPIException, URISyntaxException, IOException {
     VersionedFileRepository repo;
     String processPath;
-    try {
-      repo = repoFactory.getRepoByVersion(versionName);
-      processPath = getProcessPath(processName);
-    } catch (Exception e) {
-      throw new ReadingRepositoryException("Could not read repo to create process", e);
-    }
+    repo = repoFactory.getRepoByVersion(versionName);
+    processPath = getProcessPath(processName);
     if (repo.isFileExists(processPath)) {
       throw new BusinessProcessAlreadyExists(String.format("Process with path '%s' already exists", processPath));
     }
@@ -93,22 +95,26 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public String getProcessContent(String processName, String versionName) {
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    String processContent;
     try {
-      VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-      return repo.readFile(
-          getProcessPath(processName));
-    } catch (Exception e) {
+      processContent = repo.readFile(getProcessPath(processName));
+    } catch (IOException e) {
       throw new ReadingRepositoryException("Could no read repo to get process content", e);
     }
+    if (processContent == null) {
+      throw new ProcessNotFoundException("Process " + processName + " not found", processName);
+    }
+    return processContent;
   }
 
   @Override
   public void updateProcess(String content, String processName, String versionName) {
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    String processPath = getProcessPath(processName);
+    var time = LocalDateTime.now();
+    FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     try {
-      VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-      String processPath = getProcessPath(processName);
-      var time = LocalDateTime.now();
-      FileDatesDto fileDatesDto = FileDatesDto.builder().build();
       if (repo.isFileExists(processPath)) {
         String oldContent = repo.readFile(processPath);
         fileDatesDto = getDatesFromContent(oldContent);
@@ -130,6 +136,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     try {
       VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
       repo.deleteFile(getProcessPath(processName));
+    } catch (RepositoryNotFoundException e) {
+      throw e;
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to delete process", e);
     }
@@ -160,6 +168,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       repo = repoFactory.getRepoByVersion(versionName);
       fileList = repo.getFileList(DIRECTORY_PATH);
       masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
+    } catch (RepositoryNotFoundException e) {
+      throw e;
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to get process", e);
     }

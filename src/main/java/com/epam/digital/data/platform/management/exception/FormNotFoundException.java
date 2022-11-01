@@ -17,20 +17,19 @@
 package com.epam.digital.data.platform.management.exception;
 
 import lombok.Getter;
-
 /**
- * Thrown in case if it couldn't find requested process
+ * Thrown in case if it couldn't find requested form
  */
 @Getter
-public class ProcessNotFoundException extends RuntimeException {
-  private final String processName;
-  public ProcessNotFoundException(String message, String processName) {
+public class FormNotFoundException extends RuntimeException {
+  private final String formName;
+  public FormNotFoundException(String message, String formName) {
     super(message);
-    this.processName = processName;
+    this.formName = formName;
   }
 
-  public ProcessNotFoundException(String message, Throwable cause, String processName) {
+  public FormNotFoundException(String message, Throwable cause, String formName) {
     super(message, cause);
-    this.processName = processName;
+    this.formName = formName;
   }
 }

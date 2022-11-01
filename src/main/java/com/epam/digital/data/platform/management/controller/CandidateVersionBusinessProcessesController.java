@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.controller;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.google.gerrit.extensions.restapi.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -27,7 +28,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -126,7 +130,8 @@ public class CandidateVersionBusinessProcessesController {
   @PostMapping("/{businessProcessName}")
   public ResponseEntity<String> createBusinessProcess(@RequestBody String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName) throws Exception {
+      @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName)
+      throws GitAPIException, URISyntaxException, IOException, RestApiException {
     businessProcessService.createProcess(businessProcessName, businessProcess, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId, businessProcessName)))

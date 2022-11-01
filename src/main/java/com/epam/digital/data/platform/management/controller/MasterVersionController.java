@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.controller;
 import com.epam.digital.data.platform.management.model.dto.MasterVersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
+import com.google.gerrit.extensions.restapi.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -64,7 +65,8 @@ public class MasterVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @GetMapping
-  public ResponseEntity<MasterVersionInfoDetailed> getMasterVersionInfo() throws Exception {
+  public ResponseEntity<MasterVersionInfoDetailed> getMasterVersionInfo()
+      throws RestApiException {
     var masterInfo = versionManagementService.getMasterInfo();
     if (Objects.isNull(masterInfo)) {
       return ResponseEntity.ok()

@@ -135,8 +135,18 @@ public class GerritServiceImpl implements GerritService {
   }
 
   @Override
-  public Map<String, FileInfo> getListOfChangesInMR(String changeId) throws RestApiException {
-    return gerritApi.changes().id(changeId).current().files();
+  public Map<String, FileInfo> getListOfChangesInMR(String changeId) {
+    try {
+      return gerritApi.changes().id(changeId).current().files();
+    } catch (HttpStatusException e) {
+      if (e.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, e);
+      }
+    } catch (RestApiException ex) {
+      throw new GerritCommunicationException(
+          "Something went wrong wile getting changes in candidate with id " + changeId, ex);
+    }
+    return null;
   }
 
   @Override

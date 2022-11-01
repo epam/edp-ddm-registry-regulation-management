@@ -57,6 +57,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
   private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
+  private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
+  private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
 
   private final MessageResolver messageResolver;
 
@@ -228,6 +230,22 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Could not parse settings files");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(SETTINGS_PROCESSING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleFormNotFoundException(
+      FormNotFoundException exception) {
+    log.error("Form {} not found", exception.getFormName());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(FORM_NOT_FOUND_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleProcessNotFoundException(
+      ProcessNotFoundException exception) {
+    log.error("Business process {} not found", exception.getProcessName());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(PROCESS_NOT_FOUND_EXCEPTION, exception));
   }
 
   @ExceptionHandler
