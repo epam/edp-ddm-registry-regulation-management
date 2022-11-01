@@ -34,7 +34,7 @@ public interface GerritService {
   List<String> getClosedMrIds() throws RestApiException;
   ChangeInfo getMRByNumber(String number) throws RestApiException;
   ChangeInfoDto getChangeInfo(String changeId) throws RestApiException;
-  Map<String, FileInfo> getListOfChangesInMR(String changeId) throws RestApiException;
+  Map<String, FileInfo> getListOfChangesInMR(String changeId);
   String getFileContent(String changeId, String filename) throws RestApiException;
   void submitChanges(String changeId);
   void deleteChanges(String changeId) throws RestApiException;

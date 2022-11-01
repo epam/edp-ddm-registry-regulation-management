@@ -20,6 +20,7 @@ import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryFactoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
+import com.google.gerrit.extensions.common.ChangeInfo;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,9 @@ public class VersionedFileRepositoryFactoryTest {
   @SneakyThrows
   void getRepositoryVersionedTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
+    ChangeInfo changeInfo = new ChangeInfo();
+    changeInfo.changeId = "1";
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     VersionedFileRepository repo = factory.getRepoByVersion("version");
     Assertions.assertInstanceOf(VersionedFileRepositoryImpl.class, repo);
   }
@@ -64,6 +68,9 @@ public class VersionedFileRepositoryFactoryTest {
   @SneakyThrows
   void getAvailReposTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
+    ChangeInfo changeInfo = new ChangeInfo();
+    changeInfo.changeId = "1";
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     factory.getRepoByVersion("version");
     factory.getRepoByVersion("master");
     Map<String, VersionedFileRepository> repositories = factory.getAvailableRepos();

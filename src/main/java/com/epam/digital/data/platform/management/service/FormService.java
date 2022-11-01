@@ -17,34 +17,41 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
+import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 public interface FormService {
 
   /**
    * Get form list for specific version
    */
-  List<FormResponse> getFormListByVersion(String versionName) throws Exception;
+  List<FormResponse> getFormListByVersion(String versionName) throws IOException, RestApiException;
 
-  List<FormResponse> getChangedFormsListByVersion(String versionName) throws Exception;
+  List<FormResponse> getChangedFormsListByVersion(String versionName) throws IOException, RestApiException;
 
   /**
    * Create new form - create form from scratch or create from copy
    */
-  void createForm(String formName, String content, String versionName) throws Exception;
+  void createForm(String formName, String content, String versionName)
+      throws IOException, RestApiException, GitAPIException, URISyntaxException;
 
   /**
    * Get content from existing form
    */
-  String getFormContent(String formName, String versionName) throws Exception;
+  String getFormContent(String formName, String versionName) throws IOException;
 
   /**
    * Update the content of existing form
    */
-  void updateForm(String content, String formName, String versionName) throws Exception;
+  void updateForm(String content, String formName, String versionName)
+      throws IOException, RestApiException, GitAPIException, URISyntaxException;
 
   /**
    * Delete form
    */
-  void deleteForm(String formName, String versionName) throws Exception;
+  void deleteForm(String formName, String versionName)
+      throws IOException, GitAPIException, URISyntaxException, RestApiException;
 }

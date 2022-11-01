@@ -21,7 +21,9 @@ import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.lang.NonNull;
 
 /**
@@ -55,15 +57,15 @@ public interface JGitService {
    */
   void fetch(@NonNull String versionName, @NonNull ChangeInfoDto changeInfoDto);
 
-  List<String> getFilesInPath(String versionName, String path) throws Exception;
+  List<String> getFilesInPath(String versionName, String path) throws IOException;
 
   FileDatesDto getDates(String versionName, String filePath);
 
-  String getFileContent(String versionName, String filePath) throws Exception;
+  String getFileContent(String versionName, String filePath) throws IOException;
 
-  void amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws Exception;
+  void amend(VersioningRequestDto requestDto, ChangeInfoDto changeInfoDto) throws GitAPIException, URISyntaxException, IOException;
 
-  void delete(ChangeInfoDto changeInfoDto, String fileName) throws Exception;
+  void delete(ChangeInfoDto changeInfoDto, String fileName) throws GitAPIException, URISyntaxException;
 
   void deleteRepo(String repoName) throws IOException;
 }

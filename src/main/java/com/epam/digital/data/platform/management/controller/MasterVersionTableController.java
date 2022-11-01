@@ -68,7 +68,7 @@ public class MasterVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<List<TableDetailsShort>> getTables() throws Exception {
+  public ResponseEntity<List<TableDetailsShort>> getTables() {
     log.info("getTables called");
     final List<TableDetailsShort> master = tableService.list();
     log.info("There were found {} tables", master.size());
@@ -103,8 +103,7 @@ public class MasterVersionTableController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{tableName}")
   public ResponseEntity<DdmTable> getTable(
-      @PathVariable @Parameter(description = "Table name", required = true) String tableName)
-      throws Exception {
+      @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     log.info("getTable called");
     final DdmTable ddmTable = tableService.get(tableName);
     log.info("Table '{}' was found", tableName);

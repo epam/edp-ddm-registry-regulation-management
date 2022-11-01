@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.event.publisher.RegistryRegulationManagementEventPublisher;
+import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
@@ -35,6 +36,7 @@ import com.epam.digital.data.platform.management.service.VersionManagementServic
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.LabelInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -75,7 +77,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  public List<String> getDetailsOfHeadMaster(String path) throws Exception {
+  public List<String> getDetailsOfHeadMaster(String path) throws IOException {
     return jGitService.getFilesInPath(config.getHeadBranch(), path);
   }
 
@@ -106,7 +108,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  public List<VersionedFileInfo> getVersionFileList(String versionName) throws Exception {
+  public List<VersionedFileInfo> getVersionFileList(String versionName) {
     return gerritService.getListOfChangesInMR(versionName).entrySet().stream()
         .map(file -> VersionedFileInfo.builder()
             .name(file.getKey())
@@ -130,13 +132,14 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   public ChangeInfoDetailedDto getVersionDetails(String versionName) throws RestApiException {
     var e = gerritService.getMRByNumber(versionName);
     if (Objects.isNull(e)) {
-      throw new IllegalArgumentException();
+      throw new GerritChangeNotFoundException("Could not find candidate with id " + versionName);
     }
     return mapChangeInfo(e);
   }
 
   @Override
-  public VersionChanges getVersionChanges(String versionCandidateId) throws Exception {
+  public VersionChanges getVersionChanges(String versionCandidateId)
+      throws IOException, RestApiException {
     log.debug("Selecting form changes for version candidate {}", versionCandidateId);
     var forms = formService.getChangedFormsListByVersion(versionCandidateId)
         .stream()

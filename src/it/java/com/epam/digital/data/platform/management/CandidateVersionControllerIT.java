@@ -137,7 +137,7 @@ public class CandidateVersionControllerIT extends BaseIT {
     gerritApiMock.mockGetChangeInfo(candidateId, null);
     mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + candidateId)
             .accept(MediaType.APPLICATION_JSON_VALUE))
-        .andExpectAll(status().isInternalServerError());
+        .andExpectAll(status().isNotFound());
   }
 
   @Test

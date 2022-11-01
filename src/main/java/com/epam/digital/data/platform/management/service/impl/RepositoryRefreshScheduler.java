@@ -20,6 +20,7 @@ import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.GerritService;
 import com.epam.digital.data.platform.management.service.JGitService;
 import com.google.gerrit.extensions.common.ChangeInfo;
+import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +37,7 @@ public class RepositoryRefreshScheduler {
   private final JGitService jGitService;
 
   @Scheduled(cron = "${scheduled.repositoryRefreshCron}", zone = "${scheduled.repositoryRefreshTimezone}")
-  public void refresh() throws Exception {
+  public void refresh() throws RestApiException {
     log.debug("Refreshing repositories started");
     List<ChangeInfo> mrList = gerritService.getMRList().stream()
         .filter(mr -> !mr.mergeable).collect(Collectors.toList());

@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
 import java.util.List;
 import org.springframework.lang.Nullable;
 
@@ -38,12 +39,12 @@ public interface VersionManagementService {
   /**
    * Details of head master
    */
-  List<String> getDetailsOfHeadMaster(String path) throws Exception;
+  List<String> getDetailsOfHeadMaster(String path) throws IOException;
 
   /**
    * Details of current version
    */
-  List<VersionedFileInfo> getVersionFileList(String versionName) throws Exception;
+  List<VersionedFileInfo> getVersionFileList(String versionName);
 
   /**
    * Create new version
@@ -80,7 +81,7 @@ public interface VersionManagementService {
 //   */
 //  boolean vote(String versionName, String label, short value) throws RestApiException;
 
-  VersionChanges getVersionChanges(String versionCandidateId) throws Exception;
+  VersionChanges getVersionChanges(String versionCandidateId) throws IOException, RestApiException;
 //
 //    /**
 //     * Add robot comment

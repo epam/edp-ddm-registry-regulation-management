@@ -18,21 +18,26 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 
+import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
+import org.eclipse.jgit.api.errors.GitAPIException;
 
 public interface VersionedFileRepository {
 
-  List<FileResponse> getFileList() throws Exception;
+  List<FileResponse> getFileList() throws IOException, RestApiException;
 
-  List<FileResponse> getFileList(String path) throws Exception;
+  List<FileResponse> getFileList(String path) throws IOException, RestApiException;
 
-  void writeFile(String path, String content) throws Exception;
+  void writeFile(String path, String content) throws RestApiException, GitAPIException, URISyntaxException, IOException;
 
-  String readFile(String path) throws Exception;
+  String readFile(String path) throws IOException;
 
-  boolean isFileExists(String path) throws Exception;
+  boolean isFileExists(String path) throws IOException, RestApiException;
 
-  void deleteFile(String path) throws Exception;
+  void deleteFile(String path)
+      throws IOException, RestApiException, GitAPIException, URISyntaxException;
 
   String getVersionId();
 
