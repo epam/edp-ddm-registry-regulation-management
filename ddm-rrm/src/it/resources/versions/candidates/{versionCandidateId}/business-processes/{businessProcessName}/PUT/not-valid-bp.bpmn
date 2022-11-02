@@ -6,8 +6,8 @@
   xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1poh5q3"
   targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.1.0"
   modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.0.0"
-  rrm:created="%s" rrm:modified="%s">
-  <bpmn:process id="%s" name="%s" isExecutable="true">
+  rrm:created="" rrm:modified="">
+  <bpmn:process id="not-valid-bp" name="Not valid BP" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1"/>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

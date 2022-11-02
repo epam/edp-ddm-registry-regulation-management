@@ -16,92 +16,113 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initBusinessProcessDetails;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class MasterVersionBPControllerIT extends BaseIT {
+@DisplayName("Business-process in master version controller tests")
+class MasterVersionBPControllerIT extends BaseIT {
 
-  private static final String BASE_REQUEST = "/versions/master/business-processes";
+  @Nested
+  @DisplayName("GET /versions/master/business-processes/{businessProcessName}")
+  class MasterVersionBPGetBpByNameControllerIT {
 
-  @Test
-  @SneakyThrows
-  public void getBusinessProcess() {
-    String versionCandidateId = "head-branch";
-    String businessProcessName = "name";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    BusinessProcessDetailsShort businessProcessDetails = initBusinessProcessDetails(
-        businessProcessName, "title");
+    @Test
+    @DisplayName("should return 200 with business-process content")
+    @SneakyThrows
+    void getBusinessProcess() {
+      // add file to "remote" repo
+      final var expectedBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/GET/john-does-bp.bpmn");
+      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+      // perform query
+      mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
+              .accept(MediaType.TEXT_XML)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.TEXT_XML),
+          content().xml(expectedBpContent)
+      );
+    }
 
-    jGitWrapperMock.mockGetBusinessProcess(businessProcess);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-
-    mockMvc.perform(
-        MockMvcRequestBuilders.get(BASE_REQUEST + "/{businessProcessName}", versionCandidateId,
-                businessProcessName)
-            .accept(MediaType.TEXT_XML)).andExpectAll(
-        status().isOk(),
-        content().contentType("text/xml"),
-        xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string(
-            businessProcessDetails.getName()),
-        xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
-            businessProcessDetails.getTitle())
-    );
+    @Test
+    @DisplayName("should return 404 if business-process doesn't exist")
+    @SneakyThrows
+    void getBusinessProcess_businessProcessDoesNotExist() {
+      mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("PROCESS_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is("Process john-does-bp not found"))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void getBusinessProcesses() {
-    String versionCandidateId = "head-branch";
-    String businessProcessName = "businessProcessName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+  @Nested
+  @DisplayName("GET /versions/master/business-processes")
+  class CandidateVersionBPGetBpListControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(businessProcessName, revisionInfo);
-    changeInfo.currentRevision = businessProcessName;
-    changeInfoDto.setRefs(versionCandidateId);
+    @Test
+    @DisplayName("should return 200 with all found business-processes")
+    @SneakyThrows
+    void getBusinessProcessesByVersionId() {
+      // add files to "remote" repo
+      final var johnDoesBpContent = context.getResourceContent(
+          "/versions/master/business-processes/GET/john-does-bp.bpmn");
+      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", johnDoesBpContent);
+      final var mrSmithsBpContent = context.getResourceContent(
+          "/versions/master/business-processes/GET/mr-smiths-bp.bpmn");
+      context.addFileToHeadRepo("/bpmn/mr-smiths-bp.bpmn", mrSmithsBpContent);
 
-    jGitWrapperMock.mockGetBusinessProcessList(Map.of("name", businessProcess));
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockCheckoutCommand();
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
-        .accept(MediaType.APPLICATION_JSON)).andExpectAll(
-        status().isOk(),
-        content().contentType(MediaType.APPLICATION_JSON),
-        jsonPath("$", hasSize(1)));
+      // define expected john-does-bp dates
+      final var expectedJohnDoesBpDates = context.getHeadRepoDatesByPath(
+          "bpmn/john-does-bp.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/master/business-processes")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$[0].name", is("john-does-bp")),
+          jsonPath("$[0].title", is("John Doe's BP")),
+          jsonPath("$[0].created", is(expectedJohnDoesBpDates.getCreated())),
+          jsonPath("$[0].updated", is(expectedJohnDoesBpDates.getUpdated())),
+          jsonPath("$[1].name", is("mr-smiths-bp")),
+          jsonPath("$[1].title", is("Mr Smith's BP")),
+          jsonPath("$[1].created", is("2022-10-28T06:16:26.123Z")),
+          jsonPath("$[1].updated", is("2022-10-28T20:26:26.123Z"))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 200 with empty array if there are no business-processes")
+    @SneakyThrows
+    void getBusinessProcessesByVersionId_NoBusinessProcesses() {
+      // perform query
+      mockMvc.perform(
+          get("/versions/master/business-processes")
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$", hasSize(0))
+      );
+    }
   }
 }

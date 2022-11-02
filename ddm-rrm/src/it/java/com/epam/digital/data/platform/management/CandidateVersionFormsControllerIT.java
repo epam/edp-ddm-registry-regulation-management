@@ -16,320 +16,485 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.createFormJson;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.deleteFormJson;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initFormDetails;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.util.InitialisationUtils;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import com.google.gson.Gson;
 import com.google.gson.JsonParser;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.eclipse.jgit.transport.RefSpec;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class CandidateVersionFormsControllerIT extends BaseIT {
+@DisplayName("Forms in version candidates controller tests")
+class CandidateVersionFormsControllerIT extends BaseIT {
 
-  private static final String BASE_REQUEST = "/versions/candidates/{versionCandidateId}/forms";
-  private final Gson gson = new Gson();
+  @Nested
+  @DisplayName("GET /versions/candidates/{versionCandidateId}/forms/{formName}")
+  class CandidateVersionFormsGetFormByNameControllerIT {
 
-  @Test
-  @SneakyThrows
-  public void getForm() {
-    final var versionCandidateId = RandomString.make();
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    var formDetails = initFormDetails(formName, "title",
-        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
+    @Test
+    @DisplayName("should return 200 with form content")
+    @SneakyThrows
+    void getForm() {
+      // add file to "remote" repo
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetForm(formDetails);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(
-        MockMvcRequestBuilders.get(BASE_REQUEST + "/{formName}", versionCandidateId, formName)
-            .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$.name", is(formDetails.getName())),
-        jsonPath("$.title", is(formDetails.getTitle()))
-    );
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          content().json(expectedFormContent)
+      );
+    }
 
-    Mockito.verify(versionCandidateCloneResult).close();
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void getForm_versionCandidateDoesNotExist() {
+      // mock gerrit change info doesn't exist
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "john-does-form")
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if form doesn't exist")
+    @SneakyThrows
+    void getForm_formDoesNotExist() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "john-does-form")
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("FORM_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is("Form john-does-form not found"))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void getFormsByVersionId() {
-    final var versionCandidateId = RandomString.make();
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+  @Nested
+  @DisplayName("GET /versions/candidates/{versionCandidateId}/forms")
+  class CandidateVersionFormsGetFormListControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
-    var list = new ArrayList<TestFormDetailsShort>();
-    list.add(initFormDetails("name", "title", "{\"name\":\"name\", \"title\":\"title\"}"));
-    list.add(initFormDetails("name2", "title2", "{\"name\":\"name2\", \"title\":\"title2\"}"));
+    @Test
+    @DisplayName("should return 200 with all found forms")
+    @SneakyThrows
+    void getFormsByVersionId() {
+      // add files to "remote" repo
+      final var johnDoesFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/GET/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
+      final var mrSmithsFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/GET/mr-smiths-form.json");
+      context.addFileToHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
 
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetFormsList(list);
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$[0].name", is("name")),
-        jsonPath("$[0].title", is("title")),
-        jsonPath("$[1].name", is("name2")),
-        jsonPath("$[1].title", is("title2"))
-    );
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-    Mockito.verify(versionCandidateCloneResult).close();
+      // define expected john-does-form dates
+      final var expectedJohnDoesFormDates = context.getHeadRepoDatesByPath(
+          "forms/john-does-form.json");
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$[0].name", is("john-does-form")),
+          jsonPath("$[0].title", is("John Doe's form")),
+          jsonPath("$[0].created", is(expectedJohnDoesFormDates.getCreated())),
+          jsonPath("$[0].updated", is(expectedJohnDoesFormDates.getUpdated())),
+          jsonPath("$[1].name", is("mr-smiths-form")),
+          jsonPath("$[1].title", is("Mr Smith's form")),
+          jsonPath("$[1].created", is("2022-10-28T20:21:48.845Z")),
+          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z"))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 200 with empty array if there are no forms")
+    @SneakyThrows
+    void getFormsByVersionId_noForms() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$", hasSize(0))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void getFormsByVersionId_versionCandidateDoesNotExist() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/forms", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType("application/json"),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void getFormsByVersionIdNoForms() {
-    String versionCandidateId = "-1";
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+  @Nested
+  @DisplayName("POST /versions/candidates/{versionCandidateId}/forms/{formName}")
+  class CandidateVersionFormsCreateFormByNameControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "-1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
+    @Test
+    @DisplayName("should return 200 and create form if there's no such form")
+    @SneakyThrows
+    void createForm() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetFormsList(new ArrayList<>());
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST, versionCandidateId)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$", hasSize(0))
-    );
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form.json");
 
-    Mockito.verify(versionCandidateCloneResult).close();
+      // perform query
+      mockMvc.perform(
+          post("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isCreated(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form"))
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void createForm_noVersionCandidate() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form.json");
+
+      // perform query
+      mockMvc.perform(
+          post("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 409 if there's already exists such form")
+    @SneakyThrows
+    void createForm_formAlreadyExists() {
+      // add file to "remote" repo
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", expectedFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          post("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isConflict(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("FORM_ALREADY_EXISTS_EXCEPTION")),
+          jsonPath("$.details", is("Form with path 'forms/valid-form.json' already exists"))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void createForm() {
-    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
-    final var versionCandidateId = String.valueOf(versionCandidateNumber);
-    final var formName = RandomString.make();
-    final var formPath = "forms";
-    final var formFileName = String.format("%s.json", formName);
-    final var formFileRelativePath = String.format("%s/%s", formPath, formFileName);
-    final var commitId = RandomString.make();
-    final var formContent = testForm;
+  @Nested
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/forms/{formName}")
+  class CandidateVersionFormsUpdateFormByNameControllerIT {
 
-    InitialisationUtils.createTempRepo(versionCandidateId);
-    final var formFileFullPath = Path.of(tempRepoDirectory.getPath(), versionCandidateId, formPath,
-        formFileName);
-    Assertions.assertThat(formFileFullPath.toFile().exists()).isFalse();
+    @Test
+    @DisplayName("should return 200 and update form if there's already exists such form")
+    @SneakyThrows
+    void updateForm() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
 
-    final var changeInfo = initChangeInfo(versionCandidateNumber);
-    final var changeInfoDto = initChangeInfoDto(changeInfo);
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
-    jGitWrapperMock.mockGetFileList(openRepoResult, formPath, List.of());
-    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
-    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
-    final var addCommand = jGitWrapperMock.mockAddCommand(openRepoResult, formFileRelativePath);
-    final var status = jGitWrapperMock.mockStatusCommand(openRepoResult, false);
-    final var commitCommand = jGitWrapperMock.mockCommitCommand(openRepoResult, commitId,
-        changeInfoDto);
-    final var remoteAdd = jGitWrapperMock.mockRemoteAddCommand(openRepoResult);
-    final var pushCommand = jGitWrapperMock.mockPushCommand(openRepoResult);
-    jGitWrapperMock.mockGetFileContent(openRepoResult, formFileRelativePath, formContent);
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
 
-    mockMvc.perform(MockMvcRequestBuilders.post(
-            BASE_REQUEST + "/{formName}", versionCandidateId, formName)
-        .contentType(MediaType.TEXT_XML).content(formContent)
-        .accept(MediaType.APPLICATION_JSON)).andExpectAll(
-        status().isCreated(),
-        content().contentType("application/json"),
-        jsonPath("$.title", is("Update physical factors")),
-        jsonPath("$.path", is("add-fizfactors1")),
-        jsonPath("$.display", is("form")),
-        jsonPath("$.components", hasSize(0)),
-        jsonPath("$.name", is("add-fizfactors1"))
-    );
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
 
-    Mockito.verify(fetchCommand, Mockito.times(2)).call();
-    Mockito.verify(checkoutCommand, Mockito.times(2)).call();
-    Mockito.verify(addCommand).call();
-    Mockito.verify(status).isClean();
-    Mockito.verify(commitCommand).call();
-    Mockito.verify(remoteAdd).call();
-    Mockito.verify(pushCommand).call();
-    Mockito.verify(pushCommand)
-        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form.json").getCreated();
 
-    Assertions.assertThat(formFileFullPath.toFile().exists()).isTrue();
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
 
-    final var actualContent = Files.readString(formFileFullPath);
-    JSONAssert.assertEquals(formContent, actualContent,
-        new CustomComparator(JSONCompareMode.LENIENT,
-            new Customization("created", (o1, o2) -> true),
-            new Customization("modified", (o1, o2) -> true)
-        ));
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
 
-    var form = JsonParser.parseString(actualContent).getAsJsonObject();
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
 
-    final var created = LocalDateTime.parse(form.get("created").getAsString(), JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
-    final var updated = LocalDateTime.parse(form.get("modified").getAsString(), JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
-    Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
-        .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
-    Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
-        .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    @Test
+    @DisplayName("should return 200 and create form if there's no such form")
+    @SneakyThrows
+    void updateForm_noFormsToUpdate() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void updateForm_noVersionCandidate() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void updateForm() {
-    final var versionCandidateId = RandomString.make();
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    var form = initFormDetails(formName, "title",
-        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
+  @Nested
+  @DisplayName("DELETE /versions/candidates/{versionCandidateId}/forms/{formName}")
+  class CandidateVersionFormsDeleteFormByNameControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.revisions.put(versionCandidateId, revisionInfo);
-    changeInfo.currentRevision = versionCandidateId;
-    changeInfoDto.setRefs(versionCandidateId);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    InitialisationUtils.createTempRepo(versionCandidateId);
-    String filePath = createFormJson(form, versionCandidateId);
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockAddCommand();
-    jGitWrapperMock.mockStatusCommand();
-    jGitWrapperMock.mockRemoteAddCommand();
-    jGitWrapperMock.mockPushCommand();
-    jGitWrapperMock.mockCommitCommand();
-    jGitWrapperMock.mockLogCommand();
-    jGitWrapperMock.mockGetForm(form);
-    jGitWrapperMock.mockGetFormsList(List.of(form));
-    mockMvc.perform(MockMvcRequestBuilders.put(
-            BASE_REQUEST + "/{formName}", versionCandidateId, formName)
-        .contentType(MediaType.APPLICATION_JSON_VALUE).content(gson.toJson(form))
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"));
-    deleteFormJson(filePath);
-  }
+    @Test
+    @DisplayName("should return 204 and delete form if there's already exists such form")
+    @SneakyThrows
+    void deleteForm() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
 
-  @Test
-  @SneakyThrows
-  public void deleteForm() {
-    final var versionCandidateNumber = new Random().nextInt(Integer.MAX_VALUE);
-    final var versionCandidateId = String.valueOf(versionCandidateNumber);
-    final var formName = RandomString.make();
-    final var formPath = "forms";
-    final var formFileName = String.format("%s.json", formName);
-    final var formFileRelativePath = String.format("%s/%s", formPath, formFileName);
-    final var commitId = RandomString.make();
-    var form = initFormDetails(formName, "title",
-        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
-    InitialisationUtils.createTempRepo(versionCandidateId);
-    InitialisationUtils.createFormJson(form, versionCandidateId);
-    final var formFileFullPath = Path.of(tempRepoDirectory.getPath(), versionCandidateId, formPath,
-        formFileName);
-    Assertions.assertThat(formFileFullPath.toFile().exists()).isTrue();
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-    final var changeInfo = initChangeInfo(versionCandidateNumber);
-    final var changeInfoDto = initChangeInfoDto(changeInfo);
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "john-does-form")
+      ).andExpect(
+          status().isNoContent()
+      );
 
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    final var openRepoResult = jGitWrapperMock.mockOpenGit(versionCandidateId);
-    jGitWrapperMock.mockGetFileList(openRepoResult, formPath, List.of(formFileName));
-    jGitWrapperMock.mockGitFileDates(openRepoResult, formFileRelativePath, LocalDateTime.now(),
-        LocalDateTime.now());
-    final var fetchCommand = jGitWrapperMock.mockFetchCommand(openRepoResult, changeInfoDto);
-    final var checkoutCommand = jGitWrapperMock.mockCheckoutCommand(openRepoResult);
-    final var rmCommand = jGitWrapperMock.mockRmCommand(openRepoResult, formFileRelativePath);
-    final var status = jGitWrapperMock.mockStatusCommand(openRepoResult, false);
-    final var commitCommand = jGitWrapperMock.mockCommitCommand(openRepoResult, commitId,
-        changeInfoDto);
-    final var remoteAdd = jGitWrapperMock.mockRemoteAddCommand(openRepoResult);
-    final var pushCommand = jGitWrapperMock.mockPushCommand(openRepoResult);
+      // assert that file is deleted
+      final var isFileExists = context.isFileExistsInRemoteVersionCandidateRepo(
+          "/forms/john-does-form.json");
+      Assertions.assertThat(isFileExists).isFalse();
+    }
 
-    mockMvc.perform(MockMvcRequestBuilders.delete(
-            BASE_REQUEST + "/{businessProcessName}", versionCandidateId, formName))
-        .andExpect(status().isNoContent());
-    Mockito.verify(fetchCommand, Mockito.times(2)).call();
-    Mockito.verify(checkoutCommand, Mockito.times(2)).call();
-    Mockito.verify(rmCommand).call();
-    Mockito.verify(status).isClean();
-    Mockito.verify(commitCommand).call();
-    Mockito.verify(remoteAdd).call();
-    Mockito.verify(pushCommand).call();
-    Mockito.verify(pushCommand)
-        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+    @Test
+    @DisplayName("should return 204 if there's no such form")
+    @SneakyThrows
+    void deleteForm_noFormToDelete() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          delete(
+              "/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "john-does-form")
+      ).andExpect(
+          status().isNoContent()
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void deleteForm_noVersionCandidate() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform query
+      mockMvc.perform(
+          delete(
+              "/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
   }
 }

@@ -136,6 +136,11 @@
       <version>${spring.restdocs.mockmvc.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <artifactId>wiremock</artifactId>
+      <groupId>com.github.tomakehurst</groupId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

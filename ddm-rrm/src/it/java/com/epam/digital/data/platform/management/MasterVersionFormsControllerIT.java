@@ -16,126 +16,134 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initFormDetails;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.dto.TestFormDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.service.JGitService;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import java.util.ArrayList;
-import java.util.HashMap;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class MasterVersionFormsControllerIT extends BaseIT {
+@DisplayName("Forms in master version controller tests")
+class MasterVersionFormsControllerIT extends BaseIT {
 
-  private static final String BASE_REQUEST = "/versions/master/forms";
   @Autowired
   private CacheManager cacheManager;
-
-  @Autowired
-  private JGitService jGitService;
   private static final String DATE_CACHE_NAME = "dates";
 
-  @Test
-  @SneakyThrows
-  public void getForm() {
-    String versionCandidateId = "head-branch";
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    var formDetails = initFormDetails(formName, "title",
-        "{\"name\":\"" + formName + "\", \"title\":\"title\"}");
+  @Nested
+  @DisplayName("GET /versions/master/forms/{formName}")
+  class MasterVersionFormsGetFormByNameControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
+    @Test
+    @DisplayName("should return 200 with form content")
+    @SneakyThrows
+    void getForm() {
+      // add file to "remote" repo
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/GET/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
-    jGitWrapperMock.mockGetForm(formDetails);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockPullCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + "/{formName}", formName)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$.name", is(formDetails.getName())),
-        jsonPath("$.title", is(formDetails.getTitle()))
-    );
+      // perform query
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          content().json(expectedFormContent)
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if form doesn't exist")
+    @SneakyThrows
+    void getForm_formDoesNotExist() {
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("FORM_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is("Form john-does-form not found"))
+      );
+    }
   }
 
-  @Test
-  @SneakyThrows
-  public void getForms() {
-    String versionCandidateId = "head-branch";
-    String formName = "formName";
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
+  @Nested
+  @DisplayName("GET /versions/master/forms")
+  class CandidateVersionFormsGetFormListControllerIT {
 
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = "id1";
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
-    var list = new ArrayList<TestFormDetailsShort>();
-    list.add(initFormDetails("name", "title", "{\"name\":\"name\", \"title\":\"title\"}"));
-    list.add(initFormDetails("name2", "title2", "{\"name\":\"name2\", \"title\":\"title2\"}"));
+    @Test
+    @DisplayName("should return 200 with all found forms")
+    @SneakyThrows
+    void getFormsInMaster() {
+      // add files to "remote" repo
+      final var johnDoesFormContent = context.getResourceContent(
+          "/versions/master/forms/GET/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
+      final var mrSmithsFormContent = context.getResourceContent(
+          "/versions/master/forms/GET/mr-smiths-form.json");
+      context.addFileToHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
 
-    jGitWrapperMock.mockGetFormsList(list);
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    jGitWrapperMock.mockLogCommand();
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST)
-        .accept(MediaType.APPLICATION_JSON_VALUE)).andExpectAll(
-        status().isOk(),
-        content().contentType("application/json"),
-        jsonPath("$[0].name", is("name")),
-        jsonPath("$[0].title", is("title")),
-        jsonPath("$[1].name", is("name2")),
-        jsonPath("$[1].title", is("title2"))
-    );
-  }
+      // define expected john-does-form dates
+      final var expectedJohnDoesFormDates = context.getHeadRepoDatesByPath(
+          "forms/john-does-form.json");
 
-  @Test
-  @SneakyThrows
-  void testDatesInCache() {
-    jGitWrapperMock.mockGetFileInPath();
-    mockMvc.perform(MockMvcRequestBuilders.get("/versions/master/forms")
-            .accept(MediaType.APPLICATION_JSON_VALUE))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType("application/json"),
-            jsonPath("$.[0].name", is("someFile")),
-            jsonPath("$.[0].title", is("title")),
-            jsonPath("$.[0].created", is("1970-01-01T00:00:00.000Z")),
-            jsonPath("$.[0].updated", is("1970-01-01T00:00:00.000Z")));
-    Cache dates = cacheManager.getCache(DATE_CACHE_NAME);
-    assertThat(dates).isNotNull();
-    SimpleKey cacheKey = new SimpleKey("head-branch", "forms/someFile");
-    Cache.ValueWrapper valueWrapper = dates.get(cacheKey);
-    assertThat(valueWrapper).isNotNull();
+      // perform query
+      mockMvc.perform(
+          get("/versions/master/forms")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$[0].name", is("john-does-form")),
+          jsonPath("$[0].title", is("John Doe's form")),
+          jsonPath("$[0].created", is(expectedJohnDoesFormDates.getCreated())),
+          jsonPath("$[0].updated", is(expectedJohnDoesFormDates.getUpdated())),
+          jsonPath("$[1].name", is("mr-smiths-form")),
+          jsonPath("$[1].title", is("Mr Smith's form")),
+          jsonPath("$[1].created", is("2022-10-28T20:21:48.845Z")),
+          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z"))
+      );
 
-    Thread.sleep(10000);
-    dates = cacheManager.getCache(DATE_CACHE_NAME);
-    assertThat(dates).isNotNull();
-    assertThat(dates.get(cacheKey)).isNull();
+      final var datesCache = cacheManager.getCache(DATE_CACHE_NAME);
+      Assertions.assertThat(datesCache).isNotNull();
+
+      final var johnDoesCacheKey = new SimpleKey("head-branch", "forms/john-does-form.json");
+      final var valueWrapper = datesCache.get(johnDoesCacheKey);
+      Assertions.assertThat(valueWrapper).isNotNull();
+
+      Thread.sleep(10000);
+      final var emptyDatesCache = cacheManager.getCache(DATE_CACHE_NAME);
+      Assertions.assertThat(emptyDatesCache)
+          .isNotNull()
+          .extracting(cache -> cache.get(johnDoesCacheKey))
+          .isNull();
+    }
+
+    @Test
+    @DisplayName("should return 200 with empty array if there are no forms")
+    @SneakyThrows
+    void getFormsInMaster_noForms() {
+      mockMvc.perform(
+          get("/versions/master/forms")
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$", hasSize(0))
+      );
+    }
   }
 }
