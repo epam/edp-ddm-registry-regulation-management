@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.gitintegration.exception;
 
 public class GitCommandException extends RuntimeException {
 

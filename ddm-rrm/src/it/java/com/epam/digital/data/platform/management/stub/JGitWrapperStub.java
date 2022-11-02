@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.stub;
 
 import com.epam.digital.data.platform.management.context.TestExecutionContext;
-import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitWrapper;
 import java.io.File;
 import java.io.IOException;
 import org.eclipse.jgit.api.Git;

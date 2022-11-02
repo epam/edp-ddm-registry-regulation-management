@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
 import lombok.SneakyThrows;

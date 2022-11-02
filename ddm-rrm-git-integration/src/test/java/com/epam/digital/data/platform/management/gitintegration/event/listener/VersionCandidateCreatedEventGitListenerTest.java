@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.event.listener;
+package com.epam.digital.data.platform.management.gitintegration.event.listener;
 
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEvent;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;

@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.FormNotFoundException;
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;

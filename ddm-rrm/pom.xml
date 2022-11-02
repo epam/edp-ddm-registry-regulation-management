@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-rrm-core</artifactId>
+      <artifactId>ddm-rrm-git-integration</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -42,12 +42,7 @@
       <artifactId>ddm-starter-localization</artifactId>
       <version>${ddm-starter-localization.version}</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>${jgit.version}</version>
-    </dependency>
+
     <dependency>
       <groupId>com.urswolfer.gerrit.client.rest</groupId>
       <artifactId>gerrit-rest-java-client</artifactId>
@@ -83,11 +78,6 @@
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-vault-config</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.any23</groupId>
-      <artifactId>apache-any23-encoding</artifactId>
-      <version>${apache-encoding-detector.version}</version>
     </dependency>
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>

@@ -18,15 +18,16 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.ArgumentMatchers.any;
 
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.DeleteOldRepositoryScheduler;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
-import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
 import com.google.gerrit.extensions.restapi.RestApiException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,8 +49,8 @@ public class DeleteOldRepositorySchedulerTest {
   @Test
   @SneakyThrows
   void deleteOldRepositoriesSuccessTest() {
-    String repo = "1";
-    List<String> ids = List.of(repo);
+    var repo = RandomString.make();
+    var ids = List.of(repo);
     Mockito.when(gerritService.getClosedMrIds()).thenReturn(ids);
     scheduler.deleteOldRepositories();
     Mockito.verify(jGitService).deleteRepo(repo);
@@ -75,10 +76,10 @@ public class DeleteOldRepositorySchedulerTest {
   @Test
   @SneakyThrows
   void exceptionNotThrownTest() {
-    String repo = "1";
-    List<String> ids = List.of(repo);
+    var repo = RandomString.make();
+    var ids = List.of(repo);
     Mockito.when(gerritService.getClosedMrIds()).thenReturn(ids);
-    Mockito.doThrow(IOException.class).when(jGitService).deleteRepo(repo);
+    Mockito.doThrow(GitCommandException.class).when(jGitService).deleteRepo(repo);
     Assertions.assertThatCode(() -> scheduler.deleteOldRepositories())
         .doesNotThrowAnyException();
   }

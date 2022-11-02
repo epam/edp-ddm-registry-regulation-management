@@ -19,6 +19,8 @@ package com.epam.digital.data.platform.management.exception;
 import static com.epam.digital.data.platform.management.util.Header.TRACE_ID;
 
 import com.epam.digital.data.platform.management.controller.BusinessProcess;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;

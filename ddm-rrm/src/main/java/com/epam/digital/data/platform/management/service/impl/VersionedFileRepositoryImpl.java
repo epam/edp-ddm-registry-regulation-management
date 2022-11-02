@@ -16,14 +16,14 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
-import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
 import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
@@ -123,7 +123,8 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
           .formName(path)
           .versionName(versionName)
           .content(content).build();
-      jGitService.amend(dto, changeInfo);
+      jGitService.amend(dto.getVersionName(), changeInfo.getRefs(), changeInfo.getSubject(),
+          changeInfo.getChangeId(), dto.getFormName(), dto.getContent());
     }
   }
 
@@ -155,7 +156,8 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
-      jGitService.delete(changeInfo, path);
+      jGitService.delete(changeInfo.getNumber(), path, changeInfo.getRefs(),
+          changeInfo.getSubject(), changeInfo.getChangeId());
     }
   }
 
@@ -173,7 +175,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
       } else {
         jGitService.cloneRepo(versionName);
         var changeInfo = gerritService.getChangeInfo(changeId);
-        jGitService.fetch(versionName, changeInfo);
+        jGitService.fetch(versionName, changeInfo.getRefs());
       }
     } catch (RestApiException exception) {
       throw new GerritCommunicationException("Cannot access gerrit.");

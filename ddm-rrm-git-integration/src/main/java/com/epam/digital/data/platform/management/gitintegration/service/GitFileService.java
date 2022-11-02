@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.service.impl;
+package com.epam.digital.data.platform.management.gitintegration.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -26,25 +26,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class RequestToFileConverter {
+public class GitFileService {
 
   @Autowired
   private GerritPropertiesConfig config;
 
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public File convert(VersioningRequestDto requestDto) throws IOException {
-    if (requestDto != null && requestDto.getContent() != null) {
+  public File writeFile(String repositoryName, String fileContent, String filePath) {
+    if (fileContent != null) {
       var repositoryDirectory = FilenameUtils.normalizeNoEndSeparator(
           config.getRepositoryDirectory());
-      var fileDirectory = FilenameUtils.getPathNoEndSeparator(requestDto.getFormName());
-      var fileName = requestDto.getFormName();
+      var fileDirectory = FilenameUtils.getPathNoEndSeparator(filePath);
       var fullPath = repositoryDirectory + File.separator +
-          requestDto.getVersionName() + File.separator + fileDirectory;
+          repositoryName + File.separator + fileDirectory;
 
-      File file = new File(FilenameUtils.normalizeNoEndSeparator(fullPath),
-          FilenameUtils.getName(fileName));
+      var file = new File(FilenameUtils.normalizeNoEndSeparator(fullPath),
+          FilenameUtils.getName(filePath));
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-        writer.write(requestDto.getContent());
+        writer.write(fileContent);
+      } catch (IOException e) {
+        throw new GitCommandException(
+            String.format("Exception occurred during writing content to file %s: %s", filePath,
+                e.getMessage()), e);
       }
       return file;
     }

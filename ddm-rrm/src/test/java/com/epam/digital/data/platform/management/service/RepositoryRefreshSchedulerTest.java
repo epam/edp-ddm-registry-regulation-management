@@ -18,9 +18,9 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.Mockito.never;
 
+import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
-import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.RepositoryRefreshScheduler;
 import com.google.gerrit.extensions.common.AccountInfo;
 import com.google.gerrit.extensions.common.ChangeInfo;
@@ -69,7 +69,7 @@ public class RepositoryRefreshSchedulerTest {
 
     repositoryRefreshScheduler.refresh();
     Mockito.verify(gerritService).rebase(changeInfo.changeId);
-    Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto);
+    Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
@@ -83,7 +83,7 @@ public class RepositoryRefreshSchedulerTest {
 
     Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
         .doesNotThrowAnyException();
-    Mockito.verify(jGitService, never()).fetch(changeInfoDto.getNumber(), changeInfoDto);
+    Mockito.verify(jGitService, never()).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
