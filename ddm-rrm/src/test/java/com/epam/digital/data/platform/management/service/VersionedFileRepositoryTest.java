@@ -20,8 +20,9 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -158,17 +160,26 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void writeFileTest() {
-    ChangeInfoDto changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setSubject("change");
-    repository.setVersionName("1");
-    ChangeInfo changeInfo = new ChangeInfo();
-    changeInfo.changeId = "changeId";
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    final var filecontent = RandomString.make();
+    var changeInfoDto = new ChangeInfoDto();
+    changeInfoDto.setSubject(commitMessage);
+    changeInfoDto.setRefs(refs);
+    changeInfoDto.setChangeId(changeId);
+    repository.setVersionName(repositoryName);
+    var changeInfo = new ChangeInfo();
+    changeInfo.changeId = changeId;
     changeInfo._number = 1;
-    Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
-    Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
-    repository.writeFile("/form", "content");
-    Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo("changeId");
-    Mockito.verify(jGitService, Mockito.times(1)).amend(any(), any());
+    Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
+    Mockito.when(gerritService.getMRByNumber(eq(repositoryName))).thenReturn(changeInfo);
+    repository.writeFile(filepath, filecontent);
+    Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo(changeId);
+    Mockito.verify(jGitService, Mockito.times(1))
+        .amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
   }
 
   @Test
@@ -200,6 +211,8 @@ public class VersionedFileRepositoryTest {
   void pullRepositoryTest() {
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.changeId = "1";
+    final var mock = Mockito.mock(ChangeInfoDto.class);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     repository.setVersionName("version");
     repository.pullRepository();

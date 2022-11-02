@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.gitintegration.service;
 
 import java.util.ArrayList;
 import java.util.List;

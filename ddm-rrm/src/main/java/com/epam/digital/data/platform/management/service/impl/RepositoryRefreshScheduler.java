@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
@@ -48,7 +48,7 @@ public class RepositoryRefreshScheduler {
         log.debug("Refreshing repository {}", changeInfo._number);
         gerritService.rebase(changeId);
         ChangeInfoDto changeInfoDto = gerritService.getChangeInfo(changeId);
-        jGitService.fetch(changeInfoDto.getNumber(), changeInfoDto);
+        jGitService.fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
       } catch (Exception e) {
         log.error("Error during repository refresh", e);
       }

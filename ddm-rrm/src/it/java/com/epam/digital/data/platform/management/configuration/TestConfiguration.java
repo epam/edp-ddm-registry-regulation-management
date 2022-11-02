@@ -19,7 +19,7 @@ package com.epam.digital.data.platform.management.configuration;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 import com.epam.digital.data.platform.management.mock.VaultOperationsMock;
-import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitWrapper;
 import com.epam.digital.data.platform.management.stub.JGitWrapperStub;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;

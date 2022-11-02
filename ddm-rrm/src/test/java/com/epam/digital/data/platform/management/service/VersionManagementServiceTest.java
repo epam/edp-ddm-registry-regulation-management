@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
@@ -336,13 +337,13 @@ class VersionManagementServiceTest {
     changeInfoDto.setNumber(version);
     Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
 
-    Mockito.doNothing().when(jGitService).fetch(version, changeInfoDto);
+    Mockito.doNothing().when(jGitService).fetch(version, refs);
 
     managementService.rebase(version);
 
     Mockito.verify(gerritService).getMRByNumber(version);
     Mockito.verify(gerritService).rebase(changeId);
     Mockito.verify(gerritService).getChangeInfo(changeId);
-    Mockito.verify(jGitService).fetch(version, changeInfoDto);
+    Mockito.verify(jGitService).fetch(version, refs);
   }
 }

@@ -17,6 +17,8 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryFactoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
@@ -51,6 +53,8 @@ public class VersionedFileRepositoryFactoryTest {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.changeId = "1";
+    final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     VersionedFileRepository repo = factory.getRepoByVersion("version");
     Assertions.assertInstanceOf(VersionedFileRepositoryImpl.class, repo);
@@ -70,6 +74,8 @@ public class VersionedFileRepositoryFactoryTest {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
     ChangeInfo changeInfo = new ChangeInfo();
     changeInfo.changeId = "1";
+    final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     factory.getRepoByVersion("version");
     factory.getRepoByVersion("master");

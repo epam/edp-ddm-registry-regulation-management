@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.gitintegration.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -21,11 +21,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
-import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
-import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
-import com.epam.digital.data.platform.management.service.impl.RequestToFileConverter;
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -81,7 +76,7 @@ class JGitServiceSyncTest {
   @Mock
   private Repository repository;
   @Mock
-  private RequestToFileConverter requestToFileConverter;
+  private GitFileService gitFileService;
 
   @BeforeEach
   public void setUp() {
@@ -313,9 +308,14 @@ class JGitServiceSyncTest {
   @Test
   @SneakyThrows
   void amendSyncTest() {
-    String version = "version";
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    final var filecontent = RandomString.make();
 
-    var file = new File(tempDir, version);
+    var file = new File(tempDir, repositoryName);
     Assertions.assertThat(file.createNewFile()).isTrue();
 
     Counter counter = new Counter(7);
@@ -333,12 +333,7 @@ class JGitServiceSyncTest {
     when(git.fetch()).thenReturn(fetchCommand);
     when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
 
-    VersioningRequestDto requestDto = mock(VersioningRequestDto.class);
-    when(requestDto.getVersionName()).thenReturn(version);
-    ChangeInfoDto changeInfoDto = mock(ChangeInfoDto.class);
-
-    when(changeInfoDto.getRefs()).thenReturn("refs");
-    when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
+    when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
     when(fetchCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called fetch command for {}", Thread.currentThread().getName());
@@ -360,7 +355,7 @@ class JGitServiceSyncTest {
     when(amendedFile.getParent()).thenReturn("parent");
     when(amendedFile.getName()).thenReturn("name");
     String filePattern = "parent/name";
-    when(requestToFileConverter.convert(requestDto)).thenReturn(amendedFile);
+    when(gitFileService.writeFile(repositoryName, filecontent, filepath)).thenReturn(amendedFile);
 
     //add file to Git method
     when(amendedFile.exists()).thenReturn(true);
@@ -388,9 +383,8 @@ class JGitServiceSyncTest {
     when(addStatus.isClean()).thenReturn(false);
     CommitCommand commitCommand = mock(CommitCommand.class);
     when(git.commit()).thenReturn(commitCommand);
-    when(changeInfoDto.getSubject()).thenReturn("subject");
-    when(changeInfoDto.getChangeId()).thenReturn("changeId");
     when(commitCommand.setMessage(any())).thenReturn(commitCommand);
+    when(commitCommand.setAmend(true)).thenReturn(commitCommand);
     when(commitCommand.setAmend(true)).thenReturn(commitCommand);
     RevCommit revCommit = mock(RevCommit.class);
     when(commitCommand.call()).thenAnswer(invocation -> {
@@ -425,7 +419,7 @@ class JGitServiceSyncTest {
     for (int i = 0; i < numberOfThreads; i++) {
       service.execute(() -> {
         try {
-          jGitService.amend(requestDto, changeInfoDto);
+          jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
         } catch (Exception e) {
           log.error("error", e);
           // Handle exception
@@ -446,12 +440,15 @@ class JGitServiceSyncTest {
   @Test
   @SneakyThrows
   void deleteSyncTest() {
-    String version = "version";
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
 
-    var file = new File(tempDir, version);
+    var file = new File(tempDir, repositoryName);
     Assertions.assertThat(file.createNewFile()).isTrue();
 
-    String path = "forms";
 
     Counter counter = new Counter(2);
 
@@ -468,13 +465,7 @@ class JGitServiceSyncTest {
     when(git.fetch()).thenReturn(fetchCommand);
     when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
 
-    VersioningRequestDto requestDto = mock(VersioningRequestDto.class);
-    when(requestDto.getVersionName()).thenReturn(version);
-    ChangeInfoDto changeInfoDto = mock(ChangeInfoDto.class);
-
-    when(changeInfoDto.getRefs()).thenReturn("refs");
-    when(changeInfoDto.getNumber()).thenReturn(version);
-    when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
+    when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
     when(fetchCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called fetch command for {}", Thread.currentThread().getName());
@@ -499,7 +490,7 @@ class JGitServiceSyncTest {
     for (int i = 0; i < numberOfThreads; i++) {
       service.execute(() -> {
         try {
-          jGitService.delete(changeInfoDto, path);
+          jGitService.delete(repositoryName, filepath, refs, commitMessage, changeId);
         } catch (Exception e) {
           log.error("error", e);
           // Handle exception

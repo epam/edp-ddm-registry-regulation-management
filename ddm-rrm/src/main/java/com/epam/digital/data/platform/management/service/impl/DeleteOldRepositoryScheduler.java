@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

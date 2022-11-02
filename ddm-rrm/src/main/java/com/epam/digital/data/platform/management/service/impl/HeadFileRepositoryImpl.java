@@ -15,12 +15,11 @@
  */
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -30,7 +29,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.naming.OperationNotSupportedException;
 import lombok.Setter;
 import org.apache.commons.io.FilenameUtils;
 

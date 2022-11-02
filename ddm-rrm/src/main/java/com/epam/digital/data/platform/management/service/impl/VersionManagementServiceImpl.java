@@ -31,7 +31,7 @@ import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.service.JGitService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.LabelInfo;
@@ -104,7 +104,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
     log.debug("Fetching {} version candidate on remote ref", versionName);
     var changeInfoDto = gerritService.getChangeInfo(mr.changeId);
-    jGitService.fetch(versionName, changeInfoDto);
+    jGitService.fetch(versionName, changeInfoDto.getRefs());
   }
 
   @Override

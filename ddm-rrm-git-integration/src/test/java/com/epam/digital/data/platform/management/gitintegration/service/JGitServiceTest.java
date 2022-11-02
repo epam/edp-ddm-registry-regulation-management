@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.gitintegration.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
@@ -22,15 +22,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.exception.GitCommandException;
-import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
-import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
-import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
-import com.epam.digital.data.platform.management.service.impl.JGitServiceImpl;
-import com.epam.digital.data.platform.management.service.impl.JGitWrapper;
-import com.epam.digital.data.platform.management.service.impl.RequestToFileConverter;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -93,7 +87,7 @@ class JGitServiceTest {
   private FetchCommand fetchCommand;
 
   @Mock
-  private RequestToFileConverter requestToFileConverter;
+  private GitFileService gitFileService;
 
   @Mock
   private RevTree revTree;
@@ -268,7 +262,7 @@ class JGitServiceTest {
     var ioException = new IOException("io exception");
     Mockito.when(jGitWrapper.open(file)).thenThrow(ioException);
     Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(ReadingRepositoryException.class)
+        .isInstanceOf(GitCommandException.class)
         .hasMessage("Exception occurred during repository opening: io exception")
         .hasCause(ioException);
   }
@@ -328,7 +322,7 @@ class JGitServiceTest {
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(headBranch);
 
     Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(ReadingRepositoryException.class)
+        .isInstanceOf(RepositoryNotFoundException.class)
         .hasNoCause()
         .hasMessage("Repository " + headBranch + " doesn't exists");
 
@@ -344,9 +338,6 @@ class JGitServiceTest {
     var refs = RandomString.make();
     var file = new File(tempDir, repoName);
     Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setRefs(refs);
 
     var fetchCommand = Mockito.mock(FetchCommand.class);
     var checkoutCommand = Mockito.mock(CheckoutCommand.class);
@@ -367,7 +358,7 @@ class JGitServiceTest {
 
     Mockito.when(checkoutCommand.setName(Constants.FETCH_HEAD)).thenReturn(checkoutCommand);
 
-    jGitService.fetch(repoName, changeInfoDto);
+    jGitService.fetch(repoName, refs);
 
     Mockito.verify(jGitWrapper).open(file);
 
@@ -393,9 +384,6 @@ class JGitServiceTest {
     var file = new File(tempDir, repoName);
     Assertions.assertThat(file.createNewFile()).isTrue();
 
-    var changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setRefs(refs);
-
     var fetchCommand = Mockito.mock(FetchCommand.class);
     var checkoutCommand = Mockito.mock(CheckoutCommand.class);
 
@@ -417,7 +405,7 @@ class JGitServiceTest {
 
     var invalidRemote = new InvalidRemoteException("invalid remote");
     Mockito.when(fetchCommand.call()).thenThrow(invalidRemote).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Default remote \"origin\" cannot be invalid")
         .hasCause(invalidRemote);
@@ -425,7 +413,7 @@ class JGitServiceTest {
     var checkoutConflict = new CheckoutConflictException(List.of(),
         new org.eclipse.jgit.errors.CheckoutConflictException("form.json"));
     Mockito.when(checkoutCommand.call()).thenThrow(checkoutConflict).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Checkout on FETCH_HEAD must not throw such exception: "
             + checkoutConflict.getMessage())
@@ -433,7 +421,7 @@ class JGitServiceTest {
 
     var refAlreadyExists = new RefAlreadyExistsException("ref already exists");
     Mockito.when(checkoutCommand.call()).thenThrow(refAlreadyExists).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Checkout on FETCH_HEAD must not throw such exception: "
             + refAlreadyExists.getMessage())
@@ -441,7 +429,7 @@ class JGitServiceTest {
 
     var refNotFound = new RefNotFoundException("ref not found");
     Mockito.when(checkoutCommand.call()).thenThrow(refNotFound).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(
             "Checkout on FETCH_HEAD must not throw such exception: " + refNotFound.getMessage())
@@ -449,7 +437,7 @@ class JGitServiceTest {
 
     var invalidRefName = new InvalidRefNameException("invalid ref name");
     Mockito.when(checkoutCommand.call()).thenThrow(invalidRefName).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage(
             "Checkout on FETCH_HEAD must not throw such exception: " + invalidRefName.getMessage())
@@ -465,9 +453,6 @@ class JGitServiceTest {
     var refs = RandomString.make();
     var file = new File(tempDir, repoName);
     Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setRefs(refs);
 
     var fetchCommand = Mockito.mock(FetchCommand.class);
     var checkoutCommand = Mockito.mock(CheckoutCommand.class);
@@ -491,13 +476,13 @@ class JGitServiceTest {
     var gitAPIException = new GitAPIException("some git API exception") {
     };
     Mockito.when(fetchCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Exception occurred while fetching: some git API exception")
         .hasCause(gitAPIException);
 
     Mockito.when(checkoutCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, changeInfoDto))
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Exception occurred while checkout: some git API exception")
         .hasCause(gitAPIException);
@@ -507,9 +492,9 @@ class JGitServiceTest {
   @SneakyThrows
   void testFetchDirectoryNotExist() {
     var repoName = RandomString.make();
-
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, new ChangeInfoDto()))
-        .isInstanceOf(ReadingRepositoryException.class)
+    final String refs = RandomString.make();
+    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
+        .isInstanceOf(RepositoryNotFoundException.class)
         .hasMessage("Repository " + repoName + " doesn't exists")
         .hasNoCause();
 
@@ -590,30 +575,40 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void testAmendRepositoryNotExist() {
-    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.amend(VersioningRequestDto.builder()
-        .versionName("1")
-        .build(), new ChangeInfoDto()));
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    final var filecontent = RandomString.make();
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class)
+        .isThrownBy(() -> jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent));
   }
 
   @Test
   @SneakyThrows
   void testAmendEmptyInput() {
-    var repo = new File(tempDir, "version");
+
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    final var filecontent = RandomString.make();
+    var repo = new File(tempDir, repositoryName);
     Assertions.assertThat(repo.createNewFile()).isTrue();
 
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
     Mockito.when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
     Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
-    var requestDto = VersioningRequestDto.builder().versionName("version").build();
-    Mockito.when(requestToFileConverter.convert(requestDto)).thenReturn(null);
+    Mockito.when(gitFileService.writeFile(repositoryName, filecontent, filepath)).thenReturn(null);
 
-    ChangeInfoDto changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setRefs("refs");
-    jGitService.amend(requestDto, changeInfoDto);
+
+    jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
     Mockito.verify(git, never()).add();
     Mockito.verify(git, never()).rm();
   }
@@ -655,20 +650,22 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void deleteFalseTest() {
-    var repo = new File(tempDir, "1");
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    var repo = new File(tempDir, repositoryName);
     Assertions.assertThat(repo.createNewFile()).isTrue();
 
-    ChangeInfoDto dto = new ChangeInfoDto();
-    dto.setRefs("refs");
-    dto.setNumber("1");
     Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
     Mockito.when(git.fetch()).thenReturn(fetchCommand);
     Mockito.when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setRefSpecs("refs")).thenReturn(fetchCommand);
+    Mockito.when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
     Mockito.when(git.checkout()).thenReturn(checkoutCommand);
     Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    jGitService.delete(dto, "form");
+    jGitService.delete(repositoryName, filepath, refs, commitMessage, changeId);
     Mockito.verify(checkoutCommand).call();
     Mockito.verify(git, never()).add();
     Mockito.verify(git, never()).rm();
@@ -677,8 +674,12 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void deleteRepoNotExistTest() {
-    var changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setNumber("1");
-    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.delete(changeInfoDto, "form"));
+    final var repositoryName = RandomString.make();
+    final var refs = RandomString.make();
+    final var commitMessage = RandomString.make();
+    final var changeId = RandomString.make();
+    final var filepath = RandomString.make();
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(
+        () -> jGitService.delete(repositoryName, filepath, refs, commitMessage, changeId));
   }
 }

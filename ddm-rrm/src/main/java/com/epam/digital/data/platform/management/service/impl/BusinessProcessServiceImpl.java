@@ -22,9 +22,9 @@ import com.epam.digital.data.platform.management.exception.BusinessProcessAlread
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
-import com.epam.digital.data.platform.management.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-import com.epam.digital.data.platform.management.model.dto.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
