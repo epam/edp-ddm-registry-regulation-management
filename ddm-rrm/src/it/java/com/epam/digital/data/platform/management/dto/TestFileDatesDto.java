@@ -16,19 +16,14 @@
 
 package com.epam.digital.data.platform.management.dto;
 
-import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Builder
-public class TestFormDetailsShort {
+public class TestFileDatesDto {
 
-  private String name;
-  private String title;
-  private LocalDateTime created;
-  private LocalDateTime updated;
-  private String content;
+  private String created;
+  private String updated;
+
 }

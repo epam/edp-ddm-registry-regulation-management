@@ -16,73 +16,156 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import java.util.HashMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import lombok.SneakyThrows;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class CandidateVersionSettingsControllerIT extends BaseIT {
+@DisplayName("Settings in version candidates controller tests")
+class CandidateVersionSettingsControllerIT extends BaseIT {
 
-  private static final String BASE_REQUEST = "/versions/candidates/";
+  @Nested
+  @DisplayName("GET /versions/candidates/{versionCandidateId}/settings")
+  class CandidateVersionSettingsGetSettingsControllerIT {
 
-  private static final String GLOBAL_SETTINGS_VALUE =
-      "supportEmail: \"support@registry.gov.ua\"\n" +
-          "themeFile: \"white-theme.js\"\n";
-  private static final String SETTINGS_VALUE = "settings:\n" +
-      "  general:\n" +
-//      "    validation:\n" + TODO uncomment after validator-cli update
-//      "      email:\n" +
-//      "        blacklist:\n" +
-//      "          domains:\n" +
-//      "          - \"ya.ua\"\n" +
-//      "          - \"ya.ru\"\n" +
-      "    titleFull: \"<Registry name>\"\n" +
-      "    title: \"mdtuddm\"\n";
+    @Test
+    @DisplayName("should return 200 with version candidate settings")
+    @SneakyThrows
+    void getSettings() {
+      // create version candidate
+      final var versionCandidateId = context.createVersionCandidate();
 
-  @Test
-  @SneakyThrows
-  void getSettings() {
-    String versionCandidateId = RandomString.make();
-    String formName = "formName";
+      // add files to version candidate remote
+      final var globalVarsContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/settings/GET/camunda-global-system-vars.yml");
+      context.addFileToVersionCandidateRemote(
+          "/global-vars/camunda-global-system-vars.yml", globalVarsContent);
+      final var settingsContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/settings/GET/settings.yml");
+      context.addFileToVersionCandidateRemote("/settings/settings.yml",
+          settingsContent);
 
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
-    final var versionCandidateCloneResult = jGitWrapperMock.mockCloneCommand(versionCandidateId);
-    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE, GLOBAL_SETTINGS_VALUE);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST + versionCandidateId + "/settings")
-            .accept(MediaType.APPLICATION_JSON_VALUE))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType("application/json"),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua")),
-            jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.titleFull", is("<Registry name>")),
-//            jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
-            jsonPath("title", is("mdtuddm")));
+      // perform request
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/settings", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$.supportEmail", is("vc@registry.gov.ua")),
+          jsonPath("$.themeFile", is("vc-white-theme.js")),
+          jsonPath("$.titleFull", is("Version candidate Registry full title")),
+//        jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
+          jsonPath("title", is("Version candidate Registry title"))
+      );
+    }
 
-    Mockito.verify(versionCandidateCloneResult).close();
+    @Test
+    @DisplayName("should return 404 if version candidate doesn't exist")
+    @SneakyThrows
+    void getSettings_noVersionCandidate() {
+      // create version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform request
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/settings", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType("application/json"),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
+  }
+
+  @Nested
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/settings")
+  class CandidateVersionSettingsUpdateSettingsControllerIT {
+
+    @Test
+    @DisplayName("should return 200 and update version candidate settings")
+    @SneakyThrows
+    void getSettings() {
+      // create version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform request
+      final var requestBody = Map.of(
+          "supportEmail", "putvc@registry.gov.ua",
+          "themeFile", "put-vc-white-theme.js",
+          "titleFull", "PUT Version candidate Registry full title",
+          "title", "PUT Version candidate Registry title"
+      );
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/settings", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(new ObjectMapper().writeValueAsString(requestBody))
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$.supportEmail", is("putvc@registry.gov.ua")),
+          jsonPath("$.themeFile", is("put-vc-white-theme.js")),
+          jsonPath("$.titleFull", is("PUT Version candidate Registry full title")),
+//        jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
+          jsonPath("title", is("PUT Version candidate Registry title"))
+      );
+
+      // define expected files contents
+      final var expectedGlobalVarsContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/settings/PUT/camunda-global-system-vars.yml");
+      final var expectedSettingsContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/settings/PUT/settings.yml");
+      // define actual file contents
+      final var actualGlobalVarsContent = context.getFileFromRemoteVersionCandidateRepo(
+          "global-vars/camunda-global-system-vars.yml");
+      final var actualSettingsContent = context.getFileFromRemoteVersionCandidateRepo(
+          "settings/settings.yml");
+
+      Assertions.assertThat(actualGlobalVarsContent)
+          .isEqualTo(expectedGlobalVarsContent);
+      Assertions.assertThat(actualSettingsContent)
+          .isEqualTo(expectedSettingsContent);
+    }
+
+    @Test
+    @DisplayName("should return 404 if version candidate doesn't exist")
+    @SneakyThrows
+    void updateSettings_noVersionCandidate() {
+      // create version candidate
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform request
+      final var requestBody = Map.of(
+          "supportEmail", "putvc@registry.gov.ua",
+          "themeFile", "put-vc-white-theme.js",
+          "titleFull", "PUT Version candidate Registry full title",
+          "title", "PUT Version candidate Registry title"
+      );
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/settings", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON)
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(new ObjectMapper().writeValueAsString(requestBody))
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType("application/json"),
+          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+      );
+    }
   }
 }

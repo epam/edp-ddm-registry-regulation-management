@@ -16,11 +16,14 @@
 
 package com.epam.digital.data.platform.management.exception;
 
+import static com.epam.digital.data.platform.management.util.Header.TRACE_ID;
+
 import com.epam.digital.data.platform.management.controller.BusinessProcess;
-import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
+import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -31,10 +34,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import java.util.Objects;
-
-import static com.epam.digital.data.platform.management.util.Header.TRACE_ID;
 
 @Slf4j
 @RestControllerAdvice
@@ -266,7 +265,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       ConstraintViolationException exception) {
     if (getAnnotationFromConstraintViolationException(exception) instanceof BusinessProcess) {
       log.warn("Business process content has errors");
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
           .body(newDetailedResponse(BUSINESS_PROCESS_CONTENT_EXCEPTION, exception));
     }
     log.error("Constraint violation exception");
@@ -274,11 +273,12 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(CONSTRAINT_VIOLATION_EXCEPTION, exception));
   }
 
-  private Annotation getAnnotationFromConstraintViolationException(ConstraintViolationException exception) {
+  private Annotation getAnnotationFromConstraintViolationException(
+      ConstraintViolationException exception) {
     var constraintViolations = exception.getConstraintViolations();
     if (constraintViolations != null && !constraintViolations.isEmpty()) {
       var next = constraintViolations.iterator().next();
-      if(next != null && next.getConstraintDescriptor() != null) {
+      if (next != null && next.getConstraintDescriptor() != null) {
         return next.getConstraintDescriptor().getAnnotation();
       }
     }

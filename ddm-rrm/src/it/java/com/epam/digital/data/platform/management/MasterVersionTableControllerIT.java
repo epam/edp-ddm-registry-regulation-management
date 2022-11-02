@@ -29,9 +29,11 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
+@DisplayName("Tables in master version controller tests")
 public class MasterVersionTableControllerIT extends BaseIT {
 
   static final String BASE_URL = "/versions/master/tables";
@@ -60,30 +62,36 @@ public class MasterVersionTableControllerIT extends BaseIT {
   }
 
   @Test
+  @DisplayName("GET /versions/master/tables should return 200 with all tables")
   @SneakyThrows
   void getTablesTest() {
-    mockMvc.perform(get(BASE_URL))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.[0].name", is("table_sample")),
-            jsonPath("$.[0].description", is("John Doe's table")),
-            jsonPath("$.[0].objectReference", is(true)),
-            jsonPath("$.[0].historyFlag", is(false)));
+    mockMvc.perform(
+        get(BASE_URL)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.[0].name", is("table_sample")),
+        jsonPath("$.[0].description", is("John Doe's table")),
+        jsonPath("$.[0].objectReference", is(true)),
+        jsonPath("$.[0].historyFlag", is(false))
+    );
   }
 
   @Test
+  @DisplayName("GET /versions/master/tables/{tableName} should return 200 with table info")
   @SneakyThrows
   void getTableTest() {
     var name = "table_sample";
-    mockMvc.perform(get(String.format("%s/%s", BASE_URL, name)))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.name", is(name)),
-            jsonPath("$.description", is("John Doe's table")),
-            jsonPath("$.objectReference", is(true)),
-            jsonPath("$.historyFlag", is(false)));
+    mockMvc.perform(
+        get(String.format("%s/%s", BASE_URL, name))
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.name", is(name)),
+        jsonPath("$.description", is("John Doe's table")),
+        jsonPath("$.objectReference", is(true)),
+        jsonPath("$.historyFlag", is(false))
+    );
   }
 
   @AfterEach

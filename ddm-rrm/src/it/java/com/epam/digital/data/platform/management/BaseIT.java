@@ -16,20 +16,14 @@
 
 package com.epam.digital.data.platform.management;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.mock.GerritApiMock;
-import com.epam.digital.data.platform.management.mock.JGitWrapperMock;
-import com.epam.digital.data.platform.management.util.InitialisationUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import com.epam.digital.data.platform.management.context.TestExecutionContext;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
+import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.FileSystemUtils;
 
 @ActiveProfiles({"local", "test"})
 @AutoConfigureMockMvc
@@ -49,24 +44,10 @@ import org.springframework.test.web.servlet.MockMvc;
     classes = UserImportApplication.class)
 public abstract class BaseIT {
 
-  protected static File tempRepoDirectory;
-
   @Autowired
   protected MockMvc mockMvc;
   @Autowired
-  protected JGitWrapperMock jGitWrapperMock;
-  @Autowired
-  protected GerritApiMock gerritApiMock;
-  @Autowired
-  protected GerritPropertiesConfig gerritPropertiesConfig;
-  @Autowired
-  protected ObjectMapper objectMapper;
-
-  protected final String testProcessFormat = getResource("test-process-format.bpmn");
-  protected final String testForm = getResource("test-form-sample.json");
-  protected final String testProcessFormatWithDates = getResource(
-      "test-process-format-with-dates.bpmn");
-  protected final String businessProcess = getResource("test-process.bpmn");
+  protected TestExecutionContext context;
   protected final static Map<String, String> BPMN_NAMESPACES = Map.of(
       "bpmn", "http://www.omg.org/spec/BPMN/20100524/MODEL",
       "bpmndi", "http://www.omg.org/spec/BPMN/20100524/DI",
@@ -74,12 +55,11 @@ public abstract class BaseIT {
       "modeler", "http://camunda.org/schema/modeler/1.0");
 
   @BeforeAll
-  static void setUpStatic() throws IOException {
+  @SneakyThrows
+  static void setUpStatic() {
     var path = System.getProperty("gerrit.repository-directory");
-    if (Objects.nonNull(path)) {
-      tempRepoDirectory = new File(path);
-    } else {
-      tempRepoDirectory = Files.createTempDirectory("testDirectory").toFile();
+    if (Objects.isNull(path)) {
+      final var tempRepoDirectory = Files.createTempDirectory("testDirectory").toFile();
       System.setProperty("gerrit.repository-directory", tempRepoDirectory.getPath());
     }
   }
@@ -87,23 +67,26 @@ public abstract class BaseIT {
   @BeforeEach
   @SneakyThrows
   void setUp() {
-    jGitWrapperMock.init();
-    gerritApiMock.init();
-    InitialisationUtils.createTempRepo(gerritPropertiesConfig.getHeadBranch());
-  }
+    if (!context.getTestDirectory().exists()) {
+      Assertions.assertTrue(context.getTestDirectory().mkdirs());
+    }
 
-  @SneakyThrows
-  private String getResource(String resourcePath) {
-    return IOUtils.toString(getClass().getClassLoader().getResourceAsStream(resourcePath),
-        StandardCharsets.UTF_8);
+    final var headDir = context.getHeadRepo();
+    try (var git = Git.init()
+        .setInitialBranch(context.getGerritProps().getHeadBranch())
+        .setDirectory(headDir)
+        .call()) {
+      // init head repo
+      FileSystemUtils.copyRecursively(Path.of(ClassLoader.getSystemResource("baseRepo").toURI()),
+          headDir.toPath());
+      git.add().addFilepattern(".").call();
+      git.commit().setMessage("added folder structure").call();
+    }
   }
 
   @AfterEach
   @SneakyThrows
   void tearDown() {
-    FileUtils.deleteDirectory(tempRepoDirectory);
-    Assertions.assertTrue(tempRepoDirectory.mkdirs());
-    jGitWrapperMock.resetAll();
-    gerritApiMock.resetAll();
+    FileUtils.forceDelete(context.getTestDirectory());
   }
 }

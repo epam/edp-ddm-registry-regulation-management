@@ -16,69 +16,35 @@
 
 package com.epam.digital.data.platform.management;
 
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfo;
-import static com.epam.digital.data.platform.management.util.InitialisationUtils.initChangeInfoDto;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.RevisionInfo;
-import java.util.HashMap;
 import lombok.SneakyThrows;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-public class MasterVersionSettingsControllerIT extends BaseIT {
-
-  private static final String BASE_REQUEST = "/versions/master/settings";
-  private static final String GLOBAL_SETTINGS_VALUE = "supportEmail: \"support@registry.gov.ua\"\n" +
-      "themeFile: \"white-theme.js\"\n";
-  private static final String SETTINGS_VALUE = "settings:\n" +
-      "  general:\n" +
-//      "    validation:\n" + TODO uncomment after validator-cli update
-//      "      email:\n" +
-//      "        blacklist:\n" +
-//      "          domains:\n" +
-//      "          - \"ya.ua\"\n" +
-//      "          - \"ya.ru\"\n" +
-      "    titleFull: \"<Registry name>\"\n" +
-      "    title: \"mdtuddm\"\n";
+@DisplayName("Settings in master version controller tests")
+class MasterVersionSettingsControllerIT extends BaseIT {
 
   @Test
+  @DisplayName("GET /versions/master/settings should return 200 with all settings")
   @SneakyThrows
   void getSettings() {
-    final var versionCandidateId = RandomString.make();
-    String formName = "formName";
-
-    ChangeInfo changeInfo = initChangeInfo(1, "admin", "admin@epam.com", "admin");
-    ChangeInfoDto changeInfoDto = initChangeInfoDto(versionCandidateId);
-    changeInfo.revisions = new HashMap<>();
-    RevisionInfo revisionInfo = new RevisionInfo();
-    revisionInfo.ref = versionCandidateId;
-    changeInfo.revisions.put(formName, revisionInfo);
-    changeInfo.currentRevision = formName;
-    changeInfoDto.setRefs(versionCandidateId);
-    jGitWrapperMock.mockGetSettings(SETTINGS_VALUE, GLOBAL_SETTINGS_VALUE);
-    jGitWrapperMock.mockCheckoutCommand();
-    jGitWrapperMock.mockFetchCommand(changeInfoDto);
-    jGitWrapperMock.mockPullCommand();
-    gerritApiMock.mockGetChangeInfo(versionCandidateId, changeInfo);
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_REQUEST)
-            .accept(MediaType.APPLICATION_JSON_VALUE))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType("application/json"),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua")),
-            jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.titleFull", is("<Registry name>")),
-//            jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
-            jsonPath("title", is("mdtuddm")));
+    mockMvc.perform(
+        get("/versions/master/settings")
+            .accept(MediaType.APPLICATION_JSON_VALUE)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType("application/json"),
+        jsonPath("$.supportEmail", is("support@registry.gov.ua")),
+        jsonPath("$.themeFile", is("white-theme.js")),
+        jsonPath("$.titleFull", is("Registry full title")),
+//      jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
+        jsonPath("title", is("Registry title"))
+    );
   }
-
 }

@@ -28,11 +28,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.controller.CandidateVersionBusinessProcessesController;
 import com.epam.digital.data.platform.management.controller.CandidateVersionFormsController;
 import com.epam.digital.data.platform.management.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.controller.UserImportController;
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
@@ -314,13 +314,13 @@ class ApplicationExceptionHandlerTest {
     var content = TestUtils.getContent("bp-incorrect-tag.xml");
 
     mockMvc.perform(
-            post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
-                versionName, bpName).content(content))
-        .andExpect(status().isInternalServerError())
-        .andExpectAll(
-            jsonPath("$.code").value("BUSINESS_PROCESS_CONTENT_EXCEPTION"),
-            jsonPath("$.statusDetails").doesNotExist(),
-            jsonPath("$.localizedMessage").doesNotExist());
+        post("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
+            versionName, bpName).content(content)
+    ).andExpectAll(
+        status().isUnprocessableEntity(),
+        jsonPath("$.code").value("BUSINESS_PROCESS_CONTENT_EXCEPTION"),
+        jsonPath("$.statusDetails").doesNotExist(),
+        jsonPath("$.localizedMessage").doesNotExist());
   }
 
   @Test
