@@ -26,9 +26,9 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 
 public interface VersionedFileRepository {
 
-  List<FileResponse> getFileList() throws IOException, RestApiException;
+  List<FileResponse> getFileList() throws RestApiException;
 
-  List<FileResponse> getFileList(String path) throws IOException, RestApiException;
+  List<FileResponse> getFileList(String path) throws RestApiException;
 
   void writeFile(String path, String content) throws RestApiException, GitAPIException, URISyntaxException, IOException;
 

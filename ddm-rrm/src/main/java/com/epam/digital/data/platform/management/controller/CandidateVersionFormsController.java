@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Tag(name = "Registry regulations version-candidate Forms management Rest API")
 @RestController
 @RequestMapping("/versions/candidates/{versionCandidateId}/forms")
@@ -82,15 +84,17 @@ public class CandidateVersionFormsController {
   public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId)
       throws IOException, RestApiException {
-    return ResponseEntity.ok()
-        .body(formService.getFormListByVersion(versionCandidateId).stream()
-            .map(e -> FormDetailsShort.builder()
-                .name(e.getName())
-                .title(e.getTitle())
-                .created(e.getCreated())
-                .updated(e.getUpdated())
-                .build())
-            .collect(Collectors.toList()));
+    log.info("Started getting forms for {} version candidate", versionCandidateId);
+    var response = formService.getFormListByVersion(versionCandidateId).stream()
+        .map(e -> FormDetailsShort.builder()
+            .name(e.getName())
+            .title(e.getTitle())
+            .created(e.getCreated())
+            .updated(e.getUpdated())
+            .build())
+        .collect(Collectors.toList());
+    log.info("Found {} forms from {} version candidate", response.size(), versionCandidateId);
+    return ResponseEntity.ok().body(response);
   }
 
   @Operation(description = "Create new form within specific version-candidate",
@@ -130,11 +134,15 @@ public class CandidateVersionFormsController {
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the new form to be created", required = true) String formName)
       throws GitAPIException, IOException, URISyntaxException, RestApiException {
+    log.info("Started creating {} form for {} version candidate", formName, versionCandidateId);
     formService.createForm(formName, form, versionCandidateId);
+    log.info("Form {} was created for {} version candidate. Retrieving this form", formName, versionCandidateId);
+    var response = formService.getFormContent(formName, versionCandidateId);
+    log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
         .contentType(MediaType.APPLICATION_JSON)
-        .body(formService.getFormContent(formName, versionCandidateId));
+        .body(response);
   }
 
   @Operation(description = "Get full details of the specific form within version-candidate",
@@ -163,9 +171,12 @@ public class CandidateVersionFormsController {
   public ResponseEntity<String> getForm(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Form name", required = true) String formName) throws IOException {
+    log.info("Started getting {} form from {} version candidate", formName, versionCandidateId);
+    var response = formService.getFormContent(formName, versionCandidateId);
+    log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(formService.getFormContent(formName, versionCandidateId));
+        .body(response);
   }
 
   @Operation(description = "Update existing form within version-candidate",
@@ -201,10 +212,14 @@ public class CandidateVersionFormsController {
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the form to be updated", required = true) String formName)
       throws GitAPIException, IOException, URISyntaxException, RestApiException {
+    log.info("Started updating {} form for {} version candidate", formName, versionCandidateId);
     formService.updateForm(String.valueOf(form), formName, versionCandidateId);
+    log.info("Finished updating {} form for {} version candidate. Retrieving this form", formName, versionCandidateId);
+    var response = formService.getFormContent(formName, versionCandidateId);
+    log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(formService.getFormContent(formName, versionCandidateId));
+        .body(response);
   }
 
   @Operation(description = "Delete existing form within version-candidate",
@@ -235,7 +250,9 @@ public class CandidateVersionFormsController {
   public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName)
       throws IOException, GitAPIException, URISyntaxException, RestApiException {
+    log.info("Started deleting form {} from {} version candidate", formName, versionCandidateId);
     formService.deleteForm(formName, versionCandidateId);
+    log.info("Form {} was deleted from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.noContent().build();
   }
 }

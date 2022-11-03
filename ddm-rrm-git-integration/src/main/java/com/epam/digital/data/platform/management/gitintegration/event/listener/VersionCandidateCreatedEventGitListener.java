@@ -42,7 +42,7 @@ public class VersionCandidateCreatedEventGitListener implements
     var versionCandidateNumber = event.getVersionCandidateNumber();
     log.debug("Handling version candidate {} created event", versionCandidateNumber);
     try {
-      gitService.cloneRepo(versionCandidateNumber);
+      gitService.cloneRepoIfNotExist(versionCandidateNumber);
     } catch (Throwable e) {
       log.error("Version candidate {} creation handling have been failed...",
           versionCandidateNumber, e);

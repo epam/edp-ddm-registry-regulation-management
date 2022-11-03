@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +40,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Tag(name = "Registry regulations master Business processes management Rest API")
 @RestController
 @RequestMapping("/versions/master/business-processes")
@@ -71,15 +73,17 @@ public class MasterVersionBusinessProcessesController {
   @GetMapping
   public ResponseEntity<List<BusinessProcessDetailsShort>> getBusinessProcessesFromMaster() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
-    return ResponseEntity.ok()
-        .body(businessProcessService.getProcessesByVersion(masterVersionId).stream()
-            .map(e -> BusinessProcessDetailsShort.builder()
-                .name(e.getName())
-                .title(e.getTitle())
-                .created(e.getCreated())
-                .updated(e.getUpdated())
-                .build())
-            .collect(Collectors.toList()));
+    log.info("Started getting business processes from master");
+    var response = businessProcessService.getProcessesByVersion(masterVersionId).stream()
+        .map(e -> BusinessProcessDetailsShort.builder()
+            .name(e.getName())
+            .title(e.getTitle())
+            .created(e.getCreated())
+            .updated(e.getUpdated())
+            .build())
+        .collect(Collectors.toList());
+    log.info("Found {} business processes in master", response.size());
+    return ResponseEntity.ok().body(response);
   }
 
   @Operation(description = "Get business process",
@@ -111,8 +115,9 @@ public class MasterVersionBusinessProcessesController {
   public ResponseEntity<String> getBusinessProcess(
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
-    return ResponseEntity.ok()
-        .contentType(MediaType.TEXT_XML)
-        .body(businessProcessService.getProcessContent(businessProcessName, masterVersionId));
+    log.info("Started getting {} business process from master", businessProcessName);
+    var response = businessProcessService.getProcessContent(businessProcessName, masterVersionId);
+    log.info("Finished getting {} business process from master", businessProcessName);
+    return ResponseEntity.ok().contentType(MediaType.TEXT_XML).body(response);
   }
 }

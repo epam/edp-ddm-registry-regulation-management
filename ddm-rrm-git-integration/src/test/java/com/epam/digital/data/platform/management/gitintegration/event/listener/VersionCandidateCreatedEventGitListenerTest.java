@@ -44,11 +44,11 @@ class VersionCandidateCreatedEventGitListenerTest {
     final var versionNumber = RandomString.make();
     final var event = new VersionCandidateCreatedEvent(source, versionNumber);
 
-    Mockito.doNothing().when(gitService).cloneRepo(versionNumber);
+    Mockito.doNothing().when(gitService).cloneRepoIfNotExist(versionNumber);
 
     listener.handleVersionCandidateCreatedEvent(event);
 
-    Mockito.verify(gitService).cloneRepo(versionNumber);
+    Mockito.verify(gitService).cloneRepoIfNotExist(versionNumber);
   }
 
   @Test
@@ -58,11 +58,11 @@ class VersionCandidateCreatedEventGitListenerTest {
     final var versionNumber = RandomString.make();
     final var event = new VersionCandidateCreatedEvent(source, versionNumber);
 
-    Mockito.doThrow(RuntimeException.class).when(gitService).cloneRepo(versionNumber);
+    Mockito.doThrow(RuntimeException.class).when(gitService).cloneRepoIfNotExist(versionNumber);
 
     Assertions.assertThatCode(() -> listener.handleVersionCandidateCreatedEvent(event))
         .doesNotThrowAnyException();
 
-    Mockito.verify(gitService).cloneRepo(versionNumber);
+    Mockito.verify(gitService).cloneRepoIfNotExist(versionNumber);
   }
 }

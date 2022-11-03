@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
@@ -163,8 +164,7 @@ class GerritServiceTest {
     MergeableInfo mergeableInfo = Mockito.mock(MergeableInfo.class);
     mergeableInfo.mergeable = false;
     Mockito.when(request.get()).thenReturn(new ArrayList<>());
-    ChangeInfo c = gerritService.getMRByNumber(versionNumber);
-    Assertions.assertNull(c);
+    Assertions.assertThrows(GerritChangeNotFoundException.class, () -> gerritService.getMRByNumber(versionNumber));
   }
 
   @Test

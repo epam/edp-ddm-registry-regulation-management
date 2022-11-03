@@ -79,15 +79,16 @@ public class CandidateVersionController {
       })
   @GetMapping
   public ResponseEntity<List<VersionInfo>> getVersionsList() throws RestApiException {
-    return ResponseEntity.ok(
-        versionManagementService.getVersionsList()
-            .stream().map(c -> VersionInfo.builder()
-                .id(String.valueOf(c.getNumber()))
-                .name(c.getSubject())
-                .description(c.getDescription())
-                .build())
-            .collect(Collectors.toList())
-    );
+    log.info("Started getting versions list");
+    var response = versionManagementService.getVersionsList()
+        .stream().map(c -> VersionInfo.builder()
+            .id(String.valueOf(c.getNumber()))
+            .name(c.getSubject())
+            .description(c.getDescription())
+            .build())
+        .collect(Collectors.toList());
+    log.info("Found {} version candidates", response.size());
+    return ResponseEntity.ok(response);
   }
 
 
@@ -119,7 +120,9 @@ public class CandidateVersionController {
   @PostMapping("/{versionCandidateId}/decline")
   public ResponseEntity<String> declineVersionCandidate(
       @PathVariable @Parameter(description = "Version candidate identifier to abandon", required = true) String versionCandidateId) {
+    log.info("Declining {} version candidate", versionCandidateId);
     versionManagementService.decline(versionCandidateId);
+    log.info("{} version candidate was declined", versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
@@ -156,8 +159,11 @@ public class CandidateVersionController {
   @PostMapping("/{versionCandidateId}/submit")
   public ResponseEntity<String> submitVersionCandidate(
       @PathVariable @Parameter(description = "Version candidate identifier to be merged into master version", required = true) String versionCandidateId) {
+    log.info("Started submitting {} version candidate", versionCandidateId);
     versionManagementService.markReviewed(versionCandidateId);
+    log.info("Version candidate {} was marked reviewed", versionCandidateId);
     versionManagementService.submit(versionCandidateId);
+    log.info("Version candidate {} was submitted", versionCandidateId);
     return ResponseEntity.ok().build();
   }
 
@@ -191,7 +197,7 @@ public class CandidateVersionController {
   @PostMapping
   public ResponseEntity<VersionInfoDetailed> createNewVersion(
       @RequestBody CreateVersionRequest requestDto) throws RestApiException {
-    log.info("Creating new version cwith name {}", requestDto.getName());
+    log.info("Creating new version with name {}", requestDto.getName());
     var versionId = versionManagementService.createNewVersion(requestDto);
     var changeInfo = versionManagementService.getVersionDetails(versionId);
     log.info("Version candidate with name {} was created: version id - {}", requestDto.getName(),
@@ -230,9 +236,10 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
       @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId)
       throws RestApiException {
-    ChangeInfoDetailedDto changeInfoDetailedDto = versionManagementService.getVersionDetails(
-        versionCandidateId);
-    return ResponseEntity.ok().body(mapToVersionInfoDetailed(changeInfoDetailedDto));
+    log.info("Started getting detailed info about {} version candidate", versionCandidateId);
+    var response  = mapToVersionInfoDetailed(versionManagementService.getVersionDetails(versionCandidateId));
+    log.info("Finished getting detailed info about {} version candidate", versionCandidateId);
+    return ResponseEntity.ok().body(response);
   }
 
   @Operation(description = "Get version changes by id",

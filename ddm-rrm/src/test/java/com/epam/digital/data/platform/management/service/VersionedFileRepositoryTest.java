@@ -216,7 +216,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     repository.setVersionName("version");
     repository.pullRepository();
-    Mockito.verify(jGitService, Mockito.times(1)).cloneRepo("version");
+    Mockito.verify(jGitService, Mockito.times(1)).cloneRepoIfNotExist("version");
   }
 
   @Test

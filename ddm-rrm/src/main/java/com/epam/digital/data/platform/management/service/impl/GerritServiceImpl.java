@@ -112,8 +112,7 @@ public class GerritServiceImpl implements GerritService {
     Changes changes = gerritApi.changes();
     var changeInfos = changes.query(query).get();
     if (changeInfos.isEmpty()) {
-      // todo throw not found error
-      return null;
+      throw new GerritChangeNotFoundException("Could not get change info for " + number + " MR");
     }
     ChangeApi changeApi = changes.id(changeInfos.get(0).changeId);
     ChangeInfo changeInfo = changeApi.get();

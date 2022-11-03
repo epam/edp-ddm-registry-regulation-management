@@ -73,7 +73,7 @@ public class CandidateVersionSettingsController {
   public ResponseEntity<GlobalSettingsInfo> getSettings(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
       String versionCandidateId) {
-    log.info("Called #getSettings()");
+    log.info("Called #getSettings() for {} version candidate", versionCandidateId);
     var globalSetting = globalSettingService.getGlobalSettings(versionCandidateId);
     log.info("Got settings for {} version candidate", versionCandidateId);
     return ResponseEntity.ok(globalSetting);
@@ -112,7 +112,7 @@ public class CandidateVersionSettingsController {
       @RequestBody GlobalSettingsInfo settings,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
       String versionCandidateId) {
-    log.info("Called #updateSettings()");
+    log.info("Called #updateSettings() for {} version candidate", versionCandidateId);
     globalSettingService.updateSettings(versionCandidateId, settings);
     log.info("Updated settings for {} version candidate", versionCandidateId);
     return ResponseEntity.ok()
