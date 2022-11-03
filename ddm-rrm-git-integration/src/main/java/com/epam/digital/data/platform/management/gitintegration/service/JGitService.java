@@ -33,7 +33,7 @@ public interface JGitService {
    * @param repositoryName repository identifier
    * @throws GitCommandException in case of clone repository failure
    */
-  void cloneRepoIfNotExist(String repositoryName);
+  void cloneRepoIfNotExist(@NonNull String repositoryName);
 
   /**
    * Fetches and resets repository for main branch to origin state
@@ -58,9 +58,10 @@ public interface JGitService {
    *
    * @param repositoryName name of the specified repository
    * @param path           file location
+   * @return {@link List} of {@link String} with files' names
+   *
    * @throws GitCommandException in case if it couldn't open repo or fetch or reset git command
    *                             failures
-   * @return {@link List} of {@link String} with files' names
    */
   List<String> getFilesInPath(String repositoryName, String path);
 
@@ -78,10 +79,11 @@ public interface JGitService {
    *
    * @param repositoryName name of the specified repository
    * @param filePath       file location
+   * @return {@link String} content of file
+   *
    * @throws RepositoryNotFoundException if repository not exists
    * @throws GitCommandException         in case if it couldn't open repo or fetch or reset git
    *                                     command failures
-   * @return {@link String} content of file
    */
   String getFileContent(String repositoryName, String filePath);
 

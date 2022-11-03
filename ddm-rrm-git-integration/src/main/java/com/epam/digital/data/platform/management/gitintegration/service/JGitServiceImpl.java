@@ -19,7 +19,6 @@ package com.epam.digital.data.platform.management.gitintegration.service;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
-
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +50,6 @@ import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
-import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -79,11 +77,12 @@ public class JGitServiceImpl implements JGitService {
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final GitFileService gitFileService;
   private final JGitWrapper jGitWrapper;
+  private final GitRetryable retryable;
 
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
   @Override
-  public void cloneRepoIfNotExist(String repositoryName) {
+  public void cloneRepoIfNotExist(@NonNull String repositoryName) {
     log.debug("Trying to clone repository {}", repositoryName);
     var directory = getRepositoryDir(repositoryName);
     if (directory.exists()) {
@@ -91,19 +90,10 @@ public class JGitServiceImpl implements JGitService {
       return;
     }
     log.trace("Synchronizing repo {}", repositoryName);
-    Lock lock = getLock(repositoryName);
+    var lock = getLock(repositoryName);
     lock.lock();
-    try (var call = jGitWrapper.cloneRepository()
-        .setURI(getRepositoryUrl())
-        .setCredentialsProvider(getCredentialsProvider())
-        .setCloneAllBranches(true)
-        .setDirectory(directory)
-        .call()) {
+    try (var ignored = cloneRepo(directory)) {
       log.debug("Repository {} was successfully cloned.", repositoryName);
-    } catch (GitAPIException e) {
-      throw new GitCommandException(
-          String.format("Exception occurred during cloning repository %s: %s",
-              repositoryName, e.getMessage()), e);
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
@@ -157,7 +147,8 @@ public class JGitServiceImpl implements JGitService {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
     }
-    log.debug("Repository {} was successfully fetched and checkout to ref {}", repositoryName, refs);
+    log.debug("Repository {} was successfully fetched and checkout to ref {}", repositoryName,
+        refs);
   }
 
   @Override
@@ -313,6 +304,7 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
+  @Override
   public void deleteRepo(String repoName) {
     File repositoryFile = getRepositoryDir(repoName);
     if (!repositoryFile.exists()) {
@@ -324,6 +316,27 @@ public class JGitServiceImpl implements JGitService {
       throw new GitCommandException(
           String.format("Exception occurred during deleting repository %s: %s", repoName,
               e.getMessage()), e);
+    }
+  }
+
+  @NonNull
+  private Git cloneRepo(@NonNull File repositoryDirectory) {
+    final var cloneCommand = jGitWrapper.cloneRepository()
+        .setURI(getRepositoryUrl())
+        .setCredentialsProvider(getCredentialsProvider())
+        .setCloneAllBranches(true)
+        .setDirectory(repositoryDirectory);
+    try {
+      return Objects.requireNonNull(retryable.call(cloneCommand),
+          "CloneCommand#call cannot be null");
+    } catch (InvalidRemoteException e) {
+      throw new IllegalStateException(
+          String.format("Remote that is configured under \"gerrit\" prefix is invalid: %s",
+              e.getMessage()), e);
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during cloning repository %s: %s",
+              repositoryDirectory.getName(), e.getMessage()), e);
     }
   }
 
@@ -353,13 +366,9 @@ public class JGitServiceImpl implements JGitService {
       fetchCommand.setRefSpecs(refs);
     }
     try {
-      fetchCommand.call();
+      retryable.call(fetchCommand);
     } catch (InvalidRemoteException e) {
       throw new IllegalStateException("Default remote \"origin\" cannot be invalid", e);
-    } catch (TransportException e) {
-      // TODO add retry for TransportException
-      throw new RuntimeException(
-          String.format("Transport exception occurred while fetching: %s", e.getMessage()), e);
     } catch (GitAPIException e) {
       throw new GitCommandException(
           String.format("Exception occurred while fetching: %s", e.getMessage()), e);

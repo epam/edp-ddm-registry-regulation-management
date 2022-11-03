@@ -72,6 +72,8 @@ class JGitServiceSyncTest {
   @Mock
   private JGitWrapper jGitWrapper;
   @Mock
+  private GitRetryable gitRetryable;
+  @Mock
   private Git git;
   @Mock
   private Repository repository;
@@ -79,8 +81,10 @@ class JGitServiceSyncTest {
   private GitFileService gitFileService;
 
   @BeforeEach
+  @SneakyThrows
   public void setUp() {
     Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.doCallRealMethod().when(gitRetryable).call(any());
   }
 
   @Test
