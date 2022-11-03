@@ -16,12 +16,13 @@
 package com.epam.digital.data.platform.management.gitintegration.service;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import com.epam.digital.data.platform.management.core.config.CacheConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.config.RetryConfig;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
@@ -52,28 +53,42 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {RetryConfig.class,
+    CacheConfig.class,
+    CacheAutoConfiguration.class,
+    GitRetryable.class,
+    JGitServiceImpl.class})
+@DisplayName("JGit service unit test")
 class JGitServiceTest {
 
   @TempDir
-  private File tempDir;
+  File tempDir;
 
-  @InjectMocks
-  private JGitServiceImpl jGitService;
+  @Autowired
+  JGitService jGitService;
 
-  @Mock
-  private JGitWrapper jGitWrapper;
-
-  @Mock
-  private GerritPropertiesConfig gerritPropertiesConfig;
+  @MockBean
+  JGitWrapper jGitWrapper;
+  @MockBean
+  GerritPropertiesConfig gerritPropertiesConfig;
+  @MockBean
+  GitFileService gitFileService;
 
   @Mock
   private Git git;
@@ -82,12 +97,7 @@ class JGitServiceTest {
   @Mock
   private CheckoutCommand checkoutCommand;
   @Mock
-  private CloneCommand cloneCommand;
-  @Mock
   private FetchCommand fetchCommand;
-
-  @Mock
-  private GitFileService gitFileService;
 
   @Mock
   private RevTree revTree;
@@ -100,405 +110,543 @@ class JGitServiceTest {
 
   @BeforeEach
   void setUp() {
-    Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
+    Mockito.doReturn(tempDir.getPath()).when(gerritPropertiesConfig).getRepositoryDirectory();
   }
 
-  @Test
-  @SneakyThrows
-  void testCloneRepository() {
-    var repoName = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
+  @Nested
+  @DisplayName("JGitService#clone")
+  class JGitServiceCloneTest {
 
-    jGitService.cloneRepoIfNotExist(repoName);
-    Mockito.verify(jGitWrapper, Mockito.never()).open(file);
+    @Test
+    @DisplayName("should not clone if repo already exists")
+    @SneakyThrows
+    void testCloneRepository_repoAlreadyExists() {
+      var repoName = RandomString.make();
+      var file = new File(tempDir, repoName);
+      Assertions.assertThat(file.createNewFile()).isTrue();
+
+      jGitService.cloneRepoIfNotExist(repoName);
+
+      Mockito.verify(jGitWrapper, Mockito.never()).cloneRepository();
+    }
+
+    @Test
+    @DisplayName("should clone repo doesn't exist")
+    @SneakyThrows
+    void testCloneRepository() {
+      final var context = new Context();
+
+      final var git = Mockito.mock(Git.class);
+      Mockito.doReturn(git).when(context.cloneCommand).call();
+
+      jGitService.cloneRepoIfNotExist(context.repoName);
+
+      context.verifyMockInvocations();
+      Mockito.verify(git).close();
+    }
+
+    @Test
+    @DisplayName("should throw IllegalStateException if there is invalid remote")
+    @SneakyThrows
+    void testCloneRepository_invalidRemote() {
+      final var context = new Context();
+
+      Mockito.doThrow(InvalidRemoteException.class).when(context.cloneCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.cloneRepoIfNotExist(context.repoName))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("Remote that is configured under \"gerrit\" prefix is invalid: ")
+          .hasCauseInstanceOf(InvalidRemoteException.class);
+
+      context.verifyMockInvocations();
+    }
+
+    @Test
+    @DisplayName("should retry and throw GitCommandException if there is transport exception")
+    @SneakyThrows
+    void testCloneRepository_transportException() {
+      final var context = new Context();
+
+      Mockito.doThrow(TransportException.class).when(context.cloneCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.cloneRepoIfNotExist(context.repoName))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred during cloning repository %s: ",
+              context.repoName)
+          .hasCauseInstanceOf(GitAPIException.class);
+
+      Mockito.verify(context.cloneCommand, Mockito.times(3)).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if there is unknown git exception")
+    @SneakyThrows
+    void testCloneRepository_gitApiException() {
+      final var context = new Context();
+
+      Mockito.doThrow(new GitAPIException("message") {
+      }).when(context.cloneCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.cloneRepoIfNotExist(context.repoName))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred during cloning repository %s: ",
+              context.repoName)
+          .hasCauseInstanceOf(GitAPIException.class);
+
+      context.verifyMockInvocations();
+    }
+
+    @Test
+    @DisplayName("should throw NPE if clone command returned null instead of Git (not possible in real)")
+    @SneakyThrows
+    void testCloneRepository_cloneReturnNull() {
+      final var context = new Context();
+
+      Mockito.doReturn(null).when(context.cloneCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.cloneRepoIfNotExist(context.repoName))
+          .isInstanceOf(NullPointerException.class)
+          .hasMessage("CloneCommand#call cannot be null");
+
+      context.verifyMockInvocations();
+    }
+
+    class Context {
+
+      final String repoName = RandomString.make();
+      final String repoUrl = RandomString.make();
+      final String user = RandomString.make();
+      final String password = RandomString.make();
+
+      final CloneCommand cloneCommand = Mockito.mock(CloneCommand.class);
+
+      Context() {
+        final var directory = new File(tempDir, repoName);
+
+        Mockito.doReturn(cloneCommand).when(jGitWrapper).cloneRepository();
+        Mockito.doReturn(user).when(gerritPropertiesConfig).getUser();
+        Mockito.doReturn(password).when(gerritPropertiesConfig).getPassword();
+        Mockito.doReturn(repoUrl).when(gerritPropertiesConfig).getUrl();
+        Mockito.doReturn(repoName).when(gerritPropertiesConfig).getRepository();
+
+        Mockito.doReturn(cloneCommand).when(cloneCommand).setURI(repoUrl + "/" + repoName);
+        Mockito.doReturn(cloneCommand).when(cloneCommand).setDirectory(directory);
+        Mockito.doReturn(cloneCommand).when(cloneCommand).setCredentialsProvider(
+            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+        Mockito.doReturn(cloneCommand).when(cloneCommand).setCloneAllBranches(true);
+      }
+
+      @SneakyThrows
+      void verifyMockInvocations() {
+        final var directory = new File(tempDir, repoName);
+
+        Mockito.verify(jGitWrapper).cloneRepository();
+        Mockito.verify(cloneCommand).setURI(repoUrl + "/" + repoName);
+        Mockito.verify(cloneCommand).setDirectory(directory);
+        Mockito.verify(cloneCommand).setCredentialsProvider(
+            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+        Mockito.verify(cloneCommand).setCloneAllBranches(true);
+        Mockito.verify(cloneCommand).call();
+      }
+    }
   }
 
-  @Test
-  @SneakyThrows
-  void testCloneRepository1() {
-    Mockito.when(jGitWrapper.cloneRepository()).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setURI(any())).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCredentialsProvider(any())).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setDirectory(any())).thenReturn(cloneCommand);
-    Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    jGitService.cloneRepoIfNotExist("version");
-    Mockito.verify(jGitWrapper).cloneRepository();
+  @Nested
+  @DisplayName("JGitService#resetHeadBranchToRemote")
+  class JGitServiceResetHeadBranchToRemoteTest {
+
+    @Test
+    @DisplayName("should call fetch all and reset commands")
+    @SneakyThrows
+    void testResetHeadBranchToRemote() {
+      final var context = new Context();
+
+      jGitService.resetHeadBranchToRemote();
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.resetCommand).call();
+    }
+
+    @Test
+    @DisplayName("should throw IllegalStateException if there is invalid remote")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_invalidRemote() {
+      final var context = new Context();
+
+      var invalidRemote = new InvalidRemoteException("invalid remote");
+      Mockito.when(context.fetchCommand.call()).thenThrow(invalidRemote).thenReturn(null);
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessage("Default remote \"origin\" cannot be invalid")
+          .hasCauseInstanceOf(InvalidRemoteException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.resetCommand, Mockito.never()).call();
+    }
+
+    @Test
+    @DisplayName("should throw IllegalStateException if there is checkout conflict")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_checkoutConflict() {
+      final var context = new Context();
+
+      Mockito.doThrow(CheckoutConflictException.class)
+          .when(context.resetCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("Hard reset must not face any conflicts: ")
+          .hasCauseInstanceOf(CheckoutConflictException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.resetCommand).call();
+    }
+
+    @Test
+    @DisplayName("should retry and throw GitCommandException if there is transport exception")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_transportException() {
+      final var context = new Context();
+
+      Mockito.doThrow(TransportException.class)
+          .when(context.fetchCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred while fetching: ")
+          .hasCauseInstanceOf(TransportException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand, Mockito.times(3)).call();
+      Mockito.verify(context.resetCommand, Mockito.never()).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if couldn't open the repo due to any IOException")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_couldNotOpenRepo() {
+      var repoName = RandomString.make();
+      var file = new File(tempDir, repoName);
+      Assertions.assertThat(file.createNewFile()).isTrue();
+
+      Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
+
+      Mockito.doThrow(IOException.class).when(jGitWrapper).open(file);
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred during repository opening: ")
+          .hasCauseInstanceOf(IOException.class);
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if there is unknown git exception during fetch")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_fetchGitCommandException() {
+      final var context = new Context();
+
+      var gitAPIException = new GitAPIException("some git API exception") {
+      };
+      Mockito.doThrow(gitAPIException)
+          .when(context.fetchCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(GitCommandException.class)
+          .hasMessage("Exception occurred while fetching: some git API exception")
+          .hasCause(gitAPIException);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.resetCommand, Mockito.never()).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if there is unknown git exception during reset")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_resetGitCommandException() {
+      final var context = new Context();
+
+      var gitAPIException = new GitAPIException("some git API exception") {
+      };
+      Mockito.doThrow(gitAPIException)
+          .when(context.resetCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(GitCommandException.class)
+          .hasMessage("Exception occurred during hard reset on origin %s: some git API exception",
+              context.repoName)
+          .hasCause(gitAPIException);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.resetCommand).call();
+    }
+
+    @Test
+    @DisplayName("should throw RepositoryNotFoundException if couldn't open the repo due to non existence")
+    @SneakyThrows
+    void testResetHeadBranchToRemoteDirectoryNotExist() {
+      var headBranch = RandomString.make();
+      var repo = new File(tempDir, headBranch);
+      Assertions.assertThat(repo.exists()).isFalse();
+
+      Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(headBranch);
+
+      Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
+          .isInstanceOf(RepositoryNotFoundException.class)
+          .hasNoCause()
+          .hasMessage("Repository " + headBranch + " doesn't exists");
+
+      Mockito.verify(jGitWrapper, never()).open(any());
+    }
+
+    class Context {
+
+      final String repoName = RandomString.make();
+      final String user = RandomString.make();
+      final String password = RandomString.make();
+
+      final File directory = new File(tempDir, repoName);
+      final Git git = Mockito.mock(Git.class);
+
+      final FetchCommand fetchCommand = Mockito.mock(FetchCommand.class);
+      final ResetCommand resetCommand = Mockito.mock(ResetCommand.class);
+
+      @SneakyThrows
+      Context() {
+        Assertions.assertThat(directory.mkdirs()).isTrue();
+        Mockito.doReturn(git).when(jGitWrapper).open(directory);
+        Mockito.doReturn(repoName).when(gerritPropertiesConfig).getHeadBranch();
+        Mockito.doReturn(user).when(gerritPropertiesConfig).getUser();
+        Mockito.doReturn(password).when(gerritPropertiesConfig).getPassword();
+
+        Mockito.doReturn(fetchCommand).when(git).fetch();
+        Mockito.doReturn(fetchCommand)
+            .when(fetchCommand).setCredentialsProvider(
+                Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+
+        Mockito.doReturn(resetCommand).when(git).reset();
+        Mockito.doReturn(resetCommand).when(resetCommand).setMode(ResetType.HARD);
+        Mockito.doReturn(resetCommand)
+            .when(resetCommand).setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName);
+      }
+
+      @SneakyThrows
+      void verifyMockInvocations() {
+        Mockito.verify(jGitWrapper).open(directory);
+
+        Mockito.verify(git).fetch();
+        Mockito.verify(fetchCommand).setCredentialsProvider(
+            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+
+        Mockito.verify(git, Mockito.atMostOnce()).reset();
+        Mockito.verify(resetCommand, Mockito.atMostOnce()).setMode(ResetType.HARD);
+        Mockito.verify(resetCommand, Mockito.atMostOnce())
+            .setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName);
+
+        Mockito.verify(git).close();
+      }
+    }
   }
 
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemote() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var resetCommand = Mockito.mock(ResetCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.reset()).thenReturn(resetCommand);
-
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(resetCommand.setMode(ResetType.HARD)).thenReturn(resetCommand);
-    Mockito.when(resetCommand.setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName))
-        .thenReturn(resetCommand);
-
-    jGitService.resetHeadBranchToRemote();
-
-    Mockito.verify(jGitWrapper).open(file);
-
-    Mockito.verify(git).fetch();
-    Mockito.verify(git).reset();
-    Mockito.verify(git).close();
-
-    Mockito.verify(fetchCommand).setCredentialsProvider(
-        Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
-    Mockito.verify(fetchCommand).call();
-
-    Mockito.verify(resetCommand).setMode(ResetType.HARD);
-    Mockito.verify(resetCommand).setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName);
-    Mockito.verify(resetCommand).call();
-  }
-
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemote_illegalState() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var resetCommand = Mockito.mock(ResetCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.reset()).thenReturn(resetCommand);
-
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(resetCommand.setMode(ResetType.HARD)).thenReturn(resetCommand);
-    Mockito.when(resetCommand.setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName))
-        .thenReturn(resetCommand);
-
-    var invalidRemote = new InvalidRemoteException("invalid remote");
-    Mockito.when(fetchCommand.call()).thenThrow(invalidRemote).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Default remote \"origin\" cannot be invalid")
-        .hasCause(invalidRemote);
-
-    var checkoutConflict = new CheckoutConflictException(List.of(),
-        new org.eclipse.jgit.errors.CheckoutConflictException("form.json"));
-    Mockito.when(resetCommand.call()).thenThrow(checkoutConflict).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Hard reset must not face any conflicts: " + checkoutConflict.getMessage())
-        .hasCause(checkoutConflict);
-  }
-
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemote_runtimeException() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    var transportException = new TransportException("transport exception");
-    Mockito.when(fetchCommand.call()).thenThrow(transportException);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("Transport exception occurred while fetching: transport exception")
-        .hasCause(transportException);
-  }
-
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemote_couldNotOpenRepo() {
-    var repoName = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-
-    var ioException = new IOException("io exception");
-    Mockito.when(jGitWrapper.open(file)).thenThrow(ioException);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(GitCommandException.class)
-        .hasMessage("Exception occurred during repository opening: io exception")
-        .hasCause(ioException);
-  }
-
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemote_gitCommandException() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var resetCommand = Mockito.mock(ResetCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.reset()).thenReturn(resetCommand);
-
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(resetCommand.setMode(ResetType.HARD)).thenReturn(resetCommand);
-    Mockito.when(resetCommand.setRef(Constants.DEFAULT_REMOTE_NAME + "/" + repoName))
-        .thenReturn(resetCommand);
-
-    var gitAPIException = new GitAPIException("some git API exception") {
-    };
-    Mockito.when(fetchCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(GitCommandException.class)
-        .hasMessage("Exception occurred while fetching: some git API exception")
-        .hasCause(gitAPIException);
-
-    Mockito.when(resetCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(GitCommandException.class)
-        .hasMessage("Exception occurred during hard reset on origin " + repoName
-            + ": some git API exception")
-        .hasCause(gitAPIException);
-  }
-
-  @Test
-  @SneakyThrows
-  void testResetHeadBranchToRemoteDirectoryNotExist() {
-    var headBranch = RandomString.make();
-    var repo = new File(tempDir, headBranch);
-    Assertions.assertThat(repo.exists()).isFalse();
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(headBranch);
-
-    Assertions.assertThatThrownBy(() -> jGitService.resetHeadBranchToRemote())
-        .isInstanceOf(RepositoryNotFoundException.class)
-        .hasNoCause()
-        .hasMessage("Repository " + headBranch + " doesn't exists");
-
-    Mockito.verify(jGitWrapper, never()).open(any());
-  }
-
-  @Test
-  @SneakyThrows
-  void testFetch() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var refs = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var checkoutCommand = Mockito.mock(CheckoutCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-
-    Mockito.when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(checkoutCommand.setName(Constants.FETCH_HEAD)).thenReturn(checkoutCommand);
-
-    jGitService.fetch(repoName, refs);
-
-    Mockito.verify(jGitWrapper).open(file);
-
-    Mockito.verify(git).fetch();
-    Mockito.verify(git).checkout();
-    Mockito.verify(git).close();
-
-    Mockito.verify(fetchCommand).setCredentialsProvider(
-        Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
-    Mockito.verify(fetchCommand).call();
-
-    Mockito.verify(checkoutCommand).setName(Constants.FETCH_HEAD);
-    Mockito.verify(checkoutCommand).call();
-  }
-
-  @Test
-  @SneakyThrows
-  void testFetch_illegalStateException() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var refs = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var checkoutCommand = Mockito.mock(CheckoutCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-
-    Mockito.when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(checkoutCommand.setName(Constants.FETCH_HEAD)).thenReturn(checkoutCommand);
-
-    var invalidRemote = new InvalidRemoteException("invalid remote");
-    Mockito.when(fetchCommand.call()).thenThrow(invalidRemote).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Default remote \"origin\" cannot be invalid")
-        .hasCause(invalidRemote);
-
-    var checkoutConflict = new CheckoutConflictException(List.of(),
-        new org.eclipse.jgit.errors.CheckoutConflictException("form.json"));
-    Mockito.when(checkoutCommand.call()).thenThrow(checkoutConflict).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Checkout on FETCH_HEAD must not throw such exception: "
-            + checkoutConflict.getMessage())
-        .hasCause(checkoutConflict);
-
-    var refAlreadyExists = new RefAlreadyExistsException("ref already exists");
-    Mockito.when(checkoutCommand.call()).thenThrow(refAlreadyExists).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Checkout on FETCH_HEAD must not throw such exception: "
-            + refAlreadyExists.getMessage())
-        .hasCause(refAlreadyExists);
-
-    var refNotFound = new RefNotFoundException("ref not found");
-    Mockito.when(checkoutCommand.call()).thenThrow(refNotFound).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            "Checkout on FETCH_HEAD must not throw such exception: " + refNotFound.getMessage())
-        .hasCause(refNotFound);
-
-    var invalidRefName = new InvalidRefNameException("invalid ref name");
-    Mockito.when(checkoutCommand.call()).thenThrow(invalidRefName).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            "Checkout on FETCH_HEAD must not throw such exception: " + invalidRefName.getMessage())
-        .hasCause(invalidRefName);
-  }
-
-  @Test
-  @SneakyThrows
-  void testFetch_gitCommandException() {
-    var repoName = RandomString.make();
-    var user = RandomString.make();
-    var password = RandomString.make();
-    var refs = RandomString.make();
-    var file = new File(tempDir, repoName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    var fetchCommand = Mockito.mock(FetchCommand.class);
-    var checkoutCommand = Mockito.mock(CheckoutCommand.class);
-
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    Mockito.when(gerritPropertiesConfig.getUser()).thenReturn(user);
-    Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn(password);
-
-    Mockito.when(jGitWrapper.open(file)).thenReturn(git);
-
-    Mockito.when(git.fetch()).thenReturn(fetchCommand);
-    Mockito.when(git.checkout()).thenReturn(checkoutCommand);
-
-    Mockito.when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
-    Mockito.when(fetchCommand.setCredentialsProvider(
-            refEq(new UsernamePasswordCredentialsProvider(user, password))))
-        .thenReturn(fetchCommand);
-
-    Mockito.when(checkoutCommand.setName(Constants.FETCH_HEAD)).thenReturn(checkoutCommand);
-
-    var gitAPIException = new GitAPIException("some git API exception") {
-    };
-    Mockito.when(fetchCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(GitCommandException.class)
-        .hasMessage("Exception occurred while fetching: some git API exception")
-        .hasCause(gitAPIException);
-
-    Mockito.when(checkoutCommand.call()).thenThrow(gitAPIException).thenReturn(null);
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(GitCommandException.class)
-        .hasMessage("Exception occurred while checkout: some git API exception")
-        .hasCause(gitAPIException);
-  }
-
-  @Test
-  @SneakyThrows
-  void testFetchDirectoryNotExist() {
-    var repoName = RandomString.make();
-    final String refs = RandomString.make();
-    Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
-        .isInstanceOf(RepositoryNotFoundException.class)
-        .hasMessage("Repository " + repoName + " doesn't exists")
-        .hasNoCause();
-
-    Mockito.verify(jGitWrapper, never()).open(Mockito.any());
+  @Nested
+  @DisplayName("JGitService#fetch")
+  class JGitServiceFetchSpecificRefTest {
+
+    @Test
+    @DisplayName("should call fetch refs and checkout commands")
+    @SneakyThrows
+    void testFetch() {
+      final var context = new Context();
+
+      jGitService.fetch(context.repoName, context.refs);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.checkoutCommand).call();
+    }
+
+    @Test
+    @DisplayName("should throw IllegalStateException if there is invalid remote")
+    @SneakyThrows
+    void testFetch_invalidRemote() {
+      final var context = new Context();
+
+      var invalidRemote = new InvalidRemoteException("invalid remote");
+      Mockito.when(context.fetchCommand.call()).thenThrow(invalidRemote).thenReturn(null);
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(context.repoName, context.refs))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessage("Default remote \"origin\" cannot be invalid")
+          .hasCauseInstanceOf(InvalidRemoteException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.checkoutCommand, Mockito.never()).call();
+    }
+
+    @DisplayName("should throw IllegalStateException if there is checkout conflict")
+    @ParameterizedTest
+    @ValueSource(classes = {
+        CheckoutConflictException.class,
+        RefAlreadyExistsException.class,
+        RefNotFoundException.class,
+        InvalidRefNameException.class
+    })
+    @SneakyThrows
+    void testResetHeadBranchToRemote_checkoutConflict(
+        Class<? extends GitAPIException> checkoutConflictType) {
+      final var context = new Context();
+
+      Mockito.doThrow(checkoutConflictType)
+          .when(context.checkoutCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(context.repoName, context.refs))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessageContaining("Checkout on FETCH_HEAD must not throw such exception: ")
+          .hasCauseInstanceOf(checkoutConflictType);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.checkoutCommand).call();
+    }
+
+    @Test
+    @DisplayName("should retry and throw GitCommandException if there is transport exception")
+    @SneakyThrows
+    void testResetHeadBranchToRemote_transportException() {
+      final var context = new Context();
+
+      Mockito.doThrow(TransportException.class)
+          .when(context.fetchCommand).call();
+
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(context.repoName, context.refs))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred while fetching: ")
+          .hasCauseInstanceOf(TransportException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand, Mockito.times(3)).call();
+      Mockito.verify(context.checkoutCommand, Mockito.never()).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if there is unknown git exception during fetch")
+    @SneakyThrows
+    void testFetch_fetchGitCommandException() {
+      final var context = new Context();
+
+      var gitAPIException = new GitAPIException("some git API exception") {
+      };
+      Mockito.doThrow(gitAPIException)
+          .when(context.fetchCommand).call();
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(context.repoName, context.refs))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessage("Exception occurred while fetching: some git API exception")
+          .hasCause(gitAPIException);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.checkoutCommand, Mockito.never()).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if there is unknown git exception during checkout")
+    @SneakyThrows
+    void testFetch_checkoutGitCommandException() {
+      final var context = new Context();
+
+      var gitAPIException = new GitAPIException("some git API exception") {
+      };
+
+      Mockito.doThrow(gitAPIException)
+          .when(context.checkoutCommand).call();
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(context.repoName, context.refs))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessage("Exception occurred while checkout: some git API exception")
+          .hasCause(gitAPIException);
+
+      context.verifyMockInvocations();
+      Mockito.verify(context.fetchCommand).call();
+      Mockito.verify(context.checkoutCommand).call();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if couldn't open the repo due to any IOException")
+    @SneakyThrows
+    void testFetch_couldNotOpenRepo() {
+      var repoName = RandomString.make();
+      var ref = RandomString.make();
+      var file = new File(tempDir, repoName);
+      Assertions.assertThat(file.createNewFile()).isTrue();
+
+      Mockito.doThrow(IOException.class).when(jGitWrapper).open(file);
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, ref))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred during repository opening: ")
+          .hasCauseInstanceOf(IOException.class);
+    }
+
+    @Test
+    @DisplayName("Should throw RepositoryNotFoundException if couldn't open the repo due to non existence")
+    @SneakyThrows
+    void testFetchDirectoryNotExist() {
+      var repoName = RandomString.make();
+      final String refs = RandomString.make();
+      Assertions.assertThatThrownBy(() -> jGitService.fetch(repoName, refs))
+          .isInstanceOf(RepositoryNotFoundException.class)
+          .hasMessage("Repository " + repoName + " doesn't exists")
+          .hasNoCause();
+
+      Mockito.verify(jGitWrapper, never()).open(Mockito.any());
+    }
+
+    class Context {
+
+      final String repoName = RandomString.make();
+      final String user = RandomString.make();
+      final String password = RandomString.make();
+      final String refs = RandomString.make();
+
+      final File directory = new File(tempDir, repoName);
+      final Git git = Mockito.mock(Git.class);
+
+      final FetchCommand fetchCommand = Mockito.mock(FetchCommand.class);
+      final CheckoutCommand checkoutCommand = Mockito.mock(CheckoutCommand.class);
+
+      @SneakyThrows
+      Context() {
+        Assertions.assertThat(directory.mkdirs()).isTrue();
+        Mockito.doReturn(git).when(jGitWrapper).open(directory);
+        Mockito.doReturn(user).when(gerritPropertiesConfig).getUser();
+        Mockito.doReturn(password).when(gerritPropertiesConfig).getPassword();
+
+        Mockito.doReturn(fetchCommand).when(git).fetch();
+        Mockito.doReturn(fetchCommand).when(fetchCommand).setRefSpecs(refs);
+        Mockito.doReturn(fetchCommand)
+            .when(fetchCommand).setCredentialsProvider(
+                Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+
+        Mockito.doReturn(checkoutCommand).when(git).checkout();
+        Mockito.doReturn(checkoutCommand).when(checkoutCommand).setName(Constants.FETCH_HEAD);
+      }
+
+      @SneakyThrows
+      void verifyMockInvocations() {
+        Mockito.verify(jGitWrapper).open(directory);
+
+        Mockito.verify(git).fetch();
+        Mockito.verify(fetchCommand).setCredentialsProvider(
+            Mockito.refEq(new UsernamePasswordCredentialsProvider(user, password)));
+        Mockito.verify(fetchCommand).setRefSpecs(refs);
+
+        Mockito.verify(git, Mockito.atMostOnce()).reset();
+        Mockito.verify(checkoutCommand, Mockito.atMostOnce()).setName(Constants.FETCH_HEAD);
+
+        Mockito.verify(git).close();
+      }
+    }
   }
 
   @Test
@@ -582,7 +730,8 @@ class JGitServiceTest {
     final var filepath = RandomString.make();
     final var filecontent = RandomString.make();
     Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class)
-        .isThrownBy(() -> jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent));
+        .isThrownBy(() -> jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath,
+            filecontent));
   }
 
   @Test
@@ -607,7 +756,6 @@ class JGitServiceTest {
     Mockito.when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
     Mockito.when(gitFileService.writeFile(repositoryName, filecontent, filepath)).thenReturn(null);
 
-
     jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
     Mockito.verify(git, never()).add();
     Mockito.verify(git, never()).rm();
@@ -616,7 +764,8 @@ class JGitServiceTest {
   @Test
   @SneakyThrows
   void getFileContentRepoNotExistTest() {
-    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class).isThrownBy(() -> jGitService.getFileContent("version", "/"));
+    Assertions.assertThatExceptionOfType(RepositoryNotFoundException.class)
+        .isThrownBy(() -> jGitService.getFileContent("version", "/"));
   }
 
   @Test
