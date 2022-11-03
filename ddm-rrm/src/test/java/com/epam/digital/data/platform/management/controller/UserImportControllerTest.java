@@ -16,33 +16,12 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.SecurityContext;
-import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.management.service.OpenShiftService;
-import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
-import com.epam.digital.data.platform.management.util.TestUtils;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.UUID;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
-
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -50,14 +29,38 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+
+import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.service.OpenShiftService;
+import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.util.TestUtils;
+import java.util.UUID;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultHandler;
+import org.springframework.test.web.servlet.ResultMatcher;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 @SecuredControllerTest(UserImportController.class)
+@DisplayName("User import controller tests")
 class UserImportControllerTest {
 
-  static final String BASE_URL = "/batch-loads/users";
+  /*
+  TODO [MDTUDDM-12911] Will be available in the next release. Required: extend 'admin-portal-encryption-only-role' to decrypt data.
   static final String HEADER_VALUE = "attachment; filename=\"test\"";
   static final String CONTENT_LENGTH_HEADER_NAME = "Content-Length";
+  */
   static final UUID CEPH_ENTITY_ID = UUID.fromString("10e23e2a-6830-42a6-bf21-d0a4a90b5706");
 
   MockMvc mockMvc;
@@ -68,11 +71,8 @@ class UserImportControllerTest {
   @MockBean
   OpenShiftService openShiftService;
 
-  @RegisterExtension
-  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
-
   @BeforeEach
-  public void setUp(WebApplicationContext webApplicationContext,
+  void setUp(WebApplicationContext webApplicationContext,
       RestDocumentationContextProvider restDocumentation) {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
         .apply(documentationConfiguration(restDocumentation))
@@ -80,79 +80,125 @@ class UserImportControllerTest {
         .build();
   }
 
-  @SneakyThrows
-  void handleFileUpload(String tokenPath, ResultMatcher... matchers) {
-    MockMultipartFile file = new MockMultipartFile(
-        "file",
-        "users.csv",
-        MediaType.MULTIPART_FORM_DATA_VALUE,
-        "test".getBytes());
-    var cephEntity = new CephFileInfoDto(CEPH_ENTITY_ID.toString(), file.getOriginalFilename(),
-        file.getSize());
-    when(userImportService.storeFile(file, new SecurityContext())).thenReturn(cephEntity);
+  @Nested
+  @SecuredControllerTest(UserImportController.class)
+  @DisplayName("POST /batch-loads/users")
+  class UserImportControllerFileUploadTest {
 
-    mockMvc.perform(multipart(BASE_URL).file(file)
-            .with(authentication(tokenPath)))
-        .andExpectAll(matchers)
-        .andDo(document("batch-loads/users/POST"));
+    @SneakyThrows
+    void handleFileUpload(String tokenPath, ResultHandler resultHandler,
+        ResultMatcher... matchers) {
+      final var mockMultipartFile = new MockMultipartFile(
+          "file",
+          "users.csv",
+          MediaType.MULTIPART_FORM_DATA_VALUE,
+          "test".getBytes());
+      final var cephEntity = new CephFileInfoDto(CEPH_ENTITY_ID.toString(),
+          mockMultipartFile.getOriginalFilename(),
+          mockMultipartFile.getSize());
+      Mockito.doReturn(cephEntity)
+          .when(userImportService).storeFile(mockMultipartFile, new SecurityContext());
+
+      mockMvc.perform(
+          multipart("/batch-loads/users").file(mockMultipartFile)
+              .header("x-access-token", TestUtils.getContent(tokenPath))
+      ).andExpectAll(
+          matchers
+      ).andDo(resultHandler);
+    }
+
+    @Test
+    @DisplayName("should return 201 if user has user-management role")
+    void validHandleFileUpload() {
+      handleFileUpload("user-management-role-user-token",
+          document("batch-loads/users/POST"),
+          status().isCreated(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.id", is(CEPH_ENTITY_ID.toString())));
+    }
+
+    @Test
+    @DisplayName("should return 403 if user doesn't have user-management role")
+    void handleFileUploadShouldReturn403WithoutRequiredRole() {
+      handleFileUpload("user-token", result -> {
+      }, status().isForbidden());
+    }
   }
 
-  @Test
-  void validHandleFileUpload() {
-    handleFileUpload("user-management-role-user-token",
-        status().isCreated(),
-        content().contentType(MediaType.APPLICATION_JSON),
-        jsonPath("$.id", is(CEPH_ENTITY_ID.toString())));
+  @Nested
+  @SecuredControllerTest(UserImportController.class)
+  @DisplayName("GET /batch-loads/users")
+  class UserImportControllerGetFilesInfoTest {
+
+    @SneakyThrows
+    void getFilesInfo(String tokenPath, ResultHandler resultHandler, ResultMatcher... matchers) {
+      final var expectedFilesInfo = new CephFileInfoDto(CEPH_ENTITY_ID.toString(), "users.csv", 1L);
+
+      Mockito.doReturn(expectedFilesInfo)
+          .when(userImportService).getFileInfo(new SecurityContext());
+
+      mockMvc.perform(
+          get("/batch-loads/users")
+              .header("x-access-token", TestUtils.getContent(tokenPath))
+      ).andExpectAll(
+          matchers
+      ).andDo(resultHandler);
+
+    }
+
+    @Test
+    @DisplayName("should return 200 if user has user-management role")
+    void validGetFilesInfo() {
+      getFilesInfo("user-management-role-user-token",
+          document("batch-loads/users/GET"),
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.id", is(CEPH_ENTITY_ID.toString())),
+          jsonPath("$.name", is("users.csv")),
+          jsonPath("$.size", is(1)));
+    }
+
+    @Test
+    @DisplayName("should return 403 if user doesn't have user-management role")
+    void getFilesInfoShouldReturn403WithoutRequiredRole() {
+      getFilesInfo("user-token", result -> {
+      }, status().isForbidden());
+    }
   }
 
-  @Test
-  void handleFileUploadShouldReturn403WithoutRequiredRole() {
-    handleFileUpload("user-token", status().isForbidden());
-  }
+  @Nested
+  @SecuredControllerTest(UserImportController.class)
+  @DisplayName("DELETE /batch-loads/users/{id}")
+  class UserImportControllerFileDeleteTest {
 
-  @SneakyThrows
-  void getFilesInfo(String tokenPath, ResultMatcher... matchers) {
+    @SneakyThrows
+    void deleteFile(String tokenPath, ResultHandler resultHandler, ResultMatcher... matchers) {
+      mockMvc.perform(
+          delete("/batch-loads/users/{id}", CEPH_ENTITY_ID.toString())
+              .header("x-access-token", TestUtils.getContent(tokenPath))
+      ).andExpectAll(
+          matchers
+      ).andDo(resultHandler);
+    }
 
-    final var expectedFilesInfo = new CephFileInfoDto(CEPH_ENTITY_ID.toString(), "users.csv", 1L);
-    when(userImportService.getFileInfo(any())).thenReturn(expectedFilesInfo);
+    @Test
+    @DisplayName("should return 204 if user has user-management role")
+    void validDeleteFile() {
+      deleteFile("user-management-role-user-token",
+          document("batch-loads/users/{id}/DELETE"),
+          status().isNoContent());
 
-    mockMvc.perform(get(BASE_URL).with(authentication(tokenPath)))
-        .andExpectAll(matchers)
-        .andDo(document("batch-loads/users/GET"));
+      Mockito.verify(userImportService).delete(CEPH_ENTITY_ID.toString());
+    }
 
-  }
+    @Test
+    @DisplayName("should return 403 if user doesn't have user-management role")
+    void deleteFileShouldReturn403WithoutRequiredRole() {
+      deleteFile("user-token", result -> {
+      }, status().isForbidden());
 
-  @Test
-  void validGetFilesInfo() {
-    getFilesInfo("user-management-role-user-token",
-        status().isOk(),
-        content().contentType(MediaType.APPLICATION_JSON),
-        jsonPath("$.id", is(CEPH_ENTITY_ID.toString())),
-        jsonPath("$.name", is("users.csv")),
-        jsonPath("$.size", is(1)));
-  }
-
-  @Test
-  void getFilesInfoShouldReturn403WithoutRequiredRole() {
-    getFilesInfo("user-token", status().isForbidden());
-  }
-
-  @SneakyThrows
-  void deleteFile(String tokenPath, ResultMatcher... matchers) {
-    mockMvc.perform(delete(BASE_URL + "/{id}", CEPH_ENTITY_ID.toString())
-            .with(authentication(tokenPath)))
-        .andExpectAll(matchers)
-        .andDo(document("batch-loads/users/{id}/DELETE"));
-  }
-
-  @Test
-  void validDeleteFile() {
-    deleteFile("user-management-role-user-token", status().isNoContent());
-  }
-
-  @Test
-  void deleteFileShouldReturn403WithoutRequiredRole() {
-    deleteFile("user-token", status().isForbidden());
+      Mockito.verify(userImportService, Mockito.never()).delete(anyString());
+    }
   }
 
  /*
@@ -176,33 +222,38 @@ class UserImportControllerTest {
             );
   }*/
 
+  @Nested
+  @SecuredControllerTest(UserImportController.class)
+  @DisplayName("POST /batch-loads/users/imports")
+  class UserImportControllerFileImportsTest {
 
-  @SneakyThrows
-  void startImport(String tokenPath, ResultMatcher... matchers) {
-    mockMvc.perform(post(BASE_URL + "/imports")
-            .with(authentication(tokenPath)))
-        .andExpectAll(matchers)
-        .andDo(document("batch-loads/users/imports/POST"));
-  }
+    @SneakyThrows
+    void startImport(String tokenPath, ResultHandler resultHandler, ResultMatcher... matchers) {
+      mockMvc.perform(
+          post("/batch-loads/users/imports")
+              .header("x-access-token", TestUtils.getContent(tokenPath))
+      ).andExpectAll(
+          matchers
+      ).andDo(resultHandler);
+    }
 
-  @Test
-  void validStartImport() {
-    startImport("user-management-role-user-token", status().isAccepted());
-  }
+    @Test
+    @DisplayName("should return 202 if user has user-management role")
+    void validStartImport() {
+      startImport("user-management-role-user-token",
+          document("batch-loads/users/imports/POST"),
+          status().isAccepted());
 
-  @Test
-  void startImportShouldReturn403WithoutRequiredRole() {
-    startImport("user-token", status().isForbidden());
-  }
+      Mockito.verify(openShiftService).startImport(new SecurityContext());
+    }
 
-  private RequestPostProcessor authentication(String tokenPath) {
-    return request -> {
-      request.addHeader("x-access-token", getAuthToken(tokenPath));
-      return request;
-    };
-  }
+    @Test
+    @DisplayName("should return 403 if user doesn't have user-management role")
+    void startImportShouldReturn403WithoutRequiredRole() {
+      startImport("user-token", result -> {
+      }, status().isForbidden());
 
-  private String getAuthToken(String path) {
-    return TestUtils.getContent(path);
+      Mockito.verify(openShiftService, Mockito.never()).startImport(any());
+    }
   }
 }

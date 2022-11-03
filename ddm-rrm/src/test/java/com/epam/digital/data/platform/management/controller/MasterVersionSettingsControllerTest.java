@@ -16,81 +16,78 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
-import com.epam.digital.data.platform.management.service.VersionManagementService;
-import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mockito;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
+import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
 @ControllerTest(MasterVersionSettingsController.class)
+@DisplayName("Settings in version candidates controller tests")
 class MasterVersionSettingsControllerTest {
 
-  static final String BASE_URL = "/versions/master";
   MockMvc mockMvc;
   @MockBean
-  private GerritPropertiesConfig gerritPropertiesConfig;
+  GerritPropertiesConfig gerritPropertiesConfig;
   @MockBean
-  private VersionManagementService versionManagementService;
-  @MockBean
-  private GlobalSettingServiceImpl globalSettingServiceImpl;
-  @RegisterExtension
-  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
+  GlobalSettingServiceImpl globalSettingServiceImpl;
 
   @BeforeEach
-  public void setUp(WebApplicationContext webApplicationContext,
+  void setUp(WebApplicationContext webApplicationContext,
       RestDocumentationContextProvider restDocumentation) {
-
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-        .apply(documentationConfiguration(restDocumentation)).build();
+        .apply(documentationConfiguration(restDocumentation))
+        .build();
   }
 
   @Test
+  @DisplayName("GET /versions/master/settings should return 200 with settings content")
   @SneakyThrows
   void getSettings() {
-    GlobalSettingsInfo expected = GlobalSettingsInfo.builder()
+    final var headBranch = "head-branch";
+    Mockito.doReturn(headBranch)
+        .when(gerritPropertiesConfig).getHeadBranch();
+
+    final var expectedSettingsInfo = GlobalSettingsInfo.builder()
         .themeFile("white-theme.js")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
         .supportEmail("support@registry.gov.ua")
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("head-branch");
-    Mockito.when(globalSettingServiceImpl.getGlobalSettings("head-branch")).thenReturn(expected);
+    Mockito.doReturn(expectedSettingsInfo)
+        .when(globalSettingServiceImpl).getGlobalSettings(headBranch);
 
-    mockMvc.perform(MockMvcRequestBuilders.get(BASE_URL + "/settings")
-            .accept(MediaType.APPLICATION_JSON))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType("application/json"),
-            jsonPath("$.titleFull", is("<Назва реєстру>")),
-            jsonPath("$.title", is("mdtuddm")),
-            jsonPath("$.themeFile", is("white-theme.js")),
-            jsonPath("$.supportEmail", is("support@registry.gov.ua"))
-//            jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
-        )
-        .andDo(document("versions/master/settings/GET"));
-    Mockito.verify(globalSettingServiceImpl).getGlobalSettings("head-branch");
+    mockMvc.perform(
+        get("/versions/master/settings")
+            .accept(MediaType.APPLICATION_JSON)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.titleFull", is("<Назва реєстру>")),
+        jsonPath("$.title", is("mdtuddm")),
+        jsonPath("$.themeFile", is("white-theme.js")),
+        jsonPath("$.supportEmail", is("support@registry.gov.ua"))
+//        jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
+    ).andDo(document("versions/master/settings/GET"));
+
+    Mockito.verify(globalSettingServiceImpl).getGlobalSettings(headBranch);
   }
 }

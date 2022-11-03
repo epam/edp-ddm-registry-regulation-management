@@ -29,7 +29,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -44,10 +47,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.net.URI;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Tag(name = "Registry regulations version-candidate Business processes management Rest API")
@@ -96,7 +95,8 @@ public class CandidateVersionBusinessProcessesController {
             .updated(e.getUpdated())
             .build())
         .collect(Collectors.toList());
-    log.info("Found {} business processes from {} version candidate", response.size(), versionCandidateId);
+    log.info("Found {} business processes from {} version candidate", response.size(),
+        versionCandidateId);
     return ResponseEntity.ok().body(response);
   }
 
@@ -133,17 +133,23 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PostMapping("/{businessProcessName}")
-  public ResponseEntity<String> createBusinessProcess(@RequestBody @BusinessProcess String businessProcess,
+  public ResponseEntity<String> createBusinessProcess(
+      @RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName)
       throws GitAPIException, URISyntaxException, IOException, RestApiException {
-    log.info("Started creating business process {} for {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Started creating business process {} for {} version candidate", businessProcessName,
+        versionCandidateId);
     businessProcessService.createProcess(businessProcessName, businessProcess, versionCandidateId);
-    log.info("Finished creating business process {} for {} version candidate. Retrieving process", businessProcessName, versionCandidateId);
-    var response = businessProcessService.getProcessContent(businessProcessName, versionCandidateId);
-    log.info("Finished getting business process {} from {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Finished creating business process {} for {} version candidate. Retrieving process",
+        businessProcessName, versionCandidateId);
+    var response = businessProcessService.getProcessContent(businessProcessName,
+        versionCandidateId);
+    log.info("Finished getting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
     return ResponseEntity.created(URI.create(
-            String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId, businessProcessName)))
+            String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId,
+                businessProcessName)))
         .contentType(MediaType.TEXT_XML)
         .body(response);
   }
@@ -175,9 +181,12 @@ public class CandidateVersionBusinessProcessesController {
   public ResponseEntity<String> getBusinessProcess(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
-    log.info("Started getting business process {} from {} version candidate", businessProcessName, versionCandidateId);
-    var response = businessProcessService.getProcessContent(businessProcessName, versionCandidateId);
-    log.info("Finished getting business process {} from {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Started getting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
+    var response = businessProcessService.getProcessContent(businessProcessName,
+        versionCandidateId);
+    log.info("Finished getting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
         .body(response);
@@ -212,14 +221,20 @@ public class CandidateVersionBusinessProcessesController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping("/{businessProcessName}")
-  public ResponseEntity<String> updateBusinessProcess(@RequestBody @BusinessProcess String businessProcess,
+  public ResponseEntity<String> updateBusinessProcess(
+      @RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
-    log.info("Started updating business process {} for {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Started updating business process {} for {} version candidate", businessProcessName,
+        versionCandidateId);
     businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
-    log.info("Finished updating business process {} for {} version candidate. Retrieving this process", businessProcessName, versionCandidateId);
-    var response = businessProcessService.getProcessContent(businessProcessName, versionCandidateId);
-    log.info("Finished getting business process {} from {} version candidate", businessProcessName, versionCandidateId);
+    log.info(
+        "Finished updating business process {} for {} version candidate. Retrieving this process",
+        businessProcessName, versionCandidateId);
+    var response = businessProcessService.getProcessContent(businessProcessName,
+        versionCandidateId);
+    log.info("Finished getting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
         .body(response);
@@ -253,9 +268,11 @@ public class CandidateVersionBusinessProcessesController {
   public ResponseEntity<String> deleteBusinessProcess(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
-    log.info("Started deleting business process {} from {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Started deleting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
     businessProcessService.deleteProcess(businessProcessName, versionCandidateId);
-    log.info("Finished deleting business process {} from {} version candidate", businessProcessName, versionCandidateId);
+    log.info("Finished deleting business process {} from {} version candidate", businessProcessName,
+        versionCandidateId);
     return ResponseEntity.noContent().build();
   }
 

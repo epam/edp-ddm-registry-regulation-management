@@ -36,8 +36,6 @@ public enum FileValidatorErrorMessageTitle implements MessageTitle {
           "file-validator.error.title.token"),
   FORM_ALREADY_EXISTS(ApplicationExceptionHandler.FORM_ALREADY_EXISTS_EXCEPTION,
       "file-validator.error.tittle.form-already-exists"),
-  TABLE_PARSE_EXCEPTION(ApplicationExceptionHandler.TABLE_PARSE_EXCEPTION,
-      "file-validator.error.table-read"),
   TABLE_NOT_FOUND_EXCEPTION(ApplicationExceptionHandler.TABLE_NOT_FOUND_EXCEPTION,
       "file-validator.error.table-not-found"),
   BUSINESS_PROCESS_ALREADY_EXISTS(ApplicationExceptionHandler.BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION,
