@@ -16,9 +16,6 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_AUTHOR;
-import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_DESCRIPTION;
-import static com.epam.digital.data.platform.management.controller.CandidateVersionControllerTest.VERSION_CANDIDATE_NAME;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
@@ -28,94 +25,92 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
 import java.time.LocalDateTime;
-
-import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @ControllerTest(MasterVersionController.class)
+@DisplayName("Master version controller tests")
 class MasterVersionControllerTest {
-
-  static final String BASE_URL = "/versions/master";
 
   MockMvc mockMvc;
   @MockBean
-  private GerritPropertiesConfig gerritPropertiesConfig;
-  @MockBean
-  private VersionManagementService versionManagementService;
-  @MockBean
-  private GlobalSettingServiceImpl globalSettingServiceImpl;
-  @RegisterExtension
-  final RestDocumentationExtension restDocumentation = new RestDocumentationExtension();
+  VersionManagementService versionManagementService;
 
   @BeforeEach
-  public void setUp(WebApplicationContext webApplicationContext,
+  void setUp(WebApplicationContext webApplicationContext,
       RestDocumentationContextProvider restDocumentation) {
-
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-        .apply(documentationConfiguration(restDocumentation)).build();
+        .apply(documentationConfiguration(restDocumentation))
+        .build();
   }
 
   @Test
+  @DisplayName("GET /versions/master should return 200 with last merged change info")
   @SneakyThrows
   void getMaster() {
     var expectedChangeInfo = ChangeInfoDetailedDto.builder()
         .number(1)
-        .owner(VERSION_CANDIDATE_AUTHOR)
-        .description(VERSION_CANDIDATE_DESCRIPTION)
-        .subject(VERSION_CANDIDATE_NAME)
+        .owner("JohnDoe@epam.com")
+        .description("Version candidate to change form")
+        .subject("JohnDoe's version candidate")
         .submitted(LocalDateTime.of(2022, 7, 29, 12, 31))
         .build();
-    Mockito.when(versionManagementService.getMasterInfo()).thenReturn(expectedChangeInfo);
 
-    mockMvc.perform(get(BASE_URL))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.id", is("1")),
-            jsonPath("$.name", is(VERSION_CANDIDATE_NAME)),
-            jsonPath("$.description", is(VERSION_CANDIDATE_DESCRIPTION)),
-            jsonPath("$.author", is(VERSION_CANDIDATE_AUTHOR)),
-            jsonPath("$.latestUpdate", is("2022-07-29T12:31:00.000Z")),
-            jsonPath("$.published", nullValue()),
-            jsonPath("$.inspector", nullValue()),
-            jsonPath("$.validations", nullValue()))
-        .andDo(document("versions/master/GET"));
+    Mockito.doReturn(expectedChangeInfo)
+        .when(versionManagementService).getMasterInfo();
+
+    mockMvc.perform(
+        get("/versions/master")
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.id", is("1")),
+        jsonPath("$.name", is("JohnDoe's version candidate")),
+        jsonPath("$.description", is("Version candidate to change form")),
+        jsonPath("$.author", is("JohnDoe@epam.com")),
+        jsonPath("$.latestUpdate", is("2022-07-29T12:31:00.000Z")),
+        jsonPath("$.published", nullValue()),
+        jsonPath("$.inspector", nullValue()),
+        jsonPath("$.validations", nullValue())
+    ).andDo(document("versions/master/GET"));
+
     Mockito.verify(versionManagementService).getMasterInfo();
   }
 
   @Test
+  @DisplayName("GET /versions/master should return 200 with empty object if there is no last merged change")
   @SneakyThrows
   void getMasterNoLastVersions() {
-    Mockito.when(versionManagementService.getMasterInfo()).thenReturn(null);
+    Mockito.doReturn(null)
+        .when(versionManagementService).getMasterInfo();
 
-    mockMvc.perform(get(BASE_URL))
-        .andExpectAll(
-            status().isOk(),
-            content().contentType(MediaType.APPLICATION_JSON),
-            jsonPath("$.id", nullValue()),
-            jsonPath("$.name", nullValue()),
-            jsonPath("$.description", nullValue()),
-            jsonPath("$.author", nullValue()),
-            jsonPath("$.latestUpdate", nullValue()),
-            jsonPath("$.published", nullValue()),
-            jsonPath("$.inspector", nullValue()),
-            jsonPath("$.validations", nullValue()))
-        .andDo(document("versions/master/GET"));
+    mockMvc.perform(
+        get("/versions/master")
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.id", nullValue()),
+        jsonPath("$.name", nullValue()),
+        jsonPath("$.description", nullValue()),
+        jsonPath("$.author", nullValue()),
+        jsonPath("$.latestUpdate", nullValue()),
+        jsonPath("$.published", nullValue()),
+        jsonPath("$.inspector", nullValue()),
+        jsonPath("$.validations", nullValue())
+    ).andDo(document("versions/master/GET"));
+
     Mockito.verify(versionManagementService).getMasterInfo();
   }
 }

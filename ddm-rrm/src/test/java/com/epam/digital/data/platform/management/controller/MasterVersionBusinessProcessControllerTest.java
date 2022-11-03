@@ -16,7 +16,8 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,9 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
-import com.epam.digital.data.platform.management.service.FormService;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,74 +43,72 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-@ControllerTest(MasterVersionFormsController.class)
-@DisplayName("Forms in master version controller tests")
-class MasterVersionFormsControllerTest {
+@ControllerTest(MasterVersionBusinessProcessesController.class)
+@DisplayName("Business process in master version controller tests")
+class MasterVersionBusinessProcessControllerTest {
 
   static final String HEAD_BRANCH = "master";
 
-  MockMvc mockMvc;
-
   @MockBean
-  FormService formService;
+  BusinessProcessServiceImpl businessProcessService;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
+  MockMvc mockMvc;
 
   @BeforeEach
-  void setUp(WebApplicationContext webApplicationContext,
-      RestDocumentationContextProvider restDocumentation) {
+  void setup(WebApplicationContext webApplicationContext,
+      RestDocumentationContextProvider restDocumentationContextProvider) {
     Mockito.lenient().doReturn(HEAD_BRANCH).when(gerritPropertiesConfig).getHeadBranch();
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-        .apply(documentationConfiguration(restDocumentation))
+        .apply(documentationConfiguration(restDocumentationContextProvider))
         .build();
   }
 
   @Test
-  @DisplayName("GET /versions/master/forms should return 200 with list of all forms")
+  @DisplayName("GET /versions/master/business-processes/{businessProcessName} should return 200 with business process content")
   @SneakyThrows
-  void getFormsFromMaster() {
-    var expectedFormResponse = FormResponse.builder()
-        .name("John Doe's form")
-        .path("forms/John Doe's form.json")
+  void getBusinessProcess() {
+    final var processId = "John_Does_process";
+    final var expectedProcessContent = TestUtils.getContent("controller/John_Does_process.bpmn");
+
+    Mockito.doReturn(expectedProcessContent)
+        .when(businessProcessService).getProcessContent(processId, HEAD_BRANCH);
+
+    mockMvc.perform(
+        get("/versions/master/business-processes/{businessProcessName}", processId)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.TEXT_XML),
+        content().xml(expectedProcessContent)
+    ).andDo(document("versions/master/business-processes/{businessProcessName}/GET"));
+  }
+
+  @Test
+  @DisplayName("GET /versions/master/business-processes should return 200 with list of all business processes")
+  @SneakyThrows
+  void getBusinessProcessesByVersionId() {
+    final var expectedResponse = BusinessProcessResponse.builder()
+        .path("/bpmn/John_Does_process.bpmn")
+        .name("John_Does_process")
         .title("John Doe added new component")
-        .status(FileStatus.CURRENT)
-        .created(LocalDateTime.of(2022, 7, 29, 15, 6))
-        .updated(LocalDateTime.of(2022, 7, 29, 15, 7))
+        .created(LocalDateTime.of(2022, 11, 3, 11, 45))
+        .updated(LocalDateTime.of(2022, 11, 4, 13, 16))
         .build();
-    Mockito.doReturn(List.of(expectedFormResponse))
-        .when(formService).getFormListByVersion(HEAD_BRANCH);
+
+    Mockito.doReturn(List.of(expectedResponse))
+        .when(businessProcessService).getProcessesByVersion(HEAD_BRANCH);
 
     mockMvc.perform(
-        get("/versions/master/forms")
+        get("/versions/master/business-processes")
+            .accept(MediaType.APPLICATION_JSON)
     ).andExpectAll(
         status().isOk(),
         content().contentType(MediaType.APPLICATION_JSON),
-        jsonPath("$.[0].name", is("John Doe's form")),
-        jsonPath("$.[0].title", is("John Doe added new component")),
-        jsonPath("$.[0].created", is("2022-07-29T15:06:00.000Z")),
-        jsonPath("$.[0].updated", is("2022-07-29T15:07:00.000Z"))
-    ).andDo(document("versions/master/forms/GET"));
-
-    Mockito.verify(formService).getFormListByVersion(HEAD_BRANCH);
-  }
-
-  @Test
-  @DisplayName("GET /versions/master/forms/{formName} should return 200 with form content")
-  @SneakyThrows
-  void getFormFromMaster() {
-    final var formName = "john-does-form";
-    final var expectedFormContent = TestUtils.getContent("controller/john-does-form.json");
-    Mockito.doReturn(expectedFormContent)
-        .when(formService).getFormContent(formName, HEAD_BRANCH);
-
-    mockMvc.perform(
-        get("/versions/master/forms/{formName}", formName)
-    ).andExpectAll(
-        status().isOk(),
-        content().contentType(MediaType.APPLICATION_JSON),
-        content().json(expectedFormContent)
-    ).andDo(document("versions/master/forms/{formName}/GET"));
-
-    Mockito.verify(formService).getFormContent(formName, HEAD_BRANCH);
+        jsonPath("$", hasSize(1)),
+        jsonPath("$[0].name", equalTo("John_Does_process")),
+        jsonPath("$[0].title", equalTo("John Doe added new component")),
+        jsonPath("$[0].created", equalTo("2022-11-03T11:45:00.000Z")),
+        jsonPath("$[0].updated", equalTo("2022-11-04T13:16:00.000Z"))
+    ).andDo(document("versions/master/business-processes/GET"));
   }
 }

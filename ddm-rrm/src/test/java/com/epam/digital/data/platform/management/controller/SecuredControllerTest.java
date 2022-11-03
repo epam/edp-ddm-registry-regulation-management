@@ -22,9 +22,11 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.context.ContextConfiguration;
 
 @Target(ElementType.TYPE)
@@ -32,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 @WebMvcTest(properties = "spring.cloud.vault.enabled=false")
 @Import({PlatformSecurityAutoConfiguration.class, JacksonConfig.class})
 @ContextConfiguration
+@ExtendWith(RestDocumentationExtension.class)
 public @interface SecuredControllerTest {
 
   @AliasFor(annotation = ContextConfiguration.class, attribute = "classes")
