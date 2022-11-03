@@ -74,7 +74,6 @@ import org.springframework.stereotype.Service;
 public class JGitServiceImpl implements JGitService {
 
   private static final String ORIGIN = "origin";
-  private static final String REPOSITORY_DOES_NOT_EXIST = "Repository does not exist";
   public static final String DATE_CACHE_NAME = "dates";
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
@@ -84,11 +83,11 @@ public class JGitServiceImpl implements JGitService {
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
   @Override
-  public void cloneRepo(String repositoryName) {
+  public void cloneRepoIfNotExist(String repositoryName) {
     log.debug("Trying to clone repository {}", repositoryName);
     var directory = getRepositoryDir(repositoryName);
     if (directory.exists()) {
-      // TODO throw exception if repository already exists
+//    this condition was written in order to avoid cloning repo several times
       return;
     }
     log.trace("Synchronizing repo {}", repositoryName);

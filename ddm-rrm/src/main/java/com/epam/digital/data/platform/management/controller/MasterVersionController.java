@@ -28,12 +28,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Tag(name = "Registry regulations master version management Rest API")
 @RestController
 @RequestMapping("/versions/master")
@@ -67,19 +69,21 @@ public class MasterVersionController {
   @GetMapping
   public ResponseEntity<MasterVersionInfoDetailed> getMasterVersionInfo()
       throws RestApiException {
+    log.info("Started getting master detailed info");
     var masterInfo = versionManagementService.getMasterInfo();
     if (Objects.isNull(masterInfo)) {
+      log.info("Master info is null, returning empty info");
       return ResponseEntity.ok()
           .body(MasterVersionInfoDetailed.builder().build());
     }
-
-    return ResponseEntity.ok()
-        .body(MasterVersionInfoDetailed.builder()
-            .id(String.valueOf(masterInfo.getNumber()))
-            .author(masterInfo.getOwner())
-            .description(masterInfo.getDescription())
-            .name(masterInfo.getSubject())
-            .latestUpdate(masterInfo.getSubmitted())
-            .build());
+    var response = MasterVersionInfoDetailed.builder()
+        .id(String.valueOf(masterInfo.getNumber()))
+        .author(masterInfo.getOwner())
+        .description(masterInfo.getDescription())
+        .name(masterInfo.getSubject())
+        .latestUpdate(masterInfo.getSubmitted())
+        .build();
+    log.info("Finished getting detailed info about master");
+    return ResponseEntity.ok().body(response);
   }
 }

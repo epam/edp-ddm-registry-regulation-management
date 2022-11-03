@@ -70,9 +70,11 @@ public class UserImportController {
   @PostMapping
   public ResponseEntity<CephFileInfoDto> handleFileUpload(@RequestParam("file") MultipartFile file,
       @HttpSecurityContext SecurityContext securityContext) {
-    log.info("handleFileUpload called");
+    log.info("#handleFileUpload() called");
+    var response = userImportService.storeFile(file, securityContext);
+    log.info("File {} was uploaded", file.getName());
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(userImportService.storeFile(file, securityContext));
+        .body(response);
   }
 
   @Operation(description = "Get file information",
@@ -86,8 +88,10 @@ public class UserImportController {
                   schema = @Schema(implementation = CephFileInfoDto.class)))})
   @GetMapping
   public ResponseEntity<CephFileInfoDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
-    log.info("getFilesInfo called");
-    return ResponseEntity.ok().body(userImportService.getFileInfo(securityContext));
+    log.info("#getFilesInfo() called");
+    var response = userImportService.getFileInfo(securityContext);
+    log.info("Finished getting files info");
+    return ResponseEntity.ok().body(response);
   }
 
 
@@ -102,6 +106,7 @@ public class UserImportController {
   public ResponseEntity<Void> deleteFile(@PathVariable("id") @Parameter(required = true, description = "Resource identifier") String id) {
     log.info("deleteFile called");
     userImportService.delete(id);
+    log.info("File {} was deleted", id);
     return ResponseEntity.noContent().build();
   }
 

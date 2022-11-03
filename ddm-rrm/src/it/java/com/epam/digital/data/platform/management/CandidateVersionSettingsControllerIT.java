@@ -85,8 +85,8 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
       ).andExpectAll(
           status().isNotFound(),
           content().contentType("application/json"),
-          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
-          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+          jsonPath("$.code", is("CHANGE_NOT_FOUND")),
+          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
   }
@@ -163,8 +163,8 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
       ).andExpectAll(
           status().isNotFound(),
           content().contentType("application/json"),
-          jsonPath("$.code", is("REPOSITORY_NOT_FOUND_EXCEPTION")),
-          jsonPath("$.details", is(String.format("Version %s not found", versionCandidateId)))
+          jsonPath("$.code", is("CHANGE_NOT_FOUND")),
+          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
   }

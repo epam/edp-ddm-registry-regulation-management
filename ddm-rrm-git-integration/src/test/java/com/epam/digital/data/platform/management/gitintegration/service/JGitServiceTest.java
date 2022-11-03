@@ -110,7 +110,7 @@ class JGitServiceTest {
     var file = new File(tempDir, repoName);
     Assertions.assertThat(file.createNewFile()).isTrue();
 
-    jGitService.cloneRepo(repoName);
+    jGitService.cloneRepoIfNotExist(repoName);
     Mockito.verify(jGitWrapper, Mockito.never()).open(file);
   }
 
@@ -123,7 +123,7 @@ class JGitServiceTest {
     Mockito.when(cloneCommand.setDirectory(any())).thenReturn(cloneCommand);
     Mockito.when(cloneCommand.setCloneAllBranches(true)).thenReturn(cloneCommand);
     Mockito.when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    jGitService.cloneRepo("version");
+    jGitService.cloneRepoIfNotExist("version");
     Mockito.verify(jGitWrapper).cloneRepository();
   }
 

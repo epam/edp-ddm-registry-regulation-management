@@ -33,9 +33,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -53,8 +50,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 @Setter
 public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
-  private static final String FILE_DOES_NOT_EXIST = "File does not exist";
-
   private String versionName;
 
   private JGitService jGitService;
@@ -62,13 +57,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   private GerritService gerritService;
 
   @Override
-  public List<FileResponse> getFileList() throws IOException, RestApiException {
+  public List<FileResponse> getFileList() throws RestApiException {
     return getFileList(File.separator);
   }
 
   @Override
-  public List<FileResponse> getFileList(String path) throws IOException, RestApiException {
-    //todo update dates from  git log
+  public List<FileResponse> getFileList(String path) throws RestApiException {
     Map<String, FileResponse> filesInMaster = jGitService.getFilesInPath(versionName, path)
         .stream()
         .filter(el -> !el.equals(".gitkeep"))
@@ -86,7 +80,6 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
             Collectors.toMap(fileResponse -> FilenameUtils.getBaseName(fileResponse.getName()),
                 Function.identity()));
 
-    ChangeInfo ci = getChangeInfo();
     gerritService.getListOfChangesInMR(getChangeId()).forEach((key, value) -> {
       if (key.startsWith(path)) {
         FileResponse filesResponseDto = searchFileInMap(filesInMaster, key);
@@ -94,13 +87,9 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
           filesInMaster.put(FilenameUtils.getBaseName(key), FileResponse.builder()
               .name(FilenameUtils.getBaseName(key))
               .status(getStatus(value))
-//              .created(toUTCLocalDateTime(ci.created))
-              .updated(toUTCLocalDateTime(ci.updated))
               .build());
         } else {
           filesResponseDto.setStatus(getStatus(value));
-//                    formsResponseDto.setCreated(ci.created);
-          filesResponseDto.setUpdated(toUTCLocalDateTime(ci.updated));
         }
       }
     });
@@ -136,13 +125,6 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
   @Override
   public boolean isFileExists(String path) throws IOException, RestApiException {
-// TODO check
-    //        String changeId = getChangeId();
-//        if (changeId != null) {
-//            return gerritService.getListOfChangesInMR(changeId).entrySet().stream()
-//                    .anyMatch(e -> e.getKey().equals(path));
-//        }
-//        return false;
     File theFile = new File(path);
     String parent = theFile.getParent();
     String baseName = FilenameUtils.getBaseName(theFile.getName());
@@ -173,7 +155,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
       if (changeId == null) {
         throw new RepositoryNotFoundException("Version " + versionName + " not found", versionName);
       } else {
-        jGitService.cloneRepo(versionName);
+        jGitService.cloneRepoIfNotExist(versionName);
         var changeInfo = gerritService.getChangeInfo(changeId);
         jGitService.fetch(versionName, changeInfo.getRefs());
       }
@@ -203,12 +185,5 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
       return FileStatus.DELETED;
     }
     return null;
-  }
-
-  private LocalDateTime toUTCLocalDateTime(Timestamp timestamp) {
-    if (Objects.isNull(timestamp)) {
-      return null;
-    }
-    return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
   }
 }

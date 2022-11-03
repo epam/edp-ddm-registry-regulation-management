@@ -39,12 +39,12 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
   private JGitService jGitService;
 
   @Override
-  public List<FileResponse> getFileList() throws IOException {
+  public List<FileResponse> getFileList() {
     return getFileList(File.pathSeparator);
   }
 
   @Override
-  public List<FileResponse> getFileList(String path) throws IOException {
+  public List<FileResponse> getFileList(String path) {
     Map<String, FileResponse> formsInMaster = new HashMap<>();
     List<String> filesInPath = jGitService.getFilesInPath(versionName, path);
     for (String el : filesInPath) {
@@ -94,10 +94,10 @@ public class HeadFileRepositoryImpl implements VersionedFileRepository {
 
   @Override
   public void pullRepository() {
-    jGitService.cloneRepo(versionName);
+    jGitService.cloneRepoIfNotExist(versionName);
   }
 
-  private List<String> listFilesInHead(String path) throws IOException {
+  private List<String> listFilesInHead(String path) {
     return jGitService.getFilesInPath(versionName, path);
   }
 }

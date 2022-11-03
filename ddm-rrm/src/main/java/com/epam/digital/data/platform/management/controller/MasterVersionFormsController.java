@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +41,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Tag(name = "Registry regulations Master version Forms management Rest API")
 @RestController
 @RequestMapping("/versions/master/forms")
@@ -74,14 +76,17 @@ public class MasterVersionFormsController {
   public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster()
       throws IOException, RestApiException {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
-    return ResponseEntity.ok().body(formService.getFormListByVersion(masterVersionId).stream()
+    log.info("Started getting forms from master");
+    var response = formService.getFormListByVersion(masterVersionId).stream()
         .map(e -> FormDetailsShort.builder()
             .name(e.getName())
             .title(e.getTitle())
             .created(e.getCreated())
             .updated(e.getUpdated())
             .build())
-        .collect(Collectors.toList()));
+        .collect(Collectors.toList());
+    log.info("Found {} forms in master", response.size());
+    return ResponseEntity.ok().body(response);
   }
 
   @Operation(description = "Get specific form full details",
@@ -113,8 +118,11 @@ public class MasterVersionFormsController {
   public ResponseEntity<Object> getForm(@PathVariable @Parameter(description = "Form name", required = true) String formName)
       throws IOException {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+    log.info("Getting {} form from master", formName);
+    var response = formService.getFormContent(formName, masterVersionId);
+    log.info("Finished getting {} form form master", formName);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(formService.getFormContent(formName, masterVersionId));
+        .body(response);
   }
 }

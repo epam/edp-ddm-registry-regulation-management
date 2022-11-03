@@ -28,12 +28,12 @@ import org.springframework.lang.NonNull;
 public interface JGitService {
 
   /**
-   * Clone repository by version
+   * Clone repository by version if folder is not exists yet
    *
    * @param repositoryName repository identifier
    * @throws GitCommandException in case of clone repository failure
    */
-  void cloneRepo(String repositoryName);
+  void cloneRepoIfNotExist(String repositoryName);
 
   /**
    * Fetches and resets repository for main branch to origin state

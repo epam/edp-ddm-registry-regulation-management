@@ -99,6 +99,11 @@ openapi:
       post: 200, 400, 401, 403, 422, 500, 501
 
 platform:
+  logging:
+    aspect:
+      enabled: false
+    primary-url:
+      enabled: true
   security:
     enabled: true
     whitelist:
@@ -124,3 +129,13 @@ vault:
 file-validator:
   encoding: UTF-8
   extension: csv
+
+logbook:
+  info-logging:
+    enabled: true
+  strategy: without-body
+  exclude:
+    - /actuator/**
+  obfuscate:
+    headers:
+      - x-access-token

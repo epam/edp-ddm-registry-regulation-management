@@ -19,10 +19,10 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
+import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
-import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
@@ -136,7 +136,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     try {
       VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
       repo.deleteFile(getProcessPath(processName));
-    } catch (RepositoryNotFoundException e) {
+    } catch (GerritChangeNotFoundException e) {
       throw e;
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to delete process", e);
@@ -168,7 +168,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       repo = repoFactory.getRepoByVersion(versionName);
       fileList = repo.getFileList(DIRECTORY_PATH);
       masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
-    } catch (RepositoryNotFoundException e) {
+    } catch (GerritChangeNotFoundException e) {
       throw e;
     } catch (Exception e) {
       throw new ReadingRepositoryException("Could not read repo to get process", e);
