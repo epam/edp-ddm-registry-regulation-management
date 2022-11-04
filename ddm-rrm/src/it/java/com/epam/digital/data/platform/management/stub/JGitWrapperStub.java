@@ -22,19 +22,22 @@ import java.io.File;
 import java.io.IOException;
 import org.eclipse.jgit.api.Git;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 
 public class JGitWrapperStub extends JGitWrapper {
 
   @Autowired
   private TestExecutionContext context;
 
+  @NonNull
   @Override
   public CloneCommandStub cloneRepository() {
     return new CloneCommandStub(context);
   }
 
+  @NonNull
   @Override
-  public Git open(File repositoryDirectory) throws IOException {
+  public Git open(@NonNull File repositoryDirectory) throws IOException {
     final var git = super.open(repositoryDirectory);
     final var repo = git.getRepository();
     return new GitStub(repo, context);

@@ -71,7 +71,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class JGitServiceImpl implements JGitService {
 
-  private static final String ORIGIN = "origin";
   public static final String DATE_CACHE_NAME = "dates";
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
@@ -104,11 +103,7 @@ public class JGitServiceImpl implements JGitService {
   public void resetHeadBranchToRemote() {
     var repositoryName = gerritPropertiesConfig.getHeadBranch();
     log.debug("Trying to reset repository {} to remote state", repositoryName);
-    var repositoryDirectory = getRepositoryDir(repositoryName);
-    if (!repositoryDirectory.exists()) {
-      throw new RepositoryNotFoundException(
-          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
@@ -129,11 +124,7 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void fetch(@NonNull String repositoryName, @NonNull String refs) {
     log.debug("Trying to fetch and checkout repository {} to ref {}", repositoryName, refs);
-    var repositoryDirectory = getRepositoryDir(repositoryName);
-    if (!repositoryDirectory.exists()) {
-      throw new RepositoryNotFoundException(
-          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
@@ -152,54 +143,26 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
-  public List<String> getFilesInPath(String repositoryName, String path) {
-    File repositoryDirectory = getRepositoryDir(repositoryName);
-    if (!repositoryDirectory.exists()) {
-      return List.of();
-    }
-    List<String> items = new ArrayList<>();
-    Lock lock = getLock(repositoryName);
+  @NonNull
+  public List<String> getFilesInPath(@NonNull String repositoryName, @NonNull String path) {
+    var repositoryDirectory = getExistedRepository(repositoryName);
+    var lock = getLock(repositoryName);
     lock.lock();
-    try (var repository = openRepo(repositoryDirectory).getRepository()) {
-      RevTree tree = jGitWrapper.getRevTree(repository);
-      if (path != null && !path.isEmpty()) {
-        try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository, path, tree)) {
-          if (treeWalk != null) {
-            try (TreeWalk dirWalk = jGitWrapper.getTreeWalk(repository)) {
-              dirWalk.addTree(treeWalk.getObjectId(0));
-              dirWalk.setRecursive(true);
-              while (dirWalk.next()) {
-                items.add(dirWalk.getPathString());
-              }
-            }
-          }
-        }
-      } else {
-        try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
-          treeWalk.addTree(tree);
-          treeWalk.setRecursive(true);
-          while (treeWalk.next()) {
-            items.add(treeWalk.getPathString());
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new GitCommandException(
-          String.format("Exception occurred during reading files by path: %s", e.getMessage()), e);
+    try (
+        var git = openRepo(repositoryDirectory);
+        var repository = git.getRepository();
+        var treeWalk = jGitWrapper.getTreeWalk(repository, path)
+    ) {
+      return Objects.isNull(treeWalk) ? List.of() : getFiles(treeWalk);
     } finally {
       lock.unlock();
     }
-    Collections.sort(items);
-    return items;
   }
 
   @Cacheable(DATE_CACHE_NAME)
   @Override
   public FileDatesDto getDates(String repositoryName, String filePath) {
-    File repositoryDirectory = getRepositoryDir(repositoryName);
-    if (!repositoryDirectory.exists()) {
-      return null;
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     try (var git = openRepo(repositoryDirectory)) {
       LogCommand log = git.log();
@@ -222,11 +185,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public String getFileContent(String repositoryName, String filePath) {
-    File repositoryDirectory = getRepositoryDir(repositoryName);
-    if (!repositoryDirectory.exists()) {
-      throw new RepositoryNotFoundException(
-          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     Lock lock = getLock(repositoryName);
     lock.lock();
     try (var repository = openRepo(repositoryDirectory).getRepository()) {
@@ -256,14 +215,10 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void amend(String repositoryName, String refs, String commitMessage, String changeId,
       String filePath, String fileContent) {
-    File repositoryFile = getRepositoryDir(repositoryName);
-    if (!repositoryFile.exists()) {
-      throw new RepositoryNotFoundException(
-          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     Lock lock = getLock(repositoryName);
     lock.lock();
-    try (var git = openRepo(repositoryFile)) {
+    try (var git = openRepo(repositoryDirectory)) {
       fetch(git, refs);
       checkoutFetchHead(git);
       File file = gitFileService.writeFile(repositoryName, fileContent, filePath);
@@ -279,14 +234,10 @@ public class JGitServiceImpl implements JGitService {
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
   public void delete(String repositoryName, String filePath, String refs, String commitMessage,
       String changeId) {
-    File repositoryFile = getRepositoryDir(repositoryName);
-    if (!repositoryFile.exists()) {
-      throw new RepositoryNotFoundException(
-          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
-    }
+    var repositoryDirectory = getExistedRepository(repositoryName);
     Lock lock = getLock(repositoryName);
     lock.lock();
-    try (var git = openRepo(repositoryFile)) {
+    try (var git = openRepo(repositoryDirectory)) {
       fetch(git, refs);
       checkoutFetchHead(git);
 
@@ -306,12 +257,9 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public void deleteRepo(String repoName) {
-    File repositoryFile = getRepositoryDir(repoName);
-    if (!repositoryFile.exists()) {
-      return;
-    }
+    var repositoryFile = getRepositoryDir(repoName);
     try {
-      FileUtils.delete(repositoryFile, FileUtils.RECURSIVE);
+      FileUtils.delete(repositoryFile, FileUtils.RECURSIVE | FileUtils.SKIP_MISSING);
     } catch (IOException e) {
       throw new GitCommandException(
           String.format("Exception occurred during deleting repository %s: %s", repoName,
@@ -321,7 +269,7 @@ public class JGitServiceImpl implements JGitService {
 
   @NonNull
   private Git cloneRepo(@NonNull File repositoryDirectory) {
-    final var cloneCommand = jGitWrapper.cloneRepository()
+    var cloneCommand = jGitWrapper.cloneRepository()
         .setURI(getRepositoryUrl())
         .setCredentialsProvider(getCredentialsProvider())
         .setCloneAllBranches(true)
@@ -409,6 +357,23 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
+  private static List<String> getFiles(TreeWalk treeWalk) {
+    var files = new ArrayList<String>();
+    try {
+      treeWalk.enterSubtree();
+      treeWalk.setRecursive(true);
+      while (treeWalk.next()) {
+        files.add(FilenameUtils.getName(treeWalk.getPathString()));
+      }
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during reading files by path: %s", e.getMessage()),
+          e);
+    }
+    Collections.sort(files);
+    return files;
+  }
+
   private void doAmend(File file, String commitMessage, String changeId, Git git) {
     try {
       addFileToGit(file, git);
@@ -430,6 +395,15 @@ public class JGitServiceImpl implements JGitService {
     var repoDir = gerritPropertiesConfig.getRepositoryDirectory();
     return new File(
         FilenameUtils.normalizeNoEndSeparator(repoDir), FilenameUtils.getName(repositoryName));
+  }
+
+  private File getExistedRepository(String repositoryName) {
+    var repo = getRepositoryDir(repositoryName);
+    if (!repo.exists()) {
+      throw new RepositoryNotFoundException(
+          String.format("Repository %s doesn't exists", repositoryName), repositoryName);
+    }
+    return repo;
   }
 
   private Lock getLock(String repositoryName) {
@@ -468,11 +442,11 @@ public class JGitServiceImpl implements JGitService {
     addCommand.setUri(new URIish(getRepositoryUrl())
         .setUser(gerritPropertiesConfig.getUser())
         .setPass(gerritPropertiesConfig.getPassword()));
-    addCommand.setName(ORIGIN);
+    addCommand.setName(Constants.DEFAULT_REMOTE_NAME);
     addCommand.call();
     PushCommand push = git.push();
     push.setCredentialsProvider(getCredentialsProvider());
-    push.setRemote(ORIGIN);
+    push.setRemote(Constants.DEFAULT_REMOTE_NAME);
     push.setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
     push.call();
   }
