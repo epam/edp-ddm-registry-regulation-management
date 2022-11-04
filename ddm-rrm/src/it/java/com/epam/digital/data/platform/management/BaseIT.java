@@ -41,7 +41,7 @@ import org.springframework.util.FileSystemUtils;
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = UserImportApplication.class)
+    classes = RegistryRegulationManagementApplication.class)
 public abstract class BaseIT {
 
   @Autowired

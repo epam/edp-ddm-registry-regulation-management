@@ -53,7 +53,7 @@
       **/config/**/*,
       **/util/Header*,
       <!-- Remove archiver alter -->
-      **/UserImportApplication*,
+      **/RegistryRegulationManagementApplication*,
     </sonar.coverage.exclusions>
     <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
     <ddm-maven-tails.version>0.0.1-SNAPSHOT</ddm-maven-tails.version>
