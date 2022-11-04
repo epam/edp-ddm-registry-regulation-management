@@ -57,13 +57,15 @@ public interface JGitService {
    * Returns list files by path from repository
    *
    * @param repositoryName name of the specified repository
-   * @param path           file location
+   * @param path           non-empty file location
    * @return {@link List} of {@link String} with files' names
    *
-   * @throws GitCommandException in case if it couldn't open repo or fetch or reset git command
-   *                             failures
+   * @throws GitCommandException      in case if it couldn't open repo or fetch or reset git command
+   *                                  failures
+   * @throws IllegalArgumentException if path is empty
    */
-  List<String> getFilesInPath(String repositoryName, String path);
+  @NonNull
+  List<String> getFilesInPath(@NonNull String repositoryName, @NonNull String path);
 
   /**
    * Get creation and update date of file from git log

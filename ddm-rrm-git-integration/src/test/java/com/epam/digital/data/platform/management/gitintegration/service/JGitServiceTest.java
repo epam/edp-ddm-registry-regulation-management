@@ -649,25 +649,120 @@ class JGitServiceTest {
     }
   }
 
-  @Test
-  @SneakyThrows
-  void getFilesInPathTest() {
-    var repo = new File(tempDir, "version");
-    Assertions.assertThat(repo.createNewFile()).isTrue();
+  @Nested
+  @DisplayName("JGitService#getFilesInPath")
+  class JGitServiceGetFilesInPathTest {
 
-    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
-    Mockito.when(git.getRepository()).thenReturn(repository);
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
-    Mockito.when(jGitWrapper.getTreeWalk(repository, "/", revTree)).thenReturn(treeWalk);
-    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
-    Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
-    Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
-    List<String> version = jGitService.getFilesInPath("version", "/");
-    Assertions.assertThat(version)
-        .isNotNull()
-        .hasSize(1)
-        .element(0).isEqualTo("someFile");
+    @Test
+    @DisplayName("should return list of all found files")
+    @SneakyThrows
+    void getFilesInPathTest() {
+      var treeWalk = Mockito.mock(TreeWalk.class);
+      Mockito.doReturn(true, true, false).when(treeWalk).next();
+      Mockito.doReturn("bpmn/filename2.bpmn", "bpmn/filename1.bpmn")
+          .when(treeWalk).getPathString();
+
+      var context = new Context(treeWalk);
+
+      var actualFiles = jGitService.getFilesInPath(context.repoName, context.filePath);
+      Assertions.assertThat(actualFiles)
+          .isNotNull()
+          .hasSize(2)
+          .containsExactly("filename1.bpmn", "filename2.bpmn");
+
+      context.verifyMockInvocations();
+      Mockito.verify(treeWalk).enterSubtree();
+      Mockito.verify(treeWalk, Mockito.times(3)).next();
+      Mockito.verify(treeWalk, Mockito.times(2)).getPathString();
+    }
+
+    @Test
+    @DisplayName("should return empty list if path isn't found in repository")
+    @SneakyThrows
+    void getFilesInPathTest_treeWalkNull() {
+      var context = new Context(null);
+
+      var actualFiles = jGitService.getFilesInPath(context.repoName, context.filePath);
+      Assertions.assertThat(actualFiles)
+          .isNotNull()
+          .hasSize(0);
+
+      context.verifyMockInvocations();
+    }
+
+    @Test
+    @DisplayName("should throw GitCommandException if IOException occurred")
+    @SneakyThrows
+    void getFilesInPathTest_ioException() {
+      var treeWalk = Mockito.mock(TreeWalk.class);
+      Mockito.doThrow(IOException.class).when(treeWalk).enterSubtree();
+
+      var context = new Context(treeWalk);
+
+      Assertions.assertThatThrownBy(
+              () -> jGitService.getFilesInPath(context.repoName, context.filePath))
+          .isInstanceOf(GitCommandException.class)
+          .hasMessageContaining("Exception occurred during reading files by path: ")
+          .hasCauseInstanceOf(IOException.class);
+
+      context.verifyMockInvocations();
+      Mockito.verify(treeWalk).enterSubtree();
+      Mockito.verify(treeWalk, Mockito.never()).next();
+      Mockito.verify(treeWalk, Mockito.never()).getPathString();
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException if path is empty")
+    @SneakyThrows
+    void getFilesInEmptyPathTest() {
+      var context = new Context(null);
+
+      Mockito.doCallRealMethod().when(jGitWrapper).getTreeWalk(context.repository, "");
+
+      Assertions.assertThatThrownBy(() -> jGitService.getFilesInPath(context.repoName, ""))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("Empty path not permitted.");
+    }
+
+    @Test
+    @DisplayName("Should throw RepositoryNotFoundException if couldn't open the repo due to non existence")
+    @SneakyThrows
+    void testFetchDirectoryNotExist() {
+      final var repoName = RandomString.make();
+      final var path = RandomString.make();
+
+      Assertions.assertThatThrownBy(() -> jGitService.getFilesInPath(repoName, path))
+          .isInstanceOf(RepositoryNotFoundException.class)
+          .hasMessage("Repository %s doesn't exists", repoName)
+          .hasNoCause();
+
+      Mockito.verify(jGitWrapper, never()).open(Mockito.any());
+    }
+
+    class Context {
+
+      final String repoName = RandomString.make();
+      final String filePath = RandomString.make();
+
+      final File directory = new File(tempDir, repoName);
+      final Git git = Mockito.mock(Git.class);
+      final Repository repository = Mockito.mock(Repository.class);
+
+      @SneakyThrows
+      Context(TreeWalk treeWalkMock) {
+        Assertions.assertThat(directory.mkdirs()).isTrue();
+        Mockito.doReturn(git).when(jGitWrapper).open(directory);
+        Mockito.doReturn(repository).when(git).getRepository();
+        Mockito.doReturn(treeWalkMock).when(jGitWrapper).getTreeWalk(repository, filePath);
+      }
+
+      @SneakyThrows
+      void verifyMockInvocations() {
+        Mockito.verify(jGitWrapper).open(directory);
+        Mockito.verify(git).getRepository();
+        Mockito.verify(jGitWrapper).getTreeWalk(repository, filePath);
+      }
+    }
   }
 
   @Test
@@ -689,35 +784,6 @@ class JGitServiceTest {
     Assertions.assertThat(version).isNotNull();
     Assertions.assertThat(version.getCreate()).isNotNull();
     Assertions.assertThat(version.getUpdate()).isNotNull();
-  }
-
-  @Test
-  @SneakyThrows
-  void getFilesInEmptyPathTest() {
-    var repo = new File(tempDir, "version");
-    Assertions.assertThat(repo.createNewFile()).isTrue();
-
-    Mockito.when(jGitWrapper.open(repo)).thenReturn(git);
-    Mockito.when(git.getRepository()).thenReturn(repository);
-    Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    Mockito.when(jGitWrapper.getRevTree(repository)).thenReturn(revTree);
-    Mockito.when(jGitWrapper.getTreeWalk(repository)).thenReturn(treeWalk);
-    Mockito.when(treeWalk.next()).thenReturn(true).thenReturn(false);
-    Mockito.when(treeWalk.getPathString()).thenReturn("someFile");
-    List<String> version = jGitService.getFilesInPath("version", "");
-    Assertions.assertThat(version)
-        .isNotNull()
-        .hasSize(1)
-        .element(0).isEqualTo("someFile");
-  }
-
-  @Test
-  @SneakyThrows
-  void getFilesNoDirExists() {
-    List<String> version = jGitService.getFilesInPath("version", "");
-    Assertions.assertThat(version)
-        .isNotNull()
-        .isEmpty();
   }
 
   @Test

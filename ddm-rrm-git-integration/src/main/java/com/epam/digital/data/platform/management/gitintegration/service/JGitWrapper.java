@@ -16,6 +16,9 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import java.io.File;
+import java.io.IOException;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
@@ -23,32 +26,48 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.IOException;
 
 @Component
 public class JGitWrapper {
 
-  public Git open(File repositoryDirectory) throws IOException {
+  @NonNull
+  public Git open(@NonNull File repositoryDirectory) throws IOException {
     return Git.open(repositoryDirectory);
   }
 
+  @NonNull
   public CloneCommand cloneRepository() {
     return Git.cloneRepository();
   }
 
-  public RevTree getRevTree(Repository repository) throws IOException {
-    ObjectId lastCommitId = repository.resolve("HEAD");
-    RevWalk revWalk = new RevWalk(repository);
-    return revWalk.parseCommit(lastCommitId).getTree();
+  @NonNull
+  public RevTree getRevTree(@NonNull Repository repository) {
+    try {
+      ObjectId lastCommitId = repository.resolve("HEAD");
+      RevWalk revWalk = new RevWalk(repository);
+      return revWalk.parseCommit(lastCommitId).getTree();
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during getting repository rev tree: %s",
+              e.getMessage()), e);
+    }
   }
 
-  public TreeWalk getTreeWalk(Repository repository, String path, RevTree tree) throws IOException {
-    return TreeWalk.forPath(repository, path, tree);
+  @Nullable
+  public TreeWalk getTreeWalk(@NonNull Repository repository, @NonNull String path) {
+    try {
+      return TreeWalk.forPath(repository, path, getRevTree(repository));
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during getting repository tree walk: %s",
+              e.getMessage()), e);
+    }
   }
 
+  @NonNull
   public TreeWalk getTreeWalk(Repository r) {
     return new TreeWalk(r);
   }

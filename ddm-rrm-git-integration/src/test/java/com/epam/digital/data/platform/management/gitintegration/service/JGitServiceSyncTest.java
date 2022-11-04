@@ -169,44 +169,31 @@ class JGitServiceSyncTest {
 
     String path = "forms";
 
-    Counter counter = new Counter(3);
+    Counter counter = new Counter(2);
 
     when(jGitWrapper.open(file)).thenReturn(git);
     when(git.getRepository()).thenReturn(repository);
     when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
 
-    RevTree tree = mock(RevTree.class);
-    when(jGitWrapper.getRevTree(repository)).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called retrieving the rev tree for {}", Thread.currentThread().getName());
-      counter.check(0);
-      return tree;
-    });
     TreeWalk treeWalk = mock(TreeWalk.class);
-    when(jGitWrapper.getTreeWalk(repository, path, tree)).thenAnswer(invocation -> {
+    when(jGitWrapper.getTreeWalk(repository, path)).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called retrieving the tree walker by revision for {}",
           Thread.currentThread().getName());
-      counter.check(1);
+      counter.check(0);
       return treeWalk;
     });
 
-    TreeWalk dirWalk = mock(TreeWalk.class);
-    when(jGitWrapper.getTreeWalk(repository)).thenReturn(dirWalk);
-
-    ObjectId objectId = mock(ObjectId.class);
-    when(treeWalk.getObjectId(0)).thenReturn(objectId);
-
-    when(dirWalk.next()).thenReturn(true, false, true, false,
+    when(treeWalk.next()).thenReturn(true, false, true, false,
             true, false, true, false,
             true, false)
         .thenThrow(new RuntimeException("Called too many times!"));
 
-    when(dirWalk.getPathString()).thenAnswer(invocation -> {
+    when(treeWalk.getPathString()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called retrieving a ingle file from the tree for {}",
           Thread.currentThread().getName());
-      counter.check(2);
+      counter.check(1);
       return "file";
     });
 
@@ -452,7 +439,6 @@ class JGitServiceSyncTest {
 
     var file = new File(tempDir, repositoryName);
     Assertions.assertThat(file.createNewFile()).isTrue();
-
 
     Counter counter = new Counter(2);
 
