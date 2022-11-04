@@ -22,14 +22,11 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class })
-@ComponentScan(basePackages = {"com.epam.digital.data.platform.management",
-		"data.model.snapshot"})
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@ComponentScan(basePackages = {"com.epam.digital.data.platform.management", "data.model.snapshot"})
 @EnableScheduling
-public class UserImportApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(UserImportApplication.class, args);
-	}
-
+public class RegistryRegulationManagementApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(RegistryRegulationManagementApplication.class, args);
+  }
 }
