@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.management.gitintegration.exception.Reposi
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import java.util.List;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 /**
  * Provides methods for working with git service.
@@ -38,8 +39,9 @@ public interface JGitService {
   /**
    * Fetches and resets repository for main branch to origin state
    *
-   * @throws GitCommandException in case if it couldn't open repo or fetch or reset git command
-   *                             failures
+   * @throws GitCommandException         in case if it couldn't open repo or fetch or reset git
+   *                                     command failures
+   * @throws RepositoryNotFoundException in case if head-branch repository doesn't exist
    */
   void resetHeadBranchToRemote();
 
@@ -48,8 +50,9 @@ public interface JGitService {
    *
    * @param repositoryName name of the specified repository
    * @param refs           ref info
-   * @throws GitCommandException in case if it couldn't open repo or fetch or reset git command
-   *                             failures
+   * @throws GitCommandException         in case if it couldn't open repo or fetch or checkout git
+   *                                     command failures
+   * @throws RepositoryNotFoundException in case if repository doesn't exist
    */
   void fetch(@NonNull String repositoryName, @NonNull String refs);
 
@@ -60,9 +63,9 @@ public interface JGitService {
    * @param path           non-empty file location
    * @return {@link List} of {@link String} with files' names
    *
-   * @throws GitCommandException      in case if it couldn't open repo or fetch or reset git command
-   *                                  failures
-   * @throws IllegalArgumentException if path is empty
+   * @throws GitCommandException         in case if it couldn't open repo or facing IOException
+   * @throws RepositoryNotFoundException in case if repository doesn't exist
+   * @throws IllegalArgumentException    if path is empty
    */
   @NonNull
   List<String> getFilesInPath(@NonNull String repositoryName, @NonNull String path);
@@ -72,9 +75,14 @@ public interface JGitService {
    *
    * @param repositoryName name of the specified repository
    * @param filePath       file location
-   * @return {@link FileDatesDto dates information}
+   * @return {@link FileDatesDto dates information} or null if file in path doesn't exist
+   *
+   * @throws GitCommandException         in case if it couldn't open repo or git log command
+   *                                     failure
+   * @throws RepositoryNotFoundException in case if repository doesn't exist
    */
-  FileDatesDto getDates(String repositoryName, String filePath);
+  @Nullable
+  FileDatesDto getDates(@NonNull String repositoryName, @NonNull String filePath);
 
   /**
    * Returns file content by path from repository
@@ -84,10 +92,10 @@ public interface JGitService {
    * @return {@link String} content of file
    *
    * @throws RepositoryNotFoundException if repository not exists
-   * @throws GitCommandException         in case if it couldn't open repo or fetch or reset git
-   *                                     command failures
+   * @throws GitCommandException         in case if it couldn't open repo or facing IOException
    */
-  String getFileContent(String repositoryName, String filePath);
+  @Nullable
+  String getFileContent(@NonNull String repositoryName, @NonNull String filePath);
 
   /**
    * Amend commit with file

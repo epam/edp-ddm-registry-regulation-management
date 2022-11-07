@@ -28,18 +28,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
@@ -48,18 +48,16 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FileUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
@@ -145,71 +143,83 @@ public class JGitServiceImpl implements JGitService {
   @Override
   @NonNull
   public List<String> getFilesInPath(@NonNull String repositoryName, @NonNull String path) {
+    log.debug("Retrieving file list in repository {} at path {}", repositoryName, path);
     var repositoryDirectory = getExistedRepository(repositoryName);
+    log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
+    log.trace("Opening repo {}", repositoryName);
     try (
         var git = openRepo(repositoryDirectory);
         var repository = git.getRepository();
         var treeWalk = jGitWrapper.getTreeWalk(repository, path)
     ) {
-      return Objects.isNull(treeWalk) ? List.of() : getFiles(treeWalk);
+      log.trace("Retrieving files from {} at path {}", repositoryName, path);
+      List<String> result = Objects.nonNull(treeWalk) ? getFiles(treeWalk) : List.of();
+      log.debug("Found {} files in repository {} at path {}", result.size(), result, path);
+      return result;
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
     }
   }
 
   @Cacheable(DATE_CACHE_NAME)
   @Override
-  public FileDatesDto getDates(String repositoryName, String filePath) {
+  @Nullable
+  public FileDatesDto getDates(@NonNull String repositoryName, @NonNull String filePath) {
+    log.debug("Retrieving git commit dates in repository {} for path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
-    FileDatesDto fileDatesDto = FileDatesDto.builder().build();
+
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
-      LogCommand log = git.log();
-      log.addPath(filePath);
-      Iterable<RevCommit> call = getRevCommits(log);
-      Iterator<RevCommit> iterator = call.iterator();
-      RevCommit revCommit = iterator.next();
-      RevCommit last = iterator.next();
-      while (iterator.hasNext()) {
-        last = iterator.next();
+      log.trace("Retrieving commit stack for file {}", filePath);
+      var revCommitList = getRevCommitList(filePath, git);
+
+      if (revCommitList.isEmpty()) {
+        log.debug("Git commit dates in repository {} for path {} wasn't found", repositoryName,
+            filePath);
+        return null;
       }
-      fileDatesDto.setUpdate(
-          LocalDateTime.ofEpochSecond(revCommit.getCommitTime(), 0, ZoneOffset.UTC));
-      LocalDateTime createDate = LocalDateTime.ofEpochSecond(
-          last != null ? last.getCommitTime() : revCommit.getCommitTime(), 0, ZoneOffset.UTC);
-      fileDatesDto.setCreate(createDate);
+
+      log.trace("Retrieving updated date-time as first element in stack and created as last");
+      var updatedTime = getCommitDateTime(revCommitList.get(0));
+      var createdTime = getCommitDateTime(revCommitList.get(revCommitList.size() - 1));
+
+      log.debug("Git commit dates in repository {} for path {} retrieved", repositoryName,
+          filePath);
+      return FileDatesDto.builder()
+          .create(createdTime)
+          .update(updatedTime)
+          .build();
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
     }
-    return fileDatesDto;
   }
 
   @Override
-  public String getFileContent(String repositoryName, String filePath) {
+  @Nullable
+  public String getFileContent(@NonNull String repositoryName, @NonNull String filePath) {
+    log.debug("Retrieving file content from repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
-    Lock lock = getLock(repositoryName);
+
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
     lock.lock();
-    try (var repository = openRepo(repositoryDirectory).getRepository()) {
-      if (filePath != null && !filePath.isEmpty()) {
-        RevTree tree = jGitWrapper.getRevTree(repository);
-        try (TreeWalk treeWalk = jGitWrapper.getTreeWalk(repository)) {
-          treeWalk.addTree(tree);
-          treeWalk.setRecursive(true);
-          treeWalk.setFilter(PathFilter.create(filePath));
-          if (treeWalk.next()) {
-            ObjectId objectId = treeWalk.getObjectId(0);
-            ObjectLoader loader = repository.open(objectId);
-            return new String(loader.getBytes(), StandardCharsets.UTF_8);
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new GitCommandException(
-          String.format("Exception occurred during reading file content by path: %s",
-              e.getMessage()), e);
+    try (
+        var git = openRepo(repositoryDirectory);
+        var repository = git.getRepository();
+        var treeWalk = jGitWrapper.getTreeWalk(repository, filePath)
+    ) {
+      log.trace("Reading file content from treeWalk");
+      return Objects.isNull(treeWalk) ? null : getFileContent(repository, treeWalk);
     } finally {
       lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
     }
-    return null;
   }
 
   @Override
@@ -374,6 +384,24 @@ public class JGitServiceImpl implements JGitService {
     return files;
   }
 
+  @NonNull
+  private static LocalDateTime getCommitDateTime(@NonNull RevCommit commit) {
+    return LocalDateTime.ofEpochSecond(commit.getCommitTime(), 0, ZoneOffset.UTC);
+  }
+
+  @NonNull
+  private static String getFileContent(@NonNull Repository repository, @NonNull TreeWalk treeWalk) {
+    try {
+      var objectId = treeWalk.getObjectId(0);
+      var loader = repository.open(objectId);
+      return new String(loader.getBytes(), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during reading file content by path: %s",
+              e.getMessage()), e);
+    }
+  }
+
   private void doAmend(File file, String commitMessage, String changeId, Git git) {
     try {
       addFileToGit(file, git);
@@ -410,11 +438,19 @@ public class JGitServiceImpl implements JGitService {
     return lockMap.computeIfAbsent(repositoryName, s -> new ReentrantLock());
   }
 
-  private Iterable<RevCommit> getRevCommits(LogCommand log) {
+  private List<RevCommit> getRevCommitList(String filePath, Git git) {
+    var log = git.log();
+    log.addPath(filePath);
     try {
-      return log.call();
+      var revCommitIterable = log.call();
+      return StreamSupport.stream(revCommitIterable.spliterator(), false)
+          .collect(Collectors.toList());
+    } catch (NoHeadException e) {
+      // It's not expected of HEAD reference to disappear
+      throw new IllegalStateException("HEAD reference doesn't exists", e);
     } catch (GitAPIException e) {
-      throw new GitCommandException("Could not execute call command", e);
+      throw new GitCommandException(
+          String.format("Could not execute log command: %s", e.getMessage()), e);
     }
   }
 

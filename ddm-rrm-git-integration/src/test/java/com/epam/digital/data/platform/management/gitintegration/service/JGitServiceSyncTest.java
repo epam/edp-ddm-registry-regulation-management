@@ -45,7 +45,6 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.BeforeEach;
@@ -232,29 +231,21 @@ class JGitServiceSyncTest {
 
     String path = "forms";
 
-    Counter counter = new Counter(3);
+    Counter counter = new Counter(2);
 
     when(jGitWrapper.open(file)).thenReturn(git);
     when(git.getRepository()).thenReturn(repository);
     when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
 
-    RevTree tree = mock(RevTree.class);
-    when(jGitWrapper.getRevTree(repository)).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called retrieving the rev tree for {}", Thread.currentThread().getName());
-      counter.check(0);
-      return tree;
-    });
     TreeWalk treeWalk = mock(TreeWalk.class);
-    when(jGitWrapper.getTreeWalk(repository)).thenAnswer(invocation -> {
+    when(jGitWrapper.getTreeWalk(repository, path)).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called retrieving the tree walker by revision for {}",
           Thread.currentThread().getName());
-      counter.check(1);
+      counter.check(0);
       return treeWalk;
     });
 
-    when(treeWalk.next()).thenReturn(true);
     ObjectId objectId = mock(ObjectId.class);
     when(treeWalk.getObjectId(0)).thenReturn(objectId);
 
@@ -267,7 +258,7 @@ class JGitServiceSyncTest {
       Thread.sleep(100);
       log.info("Called retrieving file content from the tree for {}",
           Thread.currentThread().getName());
-      counter.check(2);
+      counter.check(1);
       return objectLoader;
     });
 
