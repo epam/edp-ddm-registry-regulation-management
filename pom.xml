@@ -22,6 +22,7 @@
     <module>ddm-rrm-core</module>
     <module>ddm-rrm</module>
     <module>ddm-rrm-git-integration</module>
+    <module>ddm-rrm-data-model-snapshot</module>
   </modules>
 
   <properties>
