@@ -17,7 +17,6 @@ package data.model.snapshot;
 
 import data.model.snapshot.model.DdmColumn;
 import data.model.snapshot.model.DdmDataBaseSnapshot;
-import data.model.snapshot.model.DdmIndex;
 import data.model.snapshot.model.DdmIndex.Column;
 import data.model.snapshot.model.DdmIndex.Column.Sorting;
 import data.model.snapshot.model.DdmPrimaryKeyConstraint;
@@ -63,7 +62,7 @@ public class DdmDataBaseSnapshoUtil {
 
   private static DdmPrimaryKeyConstraint getPrimaryKey() {
     DdmPrimaryKeyConstraint pk = new DdmPrimaryKeyConstraint();
-    DdmIndex.Column column = new Column();
+    Column column = new Column();
     column.setName("id");
     column.setSorting(Sorting.ASC);
     pk.setColumns(List.of(column));
