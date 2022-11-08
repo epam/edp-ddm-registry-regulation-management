@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.exception;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -34,10 +35,13 @@ import com.epam.digital.data.platform.management.controller.MasterVersionFormsCo
 import com.epam.digital.data.platform.management.controller.UserImportController;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
+import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
-import com.epam.digital.data.platform.management.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import com.epam.digital.data.platform.management.validator.Validator;
@@ -167,8 +171,10 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnOpenShiftInvocationException() {
+    doReturn(CephFileInfoDto.builder().id("id").build())
+        .when(userImportService).getFileInfo(new SecurityContext());
     doThrow(new OpenShiftInvocationException("ERROR", new RuntimeException()))
-        .when(openShiftService).startImport(new SecurityContext());
+        .when(openShiftService).startImport("id", new SecurityContext());
 
     mockMvc.perform(post(BASE_URL + "/imports"))
         .andExpectAll(

@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.util;
+package com.epam.digital.data.platform.management.osintegration.service;
 
-public enum Header {
-  TRACE_ID("X-B3-TraceId"),
-  ACCESS_TOKEN("X-Access-Token");
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 
-  private final String headerName;
-
-  Header(String headerName) {
-    this.headerName = headerName;
-  }
-
-  public String getHeaderName() {
-    return headerName;
-  }
+public interface OpenShiftService {
+  void startImport(String fileInfoId, SecurityContext securityContext);
 }

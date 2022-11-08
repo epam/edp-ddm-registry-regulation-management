@@ -30,9 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.management.service.OpenShiftService;
+import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import java.util.UUID;
@@ -240,11 +240,14 @@ class UserImportControllerTest {
     @Test
     @DisplayName("should return 202 if user has user-management role")
     void validStartImport() {
+      Mockito.when(userImportService.getFileInfo(new SecurityContext()))
+          .thenReturn(CephFileInfoDto.builder().id("id").build());
+
       startImport("user-management-role-user-token",
           document("batch-loads/users/imports/POST"),
           status().isAccepted());
 
-      Mockito.verify(openShiftService).startImport(new SecurityContext());
+      Mockito.verify(openShiftService).startImport("id", new SecurityContext());
     }
 
     @Test
@@ -253,7 +256,7 @@ class UserImportControllerTest {
       startImport("user-token", result -> {
       }, status().isForbidden());
 
-      Mockito.verify(openShiftService, Mockito.never()).startImport(any());
+      Mockito.verify(openShiftService, Mockito.never()).startImport(anyString(), any());
     }
   }
 }

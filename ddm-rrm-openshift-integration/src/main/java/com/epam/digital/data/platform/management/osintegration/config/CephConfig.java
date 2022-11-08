@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.config;
+package com.epam.digital.data.platform.management.osintegration.config;
 
 import com.epam.digital.data.platform.integration.ceph.config.S3ConfigProperties;
 import com.epam.digital.data.platform.integration.ceph.factory.CephS3Factory;

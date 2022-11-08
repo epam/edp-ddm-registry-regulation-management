@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileDto;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
 import org.springframework.web.multipart.MultipartFile;

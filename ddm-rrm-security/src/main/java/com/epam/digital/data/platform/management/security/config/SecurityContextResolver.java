@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.config;
+package com.epam.digital.data.platform.management.security.config;
 
+import com.epam.digital.data.platform.management.security.enumeration.Header;
 import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
-import com.epam.digital.data.platform.management.model.SecurityContext;
-import com.epam.digital.data.platform.management.util.Header;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
+import java.util.Objects;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-
-import java.util.Objects;
 
 public class SecurityContextResolver implements HandlerMethodArgumentResolver {
 
@@ -36,7 +35,7 @@ public class SecurityContextResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-                                NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+      NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
     var context = new SecurityContext();
     context.setAccessToken(webRequest.getHeader(Header.ACCESS_TOKEN.getHeaderName()));
     return context;

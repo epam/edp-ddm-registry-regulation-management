@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.osintegration.exception;
 
-import com.epam.digital.data.platform.management.model.SecurityContext;
+public class OpenShiftInvocationException extends RuntimeException {
 
-public interface OpenShiftService {
-  void startImport(SecurityContext securityContext);
+  public OpenShiftInvocationException(String message) {
+    super(message);
+  }
+
+  public OpenShiftInvocationException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

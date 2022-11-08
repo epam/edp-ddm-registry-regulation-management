@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.osintegration.config;
 
-public interface VaultService {
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.openshift.client.OpenShiftConfigBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-  String decrypt(String encryptedContent);
+@Configuration
+public class OpenShiftConfig {
 
-  String encrypt(String content);
+  @Bean
+  public Config config(@Value("${openshift.namespace}") String namespace) {
+    return new OpenShiftConfigBuilder().withNamespace(namespace).build();
+  }
 }

@@ -14,36 +14,30 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.osintegration.service;
 
-import com.epam.digital.data.platform.management.exception.GetProcessingException;
-import com.epam.digital.data.platform.management.exception.OpenShiftInvocationException;
-import com.epam.digital.data.platform.management.model.SecurityContext;
-import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
-import com.epam.digital.data.platform.management.service.impl.OpenShiftServiceImpl;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
+import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
+import com.epam.digital.data.platform.management.osintegration.service.OpenShiftServiceImpl;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.JobListBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @EnableKubernetesMockClient
 @ExtendWith(MockitoExtension.class)
@@ -55,53 +49,45 @@ class OpenShiftServiceTest {
   KubernetesMockServer server;
   KubernetesClient client;
 
-  @Mock
-  UserImportService userImportService;
-
   @BeforeEach
   void init() {
-    this.openShiftService = new OpenShiftServiceImpl(JOB_NAME, userImportService, server.createClient().getConfiguration());
+    this.openShiftService = new OpenShiftServiceImpl(server.createClient().getConfiguration(),
+        JOB_NAME);
   }
 
   @Test
   void validStartImportJob() {
     var id = UUID.randomUUID().toString();
-    var cephEntityReadDto = new CephFileInfoDto(id, "test.txt", 1L);
 
     Job exampleJob = createJobBuilder().build();
     server.expect()
         .withPath("/apis/batch/v1/namespaces/test/jobs")
-        .andReturn(HttpURLConnection.HTTP_OK, new JobListBuilder().addNewItemLike(exampleJob).and().build())
+        .andReturn(HttpURLConnection.HTTP_OK,
+            new JobListBuilder().addNewItemLike(exampleJob).and().build())
         .always();
     server.expect()
         .withPath("/apis/batch/v1/namespaces/test/jobs")
         .andReturn(HttpURLConnection.HTTP_OK, exampleJob)
         .once();
-    when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
 
-    openShiftService.startImport(securityContext());
+    openShiftService.startImport(id, securityContext());
 
-    verify(userImportService).getFileInfo(any());
     Job job = client.batch().v1().jobs().inNamespace(NAMESPACE).list().getItems().get(0);
     assertEquals(JOB_NAME, job.getMetadata().getName());
   }
 
   @Test
   void shouldThrowGetProcessingExceptionDueToEmptyCeph() {
-    when(userImportService.getFileInfo(any())).thenReturn(new CephFileInfoDto());
-
     var exception = assertThrows(GetProcessingException.class,
-        () -> openShiftService.startImport(securityContext()));
+        () -> openShiftService.startImport(null, securityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("Bucket is empty, nothing to import");
   }
 
   @Test
   void shouldConvertAnyOpenShiftExceptionToOpenShiftInvocationException() {
-    var cephEntityReadDto = new CephFileInfoDto(UUID.randomUUID().toString(), "test.txt", 1L);
-    when(userImportService.getFileInfo(any())).thenReturn(cephEntityReadDto);
     var exception = assertThrows(OpenShiftInvocationException.class,
-        () -> openShiftService.startImport(securityContext()));
+        () -> openShiftService.startImport(UUID.randomUUID().toString(), securityContext()));
 
     assertThat(exception.getMessage()).isEqualTo("Unable to create Job");
   }

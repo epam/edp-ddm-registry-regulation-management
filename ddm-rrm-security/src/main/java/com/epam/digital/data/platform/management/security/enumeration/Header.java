@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.config;
+package com.epam.digital.data.platform.management.security.enumeration;
 
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.openshift.client.OpenShiftConfigBuilder;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+public enum Header {
+  TRACE_ID("X-B3-TraceId"),
+  ACCESS_TOKEN("X-Access-Token");
 
-@Configuration
-public class OpenShiftConfig {
+  private final String headerName;
 
-  @Bean
-  public Config config(@Value("${openshift.namespace}") String namespace) {
-    return new OpenShiftConfigBuilder().withNamespace(namespace).build();
+  Header(String headerName) {
+    this.headerName = headerName;
+  }
+
+  public String getHeaderName() {
+    return headerName;
   }
 }

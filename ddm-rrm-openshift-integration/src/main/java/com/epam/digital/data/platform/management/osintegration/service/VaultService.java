@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.osintegration.service;
 
-public class GetProcessingException extends RuntimeException {
+public interface VaultService {
 
-  public GetProcessingException(String message) {
-    super(message);
-  }
+  String decrypt(String encryptedContent);
 
-  public GetProcessingException(String message, Throwable cause) {
-    super(message, cause);
-  }
+  String encrypt(String content);
 }
