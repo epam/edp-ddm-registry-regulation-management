@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -28,15 +27,15 @@ public interface FormService {
   /**
    * Get form list for specific version
    */
-  List<FormResponse> getFormListByVersion(String versionName) throws IOException, RestApiException;
+  List<FormResponse> getFormListByVersion(String versionName) throws IOException;
 
-  List<FormResponse> getChangedFormsListByVersion(String versionName) throws IOException, RestApiException;
+  List<FormResponse> getChangedFormsListByVersion(String versionName) throws IOException;
 
   /**
    * Create new form - create form from scratch or create from copy
    */
   void createForm(String formName, String content, String versionName)
-      throws IOException, RestApiException, GitAPIException, URISyntaxException;
+      throws IOException, GitAPIException, URISyntaxException;
 
   /**
    * Get content from existing form
@@ -47,11 +46,11 @@ public interface FormService {
    * Update the content of existing form
    */
   void updateForm(String content, String formName, String versionName)
-      throws IOException, RestApiException, GitAPIException, URISyntaxException;
+      throws IOException, GitAPIException, URISyntaxException;
 
   /**
    * Delete form
    */
   void deleteForm(String formName, String versionName)
-      throws IOException, GitAPIException, URISyntaxException, RestApiException;
+      throws IOException, GitAPIException, URISyntaxException;
 }

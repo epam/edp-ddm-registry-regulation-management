@@ -19,7 +19,6 @@ package com.epam.digital.data.platform.management.controller;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -137,7 +136,7 @@ public class CandidateVersionBusinessProcessesController {
       @RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName)
-      throws GitAPIException, URISyntaxException, IOException, RestApiException {
+      throws GitAPIException, URISyntaxException, IOException {
     log.info("Started creating business process {} for {} version candidate", businessProcessName,
         versionCandidateId);
     businessProcessService.createProcess(businessProcessName, businessProcess, versionCandidateId);

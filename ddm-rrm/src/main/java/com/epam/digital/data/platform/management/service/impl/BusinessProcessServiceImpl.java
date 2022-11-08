@@ -19,19 +19,31 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
-import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
-import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
-import com.google.gerrit.extensions.restapi.RestApiException;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -42,20 +54,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -81,7 +79,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void createProcess(String processName, String content, String versionName)
-      throws RestApiException, GitAPIException, URISyntaxException, IOException {
+      throws GitAPIException, URISyntaxException, IOException {
     VersionedFileRepository repo;
     String processPath;
     repo = repoFactory.getRepoByVersion(versionName);

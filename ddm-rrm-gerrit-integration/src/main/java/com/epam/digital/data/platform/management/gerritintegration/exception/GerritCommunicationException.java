@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.gerritintegration.exception;
 
-public class GerritChangeNotFoundException extends RuntimeException {
-  public GerritChangeNotFoundException(String message) {
+public class GerritCommunicationException extends RuntimeException {
+
+  public GerritCommunicationException(String message) {
     super(message);
   }
 
-  public GerritChangeNotFoundException(String message, Throwable cause) {
+  public GerritCommunicationException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

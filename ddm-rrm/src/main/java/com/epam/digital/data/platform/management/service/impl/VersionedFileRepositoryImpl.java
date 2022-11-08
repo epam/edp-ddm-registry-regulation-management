@@ -15,19 +15,16 @@
  */
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.VersioningRequestDto;
-import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.FileInfo;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -57,12 +54,12 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   private GerritService gerritService;
 
   @Override
-  public List<FileResponse> getFileList() throws RestApiException {
+  public List<FileResponse> getFileList() {
     return getFileList(File.separator);
   }
 
   @Override
-  public List<FileResponse> getFileList(String path) throws RestApiException {
+  public List<FileResponse> getFileList(String path) {
     Map<String, FileResponse> filesInMaster = jGitService.getFilesInPath(versionName, path)
         .stream()
         .filter(el -> !el.equals(".gitkeep"))
@@ -104,7 +101,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
   @Override
   public void writeFile(String path, String content)
-      throws RestApiException, GitAPIException, URISyntaxException, IOException {
+      throws GitAPIException, URISyntaxException, IOException {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
@@ -124,7 +121,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public boolean isFileExists(String path) throws IOException, RestApiException {
+  public boolean isFileExists(String path) throws IOException {
     File theFile = new File(path);
     String parent = theFile.getParent();
     String baseName = FilenameUtils.getBaseName(theFile.getName());
@@ -134,7 +131,7 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
   }
 
   @Override
-  public void deleteFile(String path) throws RestApiException, GitAPIException, URISyntaxException {
+  public void deleteFile(String path) throws GitAPIException, URISyntaxException {
     String changeId = getChangeId();
     if (changeId != null) {
       ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
@@ -150,38 +147,34 @@ public class VersionedFileRepositoryImpl implements VersionedFileRepository {
 
   @Override
   public void pullRepository() {
-    try {
-      var changeId = getChangeId();
-      if (changeId == null) {
-        throw new RepositoryNotFoundException("Version " + versionName + " not found", versionName);
-      } else {
-        jGitService.cloneRepoIfNotExist(versionName);
-        var changeInfo = gerritService.getChangeInfo(changeId);
-        jGitService.fetch(versionName, changeInfo.getRefs());
-      }
-    } catch (RestApiException exception) {
-      throw new GerritCommunicationException("Cannot access gerrit.");
+    var changeId = getChangeId();
+    if (changeId == null) {
+      throw new RepositoryNotFoundException("Version " + versionName + " not found", versionName);
+    } else {
+      jGitService.cloneRepoIfNotExist(versionName);
+      var changeInfo = gerritService.getChangeInfo(changeId);
+      jGitService.fetch(versionName, changeInfo.getRefs());
     }
   }
 
-  private String getChangeId() throws RestApiException {
-    ChangeInfo changeInfo = gerritService.getMRByNumber(versionName);
-    return changeInfo != null ? changeInfo.changeId : null;
+  private String getChangeId() {
+    ChangeInfoDto changeInfo = gerritService.getMRByNumber(versionName);
+    return changeInfo != null ? changeInfo.getChangeId() : null;
   }
 
-  private ChangeInfo getChangeInfo() throws RestApiException {
+  private ChangeInfoDto getChangeInfo() {
     return gerritService.getMRByNumber(versionName);
   }
 
-  private FileStatus getStatus(FileInfo fileInfo) {
-    Character status = fileInfo.status;
-    if (Objects.isNull(status) || status.toString().equals("R")) {
+  private FileStatus getStatus(FileInfoDto fileInfo) {
+    String status = fileInfo.getStatus();
+    if (Objects.isNull(status) || status.equals("R")) {
       return FileStatus.CHANGED;
     }
-    if (status.toString().equals("A")) {
+    if (status.equals("A")) {
       return FileStatus.NEW;
     }
-    if (status.toString().equals("D")) {
+    if (status.equals("D")) {
       return FileStatus.DELETED;
     }
     return null;

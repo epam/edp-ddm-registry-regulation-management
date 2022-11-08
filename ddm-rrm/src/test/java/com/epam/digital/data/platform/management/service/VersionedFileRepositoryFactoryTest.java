@@ -17,12 +17,13 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryFactoryImpl;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
-import com.google.gerrit.extensions.common.ChangeInfo;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Map;
 
 @ExtendWith(MockitoExtension.class)
 public class VersionedFileRepositoryFactoryTest {
@@ -51,10 +50,10 @@ public class VersionedFileRepositoryFactoryTest {
   @SneakyThrows
   void getRepositoryVersionedTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
-    ChangeInfo changeInfo = new ChangeInfo();
-    changeInfo.changeId = "1";
+    ChangeInfoDto changeInfo = new  ChangeInfoDto();
+    changeInfo.setChangeId("1");
     final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
-    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     VersionedFileRepository repo = factory.getRepoByVersion("version");
     Assertions.assertInstanceOf(VersionedFileRepositoryImpl.class, repo);
@@ -72,10 +71,10 @@ public class VersionedFileRepositoryFactoryTest {
   @SneakyThrows
   void getAvailReposTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
-    ChangeInfo changeInfo = new ChangeInfo();
-    changeInfo.changeId = "1";
+    ChangeInfoDto changeInfo = new  ChangeInfoDto();
+    changeInfo.setChangeId("1");
     final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
-    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     factory.getRepoByVersion("version");
     factory.getRepoByVersion("master");

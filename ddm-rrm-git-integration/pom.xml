@@ -30,6 +30,12 @@
       <groupId>org.apache.any23</groupId>
       <artifactId>apache-any23-encoding</artifactId>
       <version>${apache-encoding-detector.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 

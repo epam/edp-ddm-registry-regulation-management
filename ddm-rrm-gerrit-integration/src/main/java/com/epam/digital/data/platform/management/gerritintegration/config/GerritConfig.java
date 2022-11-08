@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.config;
+package com.epam.digital.data.platform.management.gerritintegration.config;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;

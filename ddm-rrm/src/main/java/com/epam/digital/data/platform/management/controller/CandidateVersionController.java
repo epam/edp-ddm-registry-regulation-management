@@ -22,7 +22,6 @@ import com.epam.digital.data.platform.management.model.dto.VersionInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -78,7 +77,7 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class))),
       })
   @GetMapping
-  public ResponseEntity<List<VersionInfo>> getVersionsList() throws RestApiException {
+  public ResponseEntity<List<VersionInfo>> getVersionsList() {
     log.info("Started getting versions list");
     var response = versionManagementService.getVersionsList()
         .stream().map(c -> VersionInfo.builder()
@@ -196,7 +195,7 @@ public class CandidateVersionController {
       })
   @PostMapping
   public ResponseEntity<VersionInfoDetailed> createNewVersion(
-      @RequestBody CreateVersionRequest requestDto) throws RestApiException {
+      @RequestBody CreateVersionRequest requestDto) {
     log.info("Creating new version with name {}", requestDto.getName());
     var versionId = versionManagementService.createNewVersion(requestDto);
     var changeInfo = versionManagementService.getVersionDetails(versionId);
@@ -234,8 +233,7 @@ public class CandidateVersionController {
       })
   @GetMapping("/{versionCandidateId}")
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
-      @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId)
-      throws RestApiException {
+      @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting detailed info about {} version candidate", versionCandidateId);
     var response  = mapToVersionInfoDetailed(versionManagementService.getVersionDetails(versionCandidateId));
     log.info("Finished getting detailed info about {} version candidate", versionCandidateId);
@@ -271,7 +269,7 @@ public class CandidateVersionController {
   @GetMapping("/{versionCandidateId}/changes")
   public ResponseEntity<VersionChanges> getVersionChanges(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-      String versionCandidateId) throws IOException, RestApiException {
+      String versionCandidateId) throws IOException {
     log.info("Getting changes for version {}", versionCandidateId);
     var versionChanges = versionManagementService.getVersionChanges(versionCandidateId);
     log.info("Version changes for version {} found", versionCandidateId);
@@ -307,7 +305,7 @@ public class CandidateVersionController {
   @GetMapping("/{versionCandidateId}/rebase")
   public ResponseEntity<Void> rebase(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-      String versionCandidateId) throws RestApiException {
+      String versionCandidateId) {
     log.info("Started version candidate {} rebase", versionCandidateId);
     versionManagementService.rebase(versionCandidateId);
     log.info("Version candidate {} successfully rebased", versionCandidateId);

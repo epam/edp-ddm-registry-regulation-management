@@ -16,9 +16,8 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.service.GerritService;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,7 @@ public class DeleteOldRepositoryScheduler {
   private final JGitService jGitService;
 
   @Scheduled(cron = "${scheduled.cleanRepositoriesCron}", zone = "${scheduled.cleanRepositoriesTimezone}")
-  public void deleteOldRepositories() throws RestApiException {
+  public void deleteOldRepositories() {
     List<String> closedMrs = gerritService.getClosedMrIds();
 
     closedMrs.forEach(mr -> {

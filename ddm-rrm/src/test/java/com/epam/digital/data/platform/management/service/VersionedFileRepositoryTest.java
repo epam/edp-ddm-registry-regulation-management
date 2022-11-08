@@ -20,16 +20,15 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.FileResponse;
 import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.FileInfo;
 import java.io.File;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,12 +97,12 @@ public class VersionedFileRepositoryTest {
     list.add("folder/file1");
     list.add("folder/file2");
     list.add("folder/file3");
-    var changeInfo = new ChangeInfo();
-    changeInfo.created = new Timestamp(System.currentTimeMillis());
-    changeInfo.updated = new Timestamp(System.currentTimeMillis());
-    var filesInMR = new HashMap<String, FileInfo>();
-    filesInMR.put("folder/file22", new FileInfo());
-    filesInMR.put("folder/file3", new FileInfo());
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setCreated(LocalDateTime.now());
+    changeInfo.setUpdated(LocalDateTime.now());
+    var filesInMR = new HashMap<String, FileInfoDto>();
+    filesInMR.put("folder/file22", new FileInfoDto());
+    filesInMR.put("folder/file3", new FileInfoDto());
 
     Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
@@ -121,21 +120,21 @@ public class VersionedFileRepositoryTest {
         .create(LocalDateTime.now())
         .update(LocalDateTime.now())
         .build();
-    var changeInfo = new ChangeInfo();
-    changeInfo.created = new Timestamp(System.currentTimeMillis());
-    var addedFileInfo = new FileInfo();
-    addedFileInfo.status = 'A';
-    var deletedFileInfo = new FileInfo();
-    deletedFileInfo.status = 'D';
-    var renamedFileInfo = new FileInfo();
-    renamedFileInfo.status = 'R';
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setCreated(LocalDateTime.now());
+    var addedFileInfo = new FileInfoDto();
+    addedFileInfo.setStatus("A");
+    var deletedFileInfo = new FileInfoDto();
+    deletedFileInfo.setStatus("D");
+    var renamedFileInfo = new FileInfoDto();
+    renamedFileInfo.setStatus("R");
 
     Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(
         Map.of("folder/file12", addedFileInfo,
             "folder/file2", deletedFileInfo,
             "folder/file14", renamedFileInfo,
-            "folder/file3", new FileInfo()));
+            "folder/file3", new FileInfoDto()));
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(
         List.of("file1", "file2", "file3"));
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
@@ -171,9 +170,9 @@ public class VersionedFileRepositoryTest {
     changeInfoDto.setRefs(refs);
     changeInfoDto.setChangeId(changeId);
     repository.setVersionName(repositoryName);
-    var changeInfo = new ChangeInfo();
-    changeInfo.changeId = changeId;
-    changeInfo._number = 1;
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId(changeId);
+    changeInfo.setNumber("1");
     Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
     Mockito.when(gerritService.getMRByNumber(eq(repositoryName))).thenReturn(changeInfo);
     repository.writeFile(filepath, filecontent);
@@ -186,9 +185,9 @@ public class VersionedFileRepositoryTest {
   @SneakyThrows
   void deleteTest() {
     repository.setVersionName("1");
-    ChangeInfo changeInfo = new ChangeInfo();
-    changeInfo.changeId = "changeId";
-    changeInfo._number = 1;
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId("changeId");
+    changeInfo.setNumber("1");
     ChangeInfoDto changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setSubject("change");
     Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
@@ -209,10 +208,10 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void pullRepositoryTest() {
-    ChangeInfo changeInfo = new ChangeInfo();
-    changeInfo.changeId = "1";
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId("1");
     final var mock = Mockito.mock(ChangeInfoDto.class);
-    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(mock);
+    Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     repository.setVersionName("version");
     repository.pullRepository();

@@ -27,7 +27,6 @@ import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -58,19 +57,18 @@ public class FormServiceImpl implements FormService {
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   @Override
-  public List<FormResponse> getFormListByVersion(String versionName) throws IOException, RestApiException {
+  public List<FormResponse> getFormListByVersion(String versionName) throws IOException {
     return getFormListByVersion(versionName, FileStatus.DELETED);
   }
 
   @Override
-  public List<FormResponse> getChangedFormsListByVersion(String versionName)
-      throws IOException, RestApiException {
+  public List<FormResponse> getChangedFormsListByVersion(String versionName) throws IOException {
     return getFormListByVersion(versionName, FileStatus.CURRENT);
   }
 
   @Override
   public void createForm(String formName, String content, String versionName)
-      throws IOException, RestApiException, GitAPIException, URISyntaxException {
+      throws IOException, GitAPIException, URISyntaxException {
     var time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     String formPath = getFormPath(formName);
@@ -94,7 +92,7 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void updateForm(String content, String formName, String versionName)
-      throws IOException, RestApiException, GitAPIException, URISyntaxException {
+      throws IOException, GitAPIException, URISyntaxException {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
@@ -114,7 +112,7 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void deleteForm(String formName, String versionName)
-      throws IOException, GitAPIException, URISyntaxException, RestApiException {
+      throws IOException, GitAPIException, URISyntaxException {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     repo.deleteFile(getFormPath(formName));
   }
@@ -129,7 +127,7 @@ public class FormServiceImpl implements FormService {
   }
 
   private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus)
-      throws IOException, RestApiException {
+      throws IOException {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(
         gerritPropertiesConfig.getHeadBranch());

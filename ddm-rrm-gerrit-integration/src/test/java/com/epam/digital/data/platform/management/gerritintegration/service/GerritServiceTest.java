@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.gerritintegration.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.RobotCommentRequestDto;
-import com.epam.digital.data.platform.management.model.dto.VoteRequestDto;
-import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.mapper.GerritMapper;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.RobotCommentInputDto;
 import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.api.changes.Changes;
 import com.google.gerrit.extensions.api.changes.RebaseInput;
 import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.api.changes.RevisionApi;
 import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.FileInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
 import com.google.gerrit.extensions.common.RevisionInfo;
 import com.google.gson.Gson;
@@ -41,23 +41,23 @@ import com.urswolfer.gerrit.client.rest.http.GerritRestClient;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangeApiRestClient;
 import com.urswolfer.gerrit.client.rest.http.changes.ChangesRestClient;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class GerritServiceTest {
@@ -66,6 +66,8 @@ class GerritServiceTest {
   public GerritPropertiesConfig gerritPropertiesConfig;
   @Mock
   public GerritApiImpl gerritApiImpl;
+  @Spy
+  private GerritMapper mapper = Mappers.getMapper(GerritMapper.class);
   @InjectMocks
   private GerritServiceImpl gerritService;
   @Mock
@@ -86,6 +88,7 @@ class GerritServiceTest {
     changeInfo._number = 5;
     changeInfos.add(changeInfo);
     Mockito.lenient().when(gerritApiImpl.changes()).thenReturn(changes);
+    ReflectionTestUtils.setField(gerritService, "gerritMapper", mapper);
   }
 
   @Test
@@ -143,10 +146,12 @@ class GerritServiceTest {
     Mockito.when(changeApi.current()).thenReturn(revisionApi);
     Mockito.when(revisionApi.mergeable()).thenReturn(mergeableInfo);
     Mockito.when(request.get()).thenReturn(changeInfos);
+    var dto = new ChangeInfoDto();
+    dto.setNumber("10");
     Assertions.assertTrue(info.mergeable);
-    ChangeInfo c = gerritService.getMRByNumber(versionNumber);
-    Assertions.assertFalse(info.mergeable);
-    Assertions.assertEquals(info, c);
+    ChangeInfoDto c = gerritService.getMRByNumber(versionNumber);
+    Assertions.assertFalse(c.getMergeable());
+    Assertions.assertEquals(dto.getNumber(), c.getNumber());
   }
 
   @Test
@@ -172,23 +177,25 @@ class GerritServiceTest {
   void getMrListNotNullTest() {
     Mockito.when(changes.query(any())).thenReturn(request);
     Mockito.when(request.get()).thenReturn(new ArrayList<>());
-    List<ChangeInfo> mrList = gerritService.getMRList();
+    List<ChangeInfoDto> mrList = gerritService.getMRList();
     Assertions.assertNotNull(mrList);
   }
 
   @Test
   @SneakyThrows
   void etMrListNotEmptyTest() {
+    final ChangeInfoDto dto = new ChangeInfoDto();
+    dto.setNumber("5");
     Mockito.when(changes.query(any())).thenReturn(request);
     Mockito.when(request.get()).thenReturn(changeInfos);
     Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
     Mockito.when(revisionApi.mergeable()).thenReturn(new MergeableInfo());
-    List<ChangeInfo> mrList = gerritService.getMRList();
+    List<ChangeInfoDto> mrList = gerritService.getMRList();
     Assertions.assertNotNull(mrList);
-    ChangeInfo changeInfo = mrList.get(0);
-    Assertions.assertEquals(5, changeInfo._number);
+    ChangeInfoDto changeInfo = mrList.get(0);
+    Assertions.assertEquals("5", changeInfo.getNumber());
   }
 
   @Test
@@ -199,12 +206,14 @@ class GerritServiceTest {
     HashMap<String, RevisionInfo> revisionsMap = new HashMap<>();
     revisionsMap.put(null, revisionInfo);
     changeInfo.revisions = revisionsMap;
+    changeInfo.changeId = "changeId";
     Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
-    ChangeInfoDto changeId = gerritService.getChangeInfo("changeId");
-    Assertions.assertEquals("changeId", changeId.getChangeId());
-    Assertions.assertEquals("refs", changeId.getRefs());
-    Assertions.assertEquals("5", changeId.getNumber());
+
+    var changeInfoDto = gerritService.getChangeInfo("changeId");
+    Assertions.assertEquals("changeId", changeInfoDto.getChangeId());
+    Assertions.assertEquals("refs", changeInfoDto.getRefs());
+    Assertions.assertEquals("5", changeInfoDto.getNumber());
   }
 
   @Test
@@ -213,7 +222,7 @@ class GerritServiceTest {
     Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
     Mockito.when(revisionApi.files()).thenReturn(new HashMap<>());
-    Map<String, FileInfo> files = gerritService.getListOfChangesInMR("changeId");
+    Map<String, FileInfoDto> files = gerritService.getListOfChangesInMR("changeId");
     Assertions.assertNotNull(files);
   }
 
@@ -230,7 +239,7 @@ class GerritServiceTest {
     Mockito.when(changes.create(any())).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
 
-    var request = new CreateVersionRequest();
+    var request = new CreateChangeInputDto();
     request.setName("name");
     request.setDescription("description");
     String change = gerritService.createChanges(request);
@@ -250,57 +259,6 @@ class GerritServiceTest {
     Assertions.assertNotNull(review);
   }
 
-  @Test
-  @SneakyThrows
-  void voteTestIfLabelOrValueNull() {
-    Boolean vote = gerritService.vote(new VoteRequestDto(), "changeId");
-    Assertions.assertEquals(false, vote);
-    VoteRequestDto voteRequestDto = new VoteRequestDto();
-    voteRequestDto.setLabel("Code-Review");
-    vote = gerritService.vote(voteRequestDto, "changeId");
-    Assertions.assertEquals(false, vote);
-    voteRequestDto = new VoteRequestDto();
-    voteRequestDto.setValue((short) 2);
-    vote = gerritService.vote(voteRequestDto, "changeId");
-    Assertions.assertEquals(false, vote);
-  }
-
-  @Test
-  @SneakyThrows
-  void voteTestIfPermittedLabelsAreEmpty() {
-    Map<String, Collection<String>> labels = new HashMap<>();
-    List<String> vals = new ArrayList<>();
-    labels.put("Code-Review", null);
-    changeInfo.permittedLabels = labels;
-    Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
-    Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
-    VoteRequestDto dto = new VoteRequestDto();
-    dto.setLabel("Code-Review");
-    dto.setValue((short) 0);
-    Boolean vote = gerritService.vote(dto, "changeId");
-    Assertions.assertEquals(false, vote);
-  }
-
-  @Test
-  @SneakyThrows
-  void voteTest() {
-    Map<String, Collection<String>> labels = new HashMap<>();
-    List<String> vals = new ArrayList<>();
-    vals.add("+2");
-    labels.put("Code-Review", vals);
-    changeInfo.permittedLabels = labels;
-    ReviewResult reviewResult = new ReviewResult();
-    reviewResult.ready = true;
-    Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
-    Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
-    Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
-    Mockito.when(revisionApi.review(any())).thenReturn(reviewResult);
-    VoteRequestDto dto = new VoteRequestDto();
-    dto.setLabel("Code-Review");
-    dto.setValue((short) 2);
-    Boolean vote = gerritService.vote(dto, "changeId");
-    Assertions.assertEquals(true, vote);
-  }
 
   @Test
   @SneakyThrows
@@ -317,7 +275,7 @@ class GerritServiceTest {
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
     Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
     gerritService.rebase(null);
-    RobotCommentRequestDto requestDto = new RobotCommentRequestDto();
+    RobotCommentInputDto requestDto = new RobotCommentInputDto();
     requestDto.setComment("Comment");
     gerritService.robotComment(requestDto, "changeId");
     Mockito.verify(revisionApi, Mockito.times(1)).review(any());
@@ -330,7 +288,7 @@ class GerritServiceTest {
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
     Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
     gerritService.rebase(null);
-    RobotCommentRequestDto requestDto = new RobotCommentRequestDto();
+    RobotCommentInputDto requestDto = new RobotCommentInputDto();
     gerritService.robotComment(requestDto, "changeId");
     Mockito.verify(revisionApi, Mockito.times(1)).review(any());
   }
@@ -345,10 +303,11 @@ class GerritServiceTest {
     Mockito.when(request.get()).thenReturn(changeInfos);
     Mockito.when(changes.id(changeInfo.id)).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
-
+    var dto = new ChangeInfoDto();
+    dto.setNumber("5");
     var result = gerritService.getLastMergedMR();
 
-    Assertions.assertSame(result, changeInfo);
+    assertThat(result).hasFieldOrPropertyWithValue("number", dto.getNumber());
 
     Mockito.verify(request).get();
     Mockito.verify(request).withLimit(1);

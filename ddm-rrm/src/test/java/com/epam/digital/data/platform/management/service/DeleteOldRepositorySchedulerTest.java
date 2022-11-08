@@ -18,11 +18,11 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.ArgumentMatchers.any;
 
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.DeleteOldRepositoryScheduler;
-import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -68,9 +68,9 @@ public class DeleteOldRepositorySchedulerTest {
   @Test
   @SneakyThrows
   void exceptionThrownTest() {
-    Mockito.when(gerritService.getClosedMrIds()).thenThrow(RestApiException.class);
+    Mockito.doThrow(GerritCommunicationException.class).when(gerritService).getClosedMrIds();
     Assertions.assertThatThrownBy(() -> scheduler.deleteOldRepositories())
-        .isInstanceOf(RestApiException.class);
+        .isInstanceOf(GerritCommunicationException.class);
   }
 
   @Test

@@ -19,7 +19,6 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.FormService;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -74,7 +73,7 @@ public class MasterVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster()
-      throws IOException, RestApiException {
+      throws IOException {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Started getting forms from master");
     var response = formService.getFormListByVersion(masterVersionId).stream()
