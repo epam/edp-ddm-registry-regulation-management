@@ -20,7 +20,6 @@ import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.lang.Nullable;
@@ -30,11 +29,11 @@ public interface VersionManagementService {
   /**
    * Get versions list
    */
-  List<ChangeInfoDetailedDto> getVersionsList() throws RestApiException;
+  List<ChangeInfoDetailedDto> getVersionsList();
 
 
   @Nullable
-  ChangeInfoDetailedDto getMasterInfo() throws RestApiException;
+  ChangeInfoDetailedDto getMasterInfo();
 
   /**
    * Details of head master
@@ -49,9 +48,9 @@ public interface VersionManagementService {
   /**
    * Create new version
    */
-  String createNewVersion(CreateVersionRequest subject) throws RestApiException;
+  String createNewVersion(CreateVersionRequest subject);
 
-  ChangeInfoDetailedDto getVersionDetails(String versionName) throws RestApiException;
+  ChangeInfoDetailedDto getVersionDetails(String versionName);
 
   /**
    * Decline version by name
@@ -72,16 +71,10 @@ public interface VersionManagementService {
    * Updates version with changes from head branch
    *
    * @param versionName version to update
-   * @throws RestApiException in case of any exception
    */
-  void rebase(String versionName) throws RestApiException;
+  void rebase(String versionName);
 
-//  /**
-//   * Put votes to review
-//   */
-//  boolean vote(String versionName, String label, short value) throws RestApiException;
-
-  VersionChanges getVersionChanges(String versionCandidateId) throws IOException, RestApiException;
+  VersionChanges getVersionChanges(String versionCandidateId) throws IOException;
 //
 //    /**
 //     * Add robot comment

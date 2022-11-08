@@ -18,17 +18,12 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.Mockito.never;
 
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.service.impl.GerritServiceImpl;
 import com.epam.digital.data.platform.management.service.impl.RepositoryRefreshScheduler;
-import com.google.gerrit.extensions.common.AccountInfo;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.LabelInfo;
-import com.google.gerrit.extensions.restapi.RestApiException;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -55,20 +50,19 @@ public class RepositoryRefreshSchedulerTest {
   @BeforeEach
   @SneakyThrows
   void mockMethods() {
-    ChangeInfo changeInfo = getChangeInfo();
+    ChangeInfoDto changeInfo = getChangeInfo();
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
   }
 
   @Test
   @SneakyThrows
   void refreshTest() {
-    ChangeInfo changeInfo = getChangeInfo();
-    ChangeInfoDto changeInfoDto = getChangeInfoDto();
+    ChangeInfoDto changeInfoDto = getChangeInfo();
 
-    Mockito.when(gerritService.getChangeInfo(changeInfo.changeId)).thenReturn(changeInfoDto);
+    Mockito.when(gerritService.getChangeInfo(changeInfoDto.getChangeId())).thenReturn(changeInfoDto);
 
     repositoryRefreshScheduler.refresh();
-    Mockito.verify(gerritService).rebase(changeInfo.changeId);
+    Mockito.verify(gerritService).rebase(changeInfoDto.getChangeId());
     Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
@@ -76,10 +70,9 @@ public class RepositoryRefreshSchedulerTest {
   @Test
   @SneakyThrows
   void refreshRebaseErrorTest() {
-    ChangeInfo changeInfo = getChangeInfo();
-    ChangeInfoDto changeInfoDto = getChangeInfoDto();
+    ChangeInfoDto changeInfoDto = getChangeInfo();
 
-    Mockito.doThrow(RestApiException.class).when(gerritService).rebase(changeInfo.changeId);
+    Mockito.doThrow(GerritCommunicationException.class).when(gerritService).rebase(changeInfoDto.getChangeId());
 
     Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
         .doesNotThrowAnyException();
@@ -98,34 +91,25 @@ public class RepositoryRefreshSchedulerTest {
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
-  private ChangeInfoDto getChangeInfoDto() {
-    ChangeInfoDto changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setSubject("change");
-    changeInfoDto.setNumber("1");
-    changeInfoDto.setRefs("refs");
-    return changeInfoDto;
-  }
 
-  private ChangeInfo getChangeInfo() {
-    var changeInfo = new ChangeInfo();
-    changeInfo.id = "changeInfoId";
-    changeInfo._number = 1;
-    changeInfo.changeId = "changeInfoChangeId";
-    changeInfo.branch = "changeInfoBranch";
-    changeInfo.created = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 15).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.subject = "changeInfoSubject";
-    changeInfo.topic = "changeInfoTopic";
-    changeInfo.project = "changeInfoProject";
-    changeInfo.submitted = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 25).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.updated = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 35).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.owner = new AccountInfo(1);
-    changeInfo.owner.username = "changeInfoOwnerUsername";
-    changeInfo.mergeable = false;
-    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
-    changeInfo.labels.get("label1").approved = new AccountInfo(2);
+  private ChangeInfoDto getChangeInfo() {
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setId("changeInfoId");
+    changeInfo.setNumber("1");
+    changeInfo.setChangeId("changeInfoChangeId");
+    changeInfo.setBranch("changeInfoBranch");
+    changeInfo.setCreated(
+        LocalDateTime.of(2022, 8, 10, 17, 15));
+    changeInfo.setSubject("changeInfoSubject");
+    changeInfo.setTopic("changeInfoTopic");
+    changeInfo.setProject("changeInfoProject");
+    changeInfo.setSubmitted(
+        LocalDateTime.of(2022, 8, 10, 17, 25));
+    changeInfo.setUpdated(
+        LocalDateTime.of(2022, 8, 10, 17, 35));
+    changeInfo.setOwner("changeInfoOwnerUsername");
+    changeInfo.setMergeable(false);
+    changeInfo.setLabels(Map.of("label1", true, "label2", false));
     return changeInfo;
   }
 

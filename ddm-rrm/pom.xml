@@ -24,6 +24,11 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-gerrit-integration</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-starter-actuator</artifactId>
       <version>${ddm.starter.actuator.version}</version>
     </dependency>
@@ -48,11 +53,6 @@
       <version>${ddm-starter-localization.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.urswolfer.gerrit.client.rest</groupId>
-      <artifactId>gerrit-rest-java-client</artifactId>
-      <version>${gerrit.client.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-kubernetes-client-config</artifactId>
@@ -116,6 +116,12 @@
       <artifactId>wiremock</artifactId>
       <groupId>com.github.tomakehurst</groupId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 

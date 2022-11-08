@@ -16,7 +16,7 @@
 package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.service.GerritService;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;

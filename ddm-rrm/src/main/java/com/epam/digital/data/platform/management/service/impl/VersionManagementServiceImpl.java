@@ -18,7 +18,11 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
-import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
@@ -30,16 +34,9 @@ import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.FormService;
-import com.epam.digital.data.platform.management.service.GerritService;
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
-import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.LabelInfo;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,7 +60,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
   @Override
-  public List<ChangeInfoDetailedDto> getVersionsList() throws RestApiException {
+  public List<ChangeInfoDetailedDto> getVersionsList() {
     return gerritService.getMRList().stream()
         .map(this::mapChangeInfo)
         .collect(Collectors.toList());
@@ -71,13 +68,13 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
   @Override
   @Nullable
-  public ChangeInfoDetailedDto getMasterInfo() throws RestApiException {
+  public ChangeInfoDetailedDto getMasterInfo() {
     var changeInfo = gerritService.getLastMergedMR();
     return mapChangeInfo(changeInfo);
   }
 
   @Override
-  public List<String> getDetailsOfHeadMaster(String path) throws IOException {
+  public List<String> getDetailsOfHeadMaster(String path) {
     return jGitService.getFilesInPath(config.getHeadBranch(), path);
   }
 
@@ -97,13 +94,13 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  public void rebase(String versionName) throws RestApiException {
+  public void rebase(String versionName) {
     log.debug("Rebasing {} version candidate", versionName);
     var mr = gerritService.getMRByNumber(versionName);
-    gerritService.rebase(mr.changeId);
+    gerritService.rebase(mr.getChangeId());
 
     log.debug("Fetching {} version candidate on remote ref", versionName);
-    var changeInfoDto = gerritService.getChangeInfo(mr.changeId);
+    var changeInfoDto = gerritService.getChangeInfo(mr.getChangeId());
     jGitService.fetch(versionName, changeInfoDto.getRefs());
   }
 
@@ -112,24 +109,26 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     return gerritService.getListOfChangesInMR(versionName).entrySet().stream()
         .map(file -> VersionedFileInfo.builder()
             .name(file.getKey())
-            .status(file.getValue().status == null ? null : file.getValue().status.toString())
-            .lineInserted(file.getValue().linesInserted)
-            .lineDeleted(file.getValue().linesDeleted)
-            .size(file.getValue().size)
-            .sizeDelta(file.getValue().sizeDelta)
+            .status(file.getValue().getStatus() == null ? null : file.getValue().getStatus().toString())
+            .lineInserted(file.getValue().getLinesInserted())
+            .lineDeleted(file.getValue().getLinesDeleted())
+            .size(file.getValue().getSize())
+            .sizeDelta(file.getValue().getSizeDelta())
             .build())
         .collect(Collectors.toList());
   }
 
   @Override
-  public String createNewVersion(CreateVersionRequest subject) throws RestApiException {
-    var versionNumber = gerritService.createChanges(subject);
+  public String createNewVersion(CreateVersionRequest subject) {
+    final CreateChangeInputDto changeInputDto = CreateChangeInputDto.builder().name(subject.getName())
+        .description(subject.getDescription()).build();
+    var versionNumber = gerritService.createChanges(changeInputDto);
     eventPublisher.publishVersionCandidateCreatedEvent(versionNumber);
     return versionNumber;
   }
 
   @Override
-  public ChangeInfoDetailedDto getVersionDetails(String versionName) throws RestApiException {
+  public ChangeInfoDetailedDto getVersionDetails(String versionName) {
     var e = gerritService.getMRByNumber(versionName);
     if (Objects.isNull(e)) {
       throw new GerritChangeNotFoundException("Could not find candidate with id " + versionName);
@@ -139,7 +138,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
   @Override
   public VersionChanges getVersionChanges(String versionCandidateId)
-      throws IOException, RestApiException {
+      throws IOException {
     log.debug("Selecting form changes for version candidate {}", versionCandidateId);
     var forms = formService.getChangedFormsListByVersion(versionCandidateId)
         .stream()
@@ -162,32 +161,25 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         .build();
   }
 
-  private ChangeInfoDetailedDto mapChangeInfo(ChangeInfo changeInfo) {
+  private ChangeInfoDetailedDto mapChangeInfo(ChangeInfoDto changeInfo) {
     if (Objects.isNull(changeInfo)) {
       return null;
     }
     return ChangeInfoDetailedDto.builder()
-        .id(changeInfo.id)
-        .number(changeInfo._number)
-        .changeId(changeInfo.changeId)
-        .branch(changeInfo.branch)
-        .created(toUTCLocalDateTime(changeInfo.created))
-        .subject(changeInfo.subject)
-        .description(changeInfo.topic)
-        .project(changeInfo.project)
-        .submitted(toUTCLocalDateTime(changeInfo.submitted))
-        .updated(toUTCLocalDateTime(changeInfo.updated))
-        .owner(changeInfo.owner.username)
-        .mergeable(changeInfo.mergeable)
-        .labels(getResponseLabels(changeInfo.labels))
+        .id(changeInfo.getId())
+        .number(Integer.parseInt(changeInfo.getNumber()))
+        .changeId(changeInfo.getChangeId())
+        .branch(changeInfo.getBranch())
+        .created(changeInfo.getCreated())
+        .subject(changeInfo.getSubject())
+        .description(changeInfo.getTopic())
+        .project(changeInfo.getProject())
+        .submitted(changeInfo.getSubmitted())
+        .updated(changeInfo.getUpdated())
+        .owner(changeInfo.getOwner())
+        .mergeable(changeInfo.getMergeable())
+        .labels(changeInfo.getLabels())
         .build();
-  }
-
-  private LocalDateTime toUTCLocalDateTime(Timestamp timestamp) {
-    if (Objects.isNull(timestamp)) {
-      return null;
-    }
-    return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
   }
 
   private Map<String, Boolean> getResponseLabels(Map<String, LabelInfo> labels) {

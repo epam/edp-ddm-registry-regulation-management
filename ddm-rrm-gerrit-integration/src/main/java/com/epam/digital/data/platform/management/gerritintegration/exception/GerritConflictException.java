@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.gerritintegration.exception;
 
 public class GerritConflictException extends RuntimeException {
 

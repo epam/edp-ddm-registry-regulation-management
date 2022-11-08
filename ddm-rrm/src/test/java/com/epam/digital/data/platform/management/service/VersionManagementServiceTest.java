@@ -18,20 +18,17 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
-import com.epam.digital.data.platform.management.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
-import com.google.gerrit.extensions.common.AccountInfo;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.common.FileInfo;
-import com.google.gerrit.extensions.common.LabelInfo;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -63,25 +60,24 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionsListTest() {
-    var changeInfo = new ChangeInfo();
-    changeInfo.id = "changeInfoId";
-    changeInfo._number = 1;
-    changeInfo.changeId = "changeInfoChangeId";
-    changeInfo.branch = "changeInfoBranch";
-    changeInfo.created = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 15).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.subject = "changeInfoSubject";
-    changeInfo.topic = "changeInfoTopic";
-    changeInfo.project = "changeInfoProject";
-    changeInfo.submitted = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 25).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.updated = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 35).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.owner = new AccountInfo(1);
-    changeInfo.owner.username = "changeInfoOwnerUsername";
-    changeInfo.mergeable = true;
-    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
-    changeInfo.labels.get("label1").approved = new AccountInfo(2);
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setId("changeInfoId");
+    changeInfo.setNumber("1");
+    changeInfo.setChangeId("changeInfoChangeId");
+    changeInfo.setBranch("changeInfoBranch");
+    changeInfo.setCreated(
+        LocalDateTime.of(2022, 8, 10, 14, 15));
+    changeInfo.setSubject("changeInfoSubject");
+    changeInfo.setTopic("changeInfoTopic");
+    changeInfo.setProject("changeInfoProject");
+    changeInfo.setSubmitted(
+        LocalDateTime.of(2022, 8, 10, 14, 25));
+    changeInfo.setUpdated(
+        LocalDateTime.of(2022, 8, 10, 14, 35));
+    changeInfo.setOwner("changeInfoOwnerUsername");
+    changeInfo.setMergeable(true);
+    changeInfo.setLabels(Map.of("label1", true, "label2", false));
+
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
 
     var actualVersionsList = managementService.getVersionsList();
@@ -121,18 +117,18 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionFileListTest() {
-    var info1 = new FileInfo();
-    info1.status = 'A';
-    info1.size = 50;
-    info1.linesInserted = 1;
-    info1.linesDeleted = 0;
-    info1.sizeDelta = 50;
-    var info2 = new FileInfo();
-    info2.status = null;
-    info2.size = 33;
-    info2.linesInserted = 2;
-    info2.linesDeleted = 3;
-    info2.sizeDelta = 22;
+    var info1 = new FileInfoDto();
+    info1.setStatus("A");
+    info1.setSize(50);
+    info1.setLinesInserted(1);
+    info1.setLinesDeleted(0);
+    info1.setSizeDelta(50);
+    var info2 = new FileInfoDto();
+    info2.setStatus(null);
+    info2.setSize(33);
+    info2.setLinesInserted(2);
+    info2.setLinesDeleted(3);
+    info2.setSizeDelta(22);
     Mockito.when(gerritService.getListOfChangesInMR("3"))
         .thenReturn(Map.of("file1", info1, "file2", info2));
 
@@ -172,7 +168,13 @@ class VersionManagementServiceTest {
     final var versionDescription = RandomString.make();
     final var versionNumber = RandomString.make();
 
-    final var createVersionRequest = CreateVersionRequest.builder()
+    final var createVersionRequest = CreateChangeInputDto.builder()
+        .name(versionName)
+        .description(versionDescription)
+        .build();
+    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn(versionNumber);
+
+    final var createVersion = CreateVersionRequest.builder()
         .name(versionName)
         .description(versionDescription)
         .build();
@@ -180,7 +182,7 @@ class VersionManagementServiceTest {
 
     Mockito.doNothing().when(publisher).publishVersionCandidateCreatedEvent(versionNumber);
 
-    final var actualVersion = managementService.createNewVersion(createVersionRequest);
+    final var actualVersion = managementService.createNewVersion(createVersion);
 
     Assertions.assertThat(actualVersion)
         .isEqualTo(versionNumber);
@@ -192,17 +194,17 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionDetailsTest() {
-    var changeInfo = new ChangeInfo();
-    changeInfo._number = 1;
-    changeInfo.owner = new AccountInfo(1);
-    changeInfo.labels = Map.of();
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setNumber("1");
+    changeInfo.setOwner("owner");
+    changeInfo.setLabels(Map.of());
     Mockito.when(gerritService.getMRByNumber("1")).thenReturn(changeInfo);
 
     var actualChangeInfoDetailedDto = managementService.getVersionDetails("1");
 
     var expectedChangeInfoDetailedDto = ChangeInfoDetailedDto.builder()
         .number(1)
-        .owner(null)
+        .owner("owner")
         .labels(Map.of())
         .build();
     Assertions.assertThat(actualChangeInfoDetailedDto)
@@ -221,24 +223,22 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getMasterInfo() {
-    var changeInfo = new ChangeInfo();
-    changeInfo.id = "changeInfoId";
-    changeInfo._number = 1;
-    changeInfo.changeId = "changeInfoChangeId";
-    changeInfo.branch = "changeInfoBranch";
-    changeInfo.created = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 15).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.subject = "changeInfoSubject";
-    changeInfo.topic = "changeInfoTopic";
-    changeInfo.project = "changeInfoProject";
-    changeInfo.submitted = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 25).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.updated = null;
-    changeInfo.owner = new AccountInfo(1);
-    changeInfo.owner.username = "changeInfoOwnerUsername";
-    changeInfo.mergeable = true;
-    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
-    changeInfo.labels.get("label1").approved = new AccountInfo(2);
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setId("changeInfoId");
+    changeInfo.setNumber("1");
+    changeInfo.setChangeId("changeInfoChangeId");
+    changeInfo.setBranch("changeInfoBranch");
+    changeInfo.setCreated(
+        LocalDateTime.of(2022, 8, 10, 14, 15));
+    changeInfo.setSubject("changeInfoSubject");
+    changeInfo.setTopic("changeInfoTopic");
+    changeInfo.setProject("changeInfoProject");
+    changeInfo.setSubmitted(
+        LocalDateTime.of(2022, 8, 10, 14, 25));
+    changeInfo.setUpdated(null);
+    changeInfo.setOwner("changeInfoOwnerUsername");
+    changeInfo.setMergeable(true);
+    changeInfo.setLabels(Map.of("label1", true, "label2", false));
     Mockito.when(gerritService.getLastMergedMR()).thenReturn(changeInfo);
 
     var result = managementService.getMasterInfo();
@@ -278,26 +278,23 @@ class VersionManagementServiceTest {
   @SneakyThrows
   void getVersionChanges() {
     final var version = RandomString.make();
-    final var changeInfo = new ChangeInfo();
-    changeInfo.id = "changeInfoId";
-    changeInfo._number = 1;
-    changeInfo.changeId = "changeInfoChangeId";
-    changeInfo.branch = "changeInfoBranch";
-    changeInfo.created = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 15).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.subject = "changeInfoSubject";
-    changeInfo.topic = "changeInfoTopic";
-    changeInfo.project = "changeInfoProject";
-    changeInfo.submitted = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 25).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.updated = Timestamp.from(
-        LocalDateTime.of(2022, 8, 10, 17, 35).toInstant(ZoneOffset.ofHours(3)));
-    changeInfo.owner = new AccountInfo(1);
-    changeInfo.owner.username = "changeInfoOwnerUsername";
-    changeInfo.mergeable = true;
-    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
-    changeInfo.labels.get("label1").approved = new AccountInfo(2);
-    changeInfo.labels = Map.of("label1", new LabelInfo(), "label2", new LabelInfo());
+    final var changeInfo = new ChangeInfoDto();
+    changeInfo.setId("changeInfoId");
+    changeInfo.setNumber("1");
+    changeInfo.setChangeId("changeInfoChangeId");
+    changeInfo.setBranch("changeInfoBranch");
+    changeInfo.setCreated(
+        LocalDateTime.of(2022, 8, 10, 14, 15));
+    changeInfo.setSubject("changeInfoSubject");
+    changeInfo.setTopic("changeInfoTopic");
+    changeInfo.setProject("changeInfoProject");
+    changeInfo.setSubmitted(
+        LocalDateTime.of(2022, 8, 10, 14, 25));
+    changeInfo.setUpdated(
+        LocalDateTime.of(2022, 8, 10, 14, 35));
+    changeInfo.setOwner("changeInfoOwnerUsername");
+    changeInfo.setMergeable(true);
+    changeInfo.setLabels(Map.of("label1", false, "label2", false));
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
     var expected = ChangeInfoDetailedDto.builder()
         .id("changeInfoId")
@@ -325,8 +322,8 @@ class VersionManagementServiceTest {
     final var changeId = RandomString.make();
     final var refs = RandomString.make();
 
-    final var changeInfo = new ChangeInfo();
-    changeInfo.changeId = changeId;
+    final var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId(changeId);
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
 
     Mockito.doNothing().when(gerritService).rebase(changeId);

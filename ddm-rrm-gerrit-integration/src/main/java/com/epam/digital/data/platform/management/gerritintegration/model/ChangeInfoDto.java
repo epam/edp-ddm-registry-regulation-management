@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.gerritintegration.model;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,4 +30,15 @@ public class ChangeInfoDto {
   private String refs;
   private String number;
   private String subject;
+  private String description;
+  private LocalDateTime created;
+  private LocalDateTime updated;
+  private LocalDateTime submitted;
+  private String id;
+  private String project;
+  private String branch;
+  private String owner;
+  private String topic;
+  private Boolean mergeable;
+  private Map<String, Boolean> labels;
 }

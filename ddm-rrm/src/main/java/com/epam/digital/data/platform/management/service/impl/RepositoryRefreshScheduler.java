@@ -16,11 +16,9 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDto;
-import com.epam.digital.data.platform.management.service.GerritService;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.google.gerrit.extensions.common.ChangeInfo;
-import com.google.gerrit.extensions.restapi.RestApiException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -37,15 +35,15 @@ public class RepositoryRefreshScheduler {
   private final JGitService jGitService;
 
   @Scheduled(cron = "${scheduled.repositoryRefreshCron}", zone = "${scheduled.repositoryRefreshTimezone}")
-  public void refresh() throws RestApiException {
+  public void refresh() {
     log.debug("Refreshing repositories started");
-    List<ChangeInfo> mrList = gerritService.getMRList().stream()
-        .filter(mr -> !mr.mergeable).collect(Collectors.toList());
+    List<ChangeInfoDto> mrList = gerritService.getMRList().stream()
+        .filter(mr -> !mr.getMergeable()).collect(Collectors.toList());
 
-    for (ChangeInfo changeInfo : mrList) {
+    for (ChangeInfoDto changeInfo : mrList) {
       try {
-        String changeId = changeInfo.changeId;
-        log.debug("Refreshing repository {}", changeInfo._number);
+        String changeId = changeInfo.getChangeId();
+        log.debug("Refreshing repository {}", changeInfo.getNumber());
         gerritService.rebase(changeId);
         ChangeInfoDto changeInfoDto = gerritService.getChangeInfo(changeId);
         jGitService.fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
