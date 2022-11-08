@@ -16,11 +16,11 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.security.annotation.PreAuthorizeUserManagementRole;
-import com.epam.digital.data.platform.management.service.OpenShiftService;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.UserImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,15 +48,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @PreAuthorizeUserManagementRole
 @RequestMapping("/batch-loads/users")
+@RequiredArgsConstructor
 public class UserImportController {
+
   private static final String ATTACHMENT_HEADER_VALUE = "attachment; filename=\"%s\"";
   private final UserImportService userImportService;
   private final OpenShiftService openShiftService;
-
-  public UserImportController(UserImportService userImportService, OpenShiftService openShiftService) {
-    this.userImportService = userImportService;
-    this.openShiftService = openShiftService;
-  }
 
   @Operation(
       description = "Store file endpoint",
@@ -87,7 +85,8 @@ public class UserImportController {
               content = @Content(mediaType = MediaType.ALL_VALUE,
                   schema = @Schema(implementation = CephFileInfoDto.class)))})
   @GetMapping
-  public ResponseEntity<CephFileInfoDto> getFileInfo(@HttpSecurityContext SecurityContext securityContext) {
+  public ResponseEntity<CephFileInfoDto> getFileInfo(
+      @HttpSecurityContext SecurityContext securityContext) {
     log.info("#getFilesInfo() called");
     var response = userImportService.getFileInfo(securityContext);
     log.info("Finished getting files info");
@@ -103,7 +102,8 @@ public class UserImportController {
               content = @Content(mediaType = MediaType.ALL_VALUE,
                   schema = @Schema(implementation = CephFileInfoDto.class)))})
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteFile(@PathVariable("id") @Parameter(required = true, description = "Resource identifier") String id) {
+  public ResponseEntity<Void> deleteFile(
+      @PathVariable("id") @Parameter(required = true, description = "Resource identifier") String id) {
     log.info("deleteFile called");
     userImportService.delete(id);
     log.info("File {} was deleted", id);
@@ -132,7 +132,8 @@ public class UserImportController {
   @PostMapping("/imports")
   public ResponseEntity<Void> imports(@HttpSecurityContext SecurityContext securityContext) {
     log.info("imports called");
-    openShiftService.startImport(securityContext);
+    var cephFileDto = userImportService.getFileInfo(securityContext);
+    openShiftService.startImport(cephFileDto.getId(), securityContext);
     return ResponseEntity.accepted().build();
   }
 }

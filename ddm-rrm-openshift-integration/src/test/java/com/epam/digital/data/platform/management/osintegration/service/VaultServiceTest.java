@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.osintegration.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.epam.digital.data.platform.management.service.impl.VaultServiceImpl;
+import com.epam.digital.data.platform.management.osintegration.service.VaultService;
+import com.epam.digital.data.platform.management.osintegration.service.VaultServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -19,23 +19,16 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.management.exception.CephInvocationException;
-import com.epam.digital.data.platform.management.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.exception.VaultInvocationException;
-import com.epam.digital.data.platform.management.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.dto.CephFileDto;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.service.VaultService;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.UserImportService;
 import com.epam.digital.data.platform.management.service.UserInfoService;
 import com.epam.digital.data.platform.management.service.ValidatorService;
-import com.epam.digital.data.platform.management.service.VaultService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -44,10 +37,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserImportServiceImpl implements UserImportService {
+
   private static final String CEPH_OBJECT_CONTENT_TYPE = "application/octet-stream";
   private static final String USERNAME = "username";
   private static final String NAME = "name";
@@ -56,22 +58,10 @@ public class UserImportServiceImpl implements UserImportService {
 
   private final CephService userImportCephService;
   private final UserInfoService userInfoService;
+  @Value("${user-import-ceph.bucket}")
   private final String userImportFileBucket;
   private final VaultService vaultService;
   private final ValidatorService validatorService;
-
-  public UserImportServiceImpl(
-      CephService userImportCephService,
-      @Value("${user-import-ceph.bucket}") String userImportFileBucket,
-      UserInfoService userInfoService,
-      VaultService vaultService,
-      ValidatorService validatorService) {
-    this.userImportCephService = userImportCephService;
-    this.userImportFileBucket = userImportFileBucket;
-    this.validatorService = validatorService;
-    this.userInfoService = userInfoService;
-    this.vaultService = vaultService;
-  }
 
   @Override
   public CephFileInfoDto storeFile(MultipartFile file, SecurityContext securityContext) {
@@ -80,7 +70,8 @@ public class UserImportServiceImpl implements UserImportService {
     String encodedFileName;
     try {
       encodedFileName = new String(Base64.getEncoder()
-          .encode(validationResult.getFileName().getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+          .encode(validationResult.getFileName().getBytes(StandardCharsets.UTF_8)),
+          StandardCharsets.UTF_8);
     } catch (IllegalArgumentException e) {
       throw new FileLoadProcessingException("Cannot read file name", e);
     }
@@ -92,7 +83,8 @@ public class UserImportServiceImpl implements UserImportService {
     String existingId = getFileInfo(securityContext).getId();
     var cephKey = StringUtils.defaultIfBlank(existingId, UUID.randomUUID().toString());
 
-    saveFileToCeph(cephKey, encryptedContent, encodedFileName, username, validationResult.getSize());
+    saveFileToCeph(cephKey, encryptedContent, encodedFileName, username,
+        validationResult.getSize());
 
     return new CephFileInfoDto(cephKey, validationResult.getFileName(), file.getSize());
   }
@@ -109,7 +101,8 @@ public class UserImportServiceImpl implements UserImportService {
 
       return userImportCephService.getMetadata(userImportFileBucket, keys)
           .stream()
-          .filter(cephObjectMetadata -> StringUtils.equals(cephObjectMetadata.getUserMetadata().get(USERNAME), username))
+          .filter(cephObjectMetadata -> StringUtils.equals(
+              cephObjectMetadata.getUserMetadata().get(USERNAME), username))
           .findFirst()
           .map(cephObjectMetadata -> mapToDto(cephObjectMetadata.getUserMetadata()))
           .orElse(new CephFileInfoDto());
@@ -137,16 +130,19 @@ public class UserImportServiceImpl implements UserImportService {
       throw new CephInvocationException("Failed download file from ceph, cephKey: " + cephKey, e);
     }
 
-    var cephObject = cephObjectOptional.orElseThrow(() -> new GetProcessingException("File not found in Ceph: " + cephKey));
+    var cephObject = cephObjectOptional.orElseThrow(
+        () -> new GetProcessingException("File not found in Ceph: " + cephKey));
 
     var fileName = Optional.ofNullable(cephObject.getMetadata().getUserMetadata().get(NAME))
-        .orElseThrow(() -> new GetProcessingException("Failed download file from ceph - missed file name, cephKey: " + cephKey));
+        .orElseThrow(() -> new GetProcessingException(
+            "Failed download file from ceph - missed file name, cephKey: " + cephKey));
 
     var decodedFileName = new String(Base64.getDecoder().decode(fileName), StandardCharsets.UTF_8);
 
     var decodedInputStream = decodeContent(cephObject.getContent());
 
-    return new CephFileDto(decodedFileName, decodedInputStream, cephObject.getMetadata().getContentLength());
+    return new CephFileDto(decodedFileName, decodedInputStream,
+        cephObject.getMetadata().getContentLength());
   }
 
   private byte[] getEncryptedContent(MultipartFile file) {
@@ -162,7 +158,8 @@ public class UserImportServiceImpl implements UserImportService {
     return CephFileInfoDto
         .builder()
         .id(userMetadata.getOrDefault(ID, StringUtils.EMPTY))
-        .name(new String(Base64.getDecoder().decode(userMetadata.getOrDefault(NAME, StringUtils.EMPTY))))
+        .name(new String(
+            Base64.getDecoder().decode(userMetadata.getOrDefault(NAME, StringUtils.EMPTY))))
         .size(Long.parseLong(userMetadata.getOrDefault(SIZE, "0")))
         .build();
   }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model;
+package com.epam.digital.data.platform.management.security.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,5 +24,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SecurityContext {
+
   private String accessToken;
 }

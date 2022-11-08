@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service.impl;
+package com.epam.digital.data.platform.management.osintegration.service;
 
-import com.epam.digital.data.platform.management.exception.GetProcessingException;
-import com.epam.digital.data.platform.management.exception.OpenShiftInvocationException;
-import com.epam.digital.data.platform.management.model.SecurityContext;
-import com.epam.digital.data.platform.management.service.OpenShiftService;
-import com.epam.digital.data.platform.management.service.UserImportService;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import java.util.Arrays;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.UUID;
-
 @Service
+@RequiredArgsConstructor
 public class OpenShiftServiceImpl implements OpenShiftService {
 
   private static final String CALL_APP_JAR = ">- \njava -jar app.jar --id='%s' --USER_ACCESS_TOKEN='%s' --REQUEST_ID='%s'";
@@ -43,22 +42,13 @@ public class OpenShiftServiceImpl implements OpenShiftService {
   private static final String JOB_NAME_LABEL = "name";
   private static final String MINUS_DELIMITER = "-";
 
-  private final UserImportService userImportService;
   private final Config openShiftConfig;
+  @Value("${openshift.job.name}")
   private final String jobName;
 
-  public OpenShiftServiceImpl(@Value("${openshift.job.name}") String jobName,
-      UserImportService userImportService,
-      Config openShiftConfig) {
-    this.userImportService = userImportService;
-    this.openShiftConfig = openShiftConfig;
-    this.jobName = jobName;
-  }
-
   @Override
-  public void startImport(SecurityContext securityContext) {
-    var fileInfo = userImportService.getFileInfo(securityContext);
-    if (StringUtils.isBlank(fileInfo.getId())) {
+  public void startImport(String fileInfoId, SecurityContext securityContext) {
+    if (StringUtils.isBlank(fileInfoId)) {
       throw new GetProcessingException("Bucket is empty, nothing to import");
     }
 
@@ -66,7 +56,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
 
       var job = getJob(openShiftClient);
 
-      var clonedJob = cloneJob(job, fileInfo.getId(), securityContext);
+      var clonedJob = cloneJob(job, fileInfoId, securityContext);
 
       openShiftClient.batch().v1().jobs().createOrReplace(clonedJob);
     } catch (KubernetesClientException e) {

@@ -29,9 +29,15 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-openshift-integration</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-starter-actuator</artifactId>
       <version>${ddm.starter.actuator.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
@@ -39,18 +45,14 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-security</artifactId>
-      <version>${ddm.starter.security.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-ceph-client</artifactId>
-      <version>${ddm.ceph.client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-starter-localization</artifactId>
       <version>${ddm-starter-localization.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -70,35 +72,14 @@
     </dependency>
 
     <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-      <version>${openshift-client.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>openshift-client</artifactId>
-      <version>${openshift-client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-vault-config</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.jayway.jsonpath</groupId>
       <artifactId>json-path</artifactId>
       <version>${json-path.version}</version>
     </dependency>
+
     <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-server-mock</artifactId>
-      <version>${kubernetes-mock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>openshift-server-mock</artifactId>
-      <version>${kubernetes-mock.version}</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-migrationsupport</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -20,10 +20,11 @@ import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
 import com.epam.digital.data.platform.management.exception.CephInvocationException;
-import com.epam.digital.data.platform.management.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.exception.VaultInvocationException;
-import com.epam.digital.data.platform.management.model.SecurityContext;
+import com.epam.digital.data.platform.management.osintegration.service.VaultService;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.model.ValidationResult;
 import com.epam.digital.data.platform.management.model.dto.CephFileDto;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
@@ -83,7 +84,7 @@ class UserImportServiceTest {
 
   @BeforeEach
   void init() {
-    this.userImportService = new UserImportServiceImpl(cephService, FILE_BUCKET, userInfoService, vaultService, validatorService);
+    this.userImportService = new UserImportServiceImpl(cephService, userInfoService, FILE_BUCKET, vaultService, validatorService);
   }
 
   @Test

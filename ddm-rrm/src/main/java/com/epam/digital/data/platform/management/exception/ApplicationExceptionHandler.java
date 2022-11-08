@@ -16,7 +16,7 @@
 
 package com.epam.digital.data.platform.management.exception;
 
-import static com.epam.digital.data.platform.management.util.Header.TRACE_ID;
+import static com.epam.digital.data.platform.management.security.enumeration.Header.TRACE_ID;
 
 import com.epam.digital.data.platform.management.controller.BusinessProcess;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
@@ -26,10 +26,13 @@ import com.epam.digital.data.platform.management.gitintegration.exception.GitCom
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.lang.annotation.Annotation;
 import java.util.Objects;
 import javax.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -42,6 +45,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
   public static final String FILE_ENCODING_EXCEPTION = "FILE_ENCODING_EXCEPTION";
@@ -70,10 +74,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
 
   private final MessageResolver messageResolver;
-
-  public ApplicationExceptionHandler(MessageResolver messageResolver) {
-    this.messageResolver = messageResolver;
-  }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<DetailedErrorResponse> handleException(Exception exception) {

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.osintegration.exception;
 
-public class OpenShiftInvocationException extends RuntimeException {
+public class GetProcessingException extends RuntimeException {
 
-  public OpenShiftInvocationException(String message) {
+  public GetProcessingException(String message) {
     super(message);
   }
 
-  public OpenShiftInvocationException(String message, Throwable cause) {
+  public GetProcessingException(String message, Throwable cause) {
     super(message, cause);
   }
 }
