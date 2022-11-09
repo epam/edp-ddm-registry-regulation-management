@@ -15,9 +15,9 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.FormService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -26,14 +26,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -81,8 +78,7 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId)
-      throws IOException {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting forms for {} version candidate", versionCandidateId);
     var response = formService.getFormListByVersion(versionCandidateId).stream()
         .map(e -> FormDetailsShort.builder()
@@ -131,8 +127,7 @@ public class CandidateVersionFormsController {
   @PostMapping("/{formName}")
   public ResponseEntity<String> formCreate(@RequestBody String form,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Name of the new form to be created", required = true) String formName)
-      throws GitAPIException, IOException, URISyntaxException {
+      @PathVariable @Parameter(description = "Name of the new form to be created", required = true) String formName) {
     log.info("Started creating {} form for {} version candidate", formName, versionCandidateId);
     formService.createForm(formName, form, versionCandidateId);
     log.info("Form {} was created for {} version candidate. Retrieving this form", formName, versionCandidateId);
@@ -169,7 +164,7 @@ public class CandidateVersionFormsController {
   @GetMapping("/{formName}")
   public ResponseEntity<String> getForm(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Form name", required = true) String formName) throws IOException {
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) {
     log.info("Started getting {} form from {} version candidate", formName, versionCandidateId);
     var response = formService.getFormContent(formName, versionCandidateId);
     log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
@@ -209,8 +204,7 @@ public class CandidateVersionFormsController {
   @PutMapping(value = "/{formName}")
   public ResponseEntity<String> updateForm(@RequestBody String form,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Name of the form to be updated", required = true) String formName)
-      throws GitAPIException, IOException, URISyntaxException {
+      @PathVariable @Parameter(description = "Name of the form to be updated", required = true) String formName) {
     log.info("Started updating {} form for {} version candidate", formName, versionCandidateId);
     formService.updateForm(String.valueOf(form), formName, versionCandidateId);
     log.info("Finished updating {} form for {} version candidate. Retrieving this form", formName, versionCandidateId);
@@ -247,8 +241,7 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @DeleteMapping("/{formName}")
   public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName)
-      throws IOException, GitAPIException, URISyntaxException {
+      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName) {
     log.info("Started deleting form {} from {} version candidate", formName, versionCandidateId);
     formService.deleteForm(formName, versionCandidateId);
     log.info("Form {} was deleted from {} version candidate", formName, versionCandidateId);

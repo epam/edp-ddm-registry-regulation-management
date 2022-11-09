@@ -34,6 +34,7 @@ import com.epam.digital.data.platform.management.controller.CandidateVersionForm
 import com.epam.digital.data.platform.management.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.controller.UserImportController;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
@@ -41,7 +42,7 @@ import com.epam.digital.data.platform.management.osintegration.exception.OpenShi
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.service.FormService;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import com.epam.digital.data.platform.management.validator.Validator;

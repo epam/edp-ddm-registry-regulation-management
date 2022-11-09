@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
@@ -29,11 +30,10 @@ import com.epam.digital.data.platform.management.model.dto.BusinessProcessRespon
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.service.FormService;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.service.VersionManagementService;
 import java.util.List;
 import java.util.Objects;
@@ -188,7 +188,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         .build();
   }
 
-  private FormChangesInfo toChangeInfo(FormResponse formResponse) {
+  private FormChangesInfo toChangeInfo(FormInfoDto formResponse) {
     return FormChangesInfo.builder()
         .name(formResponse.getName())
         .title(formResponse.getTitle())
