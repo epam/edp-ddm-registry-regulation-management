@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.filemanagement.service;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Map;
 
-@Setter
-@Getter
-@Builder
-public class VersioningRequestDto {
-  private String versionName;
-  private String formName;
-  private String content;
+public interface VersionedFileRepositoryFactory {
+
+  VersionedFileRepository getRepoByVersion(String versionName);
+
+  Map<String, VersionedFileRepository> getAvailableRepos();
 }

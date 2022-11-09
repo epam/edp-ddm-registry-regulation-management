@@ -14,39 +14,50 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
-
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.epam.digital.data.platform.management.filemanagement.service;
 
 import static org.mockito.ArgumentMatchers.any;
+
+import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class HeadFileRepositoryTest {
 
   @Mock
   private JGitService jGitService;
-  @InjectMocks
-  private HeadFileRepositoryImpl repository;
+  @Mock
+  private GerritService gerritService;
+  @Spy
+  private FileManagementMapper mapper = Mappers.getMapper(FileManagementMapper.class);
+
+  private VersionedFileRepository repository;
+
+  @BeforeEach
+  void setUp() {
+    repository = new HeadFileRepositoryImpl("version", jGitService, gerritService, mapper);
+  }
 
   @Test
   @SneakyThrows
   void getFileListTest() {
     List<String> list = new ArrayList<>();
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(list);
-    List<FileResponse> fileList = repository.getFileList("/");
+    List<VersionedFileInfoDto> fileList = repository.getFileList("/");
     Assertions.assertNotNull(fileList);
   }
 
@@ -73,8 +84,7 @@ public class HeadFileRepositoryTest {
   @Test
   @SneakyThrows
   void pullRepositoryTest() {
-    repository.setVersionName("version");
-    repository.pullRepository();
+    repository.updateRepository();
     Mockito.verify(jGitService, Mockito.times(1)).cloneRepoIfNotExist("version");
   }
 

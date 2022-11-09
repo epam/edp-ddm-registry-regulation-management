@@ -20,27 +20,24 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.FormNotFoundException;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.FormService;
-import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.jayway.jsonpath.JsonPath;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -57,18 +54,17 @@ public class FormServiceImpl implements FormService {
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   @Override
-  public List<FormResponse> getFormListByVersion(String versionName) throws IOException {
+  public List<FormResponse> getFormListByVersion(String versionName) {
     return getFormListByVersion(versionName, FileStatus.DELETED);
   }
 
   @Override
-  public List<FormResponse> getChangedFormsListByVersion(String versionName) throws IOException {
+  public List<FormResponse> getChangedFormsListByVersion(String versionName) {
     return getFormListByVersion(versionName, FileStatus.CURRENT);
   }
 
   @Override
-  public void createForm(String formName, String content, String versionName)
-      throws IOException, GitAPIException, URISyntaxException {
+  public void createForm(String formName, String content, String versionName) {
     var time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     String formPath = getFormPath(formName);
@@ -81,7 +77,7 @@ public class FormServiceImpl implements FormService {
   }
 
   @Override
-  public String getFormContent(String formName, String versionName) throws IOException {
+  public String getFormContent(String formName, String versionName) {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     String formContent = repo.readFile(getFormPath(formName));
     if (formContent == null) {
@@ -91,8 +87,7 @@ public class FormServiceImpl implements FormService {
   }
 
   @Override
-  public void updateForm(String content, String formName, String versionName)
-      throws IOException, GitAPIException, URISyntaxException {
+  public void updateForm(String content, String formName, String versionName) {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
@@ -104,15 +99,14 @@ public class FormServiceImpl implements FormService {
     if (fileDatesDto.getCreate() == null) {
       fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
           .filter(fileResponse -> fileResponse.getName().equals(formName))
-          .findFirst().map(FileResponse::getCreated).orElse(time));
+          .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(formPath, content);
   }
 
   @Override
-  public void deleteForm(String formName, String versionName)
-      throws IOException, GitAPIException, URISyntaxException {
+  public void deleteForm(String formName, String versionName) {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     repo.deleteFile(getFormPath(formName));
   }
@@ -126,30 +120,29 @@ public class FormServiceImpl implements FormService {
     return JsonPath.read(formContent, FORM_TITLE_PATH);
   }
 
-  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus)
-      throws IOException {
+  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus) {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(
         gerritPropertiesConfig.getHeadBranch());
-    List<FileResponse> fileList = repo.getFileList(DIRECTORY_PATH);
+    List<VersionedFileInfoDto> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormResponse> forms = new ArrayList<>();
-    for (FileResponse fileResponse : fileList) {
-      if (fileResponse.getStatus().equals(skippedStatus)) {
+    for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
+      if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
       }
       String formContent;
-      if (fileResponse.getStatus() == FileStatus.DELETED) {
-        formContent = masterRepo.readFile(getFormPath(fileResponse.getName()));
+      if (versionedFileInfoDto.getStatus() == FileStatus.DELETED) {
+        formContent = masterRepo.readFile(getFormPath(versionedFileInfoDto.getName()));
       } else {
-        formContent = repo.readFile(getFormPath(fileResponse.getName()));
+        formContent = repo.readFile(getFormPath(versionedFileInfoDto.getName()));
       }
       FileDatesDto fileDatesDto = getDatesFromContent(formContent);
       forms.add(FormResponse.builder()
-          .name(fileResponse.getName())
-          .path(fileResponse.getPath())
-          .status(fileResponse.getStatus())
-          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(fileResponse.getCreated()))
-          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(fileResponse.getUpdated()))
+          .name(versionedFileInfoDto.getName())
+          .path(versionedFileInfoDto.getPath())
+          .status(versionedFileInfoDto.getStatus())
+          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(versionedFileInfoDto.getCreated()))
+          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(versionedFileInfoDto.getUpdated()))
           .title(getTitleFromFormContent(formContent))
           .build());
     }

@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.model.dto;
 
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

@@ -25,15 +25,14 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -58,6 +56,7 @@ import org.xml.sax.SAXException;
 @Component
 @RequiredArgsConstructor
 public class BusinessProcessServiceImpl implements BusinessProcessService {
+
   private static final String DIRECTORY_PATH = "bpmn";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
   private final VersionedFileRepositoryFactory repoFactory;
@@ -78,14 +77,14 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   @Override
-  public void createProcess(String processName, String content, String versionName)
-      throws GitAPIException, URISyntaxException, IOException {
+  public void createProcess(String processName, String content, String versionName) {
     VersionedFileRepository repo;
     String processPath;
     repo = repoFactory.getRepoByVersion(versionName);
     processPath = getProcessPath(processName);
     if (repo.isFileExists(processPath)) {
-      throw new BusinessProcessAlreadyExists(String.format("Process with path '%s' already exists", processPath));
+      throw new BusinessProcessAlreadyExists(
+          String.format("Process with path '%s' already exists", processPath));
     }
     content = addDatesToContent(content, LocalDateTime.now(), LocalDateTime.now());
     repo.writeFile(processPath, content);
@@ -95,11 +94,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   public String getProcessContent(String processName, String versionName) {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     String processContent;
-    try {
-      processContent = repo.readFile(getProcessPath(processName));
-    } catch (IOException e) {
-      throw new ReadingRepositoryException("Could no read repo to get process content", e);
-    }
+    processContent = repo.readFile(getProcessPath(processName));
     if (processContent == null) {
       throw new ProcessNotFoundException("Process " + processName + " not found", processName);
     }
@@ -120,7 +115,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       if (fileDatesDto.getCreate() == null) {
         fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
             .filter(fileResponse -> fileResponse.getName().equals(processName))
-            .findFirst().map(FileResponse::getCreated).orElse(time));
+            .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
       }
       content = addDatesToContent(content, fileDatesDto.getCreate(), time);
       repo.writeFile(processPath, content);
@@ -158,10 +153,11 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         BPMN_FILE_EXTENSION);
   }
 
-  private List<BusinessProcessResponse> getProcessesByVersion(String versionName, FileStatus skippedStatus) {
+  private List<BusinessProcessResponse> getProcessesByVersion(String versionName,
+      FileStatus skippedStatus) {
     VersionedFileRepository repo;
     VersionedFileRepository masterRepo;
-    List<FileResponse> fileList;
+    List<VersionedFileInfoDto> fileList;
     try {
       repo = repoFactory.getRepoByVersion(versionName);
       fileList = repo.getFileList(DIRECTORY_PATH);
@@ -172,27 +168,27 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       throw new ReadingRepositoryException("Could not read repo to get process", e);
     }
     List<BusinessProcessResponse> processes = new ArrayList<>();
-    for (FileResponse fileResponse : fileList) {
-      if (fileResponse.getStatus().equals(skippedStatus)) {
+    for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
+      if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
       }
       String processContent;
       try {
-        if (fileResponse.getStatus() == FileStatus.DELETED) {
-          processContent = masterRepo.readFile(getProcessPath(fileResponse.getName()));
+        if (versionedFileInfoDto.getStatus() == FileStatus.DELETED) {
+          processContent = masterRepo.readFile(getProcessPath(versionedFileInfoDto.getName()));
         } else {
-          processContent = getProcessContent(fileResponse.getName(), versionName);
+          processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
         }
       } catch (Exception e) {
         throw new GerritCommunicationException("Could not read file from master", e);
       }
       FileDatesDto fileDatesDto = getDatesFromContent(processContent);
       processes.add(BusinessProcessResponse.builder()
-          .name(fileResponse.getName())
-          .path(fileResponse.getPath())
-          .status(fileResponse.getStatus())
-          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(fileResponse.getCreated()))
-          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(fileResponse.getUpdated()))
+          .name(versionedFileInfoDto.getName())
+          .path(versionedFileInfoDto.getPath())
+          .status(versionedFileInfoDto.getStatus())
+          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(versionedFileInfoDto.getCreated()))
+          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(versionedFileInfoDto.getUpdated()))
           .title(getNameFromContent(processContent))
           .build());
     }
@@ -206,10 +202,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       doc.getDocumentElement().normalize();
       Element element = doc.getDocumentElement();
       if (element.hasAttribute(PROCESS_MODIFIED_PATH)) {
-        fileDatesDto.setUpdate(LocalDateTime.parse(element.getAttribute(PROCESS_MODIFIED_PATH), JacksonConfig.DATE_TIME_FORMATTER));
+        fileDatesDto.setUpdate(LocalDateTime.parse(element.getAttribute(PROCESS_MODIFIED_PATH),
+            JacksonConfig.DATE_TIME_FORMATTER));
       }
       if (element.hasAttribute(PROCESS_CREATED_PATH)) {
-        fileDatesDto.setCreate(LocalDateTime.parse(element.getAttribute(PROCESS_CREATED_PATH), JacksonConfig.DATE_TIME_FORMATTER));
+        fileDatesDto.setCreate(LocalDateTime.parse(element.getAttribute(PROCESS_CREATED_PATH),
+            JacksonConfig.DATE_TIME_FORMATTER));
       }
     } catch (SAXException | IOException exception) {
       throw new RuntimeException("Could not parse xml document", exception);
@@ -217,13 +215,17 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     return fileDatesDto;
   }
 
-  private String addDatesToContent(String processContent, LocalDateTime created, LocalDateTime modified) {
+  private String addDatesToContent(String processContent, LocalDateTime created,
+      LocalDateTime modified) {
     try {
       Document doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
       Element element = doc.getDocumentElement();
-      element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rrm", "http://registry-regulation-management");
-      element.setAttributeNS("http://registry-regulation-management", PROCESS_MODIFIED_PATH, modified.format(JacksonConfig.DATE_TIME_FORMATTER));
-      element.setAttributeNS("http://registry-regulation-management", PROCESS_CREATED_PATH, created.format(JacksonConfig.DATE_TIME_FORMATTER));
+      element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rrm",
+          "http://registry-regulation-management");
+      element.setAttributeNS("http://registry-regulation-management", PROCESS_MODIFIED_PATH,
+          modified.format(JacksonConfig.DATE_TIME_FORMATTER));
+      element.setAttributeNS("http://registry-regulation-management", PROCESS_CREATED_PATH,
+          created.format(JacksonConfig.DATE_TIME_FORMATTER));
       doc.setXmlStandalone(true);
       return getStringFromDocument(doc);
     } catch (SAXException | IOException exception) {

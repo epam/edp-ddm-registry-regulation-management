@@ -24,8 +24,10 @@ import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.model.dto.FormResponse;
 import com.epam.digital.data.platform.management.service.impl.FormServiceImpl;
 import java.time.LocalDateTime;
@@ -73,10 +75,10 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void getFormListByVersionTest() {
-    var newForm = FileResponse.builder().name("form").path("forms/form.json").status(FileStatus.NEW)
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json").status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
-    var deletedForm = FileResponse.builder().status(FileStatus.DELETED).build();
+    var deletedForm = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm, deletedForm));
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
 

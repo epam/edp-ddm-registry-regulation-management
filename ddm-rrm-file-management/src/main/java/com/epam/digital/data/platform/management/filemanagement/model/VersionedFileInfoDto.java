@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.filemanagement.model;
 
-public enum FileStatus {
-  NEW,
-  CHANGED,
-  CURRENT,
-  DELETED
+import java.time.LocalDateTime;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Builder
+public class VersionedFileInfoDto {
+  private String name;
+  private String path;
+  private FileStatus status;
+  private LocalDateTime created;
+  private LocalDateTime updated;
 }

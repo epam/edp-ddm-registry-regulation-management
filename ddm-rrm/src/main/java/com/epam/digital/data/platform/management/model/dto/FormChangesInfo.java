@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.model.dto;
 
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

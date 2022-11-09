@@ -23,9 +23,11 @@ import static org.mockito.Mockito.never;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -77,14 +79,14 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void getBusinessProcessesListByVersionTest() {
-    FileResponse newBusinessProcess = FileResponse.builder()
+    VersionedFileInfoDto newBusinessProcess = VersionedFileInfoDto.builder()
         .name("business-process")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
         .status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
-    FileResponse deletedProcess = FileResponse.builder().status(FileStatus.DELETED).build();
+    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
 
     Mockito.when(repository.getFileList("bpmn"))
         .thenReturn(List.of(newBusinessProcess, deletedProcess));
