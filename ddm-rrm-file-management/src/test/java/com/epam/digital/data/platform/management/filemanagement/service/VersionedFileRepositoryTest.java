@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.filemanagement.service;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.FileResponse;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
-import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
-import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,11 +36,13 @@ import java.util.Map;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,8 +52,15 @@ public class VersionedFileRepositoryTest {
   private JGitService jGitService;
   @Mock
   private GerritService gerritService;
-  @InjectMocks
-  private VersionedFileRepositoryImpl repository;
+  @Spy
+  private FileManagementMapper mapper = Mappers.getMapper(FileManagementMapper.class);
+
+  private VersionedFileRepository repository;
+
+  @BeforeEach
+  void setUp() {
+    repository = new VersionedFileRepositoryImpl("version", jGitService, gerritService, mapper);
+  }
 
   @Test
   @SneakyThrows
@@ -64,25 +72,9 @@ public class VersionedFileRepositoryTest {
     List<String> list = new ArrayList<>();
     list.add("file1");
     list.add("file2");
-    Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
+    Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    List<FileResponse> fileList = repository.getFileList(File.separator);
-    Assertions.assertThat(fileList).isNotNull();
-  }
-
-  @Test
-  @SneakyThrows
-  void getRootFileListTest() {
-    FileDatesDto fileDates = FileDatesDto.builder()
-        .create(LocalDateTime.now())
-        .update(LocalDateTime.now())
-        .build();
-    List<String> list = new ArrayList<>();
-    list.add("file1");
-    list.add("file2");
-    Mockito.when(jGitService.getFilesInPath(any(), eq(File.separator))).thenReturn(list);
-    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    List<FileResponse> fileList = repository.getFileList();
+    List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
   }
 
@@ -108,7 +100,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    List<FileResponse> fileList = repository.getFileList("folder");
+    List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
     Assertions.assertThat(fileList.size()).isEqualTo(4);
   }
@@ -138,7 +130,7 @@ public class VersionedFileRepositoryTest {
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(
         List.of("file1", "file2", "file3"));
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    List<FileResponse> fileList = repository.getFileList("folder");
+    List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
     Assertions.assertThat(fileList.size()).isEqualTo(5);
     Assertions.assertThat(FileStatus.CURRENT).isEqualTo(getFileStatusByName(fileList, "file1"));
@@ -148,49 +140,46 @@ public class VersionedFileRepositoryTest {
     Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file14"));
   }
 
-  private FileStatus getFileStatusByName(List<FileResponse> files, String name) {
+  private FileStatus getFileStatusByName(List<VersionedFileInfoDto> files, String name) {
     return files.stream()
         .filter(e -> name.equals(e.getName()))
         .findAny()
-        .map(FileResponse::getStatus)
+        .map(VersionedFileInfoDto::getStatus)
         .orElse(null);
   }
 
   @Test
   @SneakyThrows
   void writeFileTest() {
-    final var repositoryName = RandomString.make();
     final var refs = RandomString.make();
     final var commitMessage = RandomString.make();
     final var changeId = RandomString.make();
-    final var filepath = RandomString.make();
-    final var filecontent = RandomString.make();
+    final var filepath = "folder/" + RandomString.make();
+    final var fileContent = RandomString.make();
     var changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setSubject(commitMessage);
     changeInfoDto.setRefs(refs);
     changeInfoDto.setChangeId(changeId);
-    repository.setVersionName(repositoryName);
     var changeInfo = new ChangeInfoDto();
     changeInfo.setChangeId(changeId);
     changeInfo.setNumber("1");
     Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
-    Mockito.when(gerritService.getMRByNumber(eq(repositoryName))).thenReturn(changeInfo);
-    repository.writeFile(filepath, filecontent);
+    Mockito.when(gerritService.getMRByNumber(eq("version"))).thenReturn(changeInfo);
+    repository.writeFile(filepath, fileContent);
     Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo(changeId);
     Mockito.verify(jGitService, Mockito.times(1))
-        .amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
+        .amend("version", refs, commitMessage, changeId, filepath, fileContent);
   }
 
   @Test
   @SneakyThrows
   void deleteTest() {
-    repository.setVersionName("1");
     var changeInfo = new ChangeInfoDto();
     changeInfo.setChangeId("changeId");
     changeInfo.setNumber("1");
     ChangeInfoDto changeInfoDto = new ChangeInfoDto();
     changeInfoDto.setSubject("change");
-    Mockito.when(gerritService.getMRByNumber(eq("1"))).thenReturn(changeInfo);
+    Mockito.when(gerritService.getMRByNumber(eq("version"))).thenReturn(changeInfo);
     Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
     assertThatCode(() -> repository.deleteFile("forms/form.json"))
         .doesNotThrowAnyException();
@@ -213,8 +202,7 @@ public class VersionedFileRepositoryTest {
     final var mock = Mockito.mock(ChangeInfoDto.class);
     Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
-    repository.setVersionName("version");
-    repository.pullRepository();
+    repository.updateRepository();
     Mockito.verify(jGitService, Mockito.times(1)).cloneRepoIfNotExist("version");
   }
 
@@ -229,7 +217,7 @@ public class VersionedFileRepositoryTest {
     t.add("fileName");
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
-    boolean fileExists = repository.isFileExists("/fileName");
+    boolean fileExists = repository.isFileExists("folder/fileName");
     Assertions.assertThat(fileExists).isTrue();
   }
 }

@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;

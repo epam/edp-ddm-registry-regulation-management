@@ -74,7 +74,7 @@ public interface VersionManagementService {
    */
   void rebase(String versionName);
 
-  VersionChanges getVersionChanges(String versionCandidateId) throws IOException;
+  VersionChanges getVersionChanges(String versionCandidateId);
 //
 //    /**
 //     * Add robot comment

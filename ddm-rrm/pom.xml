@@ -14,6 +14,11 @@
   <dependencies>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-file-management</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-rrm-scheduled-jobs</artifactId>
       <version>${project.version}</version>
     </dependency>

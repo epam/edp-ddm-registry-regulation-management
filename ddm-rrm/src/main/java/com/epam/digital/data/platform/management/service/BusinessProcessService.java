@@ -17,11 +17,7 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
-import org.eclipse.jgit.api.errors.GitAPIException;
 
 public interface BusinessProcessService {
 
@@ -29,8 +25,7 @@ public interface BusinessProcessService {
 
   List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName);
 
-  void createProcess(String processName, String content, String versionName)
-      throws GitAPIException, URISyntaxException, IOException;
+  void createProcess(String processName, String content, String versionName);
 
   String getProcessContent(String processName, String versionName);
 

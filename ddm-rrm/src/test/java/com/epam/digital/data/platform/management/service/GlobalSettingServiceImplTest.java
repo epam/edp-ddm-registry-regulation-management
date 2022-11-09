@@ -16,6 +16,8 @@
 
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
 import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
 import lombok.SneakyThrows;
@@ -27,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.assertj.core.api.Assertions;
-import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;

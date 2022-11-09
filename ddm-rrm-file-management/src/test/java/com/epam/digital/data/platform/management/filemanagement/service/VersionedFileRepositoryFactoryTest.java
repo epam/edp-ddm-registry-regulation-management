@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.filemanagement.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.service.impl.HeadFileRepositoryImpl;
-import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryFactoryImpl;
-import com.epam.digital.data.platform.management.service.impl.VersionedFileRepositoryImpl;
 import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
