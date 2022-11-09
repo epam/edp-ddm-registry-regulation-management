@@ -15,16 +15,21 @@
  */
 package com.epam.digital.data.platform.management.model.dto;
 
-import lombok.Builder;
+import java.util.stream.Stream;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@Setter
-@Builder
-public class TableDetailsShort {
-  private String name;
-  private String description;
-  private Boolean objectReference;
-  private Boolean historyFlag;
+@RequiredArgsConstructor
+public enum DdmRolePermissionOperation {
+  INSERT("I"), SELECT("S"), UPDATE("U"), DELETE("D");
+
+  private final String code;
+
+  public static DdmRolePermissionOperation of(String code) {
+    return Stream.of(DdmRolePermissionOperation.values())
+        .filter(o -> o.getCode().equals(code))
+        .findFirst()
+        .orElseThrow(IllegalArgumentException::new);
+  }
 }

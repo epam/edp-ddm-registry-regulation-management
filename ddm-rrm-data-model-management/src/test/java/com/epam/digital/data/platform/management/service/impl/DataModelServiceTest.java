@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.service;
+
+package com.epam.digital.data.platform.management.service.impl;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
-import com.epam.digital.data.platform.management.MasterVersionTableControllerIT;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
-import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
-import com.epam.digital.data.platform.management.service.impl.TableServiceImpl;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import data.model.snapshot.model.DdmTable;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,14 +43,14 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class TableServiceTest {
+public class DataModelServiceTest {
   static final String DATA_MODEL_SNAPSHOT_TABLES_TABLE_SAMPLE_JSON = "repositories/data-model-snapshot/tables/table_sample.json";
   static final String DATA_MODEL_SNAPSHOT_DIRECTORY = "repositories/data-model-snapshot/tables";
 
   @Mock
   ObjectMapper objectMapper;
   @InjectMocks
-  TableServiceImpl tableService;
+  DataModelServiceImpl tableService;
 
   @BeforeAll
   @SneakyThrows
@@ -71,11 +70,11 @@ public class TableServiceTest {
   @Test
   @SneakyThrows
   void listTest() {
-    final DdmTable table = getTable();
-    Mockito.when(objectMapper.readValue(anyString(), eq(DdmTable.class))).thenReturn(table);
-    final List<TableDetailsShort> list = tableService.list();
+    final TableInfoDto table = getTable();
+    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenReturn(table);
+    final List<TableShortInfoDto> list = tableService.list();
     Assertions.assertThat(list).isNotEmpty();
-    final TableDetailsShort tableDetailsShort = list.get(0);
+    final TableShortInfoDto tableDetailsShort = list.get(0);
     Assertions.assertThat(tableDetailsShort.getName()).isEqualTo(table.getName());
     Assertions.assertThat(tableDetailsShort.getDescription()).isEqualTo(table.getDescription());
     Assertions.assertThat(tableDetailsShort.getHistoryFlag()).isEqualTo(table.getHistoryFlag());
@@ -86,11 +85,11 @@ public class TableServiceTest {
   @SneakyThrows
   void getTest() {
     final String tableName = "table_sample";
-    final DdmTable table = getTable();
-    Mockito.when(objectMapper.readValue(anyString(), eq(DdmTable.class))).thenReturn(table);
-    final DdmTable ddmTable = tableService.get(tableName);
-    Assertions.assertThat(ddmTable).isNotNull();
-    Assertions.assertThat(ddmTable.getName()).isEqualTo(table.getName());
+    final TableInfoDto table = getTable();
+    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenReturn(table);
+    final TableInfoDto tableInfoDto = tableService.get(tableName);
+    Assertions.assertThat(tableInfoDto).isNotNull();
+    Assertions.assertThat(tableInfoDto.getName()).isEqualTo(table.getName());
   }
 
   @Test
@@ -106,7 +105,7 @@ public class TableServiceTest {
   @SneakyThrows
   void getTableParseExceptionTest() {
     final String tableName = "table_sample";
-    Mockito.when(objectMapper.readValue(anyString(), eq(DdmTable.class))).thenThrow(
+    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenThrow(
         JsonProcessingException.class);
     Assertions.assertThatThrownBy(() -> tableService.get(tableName))
         .isInstanceOf(TableParseException.class);
@@ -121,11 +120,11 @@ public class TableServiceTest {
   @SneakyThrows
   private static File getFile(String path) {
     return new File(
-        Objects.requireNonNull(MasterVersionTableControllerIT.class.getResource(path)).toURI());
+        Objects.requireNonNull(DataModelServiceTest.class.getResource(path)).toURI());
   }
 
-  private DdmTable getTable() {
-    DdmTable table = new DdmTable();
+  private TableInfoDto getTable() {
+    TableInfoDto table = new TableInfoDto();
     table.setName("table_sample");
     table.setHistoryFlag(false);
     table.setDescription("John Doe's table");

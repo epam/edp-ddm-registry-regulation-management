@@ -17,10 +17,10 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
-import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
-import com.epam.digital.data.platform.management.service.TableService;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import data.model.snapshot.model.DdmTable;
+import com.epam.digital.data.platform.management.service.DataModelService;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,7 +37,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class TableServiceImpl implements TableService {
+public class DataModelServiceImpl implements DataModelService {
 
   public static final String DIRECTORY_PATH = "repositories/data-model-snapshot/tables";
   private static final String JSON_FILE_EXTENSION = "json";
@@ -45,23 +45,23 @@ public class TableServiceImpl implements TableService {
   private final ObjectMapper objectMapper;
 
   @Override
-  public List<TableDetailsShort> list() {
+  public List<TableShortInfoDto> list() {
     log.debug("Trying to get list of tables");
     final File[] files = new File(DIRECTORY_PATH).listFiles();
     if (files == null) {
       log.debug("No one table found.");
       return new ArrayList<>();
     }
-    List<TableDetailsShort> tableDetails = new ArrayList<>();
+    List<TableShortInfoDto> tableDetails = new ArrayList<>();
     for (File file : files) {
       final String baseName = FilenameUtils.getBaseName(file.getName());
       log.trace("Getting table {}", baseName);
-      final DdmTable ddmTable = get(baseName);
-      tableDetails.add(TableDetailsShort.builder()
-          .name(ddmTable.getName())
-          .description(ddmTable.getDescription())
-          .historyFlag(ddmTable.getHistoryFlag())
-          .objectReference(ddmTable.getObjectReference())
+      final TableInfoDto tableInfoDto = get(baseName);
+      tableDetails.add(TableShortInfoDto.builder()
+          .name(tableInfoDto.getName())
+          .description(tableInfoDto.getDescription())
+          .historyFlag(tableInfoDto.getHistoryFlag())
+          .objectReference(tableInfoDto.getObjectReference())
           .build());
     }
     log.debug("There were found {} tables", tableDetails.size());
@@ -70,12 +70,12 @@ public class TableServiceImpl implements TableService {
   }
 
   @Override
-  public DdmTable get(String name) {
+  public TableInfoDto get(String name) {
     log.debug("Trying to get table with name '{}'", name);
     try (FileInputStream fis = new FileInputStream(getProcessPath(name))) {
       String data = IOUtils.toString(fis, StandardCharsets.UTF_8.name());
       log.debug("Table with name '{}' was found", name);
-      return objectMapper.readValue(data, DdmTable.class);
+      return objectMapper.readValue(data, TableInfoDto.class);
     } catch (FileNotFoundException e) {
       throw new TableNotFoundException(String.format("Table with name '%s' doesn't exist.", name));
     } catch (IOException e) {

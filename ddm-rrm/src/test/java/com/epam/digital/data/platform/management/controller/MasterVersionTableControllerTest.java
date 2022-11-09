@@ -27,10 +27,12 @@ import com.epam.digital.data.platform.management.exception.ApplicationExceptionH
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
-import com.epam.digital.data.platform.management.service.TableService;
+import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import com.epam.digital.data.platform.starter.localization.MessageTitle;
+import com.epam.digital.data.platform.management.service.DataModelService;
 import data.model.snapshot.model.DdmTable;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -51,10 +53,11 @@ import org.springframework.web.context.WebApplicationContext;
 class MasterVersionTableControllerTest {
 
   @MockBean
-  TableService tableService;
+  DataModelService tableService;
   @MockBean
   MessageResolver messageResolver;
-
+  @MockBean
+  DdmTableMapper mapper;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -70,7 +73,7 @@ class MasterVersionTableControllerTest {
   @DisplayName("GET /versions/master/tables should return 200 with all found tables")
   @SneakyThrows
   void getTablesTest() {
-    var expectedTablesResponse = TableDetailsShort.builder()
+    var expectedTablesResponse = TableShortInfoDto.builder()
         .name("John Doe's table")
         .description("John Doe get table")
         .objectReference(true)
@@ -104,13 +107,19 @@ class MasterVersionTableControllerTest {
     void getTableTest() {
       final var tableName = "John_Does_table";
 
-      final var expectedTablesResponse = new DdmTable();
+      final var expectedTablesResponse = new TableInfoDto();
       expectedTablesResponse.setName(tableName);
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
       expectedTablesResponse.setHistoryFlag(false);
       Mockito.doReturn(expectedTablesResponse)
           .when(tableService).get(tableName);
+      final var expectedDdmTable = new DdmTable();
+      expectedDdmTable.setName(tableName);
+      expectedDdmTable.setDescription("John Doe get table");
+      expectedDdmTable.setObjectReference(true);
+      expectedDdmTable.setHistoryFlag(false);
+      Mockito.doReturn(expectedDdmTable).when(mapper).convertToDdmTable(expectedTablesResponse);
 
       mockMvc.perform(
           get("/versions/master/tables/{tableName}", tableName)

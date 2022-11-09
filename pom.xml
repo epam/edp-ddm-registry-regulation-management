@@ -23,6 +23,7 @@
     <module>ddm-rrm</module>
     <module>ddm-rrm-git-integration</module>
     <module>ddm-rrm-data-model-snapshot</module>
+    <module>ddm-rrm-data-model-management</module>
     <module>ddm-rrm-gerrit-integration</module>
     <module>ddm-rrm-openshift-integration</module>
     <module>ddm-rrm-security</module>
