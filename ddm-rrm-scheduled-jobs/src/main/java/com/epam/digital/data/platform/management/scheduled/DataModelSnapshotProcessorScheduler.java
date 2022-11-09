@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.service.impl;
+package com.epam.digital.data.platform.management.scheduled;
 
 import data.model.snapshot.DdmSchemaProcessor;
 import lombok.RequiredArgsConstructor;

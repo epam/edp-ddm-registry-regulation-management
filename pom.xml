@@ -26,6 +26,7 @@
     <module>ddm-rrm-gerrit-integration</module>
     <module>ddm-rrm-openshift-integration</module>
     <module>ddm-rrm-security</module>
+    <module>ddm-rrm-scheduled-jobs</module>
   </modules>
 
   <properties>
