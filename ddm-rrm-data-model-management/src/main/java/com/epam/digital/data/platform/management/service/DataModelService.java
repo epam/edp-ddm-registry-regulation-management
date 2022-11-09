@@ -17,28 +17,28 @@ package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
-import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
-import data.model.snapshot.model.DdmTable;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import java.util.List;
 
 /**
  * Provides methods to work with tables
  */
-public interface TableService {
+public interface DataModelService {
 
   /**
-   * Get {@link List} of {@link TableDetailsShort}
-   * @return {@link List} of {@link TableDetailsShort}
+   * Get {@link List} of {@link TableShortInfoDto}
+   * @return {@link List} of {@link TableShortInfoDto}
    * @throws TableParseException if any of the tables could not be parsed
    */
-  List<TableDetailsShort> list();
+  List<TableShortInfoDto> list();
 
   /**
-   * Get {@link DdmTable} by table name
+   * Get {@link TableInfoDto} by table name
    * @param name table name
-   * @return {@link DdmTable}
+   * @return {@link TableInfoDto}
    * @throws TableParseException if table could not be parsed
    * @throws TableNotFoundException if table doesn't exist
    */
-  DdmTable get(String name);
+  TableInfoDto get(String name);
 }

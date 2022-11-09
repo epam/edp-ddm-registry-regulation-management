@@ -15,9 +15,10 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.TableDetailsShort;
+import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.TableService;
+import com.epam.digital.data.platform.management.service.DataModelService;
 import data.model.snapshot.model.DdmTable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,7 +45,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class MasterVersionTableController {
 
-  private final TableService tableService;
+  private final DdmTableMapper ddmTableMapper;
+
+  private final DataModelService tableService;
 
   @Operation(description = "Get tables list from master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -56,7 +59,7 @@ public class MasterVersionTableController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  array = @ArraySchema(schema = @Schema(implementation = TableDetailsShort.class)))),
+                  array = @ArraySchema(schema = @Schema(implementation = TableShortInfoDto.class)))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -68,9 +71,9 @@ public class MasterVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<List<TableDetailsShort>> getTables() {
+  public ResponseEntity<List<TableShortInfoDto>> getTables() {
     log.info("getTables called");
-    final List<TableDetailsShort> master = tableService.list();
+    final List<TableShortInfoDto> master = tableService.list();
     log.info("There were found {} tables", master.size());
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON).body(master);
@@ -105,7 +108,7 @@ public class MasterVersionTableController {
   public ResponseEntity<DdmTable> getTable(
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     log.info("getTable called");
-    final DdmTable ddmTable = tableService.get(tableName);
+    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(tableService.get(tableName));
     log.info("Table '{}' was found", tableName);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)

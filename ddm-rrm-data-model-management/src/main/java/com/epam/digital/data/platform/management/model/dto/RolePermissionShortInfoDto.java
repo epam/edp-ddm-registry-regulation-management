@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package data.model.snapshot.model;
+package com.epam.digital.data.platform.management.model.dto;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,7 +30,7 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 @EqualsAndHashCode(of = "permissionId")
-public class DdmRolePermission {
+public class RolePermissionShortInfoDto {
 
   @Id
   @Column(name = "permission_id")
