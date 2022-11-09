@@ -14,37 +14,63 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.forms.service;
 
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
+import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import java.util.List;
 
+/**
+ * Provide methods to work with forms
+ */
 public interface FormService {
 
   /**
    * Get form list for specific version
+   *
+   * @return {@link FormInfoDto} representation of form info
    */
-  List<FormResponse> getFormListByVersion(String versionName);
+  List<FormInfoDto> getFormListByVersion(String versionName);
 
-  List<FormResponse> getChangedFormsListByVersion(String versionName);
+  /**
+   * Returns forms by version name
+   *
+   * @param versionName name of version candidate
+   * @return {@link FormInfoDto} representation of form info
+   */
+  List<FormInfoDto> getChangedFormsListByVersion(String versionName);
 
   /**
    * Create new form - create form from scratch or create from copy
+   *
+   * @param formName    name of form
+   * @param content     content of form
+   * @param versionName name of version candidate
    */
   void createForm(String formName, String content, String versionName);
 
   /**
    * Get content from existing form
+   *
+   * @param formName    name of form
+   * @param versionName name of version candidate
+   * @return {@link String} form content
    */
   String getFormContent(String formName, String versionName);
 
   /**
    * Update the content of existing form
+   *
+   * @param content     content of form
+   * @param formName    name of form
+   * @param versionName name of version candidate
    */
   void updateForm(String content, String formName, String versionName);
 
   /**
    * Delete form
+   *
+   * @param formName    name of form
+   * @param versionName name of version candidate
    */
   void deleteForm(String formName, String versionName);
 }

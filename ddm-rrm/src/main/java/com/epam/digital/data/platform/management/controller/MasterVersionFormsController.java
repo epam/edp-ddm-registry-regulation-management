@@ -16,9 +16,9 @@
 package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.model.dto.FormDetailsShort;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.FormService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -27,7 +27,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,8 +71,7 @@ public class MasterVersionFormsController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster()
-      throws IOException {
+  public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Started getting forms from master");
     var response = formService.getFormListByVersion(masterVersionId).stream()
@@ -114,8 +112,8 @@ public class MasterVersionFormsController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{formName}")
-  public ResponseEntity<Object> getForm(@PathVariable @Parameter(description = "Form name", required = true) String formName)
-      throws IOException {
+  public ResponseEntity<Object> getForm(
+      @PathVariable @Parameter(description = "Form name", required = true) String formName) {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting {} form from master", formName);
     var response = formService.getFormContent(formName, masterVersionId);

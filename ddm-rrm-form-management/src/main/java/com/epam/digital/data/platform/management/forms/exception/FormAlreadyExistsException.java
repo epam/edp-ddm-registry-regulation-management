@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.forms.exception;
 
 public class FormAlreadyExistsException extends RuntimeException {
   public FormAlreadyExistsException(String message) {

@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service.impl;
+package com.epam.digital.data.platform.management.forms.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.exception.FormAlreadyExistsException;
-import com.epam.digital.data.platform.management.exception.FormNotFoundException;
-import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.forms.FormMapper;
+import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
+import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
+import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
-import com.epam.digital.data.platform.management.service.FormService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
@@ -46,20 +44,21 @@ public class FormServiceImpl implements FormService {
 
   private static final String DIRECTORY_PATH = "forms";
   private static final String JSON_FILE_EXTENSION = "json";
-  public static final String FORM_TITLE_PATH = "$.title";
   public static final String FORM_CREATED_FIELD = "created";
   public static final String FORM_MODIFIED_FIELD = "modified";
   private final VersionedFileRepositoryFactory repoFactory;
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
+  private final FormMapper formMapper;
+
   @Override
-  public List<FormResponse> getFormListByVersion(String versionName) {
+  public List<FormInfoDto> getFormListByVersion(String versionName) {
     return getFormListByVersion(versionName, FileStatus.DELETED);
   }
 
   @Override
-  public List<FormResponse> getChangedFormsListByVersion(String versionName) {
+  public List<FormInfoDto> getChangedFormsListByVersion(String versionName) {
     return getFormListByVersion(versionName, FileStatus.CURRENT);
   }
 
@@ -116,16 +115,12 @@ public class FormServiceImpl implements FormService {
         JSON_FILE_EXTENSION);
   }
 
-  private String getTitleFromFormContent(String formContent) {
-    return JsonPath.read(formContent, FORM_TITLE_PATH);
-  }
-
-  private List<FormResponse> getFormListByVersion(String versionName, FileStatus skippedStatus) {
+  private List<FormInfoDto> getFormListByVersion(String versionName, FileStatus skippedStatus) {
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     VersionedFileRepository masterRepo = repoFactory.getRepoByVersion(
         gerritPropertiesConfig.getHeadBranch());
     List<VersionedFileInfoDto> fileList = repo.getFileList(DIRECTORY_PATH);
-    List<FormResponse> forms = new ArrayList<>();
+    List<FormInfoDto> forms = new ArrayList<>();
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
@@ -137,14 +132,7 @@ public class FormServiceImpl implements FormService {
         formContent = repo.readFile(getFormPath(versionedFileInfoDto.getName()));
       }
       FileDatesDto fileDatesDto = getDatesFromContent(formContent);
-      forms.add(FormResponse.builder()
-          .name(versionedFileInfoDto.getName())
-          .path(versionedFileInfoDto.getPath())
-          .status(versionedFileInfoDto.getStatus())
-          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(versionedFileInfoDto.getCreated()))
-          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(versionedFileInfoDto.getUpdated()))
-          .title(getTitleFromFormContent(formContent))
-          .build());
+      forms.add(formMapper.toForm(versionedFileInfoDto, fileDatesDto, formContent));
     }
     return forms;
   }

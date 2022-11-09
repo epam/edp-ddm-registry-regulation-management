@@ -29,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import com.epam.digital.data.platform.management.model.dto.FormResponse;
-import com.epam.digital.data.platform.management.service.impl.FormServiceImpl;
+import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.forms.service.FormServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -67,7 +67,7 @@ class CandidateVersionFormsControllerTest {
   @DisplayName("GET /versions/candidates/{versionCandidateId}/forms should return 200 with list of all forms")
   @SneakyThrows
   void getFormsByVersionIdTest() {
-    var expectedFormResponse = FormResponse.builder()
+    var expectedFormResponse = FormInfoDto.builder()
         .name("john-does-form")
         .title("John Doe added new component")
         .path("/")

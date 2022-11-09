@@ -19,6 +19,8 @@ package com.epam.digital.data.platform.management.exception;
 import static com.epam.digital.data.platform.management.security.enumeration.Header.TRACE_ID;
 
 import com.epam.digital.data.platform.management.controller.BusinessProcess;
+import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
+import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;

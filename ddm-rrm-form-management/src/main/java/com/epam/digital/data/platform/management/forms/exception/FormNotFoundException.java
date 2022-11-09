@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.forms.exception;
 
-import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import java.time.LocalDateTime;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
+/**
+ * Thrown in case if it couldn't find requested form
+ */
 @Getter
-@Setter
-@Builder
-@ToString
-@EqualsAndHashCode
-public class FormResponse {
-  private String name;
-  private String title;
-  private String path;
-  private FileStatus status;
-  private LocalDateTime created;
-  private LocalDateTime updated;
+public class FormNotFoundException extends RuntimeException {
+  private final String formName;
+  public FormNotFoundException(String message, String formName) {
+    super(message);
+    this.formName = formName;
+  }
+
+  public FormNotFoundException(String message, Throwable cause, String formName) {
+    super(message, cause);
+    this.formName = formName;
+  }
 }
