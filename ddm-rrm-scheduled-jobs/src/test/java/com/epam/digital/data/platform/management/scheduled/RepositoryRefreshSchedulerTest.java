@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.scheduled;
 
 import static org.mockito.Mockito.never;
 
@@ -22,7 +22,6 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
-import com.epam.digital.data.platform.management.service.impl.RepositoryRefreshScheduler;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
