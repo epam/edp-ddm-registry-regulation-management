@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.validator.businessProcess;
+package com.epam.digital.data.platform.management.validation.businessProcess;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;

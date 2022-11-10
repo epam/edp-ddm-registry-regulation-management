@@ -14,26 +14,14 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.exception;
 
-import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import java.time.LocalDateTime;
+public class BusinessProcessAlreadyExistsException extends RuntimeException {
+  public BusinessProcessAlreadyExistsException(String message) {
+    super(message);
+  }
 
-@Getter
-@Setter
-@Builder
-@ToString
-@EqualsAndHashCode
-public class BusinessProcessResponse {
-  private String name;
-  private String title;
-  private String path;
-  private FileStatus status;
-  private LocalDateTime created;
-  private LocalDateTime updated;
+  public BusinessProcessAlreadyExistsException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

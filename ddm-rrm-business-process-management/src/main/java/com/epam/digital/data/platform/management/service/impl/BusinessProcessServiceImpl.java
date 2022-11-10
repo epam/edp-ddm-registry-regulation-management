@@ -18,14 +18,14 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
+import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import java.io.IOException;
 import java.io.StringReader;
@@ -64,12 +64,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   public static final String PROCESS_MODIFIED_PATH = "rrm:modified";
 
   @Override
-  public List<BusinessProcessResponse> getProcessesByVersion(String versionName) {
+  public List<BusinessProcessInfoDto> getProcessesByVersion(String versionName) {
     return getProcessesByVersion(versionName, FileStatus.DELETED);
   }
 
   @Override
-  public List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName) {
+  public List<BusinessProcessInfoDto> getChangedProcessesByVersion(String versionName) {
     return getProcessesByVersion(versionName, FileStatus.CURRENT);
   }
 
@@ -80,7 +80,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     repo = repoFactory.getRepoByVersion(versionName);
     processPath = getProcessPath(processName);
     if (repo.isFileExists(processPath)) {
-      throw new BusinessProcessAlreadyExists(
+      throw new BusinessProcessAlreadyExistsException(
           String.format("Process with path '%s' already exists", processPath));
     }
     content = addDatesToContent(content, LocalDateTime.now(), LocalDateTime.now());
@@ -124,15 +124,16 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private String getNameFromContent(String processContent) {
+    Document doc;
     try {
-      Document doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
-      doc.getDocumentElement().normalize();
-      NodeList nodeList = doc.getElementsByTagName("bpmn:process");
-      Node node = nodeList.item(0);
-      return node.getAttributes().getNamedItem("name").getTextContent();
+      doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
     } catch (SAXException | IOException exception) {
       throw new RuntimeException("Could not parse xml document", exception);
     }
+    doc.getDocumentElement().normalize();
+    NodeList nodeList = doc.getElementsByTagName("bpmn:process");
+    Node node = nodeList.item(0);
+    return node.getAttributes().getNamedItem("name").getTextContent();
   }
 
   private String getProcessPath(String processName) {
@@ -140,7 +141,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         BPMN_FILE_EXTENSION);
   }
 
-  private List<BusinessProcessResponse> getProcessesByVersion(String versionName,
+  private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
       FileStatus skippedStatus) {
     VersionedFileRepository repo;
     VersionedFileRepository masterRepo;
@@ -148,7 +149,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     repo = repoFactory.getRepoByVersion(versionName);
     fileList = repo.getFileList(DIRECTORY_PATH);
     masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
-    List<BusinessProcessResponse> processes = new ArrayList<>();
+    List<BusinessProcessInfoDto> processes = new ArrayList<>();
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
@@ -160,7 +161,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
       }
       FileDatesDto fileDatesDto = getDatesFromContent(processContent);
-      processes.add(BusinessProcessResponse.builder()
+      processes.add(BusinessProcessInfoDto.builder()
           .name(versionedFileInfoDto.getName())
           .path(versionedFileInfoDto.getPath())
           .status(versionedFileInfoDto.getStatus())
@@ -176,40 +177,43 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private FileDatesDto getDatesFromContent(String processContent) {
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
+    Document doc;
     try {
-      Document doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
-      doc.getDocumentElement().normalize();
-      Element element = doc.getDocumentElement();
-      if (element.hasAttribute(PROCESS_MODIFIED_PATH)) {
-        fileDatesDto.setUpdate(LocalDateTime.parse(element.getAttribute(PROCESS_MODIFIED_PATH),
-            JacksonConfig.DATE_TIME_FORMATTER));
-      }
-      if (element.hasAttribute(PROCESS_CREATED_PATH)) {
-        fileDatesDto.setCreate(LocalDateTime.parse(element.getAttribute(PROCESS_CREATED_PATH),
-            JacksonConfig.DATE_TIME_FORMATTER));
-      }
+      doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
     } catch (SAXException | IOException exception) {
       throw new RuntimeException("Could not parse xml document", exception);
+    }
+    doc.getDocumentElement().normalize();
+    Element element = doc.getDocumentElement();
+    if (element.hasAttribute(PROCESS_MODIFIED_PATH)) {
+      fileDatesDto.setUpdate(LocalDateTime.parse(element.getAttribute(PROCESS_MODIFIED_PATH),
+          JacksonConfig.DATE_TIME_FORMATTER));
+    }
+    if (element.hasAttribute(PROCESS_CREATED_PATH)) {
+      fileDatesDto.setCreate(LocalDateTime.parse(element.getAttribute(PROCESS_CREATED_PATH),
+          JacksonConfig.DATE_TIME_FORMATTER));
     }
     return fileDatesDto;
   }
 
   private String addDatesToContent(String processContent, LocalDateTime created,
       LocalDateTime modified) {
+    Document doc;
     try {
-      Document doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
-      Element element = doc.getDocumentElement();
-      element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rrm",
-          "http://registry-regulation-management");
-      element.setAttributeNS("http://registry-regulation-management", PROCESS_MODIFIED_PATH,
-          modified.format(JacksonConfig.DATE_TIME_FORMATTER));
-      element.setAttributeNS("http://registry-regulation-management", PROCESS_CREATED_PATH,
-          created.format(JacksonConfig.DATE_TIME_FORMATTER));
-      doc.setXmlStandalone(true);
-      return getStringFromDocument(doc);
+      doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
     } catch (SAXException | IOException exception) {
       throw new RuntimeException("Could not parse xml document", exception);
     }
+    Element element = doc.getDocumentElement();
+    element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rrm",
+        "http://registry-regulation-management");
+    element.setAttributeNS("http://registry-regulation-management", PROCESS_MODIFIED_PATH,
+        modified.format(JacksonConfig.DATE_TIME_FORMATTER));
+    element.setAttributeNS("http://registry-regulation-management", PROCESS_CREATED_PATH,
+        created.format(JacksonConfig.DATE_TIME_FORMATTER));
+    doc.setXmlStandalone(true);
+    return getStringFromDocument(doc);
+
   }
 
   private String getStringFromDocument(Document doc) {

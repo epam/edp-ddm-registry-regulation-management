@@ -287,7 +287,7 @@ class ApplicationExceptionHandlerTest {
     var bpName = RandomString.make();
     var versionName = RandomString.make();
     var content = TestUtils.getContent("bp-correct.xml");
-    doThrow(BusinessProcessAlreadyExists.class).when(businessProcessService)
+    doThrow(BusinessProcessAlreadyExistsException.class).when(businessProcessService)
         .createProcess(bpName, content, versionName);
 
     when(messageResolver.getMessage(

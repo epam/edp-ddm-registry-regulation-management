@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import java.time.LocalDateTime;
@@ -91,7 +91,7 @@ class CandidateVersionBusinessProcessControllerTest {
   @SneakyThrows
   void getBusinessProcessesByVersionId() {
     final var candidateVersionId = "id1";
-    final var expectedResponse = BusinessProcessResponse.builder()
+    final var expectedResponse = BusinessProcessInfoDto.builder()
         .path("/bpmn/John_Does_process.bpmn")
         .name("John_Does_process")
         .title("John Doe added new component")
