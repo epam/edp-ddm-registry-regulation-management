@@ -44,16 +44,10 @@ public class JGitWrapper {
   }
 
   @NonNull
-  public RevTree getRevTree(@NonNull Repository repository) {
-    try {
-      ObjectId lastCommitId = repository.resolve("HEAD");
-      RevWalk revWalk = new RevWalk(repository);
-      return revWalk.parseCommit(lastCommitId).getTree();
-    } catch (IOException e) {
-      throw new GitCommandException(
-          String.format("Exception occurred during getting repository rev tree: %s",
-              e.getMessage()), e);
-    }
+  protected RevTree getRevTree(@NonNull Repository repository) throws IOException {
+    ObjectId lastCommitId = repository.resolve("HEAD");
+    RevWalk revWalk = new RevWalk(repository);
+    return revWalk.parseCommit(lastCommitId).getTree();
   }
 
   @Nullable
@@ -65,10 +59,5 @@ public class JGitWrapper {
           String.format("Exception occurred during getting repository tree walk: %s",
               e.getMessage()), e);
     }
-  }
-
-  @NonNull
-  public TreeWalk getTreeWalk(Repository r) {
-    return new TreeWalk(r);
   }
 }

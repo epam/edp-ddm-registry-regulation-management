@@ -22,6 +22,9 @@ import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,21 +33,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.eclipse.jgit.api.AddCommand;
-import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.lib.CommitBuilder;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.BeforeEach;
@@ -291,16 +297,13 @@ class JGitServiceSyncTest {
   @SneakyThrows
   void amendSyncTest() {
     final var repositoryName = RandomString.make();
-    final var refs = RandomString.make();
-    final var commitMessage = RandomString.make();
-    final var changeId = RandomString.make();
     final var filepath = RandomString.make();
     final var filecontent = RandomString.make();
 
     var file = new File(tempDir, repositoryName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
+    Assertions.assertThat(file.mkdirs()).isTrue();
 
-    Counter counter = new Counter(7);
+    Counter counter = new Counter(6);
 
     when(jGitWrapper.open(file)).thenReturn(git);
     when(git.getRepository()).thenReturn(repository);
@@ -310,44 +313,18 @@ class JGitServiceSyncTest {
     when(gerritPropertiesConfig.getUrl()).thenReturn("https://gerrit");
     when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
 
-    FetchCommand fetchCommand = mock(FetchCommand.class);
-
-    when(git.fetch()).thenReturn(fetchCommand);
-    when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-
-    when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
-    when(fetchCommand.call()).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called fetch command for {}", Thread.currentThread().getName());
-      counter.check(0);
-      return null;
-    });
-
-    CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
-    when(git.checkout()).thenReturn(checkoutCommand);
-    when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
-    when(checkoutCommand.call()).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called checkout command for {}", Thread.currentThread().getName());
-      counter.check(1);
-      return null;
-    });
-
-    File amendedFile = mock(File.class);
-    when(amendedFile.getParent()).thenReturn("parent");
-    when(amendedFile.getName()).thenReturn("name");
-    String filePattern = "parent/name";
+    File amendedFile = new File(file, filepath);
+    Assertions.assertThat(amendedFile.createNewFile()).isTrue();
     when(gitFileService.writeFile(repositoryName, filecontent, filepath)).thenReturn(amendedFile);
 
     //add file to Git method
-    when(amendedFile.exists()).thenReturn(true);
     AddCommand addCommand = mock(AddCommand.class);
     when(git.add()).thenReturn(addCommand);
-    when(addCommand.addFilepattern(filePattern)).thenReturn(addCommand);
+    when(addCommand.addFilepattern(filepath)).thenReturn(addCommand);
     when(addCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called add command for {}", Thread.currentThread().getName());
-      counter.check(2);
+      counter.check(0);
       return null;
     });
 
@@ -358,8 +335,24 @@ class JGitServiceSyncTest {
     when(statusCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called status command for {}", Thread.currentThread().getName());
-      counter.check(3);
+      counter.check(1);
       return addStatus;
+    });
+
+    var logCommand = mock(LogCommand.class);
+    when(git.log()).thenReturn(logCommand);
+    final var lastCommitBuilder = new CommitBuilder();
+    lastCommitBuilder.setMessage("message");
+    lastCommitBuilder.setTreeId(new ObjectId(1, 2, 3, 4, 5));
+    lastCommitBuilder.setAuthor(new PersonIdent("committer", "committer@epam.com",
+        LocalDateTime.of(2022, 11, 10, 13, 40).toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
+    lastCommitBuilder.setCommitter(lastCommitBuilder.getAuthor());
+    var revCommit = RevCommit.parse(lastCommitBuilder.build());
+    when(logCommand.call()).thenAnswer(invocation -> {
+      Thread.sleep(100);
+      log.info("Called log command for {}", Thread.currentThread().getName());
+      counter.check(2);
+      return List.of(revCommit);
     });
 
     when(addStatus.isClean()).thenReturn(false);
@@ -368,29 +361,33 @@ class JGitServiceSyncTest {
     when(commitCommand.setMessage(any())).thenReturn(commitCommand);
     when(commitCommand.setAmend(true)).thenReturn(commitCommand);
     when(commitCommand.setAmend(true)).thenReturn(commitCommand);
-    RevCommit revCommit = mock(RevCommit.class);
     when(commitCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called status command for {}", Thread.currentThread().getName());
-      counter.check(4);
+      counter.check(3);
       return revCommit;
     });
 
     //push changes method
     RemoteAddCommand remoteAddCommand = mock(RemoteAddCommand.class);
     when(git.remoteAdd()).thenReturn(remoteAddCommand);
+    when(remoteAddCommand.setName(any())).thenReturn(remoteAddCommand);
+    when(remoteAddCommand.setUri(any())).thenReturn(remoteAddCommand);
     when(remoteAddCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called remote add command for {}", Thread.currentThread().getName());
-      counter.check(5);
+      counter.check(4);
       return null;
     });
     PushCommand pushCommand = mock(PushCommand.class);
     when(git.push()).thenReturn(pushCommand);
+    when(pushCommand.setRefSpecs(any(RefSpec.class))).thenReturn(pushCommand);
+    when(pushCommand.setCredentialsProvider(any())).thenReturn(pushCommand);
+    when(pushCommand.setRemote(any())).thenReturn(pushCommand);
     when(pushCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called push command for {}", Thread.currentThread().getName());
-      counter.check(6);
+      counter.check(5);
       return null;
     });
 
@@ -401,77 +398,7 @@ class JGitServiceSyncTest {
     for (int i = 0; i < numberOfThreads; i++) {
       service.execute(() -> {
         try {
-          jGitService.amend(repositoryName, refs, commitMessage, changeId, filepath, filecontent);
-        } catch (Exception e) {
-          log.error("error", e);
-          // Handle exception
-        } finally {
-          latch.countDown();
-        }
-      });
-    }
-    latch.await();
-
-    Assertions.assertThat(counter.getCompletedIterations()).isEqualTo(numberOfThreads);
-    var errorList = counter.getErrorList();
-    if (!errorList.isEmpty()) {
-      throw errorList.get(0);
-    }
-  }
-
-  @Test
-  @SneakyThrows
-  void deleteSyncTest() {
-    final var repositoryName = RandomString.make();
-    final var refs = RandomString.make();
-    final var commitMessage = RandomString.make();
-    final var changeId = RandomString.make();
-    final var filepath = RandomString.make();
-
-    var file = new File(tempDir, repositoryName);
-    Assertions.assertThat(file.createNewFile()).isTrue();
-
-    Counter counter = new Counter(2);
-
-    when(jGitWrapper.open(file)).thenReturn(git);
-    when(git.getRepository()).thenReturn(repository);
-    when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-    when(gerritPropertiesConfig.getUser()).thenReturn("user");
-    when(gerritPropertiesConfig.getPassword()).thenReturn("password");
-    when(gerritPropertiesConfig.getUrl()).thenReturn("https://gerrit");
-    when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
-
-    FetchCommand fetchCommand = mock(FetchCommand.class);
-
-    when(git.fetch()).thenReturn(fetchCommand);
-    when(fetchCommand.setCredentialsProvider(any())).thenReturn(fetchCommand);
-
-    when(fetchCommand.setRefSpecs(refs)).thenReturn(fetchCommand);
-    when(fetchCommand.call()).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called fetch command for {}", Thread.currentThread().getName());
-      counter.check(0);
-      return null;
-    });
-
-    CheckoutCommand checkoutCommand = mock(CheckoutCommand.class);
-    when(git.checkout()).thenReturn(checkoutCommand);
-    when(checkoutCommand.setName("FETCH_HEAD")).thenReturn(checkoutCommand);
-    when(checkoutCommand.call()).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called checkout command for {}", Thread.currentThread().getName());
-      counter.check(1);
-      return null;
-    });
-
-    int numberOfThreads = 5;
-    ExecutorService service = Executors.newFixedThreadPool(numberOfThreads);
-    CountDownLatch latch = new CountDownLatch(numberOfThreads);
-
-    for (int i = 0; i < numberOfThreads; i++) {
-      service.execute(() -> {
-        try {
-          jGitService.delete(repositoryName, filepath, refs, commitMessage, changeId);
+          jGitService.amend(repositoryName, filepath, filecontent);
         } catch (Exception e) {
           log.error("error", e);
           // Handle exception
