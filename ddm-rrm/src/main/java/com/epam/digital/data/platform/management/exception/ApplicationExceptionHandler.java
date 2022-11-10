@@ -31,6 +31,11 @@ import com.epam.digital.data.platform.management.model.exception.DetailedErrorRe
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
+import com.epam.digital.data.platform.management.users.exception.CephInvocationException;
+import com.epam.digital.data.platform.management.users.exception.FileEncodingException;
+import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
+import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
+import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.lang.annotation.Annotation;
 import java.util.Objects;
@@ -67,8 +72,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GERRIT_COMMUNICATION_EXCEPTION = "GERRIT_COMMUNICATION_EXCEPTION";
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
-  private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
-  private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
   private static final String SETTINGS_PARSING_EXCEPTION = "SETTINGS_PARSING_EXCEPTION";
   private static final String BUSINESS_PROCESS_CONTENT_EXCEPTION = "BUSINESS_PROCESS_CONTENT_EXCEPTION";
   private static final String CONSTRAINT_VIOLATION_EXCEPTION = "CONSTRAINT_VIOLATION_EXCEPTION";
@@ -218,22 +221,6 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Business process already exists exception", exception);
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(newDetailedResponse(BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION, exception));
-  }
-
-  @ExceptionHandler
-  public ResponseEntity<DetailedErrorResponse> handleReadingRepositoryException(
-      ReadingRepositoryException exception) {
-    log.error("Something went wrong with git repository opening", exception);
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(newDetailedResponse(READING_REPOSITORY_EXCEPTION, exception));
-  }
-
-  @ExceptionHandler
-  public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
-      WritingRepositoryException exception) {
-    log.error("Could not write file to repository");
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(newDetailedResponse(WRITING_REPOSITORY_EXCEPTION, exception));
   }
 
   @ExceptionHandler

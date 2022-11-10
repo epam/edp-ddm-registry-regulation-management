@@ -31,9 +31,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
-import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
-import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.users.service.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.util.TestUtils;
 import java.util.UUID;
 import lombok.SneakyThrows;
