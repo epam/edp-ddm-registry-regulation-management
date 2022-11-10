@@ -35,7 +35,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
     CacheConfig.class,
     CacheAutoConfiguration.class,
     GitRetryable.class,
-    JGitServiceImpl.class})
+    JGitServiceImpl.class,
+    GitFileService.class})
 abstract class AbstractJGitServiceTest {
 
   @TempDir
@@ -48,8 +49,6 @@ abstract class AbstractJGitServiceTest {
   JGitWrapper jGitWrapper;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
-  @MockBean
-  GitFileService gitFileService;
 
   @BeforeEach
   void setUp() {

@@ -151,38 +151,23 @@ public class VersionedFileRepositoryTest {
   @Test
   @SneakyThrows
   void writeFileTest() {
-    final var refs = RandomString.make();
-    final var commitMessage = RandomString.make();
-    final var changeId = RandomString.make();
     final var filepath = "folder/" + RandomString.make();
     final var fileContent = RandomString.make();
-    var changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setSubject(commitMessage);
-    changeInfoDto.setRefs(refs);
-    changeInfoDto.setChangeId(changeId);
-    var changeInfo = new ChangeInfoDto();
-    changeInfo.setChangeId(changeId);
-    changeInfo.setNumber("1");
-    Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
-    Mockito.when(gerritService.getMRByNumber(eq("version"))).thenReturn(changeInfo);
+
     repository.writeFile(filepath, fileContent);
-    Mockito.verify(gerritService, Mockito.times(1)).getChangeInfo(changeId);
-    Mockito.verify(jGitService, Mockito.times(1))
-        .amend("version", refs, commitMessage, changeId, filepath, fileContent);
+
+    Mockito.verify(jGitService).amend("version", filepath, fileContent);
   }
 
   @Test
   @SneakyThrows
   void deleteTest() {
-    var changeInfo = new ChangeInfoDto();
-    changeInfo.setChangeId("changeId");
-    changeInfo.setNumber("1");
-    ChangeInfoDto changeInfoDto = new ChangeInfoDto();
-    changeInfoDto.setSubject("change");
-    Mockito.when(gerritService.getMRByNumber(eq("version"))).thenReturn(changeInfo);
-    Mockito.when(gerritService.getChangeInfo("changeId")).thenReturn(changeInfoDto);
-    assertThatCode(() -> repository.deleteFile("forms/form.json"))
+    final var filepath = "folder/" + RandomString.make();
+
+    assertThatCode(() -> repository.deleteFile(filepath))
         .doesNotThrowAnyException();
+
+    Mockito.verify(jGitService).delete("version", filepath);
   }
 
   @Test

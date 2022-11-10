@@ -98,35 +98,29 @@ public interface JGitService {
   String getFileContent(@NonNull String repositoryName, @NonNull String filePath);
 
   /**
-   * Amend commit with file
+   * Amend commit with file and push to refs for head-branch. It requires that repository already is
+   * checkout on FETCH_HEAD for successful push to repo
    *
    * @param repositoryName name of the specified repository
-   * @param refs           ref info
-   * @param commitMessage  commit message
-   * @param changeId       identifier of commit
    * @param filePath       file location on FileSystem
    * @param fileContent    content of file
    * @throws RepositoryNotFoundException if repository not exists
-   * @throws GitCommandException         in case if it couldn't open repo or fetch or reset git
-   *                                     command failures
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     remote add or push git command failures
    */
-  void amend(String repositoryName, String refs, String commitMessage, String changeId,
-      String filePath, String fileContent);
+  void amend(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent);
 
   /**
-   * Delete file in current gerrit change
+   * Delete file and push to refs for head-branch. It requires that repository already is checkout
+   * on FETCH_HEAD for successful push to repo
    *
    * @param repositoryName name of the specified repository
    * @param filePath       file location on FileSystem
-   * @param refs           ref info
-   * @param commitMessage  commit message
-   * @param changeId       identifier of commit
    * @throws RepositoryNotFoundException if repository not exists
-   * @throws GitCommandException         in case if it couldn't open repo or fetch or reset git
-   *                                     command failures
+   * @throws GitCommandException         in case if it couldn't open repo or rm, log, commit, remote
+   *                                     add or push git command failures
    */
-  void delete(String repositoryName, String filePath, String refs, String commitMessage,
-      String changeId);
+  void delete(@NonNull String repositoryName, @NonNull String filePath);
 
   /**
    * Delete repository from FileSystem

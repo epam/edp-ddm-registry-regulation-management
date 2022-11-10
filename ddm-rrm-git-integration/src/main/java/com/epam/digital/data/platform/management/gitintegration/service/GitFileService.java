@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,25 +33,24 @@ public class GitFileService {
   private GerritPropertiesConfig config;
 
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public File writeFile(String repositoryName, String fileContent, String filePath) {
-    if (fileContent != null) {
-      var repositoryDirectory = FilenameUtils.normalizeNoEndSeparator(
-          config.getRepositoryDirectory());
-      var fileDirectory = FilenameUtils.getPathNoEndSeparator(filePath);
-      var fullPath = repositoryDirectory + File.separator +
-          repositoryName + File.separator + fileDirectory;
+  @NonNull
+  public File writeFile(@NonNull String repositoryName, @NonNull String fileContent,
+      @NonNull String filePath) {
+    var repositoryDirectory = FilenameUtils.normalizeNoEndSeparator(
+        config.getRepositoryDirectory());
+    var fileDirectory = FilenameUtils.getPathNoEndSeparator(filePath);
+    var fullPath = repositoryDirectory + File.separator +
+        repositoryName + File.separator + fileDirectory;
 
-      var file = new File(FilenameUtils.normalizeNoEndSeparator(fullPath),
-          FilenameUtils.getName(filePath));
-      try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-        writer.write(fileContent);
-      } catch (IOException e) {
-        throw new GitCommandException(
-            String.format("Exception occurred during writing content to file %s: %s", filePath,
-                e.getMessage()), e);
-      }
-      return file;
+    var file = new File(FilenameUtils.normalizeNoEndSeparator(fullPath),
+        FilenameUtils.getName(filePath));
+    try (var writer = new BufferedWriter(new FileWriter(file))) {
+      writer.write(fileContent);
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during writing content to file %s: %s", filePath,
+              e.getMessage()), e);
     }
-    return null;
+    return file;
   }
 }

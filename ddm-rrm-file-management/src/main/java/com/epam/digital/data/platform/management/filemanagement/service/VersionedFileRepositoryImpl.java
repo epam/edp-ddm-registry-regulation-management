@@ -86,12 +86,7 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
 
   @Override
   public void writeFile(@NonNull String path, @NonNull String content) {
-    String changeId = getChangeId();
-    if (changeId != null) {
-      ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
-      gitService.amend(versionId, changeInfo.getRefs(), changeInfo.getSubject(),
-          changeInfo.getChangeId(), path, content);
-    }
+    gitService.amend(versionId, path, content);
   }
 
   @Override
@@ -106,12 +101,7 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
 
   @Override
   public void deleteFile(@NonNull String path) {
-    String changeId = getChangeId();
-    if (changeId != null) {
-      ChangeInfoDto changeInfo = gerritService.getChangeInfo(changeId);
-      gitService.delete(changeInfo.getNumber(), path, changeInfo.getRefs(),
-          changeInfo.getSubject(), changeInfo.getChangeId());
-    }
+    gitService.delete(versionId, path);
   }
 
   @Override
