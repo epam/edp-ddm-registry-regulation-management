@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.settings.model;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.NoArgsConstructor;
-import lombok.EqualsAndHashCode;
 
 @Getter
 @Setter
+@Builder
 @ToString
-@NoArgsConstructor
-@AllArgsConstructor
 @EqualsAndHashCode
-public class GlobalVarsDto {
+public class SettingsInfoDto {
 
+  private String titleFull;
+  private String title;
   private String themeFile;
   private String supportEmail;
+//  private List<String> blacklistedDomains; TODO uncomment after validator-cli update
+
 
 }
-

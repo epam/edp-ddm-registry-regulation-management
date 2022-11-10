@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.settings.model;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import java.util.List;
+import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 @Getter
 @Setter
-@Builder
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
-public class GlobalSettingsInfo {
+public class CamundaGlobalSystemVarsFileRepresentationDto {
 
-  private String titleFull;
-  private String title;
   private String themeFile;
   private String supportEmail;
-//  private List<String> blacklistedDomains; TODO uncomment after validator-cli update
-
 
 }
+
