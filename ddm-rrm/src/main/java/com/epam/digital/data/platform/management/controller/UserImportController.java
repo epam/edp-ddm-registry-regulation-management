@@ -16,12 +16,12 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
+import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.security.annotation.HttpSecurityContext;
 import com.epam.digital.data.platform.management.security.annotation.PreAuthorizeUserManagementRole;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
-import com.epam.digital.data.platform.management.service.UserImportService;
+import com.epam.digital.data.platform.management.users.service.UserImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

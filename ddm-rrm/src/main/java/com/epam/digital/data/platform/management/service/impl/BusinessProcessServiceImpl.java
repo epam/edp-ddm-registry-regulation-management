@@ -20,16 +20,13 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
-import com.epam.digital.data.platform.management.exception.ReadingRepositoryException;
-import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
-import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
-import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -107,33 +104,23 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     String processPath = getProcessPath(processName);
     var time = LocalDateTime.now();
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
-    try {
-      if (repo.isFileExists(processPath)) {
-        String oldContent = repo.readFile(processPath);
-        fileDatesDto = getDatesFromContent(oldContent);
-      }
-      if (fileDatesDto.getCreate() == null) {
-        fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
-            .filter(fileResponse -> fileResponse.getName().equals(processName))
-            .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
-      }
-      content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-      repo.writeFile(processPath, content);
-    } catch (Exception e) {
-      throw new ReadingRepositoryException("Could not read repo to update process", e);
+    if (repo.isFileExists(processPath)) {
+      String oldContent = repo.readFile(processPath);
+      fileDatesDto = getDatesFromContent(oldContent);
     }
+    if (fileDatesDto.getCreate() == null) {
+      fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
+          .filter(fileResponse -> fileResponse.getName().equals(processName))
+          .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
+    }
+    content = addDatesToContent(content, fileDatesDto.getCreate(), time);
+    repo.writeFile(processPath, content);
   }
 
   @Override
   public void deleteProcess(String processName, String versionName) {
-    try {
-      VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
-      repo.deleteFile(getProcessPath(processName));
-    } catch (GerritChangeNotFoundException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new ReadingRepositoryException("Could not read repo to delete process", e);
-    }
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    repo.deleteFile(getProcessPath(processName));
   }
 
   private String getNameFromContent(String processContent) {
@@ -158,37 +145,29 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     VersionedFileRepository repo;
     VersionedFileRepository masterRepo;
     List<VersionedFileInfoDto> fileList;
-    try {
-      repo = repoFactory.getRepoByVersion(versionName);
-      fileList = repo.getFileList(DIRECTORY_PATH);
-      masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
-    } catch (GerritChangeNotFoundException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new ReadingRepositoryException("Could not read repo to get process", e);
-    }
+    repo = repoFactory.getRepoByVersion(versionName);
+    fileList = repo.getFileList(DIRECTORY_PATH);
+    masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
     List<BusinessProcessResponse> processes = new ArrayList<>();
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
       }
       String processContent;
-      try {
-        if (versionedFileInfoDto.getStatus() == FileStatus.DELETED) {
-          processContent = masterRepo.readFile(getProcessPath(versionedFileInfoDto.getName()));
-        } else {
-          processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
-        }
-      } catch (Exception e) {
-        throw new GerritCommunicationException("Could not read file from master", e);
+      if (versionedFileInfoDto.getStatus() == FileStatus.DELETED) {
+        processContent = masterRepo.readFile(getProcessPath(versionedFileInfoDto.getName()));
+      } else {
+        processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
       }
       FileDatesDto fileDatesDto = getDatesFromContent(processContent);
       processes.add(BusinessProcessResponse.builder()
           .name(versionedFileInfoDto.getName())
           .path(versionedFileInfoDto.getPath())
           .status(versionedFileInfoDto.getStatus())
-          .created(Optional.ofNullable(fileDatesDto.getCreate()).orElse(versionedFileInfoDto.getCreated()))
-          .updated(Optional.ofNullable(fileDatesDto.getUpdate()).orElse(versionedFileInfoDto.getUpdated()))
+          .created(Optional.ofNullable(fileDatesDto.getCreate())
+              .orElse(versionedFileInfoDto.getCreated()))
+          .updated(Optional.ofNullable(fileDatesDto.getUpdate())
+              .orElse(versionedFileInfoDto.getUpdated()))
           .title(getNameFromContent(processContent))
           .build());
     }

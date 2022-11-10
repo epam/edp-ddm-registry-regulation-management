@@ -35,17 +35,23 @@ import com.epam.digital.data.platform.management.controller.MasterVersionFormsCo
 import com.epam.digital.data.platform.management.controller.UserImportController;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.model.dto.CephFileInfoDto;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.forms.service.FormService;
-import com.epam.digital.data.platform.management.service.impl.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.users.exception.CephInvocationException;
+import com.epam.digital.data.platform.management.users.exception.FileEncodingException;
+import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
+import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
+import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.users.exception.VaultInvocationException;
+import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
+import com.epam.digital.data.platform.management.users.service.UserImportServiceImpl;
+import com.epam.digital.data.platform.management.users.validator.Validator;
 import com.epam.digital.data.platform.management.util.TestUtils;
-import com.epam.digital.data.platform.management.validator.Validator;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.util.UUID;
 import javax.validation.ConstraintViolationException;
@@ -253,21 +259,6 @@ class ApplicationExceptionHandlerTest {
             status().isBadRequest(),
             jsonPath("$.code").value(is("FILE_EXTENSION_ERROR")),
             jsonPath("$.localizedMessage").value(is("Невідповідний формат файлу.")));
-  }
-
-  @Test
-  @SneakyThrows
-  void shouldReturnRuntimeErrorOnReadingRepositoryException() {
-    var repoName = RandomString.make();
-    when(gerritPropertiesConfig.getHeadBranch()).thenReturn(repoName);
-    when(formService.getFormListByVersion(repoName))
-        .thenThrow(ReadingRepositoryException.class);
-
-    mockMvc.perform(get("/versions/master/forms"))
-        .andExpect(status().isInternalServerError())
-        .andExpectAll(
-            jsonPath("$.code").value(is("READING_REPOSITORY_EXCEPTION")),
-            jsonPath("$.statusDetails").doesNotExist());
   }
 
   @Test

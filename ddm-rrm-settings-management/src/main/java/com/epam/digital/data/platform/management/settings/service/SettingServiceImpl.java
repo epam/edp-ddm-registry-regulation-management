@@ -18,9 +18,9 @@ package com.epam.digital.data.platform.management.settings.service;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
-import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
-import com.epam.digital.data.platform.management.settings.model.SettingsFileRepresentationDto;
 import com.epam.digital.data.platform.management.settings.model.CamundaGlobalSystemVarsFileRepresentationDto;
+import com.epam.digital.data.platform.management.settings.model.SettingsFileRepresentationDto;
+import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -54,18 +54,21 @@ public class SettingServiceImpl implements SettingService {
 
   @Override
   public void updateSettings(String versionCandidateId, SettingsInfoDto settings) {
-    YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
-    log.debug("YAMLMapper was initialized");
-    log.debug("Trying to get repo");
+    YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(
+        YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
+    log.debug("YAMLMapper was initialized. Trying to get repo");
     VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
     log.debug("Finished getting repo for {} version", versionCandidateId);
-    CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(settings.getThemeFile(), settings.getSupportEmail());
-    SettingsFileRepresentationDto settingDto = new SettingsFileRepresentationDto(settings.getTitleFull(), settings.getTitle()/*, settings.getBlacklistedDomains()*/); // TODO uncomment after validator-cli update
+    CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(settings.getThemeFile(),
+        settings.getSupportEmail());
+    SettingsFileRepresentationDto settingDto = new SettingsFileRepresentationDto(settings.getTitleFull(),
+        settings.getTitle()/*, settings.getBlacklistedDomains()*/); // TODO uncomment after validator-cli update
     writeSettingsContent(repo, mapper, settingDto);
     writeGlobalVarsContent(repo, mapper, camundaDto);
   }
 
-  private static SettingsInfoDto parseSettingsFiles(String camundaGlobalVarsContent, String settingsContent) {
+  private static SettingsInfoDto parseSettingsFiles(String camundaGlobalVarsContent,
+      String settingsContent) {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory())
         .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -89,8 +92,8 @@ public class SettingServiceImpl implements SettingService {
     }
   }
 
-
-  private void writeSettingsContent(VersionedFileRepository repo, ObjectMapper mapper, SettingsFileRepresentationDto settings) {
+  private void writeSettingsContent(VersionedFileRepository repo, ObjectMapper mapper,
+      SettingsFileRepresentationDto settings) {
     try {
       log.debug("Writing settings to file");
       repo.writeFile(VERSION_SETTINGS_PATH, mapper.writeValueAsString(settings));
@@ -100,7 +103,8 @@ public class SettingServiceImpl implements SettingService {
     }
   }
 
-  private void writeGlobalVarsContent(VersionedFileRepository repo, ObjectMapper mapper, CamundaGlobalSystemVarsFileRepresentationDto globalVars) {
+  private void writeGlobalVarsContent(VersionedFileRepository repo, ObjectMapper mapper,
+      CamundaGlobalSystemVarsFileRepresentationDto globalVars) {
     try {
       log.debug("Writing global vars to file");
       repo.writeFile(GLOBAL_SETTINGS_PATH, mapper.writeValueAsString(globalVars));

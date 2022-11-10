@@ -29,6 +29,7 @@
     <module>ddm-rrm-security</module>
     <module>ddm-rrm-file-management</module>
     <module>ddm-rrm-scheduled-jobs</module>
+    <module>ddm-rrm-user-management</module>
     <module>ddm-rrm-form-management</module>
     <module>ddm-rrm-settings-management</module>
   </modules>

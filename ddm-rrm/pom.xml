@@ -34,7 +34,7 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-rrm-openshift-integration</artifactId>
+      <artifactId>ddm-rrm-user-management</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -106,6 +106,10 @@
         <exclusion>
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
