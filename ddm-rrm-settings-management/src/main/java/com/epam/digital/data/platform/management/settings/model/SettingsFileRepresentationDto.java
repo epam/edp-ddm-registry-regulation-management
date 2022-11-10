@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.settings.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
@@ -22,20 +22,18 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
-
 @Getter
 @Setter
 @ToString
 @EqualsAndHashCode
-public class SettingDto {
+public class SettingsFileRepresentationDto {
 
   private Settings settings = new Settings();
 
-  public SettingDto() {
+  public SettingsFileRepresentationDto() {
   }
 
-  public SettingDto(String titleFull, String title/*, List<String> domains*/) {
+  public SettingsFileRepresentationDto(String titleFull, String title/*, List<String> domains*/) {
 //TODO uncomment after validator-cli update
 //    settings.getGeneral().getValidation().getEmail().getBlacklist().setDomains(domains);
     settings.getGeneral().setTitleFull(titleFull);

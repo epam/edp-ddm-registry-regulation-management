@@ -30,6 +30,7 @@
     <module>ddm-rrm-file-management</module>
     <module>ddm-rrm-scheduled-jobs</module>
     <module>ddm-rrm-form-management</module>
+    <module>ddm-rrm-settings-management</module>
   </modules>
 
   <properties>

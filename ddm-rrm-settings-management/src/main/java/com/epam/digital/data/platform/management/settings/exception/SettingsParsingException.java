@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.exception;
+package com.epam.digital.data.platform.management.settings.exception;
 
-public class SettingsProcessingException extends RuntimeException {
+public class SettingsParsingException extends RuntimeException {
 
-  public SettingsProcessingException(String message) {
+  public SettingsParsingException(String message) {
     super(message);
   }
 
-  public SettingsProcessingException(String message, Throwable cause) {
+  public SettingsParsingException(String message, Throwable cause) {
     super(message, cause);
   }
 }

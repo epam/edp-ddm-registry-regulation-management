@@ -30,6 +30,7 @@ import com.epam.digital.data.platform.management.i18n.FileValidatorErrorMessageT
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
+import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.lang.annotation.Annotation;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
   private static final String READING_REPOSITORY_EXCEPTION = "READING_REPOSITORY_EXCEPTION";
   private static final String WRITING_REPOSITORY_EXCEPTION = "WRITING_REPOSITORY_EXCEPTION";
-  private static final String SETTINGS_PROCESSING_EXCEPTION = "SETTINGS_PROCESSING_EXCEPTION";
+  private static final String SETTINGS_PARSING_EXCEPTION = "SETTINGS_PARSING_EXCEPTION";
   private static final String BUSINESS_PROCESS_CONTENT_EXCEPTION = "BUSINESS_PROCESS_CONTENT_EXCEPTION";
   private static final String CONSTRAINT_VIOLATION_EXCEPTION = "CONSTRAINT_VIOLATION_EXCEPTION";
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
@@ -237,10 +238,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
   @ExceptionHandler
   public ResponseEntity<DetailedErrorResponse> handleWritingRepositoryException(
-      SettingsProcessingException exception) {
+      SettingsParsingException exception) {
     log.error("Could not parse settings files");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(newDetailedResponse(SETTINGS_PROCESSING_EXCEPTION, exception));
+        .body(newDetailedResponse(SETTINGS_PARSING_EXCEPTION, exception));
   }
 
   @ExceptionHandler

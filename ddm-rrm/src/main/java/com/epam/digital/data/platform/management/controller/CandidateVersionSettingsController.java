@@ -16,9 +16,9 @@
 
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.GlobalSettingService;
+import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
+import com.epam.digital.data.platform.management.settings.service.SettingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class CandidateVersionSettingsController {
 
-  private final GlobalSettingService globalSettingService;
+  private final SettingService settingService;
 
   @Operation(description = "Get existing settings for version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -56,7 +56,7 @@ public class CandidateVersionSettingsController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = GlobalSettingsInfo.class))),
+                  schema = @Schema(implementation = SettingsInfoDto.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -70,13 +70,13 @@ public class CandidateVersionSettingsController {
               description = "Internal server error",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<GlobalSettingsInfo> getSettings(
+  public ResponseEntity<SettingsInfoDto> getSettings(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
       String versionCandidateId) {
     log.info("Called #getSettings() for {} version candidate", versionCandidateId);
-    var globalSetting = globalSettingService.getGlobalSettings(versionCandidateId);
+    var setting = settingService.getSettings(versionCandidateId);
     log.info("Got settings for {} version candidate", versionCandidateId);
-    return ResponseEntity.ok(globalSetting);
+    return ResponseEntity.ok(setting);
   }
 
   @Operation(description = "Update existing settings for version-candidate",
@@ -108,16 +108,16 @@ public class CandidateVersionSettingsController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping
-  public ResponseEntity<GlobalSettingsInfo> updateSettings(
-      @RequestBody GlobalSettingsInfo settings,
+  public ResponseEntity<SettingsInfoDto> updateSettings(
+      @RequestBody SettingsInfoDto settings,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
       String versionCandidateId) {
     log.info("Called #updateSettings() for {} version candidate", versionCandidateId);
-    globalSettingService.updateSettings(versionCandidateId, settings);
+    settingService.updateSettings(versionCandidateId, settings);
     log.info("Updated settings for {} version candidate", versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(globalSettingService.getGlobalSettings(versionCandidateId));
+        .body(settingService.getSettings(versionCandidateId));
   }
 
 }

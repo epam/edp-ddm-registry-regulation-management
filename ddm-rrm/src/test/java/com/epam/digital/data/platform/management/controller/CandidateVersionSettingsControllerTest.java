@@ -25,8 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
-import com.epam.digital.data.platform.management.service.GlobalSettingService;
+import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
+import com.epam.digital.data.platform.management.settings.service.SettingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,7 @@ import org.springframework.web.context.WebApplicationContext;
 class CandidateVersionSettingsControllerTest {
 
   @MockBean
-  GlobalSettingService globalSettingService;
+  SettingService settingService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -60,7 +60,7 @@ class CandidateVersionSettingsControllerTest {
   @DisplayName("GET /versions/candidates/{versionCandidateId}/settings should return 200 with settings content")
   @SneakyThrows
   void getSettings() {
-    final var expectedSettingsInfo = GlobalSettingsInfo.builder()
+    final var expectedSettingsInfo = SettingsInfoDto.builder()
         .themeFile("white-theme.js")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
@@ -68,7 +68,7 @@ class CandidateVersionSettingsControllerTest {
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.doReturn(expectedSettingsInfo)
-        .when(globalSettingService).getGlobalSettings("1");
+        .when(settingService).getSettings("1");
 
     mockMvc.perform(
         get("/versions/candidates/{versionCandidateId}/settings", "1")
@@ -82,14 +82,14 @@ class CandidateVersionSettingsControllerTest {
         jsonPath("$.supportEmail", is("support@registry.gov.ua"))
 //        jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
     ).andDo(document("versions/candidates/{versionCandidateId}/settings/GET"));
-    Mockito.verify(globalSettingService).getGlobalSettings("1");
+    Mockito.verify(settingService).getSettings("1");
   }
 
   @Test
   @DisplayName("PUT /versions/candidates/{versionCandidateId}/settings should return 200 with settings content")
   @SneakyThrows
   void updateSettings() {
-    final var expectedSettingsInfo = GlobalSettingsInfo.builder()
+    final var expectedSettingsInfo = SettingsInfoDto.builder()
         .themeFile("white-theme.js")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
@@ -97,7 +97,7 @@ class CandidateVersionSettingsControllerTest {
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.doReturn(expectedSettingsInfo)
-        .when(globalSettingService).getGlobalSettings("1");
+        .when(settingService).getSettings("1");
 
     mockMvc.perform(
         put("/versions/candidates/{versionCandidateId}/settings", "1")
@@ -114,7 +114,7 @@ class CandidateVersionSettingsControllerTest {
 //        jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
     ).andDo(document("versions/candidates/{versionCandidateId}/settings/PUT"));
 
-    Mockito.verify(globalSettingService).getGlobalSettings("1");
-    Mockito.verify(globalSettingService).updateSettings("1", expectedSettingsInfo);
+    Mockito.verify(settingService).getSettings("1");
+    Mockito.verify(settingService).updateSettings("1", expectedSettingsInfo);
   }
 }

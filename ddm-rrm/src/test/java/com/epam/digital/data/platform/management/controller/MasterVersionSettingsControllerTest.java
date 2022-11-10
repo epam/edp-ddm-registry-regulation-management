@@ -25,8 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.model.dto.GlobalSettingsInfo;
-import com.epam.digital.data.platform.management.service.impl.GlobalSettingServiceImpl;
+import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
+import com.epam.digital.data.platform.management.settings.service.SettingServiceImpl;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +47,7 @@ class MasterVersionSettingsControllerTest {
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
   @MockBean
-  GlobalSettingServiceImpl globalSettingServiceImpl;
+  SettingServiceImpl settingService;
 
   @BeforeEach
   void setUp(WebApplicationContext webApplicationContext,
@@ -65,7 +65,7 @@ class MasterVersionSettingsControllerTest {
     Mockito.doReturn(headBranch)
         .when(gerritPropertiesConfig).getHeadBranch();
 
-    final var expectedSettingsInfo = GlobalSettingsInfo.builder()
+    final var expectedSettingsInfo = SettingsInfoDto.builder()
         .themeFile("white-theme.js")
         .title("mdtuddm")
         .titleFull("<Назва реєстру>")
@@ -73,7 +73,7 @@ class MasterVersionSettingsControllerTest {
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .build();
     Mockito.doReturn(expectedSettingsInfo)
-        .when(globalSettingServiceImpl).getGlobalSettings(headBranch);
+        .when(settingService).getSettings(headBranch);
 
     mockMvc.perform(
         get("/versions/master/settings")
@@ -88,6 +88,6 @@ class MasterVersionSettingsControllerTest {
 //        jsonPath("$.blacklistedDomains", hasSize(2)) TODO uncomment after validator-cli update
     ).andDo(document("versions/master/settings/GET"));
 
-    Mockito.verify(globalSettingServiceImpl).getGlobalSettings(headBranch);
+    Mockito.verify(settingService).getSettings(headBranch);
   }
 }
