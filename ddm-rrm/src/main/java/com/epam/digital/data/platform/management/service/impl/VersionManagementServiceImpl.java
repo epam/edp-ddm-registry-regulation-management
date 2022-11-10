@@ -26,7 +26,7 @@ import com.epam.digital.data.platform.management.gerritintegration.model.CreateC
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
 import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
@@ -180,11 +180,11 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         .build();
   }
 
-  private BusinessProcessChangesInfo toChangeInfo(BusinessProcessResponse businessProcessResponse) {
+  private BusinessProcessChangesInfo toChangeInfo(BusinessProcessInfoDto businessProcessInfoDto) {
     return BusinessProcessChangesInfo.builder()
-        .name(businessProcessResponse.getName())
-        .title(businessProcessResponse.getTitle())
-        .status(businessProcessResponse.getStatus())
+        .name(businessProcessInfoDto.getName())
+        .title(businessProcessInfoDto.getTitle())
+        .status(businessProcessInfoDto.getStatus())
         .build();
   }
 

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.validator.businessProcess;
+package com.epam.digital.data.platform.management.validation.businessProcess;
 
-import com.epam.digital.data.platform.management.controller.BusinessProcess;
 import java.io.IOException;
 import java.io.StringReader;
 import javax.validation.ConstraintValidator;

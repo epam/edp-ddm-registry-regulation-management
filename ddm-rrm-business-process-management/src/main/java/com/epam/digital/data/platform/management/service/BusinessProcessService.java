@@ -16,14 +16,14 @@
 
 package com.epam.digital.data.platform.management.service;
 
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import java.util.List;
 
 public interface BusinessProcessService {
 
-  List<BusinessProcessResponse> getProcessesByVersion(String versionName);
+  List<BusinessProcessInfoDto> getProcessesByVersion(String versionName);
 
-  List<BusinessProcessResponse> getChangedProcessesByVersion(String versionName);
+  List<BusinessProcessInfoDto> getChangedProcessesByVersion(String versionName);
 
   void createProcess(String processName, String content, String versionName);
 

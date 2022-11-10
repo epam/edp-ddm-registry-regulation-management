@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.exception;
 
 import static com.epam.digital.data.platform.management.security.enumeration.Header.TRACE_ID;
 
-import com.epam.digital.data.platform.management.controller.BusinessProcess;
+import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
@@ -215,9 +215,9 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(CONFLICT_ERROR, exception));
   }
 
-  @ExceptionHandler(BusinessProcessAlreadyExists.class)
+  @ExceptionHandler(BusinessProcessAlreadyExistsException.class)
   public ResponseEntity<DetailedErrorResponse> handleBusinessProcessAlreadyExistsException(
-      BusinessProcessAlreadyExists exception) {
+      BusinessProcessAlreadyExistsException exception) {
     log.error("Business process already exists exception", exception);
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(newDetailedResponse(BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION, exception));

@@ -16,19 +16,22 @@
 
 package com.epam.digital.data.platform.management.service;
 
-import static com.epam.digital.data.platform.management.util.TestUtils.getContent;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.springframework.util.StreamUtils.copyToString;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
-import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExists;
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessResponse;
-import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
-import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
@@ -93,9 +96,9 @@ public class BusinessProcessServiceTest {
     Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
         .thenReturn(PROCESS_CONTENT);
 
-    List<BusinessProcessResponse> expectedBusinessProcessesList = businessProcessService.getProcessesByVersion(
+    List<BusinessProcessInfoDto> expectedBusinessProcessesList = businessProcessService.getProcessesByVersion(
         VERSION_ID);
-    BusinessProcessResponse expectedBusinessProcess = BusinessProcessResponse.builder()
+    BusinessProcessInfoDto expectedBusinessProcess = BusinessProcessInfoDto.builder()
         .name("business-process")
         .title("Really test name")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
@@ -135,7 +138,7 @@ public class BusinessProcessServiceTest {
         .thenReturn(true);
     Assertions.assertThatThrownBy(
             () -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
-        .isInstanceOf(BusinessProcessAlreadyExists.class);
+        .isInstanceOf(BusinessProcessAlreadyExistsException.class);
 
     Mockito.verify(repository, never()).writeFile(any(), any());
   }
@@ -191,4 +194,12 @@ public class BusinessProcessServiceTest {
 
     Mockito.verify(repository).deleteFile("bpmn/business-process." + BPMN_FILE_EXTENSION);
   }
+
+  @SneakyThrows
+  public static String getContent(String filePath) {
+    return copyToString(
+        BusinessProcessServiceTest.class.getClassLoader().getResourceAsStream(filePath),
+        StandardCharsets.UTF_8);
+  }
+
 }

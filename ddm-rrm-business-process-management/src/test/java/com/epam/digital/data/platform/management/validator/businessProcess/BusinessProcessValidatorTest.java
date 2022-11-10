@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.validator.businessProcess;
 
 import static org.mockito.ArgumentMatchers.anyString;
 
+import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcessValidator;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
