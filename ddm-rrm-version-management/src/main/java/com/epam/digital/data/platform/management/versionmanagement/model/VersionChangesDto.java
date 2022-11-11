@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.versionmanagement.model;
 
+import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,9 +30,9 @@ import java.util.List;
 @Builder
 @ToString
 @EqualsAndHashCode
-public class VersionChanges {
+public class VersionChangesDto {
 
-  private List<FormChangesInfo> changedForms;
-  private List<BusinessProcessChangesInfo> changedBusinessProcesses;
+  private List<EntityChangesInfoDto> changedForms;
+  private List<EntityChangesInfoDto> changedBusinessProcesses;
 
 }

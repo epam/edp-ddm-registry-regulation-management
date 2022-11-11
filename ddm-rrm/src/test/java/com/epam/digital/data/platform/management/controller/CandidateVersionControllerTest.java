@@ -29,13 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
-import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.mapper.RequestToDtoMapper;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.VersionChanges;
-import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
+import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
+import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,6 +59,9 @@ class CandidateVersionControllerTest {
 
   @MockBean
   VersionManagementServiceImpl versionManagementService;
+
+  @MockBean
+  RequestToDtoMapper mapper;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -72,7 +76,7 @@ class CandidateVersionControllerTest {
   @DisplayName("GET /versions/candidates should return 200 with all versions")
   @SneakyThrows
   void getVersionListTest() {
-    final var expectedChangeInfoResponse = ChangeInfoDetailedDto.builder()
+    final var expectedChangeInfoResponse = VersionInfoDto.builder()
         .number(1)
         .subject("JohnDoe's version candidate")
         .description("Version candidate to change form")
@@ -98,7 +102,7 @@ class CandidateVersionControllerTest {
   @DisplayName("POST /versions/candidates should return 200 with new created version info")
   @SneakyThrows
   void createNewVersionTest() {
-    final var expectedVersionDetails = ChangeInfoDetailedDto.builder()
+    final var expectedVersionDetails = VersionInfoDto.builder()
         .number(1)
         .subject("JohnDoe's version candidate")
         .description("Version candidate to change form")
@@ -113,8 +117,10 @@ class CandidateVersionControllerTest {
     var request = new CreateVersionRequest();
     request.setName("JohnDoe's version candidate");
     request.setDescription("Version candidate to change form");
-    Mockito.when(versionManagementService.createNewVersion(request)).thenReturn("1");
-
+    final var dto = CreateChangeInputDto.builder().name(request.getName())
+        .description(request.getDescription()).build();
+    Mockito.when(versionManagementService.createNewVersion(dto)).thenReturn("1");
+    Mockito.doReturn(dto).when(mapper).toDto(request);
     mockMvc.perform(
         post("/versions/candidates")
             .contentType(MediaType.APPLICATION_JSON)
@@ -141,7 +147,7 @@ class CandidateVersionControllerTest {
   @DisplayName("GET /versions/candidates/{versionCandidateId} should return 200 with version info")
   @SneakyThrows
   void getVersionDetailsTest() {
-    var expectedVersionDetails = ChangeInfoDetailedDto.builder()
+    var expectedVersionDetails = VersionInfoDto.builder()
         .number(1)
         .subject("JohnDoe's version candidate")
         .description("Version candidate to change form")
@@ -221,17 +227,17 @@ class CandidateVersionControllerTest {
   @DisplayName("GET /versions/candidates/{versionCandidateId}/changes should return 200 with all changes info")
   @SneakyThrows
   void getChangesTest() {
-    final var expectedChangedForm = FormChangesInfo.builder()
+    final var expectedChangedForm = EntityChangesInfoDto.builder()
         .name("formToBeUpdated")
         .title("JohnDoe's form")
         .status(FileStatus.CHANGED)
         .build();
-    final var expectedChangedProcess = BusinessProcessChangesInfo.builder()
+    final var expectedChangedProcess = EntityChangesInfoDto.builder()
         .name("newProcess")
         .title("JohnDoe's process")
         .status(FileStatus.NEW)
         .build();
-    final var expectedChanges = VersionChanges.builder()
+    final var expectedChanges = VersionChangesDto.builder()
         .changedForms(List.of(expectedChangedForm))
         .changedBusinessProcesses(List.of(expectedChangedProcess))
         .build();

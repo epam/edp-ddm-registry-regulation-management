@@ -25,8 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
-import com.epam.digital.data.platform.management.service.VersionManagementService;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import java.time.LocalDateTime;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ class MasterVersionControllerTest {
   @DisplayName("GET /versions/master should return 200 with last merged change info")
   @SneakyThrows
   void getMaster() {
-    var expectedChangeInfo = ChangeInfoDetailedDto.builder()
+    var expectedChangeInfo = VersionInfoDto.builder()
         .number(1)
         .owner("JohnDoe@epam.com")
         .description("Version candidate to change form")

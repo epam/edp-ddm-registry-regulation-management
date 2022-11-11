@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service;
+package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
@@ -24,10 +24,9 @@ import com.epam.digital.data.platform.management.gerritintegration.model.CreateC
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
-import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
-import com.epam.digital.data.platform.management.service.impl.VersionManagementServiceImpl;
+import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +36,11 @@ import org.assertj.core.api.Condition;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -53,6 +54,10 @@ class VersionManagementServiceTest {
   private GerritPropertiesConfig config;
   @Mock
   private RegistryRegulationManagementEventPublisher publisher;
+
+  @Spy
+  private VersionManagementMapper versionManagementMapper = Mappers.getMapper(
+      VersionManagementMapper.class);
 
   @InjectMocks
   private VersionManagementServiceImpl managementService;
@@ -82,7 +87,7 @@ class VersionManagementServiceTest {
 
     var actualVersionsList = managementService.getVersionsList();
 
-    var expectedChangeInfoDto = ChangeInfoDetailedDto.builder()
+    var expectedChangeInfoDto = VersionInfoDto.builder()
         .id("changeInfoId")
         .number(1)
         .changeId("changeInfoChangeId")
@@ -134,7 +139,7 @@ class VersionManagementServiceTest {
 
     var resultList = managementService.getVersionFileList("3");
 
-    var expectedFirstVersionedFileInfoDto = VersionedFileInfo.builder()
+    var expectedFirstVersionedFileInfoDto = VersionedFileInfoDto.builder()
         .name("file1")
         .status("A")
         .size(50)
@@ -144,7 +149,7 @@ class VersionManagementServiceTest {
         .build();
     var expectedFirstVersionedFileInfo = new Condition<>(expectedFirstVersionedFileInfoDto::equals,
         "equals to expected file info - ", expectedFirstVersionedFileInfoDto);
-    var expectedSecondVersionedFileInfoDto = VersionedFileInfo.builder()
+    var expectedSecondVersionedFileInfoDto = VersionedFileInfoDto.builder()
         .name("file2")
         .status(null)
         .size(33)
@@ -174,7 +179,7 @@ class VersionManagementServiceTest {
         .build();
     Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn(versionNumber);
 
-    final var createVersion = CreateVersionRequest.builder()
+    final var createVersion = CreateChangeInputDto.builder()
         .name(versionName)
         .description(versionDescription)
         .build();
@@ -202,7 +207,7 @@ class VersionManagementServiceTest {
 
     var actualChangeInfoDetailedDto = managementService.getVersionDetails("1");
 
-    var expectedChangeInfoDetailedDto = ChangeInfoDetailedDto.builder()
+    var expectedChangeInfoDetailedDto = VersionInfoDto.builder()
         .number(1)
         .owner("owner")
         .labels(Map.of())
@@ -243,7 +248,7 @@ class VersionManagementServiceTest {
 
     var result = managementService.getMasterInfo();
 
-    var expectedChangeInfoDto = ChangeInfoDetailedDto.builder()
+    var expectedChangeInfoDto = VersionInfoDto.builder()
         .id("changeInfoId")
         .number(1)
         .changeId("changeInfoChangeId")
@@ -296,7 +301,7 @@ class VersionManagementServiceTest {
     changeInfo.setMergeable(true);
     changeInfo.setLabels(Map.of("label1", false, "label2", false));
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
-    var expected = ChangeInfoDetailedDto.builder()
+    var expected = VersionInfoDto.builder()
         .id("changeInfoId")
         .number(1)
         .changeId("changeInfoChangeId")

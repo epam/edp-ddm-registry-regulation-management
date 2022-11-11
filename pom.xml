@@ -33,6 +33,7 @@
     <module>ddm-rrm-form-management</module>
     <module>ddm-rrm-settings-management</module>
     <module>ddm-rrm-business-process-management</module>
+    <module>ddm-rrm-version-management</module>
   </modules>
 
   <properties>

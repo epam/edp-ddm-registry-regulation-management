@@ -17,7 +17,7 @@ package com.epam.digital.data.platform.management.controller;
 
 import com.epam.digital.data.platform.management.model.dto.MasterVersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.VersionManagementService;
+import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

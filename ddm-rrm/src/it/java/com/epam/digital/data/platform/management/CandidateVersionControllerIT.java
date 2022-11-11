@@ -273,7 +273,7 @@ class CandidateVersionControllerIT extends BaseIT {
 
   @Nested
   @DisplayName("GET /versions/candidates/{versionCandidateId}/changes")
-  class CandidateVersionControllerVersionChangesIT {
+  class CandidateVersionControllerVersionChangesITDto {
 
     @Test
     @DisplayName("should return 200 with all changes")

@@ -14,27 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.service.impl;
+package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
-import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
-import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
-import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.FormChangesInfo;
-import com.epam.digital.data.platform.management.model.dto.VersionChanges;
-import com.epam.digital.data.platform.management.model.dto.VersionedFileInfo;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.forms.service.FormService;
-import com.epam.digital.data.platform.management.service.VersionManagementService;
+import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -56,18 +50,20 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
+  private final VersionManagementMapper versionManagementMapper;
+
   @Override
-  public List<ChangeInfoDetailedDto> getVersionsList() {
+  public List<VersionInfoDto> getVersionsList() {
     return gerritService.getMRList().stream()
-        .map(this::mapChangeInfo)
+        .map(versionManagementMapper::toVersionInfoDto)
         .collect(Collectors.toList());
   }
 
   @Override
   @Nullable
-  public ChangeInfoDetailedDto getMasterInfo() {
+  public VersionInfoDto getMasterInfo() {
     var changeInfo = gerritService.getLastMergedMR();
-    return mapChangeInfo(changeInfo);
+    return versionManagementMapper.toVersionInfoDto(changeInfo);
   }
 
   @Override
@@ -102,46 +98,36 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   @Override
-  public List<VersionedFileInfo> getVersionFileList(String versionName) {
-    return gerritService.getListOfChangesInMR(versionName).entrySet().stream()
-        .map(file -> VersionedFileInfo.builder()
-            .name(file.getKey())
-            .status(file.getValue().getStatus())
-            .lineInserted(file.getValue().getLinesInserted())
-            .lineDeleted(file.getValue().getLinesDeleted())
-            .size(file.getValue().getSize())
-            .sizeDelta(file.getValue().getSizeDelta())
-            .build())
+  public List<VersionedFileInfoDto> getVersionFileList(String versionName) {
+    return gerritService.getListOfChangesInMR(versionName).entrySet()
+        .stream()
+        .map(file -> versionManagementMapper.toVersionedFileInfoDto(file.getKey(), file.getValue()))
         .collect(Collectors.toList());
   }
 
   @Override
-  public String createNewVersion(CreateVersionRequest subject) {
-    final var changeInputDto = CreateChangeInputDto.builder()
-        .name(subject.getName())
-        .description(subject.getDescription())
-        .build();
-    var versionNumber = gerritService.createChanges(changeInputDto);
+  public String createNewVersion(CreateChangeInputDto createChangeInputDto) {
+    var versionNumber = gerritService.createChanges(createChangeInputDto);
     eventPublisher.publishVersionCandidateCreatedEvent(versionNumber);
     return versionNumber;
   }
 
   @Override
-  public ChangeInfoDetailedDto getVersionDetails(String versionName) {
+  public VersionInfoDto getVersionDetails(String versionName) {
     var e = gerritService.getMRByNumber(versionName);
     if (Objects.isNull(e)) {
       throw new GerritChangeNotFoundException("Could not find candidate with id " + versionName);
     }
-    return mapChangeInfo(e);
+    return versionManagementMapper.toVersionInfoDto(e);
   }
 
   @Override
-  public VersionChanges getVersionChanges(String versionCandidateId) {
+  public VersionChangesDto getVersionChanges(String versionCandidateId) {
     log.debug("Selecting form changes for version candidate {}", versionCandidateId);
     var forms = formService.getChangedFormsListByVersion(versionCandidateId)
         .stream()
         .filter(e -> !e.getStatus().equals(FileStatus.CURRENT))
-        .map(this::toChangeInfo)
+        .map(versionManagementMapper::formInfoDtoToChangeInfo)
         .collect(Collectors.toList());
 
     log.debug("Selecting business-process changes for version candidate {}", versionCandidateId);
@@ -149,50 +135,14 @@ public class VersionManagementServiceImpl implements VersionManagementService {
         .stream()
         .filter(businessProcessResponse -> !businessProcessResponse.getStatus()
             .equals(FileStatus.CURRENT))
-        .map(this::toChangeInfo)
+        .map(versionManagementMapper::bpInfoDtoToChangeInfo)
         .collect(Collectors.toList());
     log.debug("Changed: {} forms and {} business-processes", forms.size(),
         businessProcesses.size());
-    return VersionChanges.builder()
+    return VersionChangesDto.builder()
         .changedBusinessProcesses(businessProcesses)
         .changedForms(forms)
         .build();
   }
 
-  private ChangeInfoDetailedDto mapChangeInfo(ChangeInfoDto changeInfo) {
-    if (Objects.isNull(changeInfo)) {
-      return null;
-    }
-    return ChangeInfoDetailedDto.builder()
-        .id(changeInfo.getId())
-        .number(Integer.parseInt(changeInfo.getNumber()))
-        .changeId(changeInfo.getChangeId())
-        .branch(changeInfo.getBranch())
-        .created(changeInfo.getCreated())
-        .subject(changeInfo.getSubject())
-        .description(changeInfo.getTopic())
-        .project(changeInfo.getProject())
-        .submitted(changeInfo.getSubmitted())
-        .updated(changeInfo.getUpdated())
-        .owner(changeInfo.getOwner())
-        .mergeable(changeInfo.getMergeable())
-        .labels(changeInfo.getLabels())
-        .build();
-  }
-
-  private BusinessProcessChangesInfo toChangeInfo(BusinessProcessInfoDto businessProcessInfoDto) {
-    return BusinessProcessChangesInfo.builder()
-        .name(businessProcessInfoDto.getName())
-        .title(businessProcessInfoDto.getTitle())
-        .status(businessProcessInfoDto.getStatus())
-        .build();
-  }
-
-  private FormChangesInfo toChangeInfo(FormInfoDto formResponse) {
-    return FormChangesInfo.builder()
-        .name(formResponse.getName())
-        .title(formResponse.getTitle())
-        .status(formResponse.getStatus())
-        .build();
-  }
 }
