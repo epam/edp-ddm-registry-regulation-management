@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.versionmanagement.model;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -28,7 +28,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @EqualsAndHashCode
-public class ChangeInfoDetailedDto {
+public class VersionInfoDto {
 
   private String subject;
   private String description;

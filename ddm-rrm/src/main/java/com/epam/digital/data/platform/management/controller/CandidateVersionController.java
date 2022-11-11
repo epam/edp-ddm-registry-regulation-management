@@ -15,13 +15,15 @@
  */
 package com.epam.digital.data.platform.management.controller;
 
-import com.epam.digital.data.platform.management.model.dto.ChangeInfoDetailedDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.mapper.RequestToDtoMapper;
 import com.epam.digital.data.platform.management.model.dto.CreateVersionRequest;
-import com.epam.digital.data.platform.management.model.dto.VersionChanges;
 import com.epam.digital.data.platform.management.model.dto.VersionInfo;
 import com.epam.digital.data.platform.management.model.dto.VersionInfoDetailed;
 import com.epam.digital.data.platform.management.model.exception.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.VersionManagementService;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -30,7 +32,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,6 +54,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CandidateVersionController {
 
   private final VersionManagementService versionManagementService;
+  private final RequestToDtoMapper requestToDtoMapper;
 
   @Operation(description = "Get list of existing opened version-candidates",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -89,7 +91,6 @@ public class CandidateVersionController {
     log.info("Found {} version candidates", response.size());
     return ResponseEntity.ok(response);
   }
-
 
   @Operation(description = "Abandon the existing opened version-candidate. After this operation the version-candidate won't take any changes anymore.",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -197,7 +198,8 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> createNewVersion(
       @RequestBody CreateVersionRequest requestDto) {
     log.info("Creating new version with name {}", requestDto.getName());
-    var versionId = versionManagementService.createNewVersion(requestDto);
+    final CreateChangeInputDto changeInputDto = requestToDtoMapper.toDto(requestDto);
+    var versionId = versionManagementService.createNewVersion(changeInputDto);
     var changeInfo = versionManagementService.getVersionDetails(versionId);
     log.info("Version candidate with name {} was created: version id - {}", requestDto.getName(),
         versionId);
@@ -250,7 +252,7 @@ public class CandidateVersionController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = VersionChanges.class))),
+                  schema = @Schema(implementation = VersionChangesDto.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -267,9 +269,9 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @GetMapping("/{versionCandidateId}/changes")
-  public ResponseEntity<VersionChanges> getVersionChanges(
+  public ResponseEntity<VersionChangesDto> getVersionChanges(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-      String versionCandidateId) throws IOException {
+      String versionCandidateId) {
     log.info("Getting changes for version {}", versionCandidateId);
     var versionChanges = versionManagementService.getVersionChanges(versionCandidateId);
     log.info("Version changes for version {} found", versionCandidateId);
@@ -313,15 +315,15 @@ public class CandidateVersionController {
   }
 
   private VersionInfoDetailed mapToVersionInfoDetailed(
-      ChangeInfoDetailedDto changeInfoDetailedDto) {
+      VersionInfoDto versionInfoDto) {
     return VersionInfoDetailed.builder()
-        .id(String.valueOf(changeInfoDetailedDto.getNumber()))
-        .author(changeInfoDetailedDto.getOwner())
-        .creationDate(changeInfoDetailedDto.getCreated())
-        .description(changeInfoDetailedDto.getDescription())
-        .hasConflicts(Boolean.FALSE.equals(changeInfoDetailedDto.getMergeable()))
-        .latestUpdate(changeInfoDetailedDto.getUpdated())
-        .name(changeInfoDetailedDto.getSubject())
+        .id(String.valueOf(versionInfoDto.getNumber()))
+        .author(versionInfoDto.getOwner())
+        .creationDate(versionInfoDto.getCreated())
+        .description(versionInfoDto.getDescription())
+        .hasConflicts(Boolean.FALSE.equals(versionInfoDto.getMergeable()))
+        .latestUpdate(versionInfoDto.getUpdated())
+        .name(versionInfoDto.getSubject())
         .build();
   }
 }

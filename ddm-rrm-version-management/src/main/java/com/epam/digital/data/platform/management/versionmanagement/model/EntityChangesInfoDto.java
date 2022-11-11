@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.epam.digital.data.platform.management.model.dto;
+package com.epam.digital.data.platform.management.versionmanagement.model;
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import lombok.Builder;
@@ -28,8 +27,10 @@ import lombok.ToString;
 @Builder
 @ToString
 @EqualsAndHashCode
-public class FormChangesInfo {
+public class EntityChangesInfoDto {
+
   private String name;
   private String title;
   private FileStatus status;
+
 }

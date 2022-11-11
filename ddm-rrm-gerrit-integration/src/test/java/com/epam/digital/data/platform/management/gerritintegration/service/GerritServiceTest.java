@@ -57,7 +57,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class GerritServiceTest {
@@ -88,7 +87,6 @@ class GerritServiceTest {
     changeInfo._number = 5;
     changeInfos.add(changeInfo);
     Mockito.lenient().when(gerritApiImpl.changes()).thenReturn(changes);
-    ReflectionTestUtils.setField(gerritService, "gerritMapper", mapper);
   }
 
   @Test

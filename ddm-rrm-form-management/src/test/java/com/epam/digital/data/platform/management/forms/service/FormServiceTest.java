@@ -49,7 +49,6 @@ import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class FormServiceTest {
@@ -75,7 +74,6 @@ class FormServiceTest {
   @SneakyThrows
   void beforeEach() {
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
-    ReflectionTestUtils.setField(formService, "formMapper", formMapper);
   }
 
   @Test
