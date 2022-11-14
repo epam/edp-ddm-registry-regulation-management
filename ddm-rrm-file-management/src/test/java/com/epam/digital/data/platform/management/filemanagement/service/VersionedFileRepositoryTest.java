@@ -120,24 +120,28 @@ public class VersionedFileRepositoryTest {
     deletedFileInfo.setStatus("D");
     var renamedFileInfo = new FileInfoDto();
     renamedFileInfo.setStatus("R");
+    var copiedFileInfo = new FileInfoDto();
+    copiedFileInfo.setStatus("C");
 
     Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
     Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(
         Map.of("folder/file12", addedFileInfo,
             "folder/file2", deletedFileInfo,
             "folder/file14", renamedFileInfo,
-            "folder/file3", new FileInfoDto()));
+            "folder/file3", new FileInfoDto(),
+            "folder/file2copy", copiedFileInfo));
     Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(
-        List.of("file1", "file2", "file3"));
+        List.of("file1", "file2", "file3", "file2copy"));
     Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
     List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
-    Assertions.assertThat(fileList.size()).isEqualTo(5);
+    Assertions.assertThat(fileList.size()).isEqualTo(6);
     Assertions.assertThat(FileStatus.CURRENT).isEqualTo(getFileStatusByName(fileList, "file1"));
     Assertions.assertThat(FileStatus.DELETED).isEqualTo(getFileStatusByName(fileList, "file2"));
     Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file3"));
     Assertions.assertThat(FileStatus.NEW).isEqualTo(getFileStatusByName(fileList, "file12"));
     Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file14"));
+    Assertions.assertThat(FileStatus.NEW).isEqualTo(getFileStatusByName(fileList, "file2copy"));
   }
 
   private FileStatus getFileStatusByName(List<VersionedFileInfoDto> files, String name) {

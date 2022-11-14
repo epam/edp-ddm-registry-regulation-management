@@ -126,7 +126,7 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
     if (Objects.isNull(status) || status.equals("R")) {
       return FileStatus.CHANGED;
     }
-    if (status.equals("A")) {
+    if (status.equals("A") || status.equals("C")) {
       return FileStatus.NEW;
     }
     if (status.equals("D")) {
