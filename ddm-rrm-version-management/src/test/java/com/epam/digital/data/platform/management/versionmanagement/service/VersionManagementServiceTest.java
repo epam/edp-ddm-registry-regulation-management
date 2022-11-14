@@ -173,17 +173,17 @@ class VersionManagementServiceTest {
     final var versionDescription = RandomString.make();
     final var versionNumber = RandomString.make();
 
-    final var createVersionRequest = CreateChangeInputDto.builder()
+    final var createChangeInputDto = CreateChangeInputDto.builder()
         .name(versionName)
         .description(versionDescription)
         .build();
-    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn(versionNumber);
+    Mockito.when(gerritService.createChanges(createChangeInputDto)).thenReturn(versionNumber);
 
     final var createVersion = CreateChangeInputDto.builder()
         .name(versionName)
         .description(versionDescription)
         .build();
-    Mockito.when(gerritService.createChanges(createVersionRequest)).thenReturn(versionNumber);
+    Mockito.when(gerritService.createChanges(createChangeInputDto)).thenReturn(versionNumber);
 
     Mockito.doNothing().when(publisher).publishVersionCandidateCreatedEvent(versionNumber);
 
@@ -192,7 +192,7 @@ class VersionManagementServiceTest {
     Assertions.assertThat(actualVersion)
         .isEqualTo(versionNumber);
 
-    Mockito.verify(gerritService).createChanges(createVersionRequest);
+    Mockito.verify(gerritService).createChanges(createChangeInputDto);
     Mockito.verify(publisher).publishVersionCandidateCreatedEvent(versionNumber);
   }
 
