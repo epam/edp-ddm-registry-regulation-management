@@ -25,6 +25,7 @@ import com.epam.digital.data.platform.management.filemanagement.model.VersionedF
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.mapper.BusinessProcessMapper;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import java.io.IOException;
@@ -33,7 +34,6 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -57,6 +57,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   private static final String DIRECTORY_PATH = "bpmn";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
   private final VersionedFileRepositoryFactory repoFactory;
+  private final BusinessProcessMapper mapper;
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final DocumentBuilder documentBuilder;
@@ -75,10 +76,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void createProcess(String processName, String content, String versionName) {
-    VersionedFileRepository repo;
-    String processPath;
-    repo = repoFactory.getRepoByVersion(versionName);
-    processPath = getProcessPath(processName);
+    var processPath = getProcessPath(processName);
+    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
     if (repo.isFileExists(processPath)) {
       throw new BusinessProcessAlreadyExistsException(
           String.format("Process with path '%s' already exists", processPath));
@@ -124,12 +123,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private String getNameFromContent(String processContent) {
-    Document doc;
-    try {
-      doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
-    } catch (SAXException | IOException exception) {
-      throw new RuntimeException("Could not parse xml document", exception);
-    }
+    Document doc = parseBusinessProcess(processContent);
     doc.getDocumentElement().normalize();
     NodeList nodeList = doc.getElementsByTagName("bpmn:process");
     Node node = nodeList.item(0);
@@ -139,6 +133,14 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   private String getProcessPath(String processName) {
     return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName),
         BPMN_FILE_EXTENSION);
+  }
+
+  private Document parseBusinessProcess(String processContent) {
+    try {
+      return documentBuilder.parse(new InputSource(new StringReader(processContent)));
+    } catch (SAXException | IOException exception) {
+      throw new RuntimeException("Could not parse xml document", exception);
+    }
   }
 
   private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
@@ -160,17 +162,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       } else {
         processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
       }
-      FileDatesDto fileDatesDto = getDatesFromContent(processContent);
-      processes.add(BusinessProcessInfoDto.builder()
-          .name(versionedFileInfoDto.getName())
-          .path(versionedFileInfoDto.getPath())
-          .status(versionedFileInfoDto.getStatus())
-          .created(Optional.ofNullable(fileDatesDto.getCreate())
-              .orElse(versionedFileInfoDto.getCreated()))
-          .updated(Optional.ofNullable(fileDatesDto.getUpdate())
-              .orElse(versionedFileInfoDto.getUpdated()))
-          .title(getNameFromContent(processContent))
-          .build());
+      processes.add(mapper.toBusinessProcess(versionedFileInfoDto,
+          getDatesFromContent(processContent), getNameFromContent(processContent)));
     }
     return processes;
   }

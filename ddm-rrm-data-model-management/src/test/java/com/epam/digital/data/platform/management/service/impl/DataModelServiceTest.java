@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
+import com.epam.digital.data.platform.management.mapper.TableShortInfoMapper;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,9 +38,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +52,8 @@ public class DataModelServiceTest {
 
   @Mock
   ObjectMapper objectMapper;
+  @Spy
+  private TableShortInfoMapper mapper = Mappers.getMapper(TableShortInfoMapper.class);
   @InjectMocks
   DataModelServiceImpl tableService;
 

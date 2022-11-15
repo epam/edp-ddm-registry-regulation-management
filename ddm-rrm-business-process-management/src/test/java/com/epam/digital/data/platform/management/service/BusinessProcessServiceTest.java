@@ -29,6 +29,7 @@ import com.epam.digital.data.platform.management.filemanagement.model.FileStatus
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.mapper.BusinessProcessMapper;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
 import java.nio.charset.StandardCharsets;
@@ -40,10 +41,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -69,13 +72,15 @@ public class BusinessProcessServiceTest {
   private GerritPropertiesConfig gerritPropertiesConfig;
   @Autowired
   private DocumentBuilder documentBuilder;
+  @Spy
+  private BusinessProcessMapper businessProcessMapper = Mappers.getMapper(BusinessProcessMapper.class);
   private BusinessProcessServiceImpl businessProcessService;
 
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
     businessProcessService = new BusinessProcessServiceImpl(repositoryFactory,
-        gerritPropertiesConfig, documentBuilder);
+        businessProcessMapper, gerritPropertiesConfig, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
   }
 

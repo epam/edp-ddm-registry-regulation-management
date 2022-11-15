@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+package com.epam.digital.data.platform.management.mapper;
 
-@Getter
-@Setter
-@RequiredArgsConstructor
-@EqualsAndHashCode(of = "permissionId")
-public class RolePermissionShortInfoDto {
-  private int permissionId;
-  private String roleName;
-  private String objectName;
-  private String columnName;
-  private DdmRolePermissionOperation operation;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
+public interface TableShortInfoMapper {
+
+  TableShortInfoDto toTableShortInfoDto(TableInfoDto tableInfoDto);
 
 }
