@@ -17,6 +17,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
+import com.epam.digital.data.platform.management.mapper.TableShortInfoMapper;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +42,7 @@ public class DataModelServiceImpl implements DataModelService {
 
   public static final String DIRECTORY_PATH = "repositories/data-model-snapshot/tables";
   private static final String JSON_FILE_EXTENSION = "json";
-
+  private final TableShortInfoMapper mapper;
   private final ObjectMapper objectMapper;
 
   @Override
@@ -56,13 +57,7 @@ public class DataModelServiceImpl implements DataModelService {
     for (File file : files) {
       final String baseName = FilenameUtils.getBaseName(file.getName());
       log.trace("Getting table {}", baseName);
-      final TableInfoDto tableInfoDto = get(baseName);
-      tableDetails.add(TableShortInfoDto.builder()
-          .name(tableInfoDto.getName())
-          .description(tableInfoDto.getDescription())
-          .historyFlag(tableInfoDto.getHistoryFlag())
-          .objectReference(tableInfoDto.getObjectReference())
-          .build());
+      tableDetails.add(mapper.toTableShortInfoDto(get(baseName)));
     }
     log.debug("There were found {} tables", tableDetails.size());
     return tableDetails;

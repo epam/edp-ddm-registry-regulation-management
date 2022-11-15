@@ -17,18 +17,16 @@ package com.epam.digital.data.platform.management.validation.businessProcess;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.xerces.dom.DOMInputImpl;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
 
+@RequiredArgsConstructor
 public class SchemaResolver implements LSResourceResolver {
 
-  private String baseSchemaPath;
-
-  public SchemaResolver(String baseSchemaPath) {
-    this.baseSchemaPath = baseSchemaPath;
-  }
+  private final String baseSchemaPath;
 
   @Override
   public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId,
