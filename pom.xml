@@ -40,6 +40,7 @@
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
     <json-path.version>2.6.0</json-path.version>
     <schemacrawler.version>16.11.5</schemacrawler.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
     <sonar.coverage.exclusions>
       <!-- do not calc coverage for the classes without BL: -->
       **/model/**/*,
@@ -59,9 +60,14 @@
         <artifactId>spring-security-core</artifactId>
         <version>${spring-security-core.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>1.33</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
