@@ -25,7 +25,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +68,7 @@ public abstract class BaseIT {
   @SneakyThrows
   void setUp() {
     if (!context.getTestDirectory().exists()) {
-      Assertions.assertTrue(context.getTestDirectory().mkdirs());
+      Assertions.assertThat(context.getTestDirectory().mkdirs()).isTrue();
     }
 
     final var headDir = context.getHeadRepo();

@@ -19,7 +19,7 @@ package com.epam.digital.data.platform.management.gitintegration.service;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.opentest4j.AssertionFailedError;
 
 @Slf4j
@@ -49,7 +49,7 @@ class Counter {
       if (step == 0) {
         //checks that this is the first step
         try {
-          Assertions.assertEquals(curStep, (steps - 1));
+          Assertions.assertThat((steps - 1)).isEqualTo(curStep);
         } catch (AssertionFailedError e) {
           errorList.add(e);
           throw e;
@@ -61,10 +61,10 @@ class Counter {
       } else {
         // checks that this is the next step in the cur thread
         try {
-          Assertions.assertEquals(threadName, newThreadName);
-          Assertions.assertEquals(curStep + 1, step);
-          Assertions.assertTrue(step < steps);
-          Assertions.assertTrue(step > 0);
+          Assertions.assertThat(newThreadName).isEqualTo(threadName);
+          Assertions.assertThat(step).isEqualTo(curStep + 1);
+          Assertions.assertThat(step < steps).isTrue();
+          Assertions.assertThat(step > 0).isTrue();
         } catch (AssertionFailedError e) {
           errorList.add(e);
           throw e;
