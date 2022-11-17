@@ -29,10 +29,10 @@ import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.http.HttpStatus;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 public class GerritServiceChangeInfoTest extends AbstractGerritServiceTest {
 
   @Test
@@ -66,6 +66,9 @@ public class GerritServiceChangeInfoTest extends AbstractGerritServiceTest {
 
     Assertions.assertThatCode(() -> gerritService.getChangeInfo(changeId))
         .isInstanceOf(GerritChangeNotFoundException.class);
+
+    Mockito.verify(changeApiRestClient, Mockito.never()).get();
+    Mockito.verify(mapper, Mockito.never()).toChangeInfoDto(changeInfo);
   }
 
   @Test
@@ -76,6 +79,9 @@ public class GerritServiceChangeInfoTest extends AbstractGerritServiceTest {
 
     Assertions.assertThatCode(() -> gerritService.getChangeInfo(changeId))
         .isInstanceOf(GerritCommunicationException.class);
+
+    Mockito.verify(changeApiRestClient, Mockito.never()).get();
+    Mockito.verify(mapper, Mockito.never()).toChangeInfoDto(changeInfo);
   }
 
   @Test
@@ -86,6 +92,9 @@ public class GerritServiceChangeInfoTest extends AbstractGerritServiceTest {
 
     Assertions.assertThatCode(() -> gerritService.getChangeInfo(changeId))
         .isInstanceOf(GerritCommunicationException.class);
+
+    Mockito.verify(changeApiRestClient, Mockito.never()).get();
+    Mockito.verify(mapper, Mockito.never()).toChangeInfoDto(changeInfo);
   }
 
 }

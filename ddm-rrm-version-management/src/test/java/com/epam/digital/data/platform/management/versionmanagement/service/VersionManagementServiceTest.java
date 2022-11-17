@@ -219,9 +219,10 @@ class VersionManagementServiceTest {
   @Test
   @SneakyThrows
   void getVersionDetailsTest_notFound() {
-    Mockito.when(gerritService.getMRByNumber("1")).thenReturn(null);
+    var changeNumber = RandomString.make();
+    Mockito.when(gerritService.getMRByNumber(changeNumber)).thenReturn(null);
 
-    Assertions.assertThatThrownBy(() -> managementService.getVersionDetails("1"))
+    Assertions.assertThatThrownBy(() -> managementService.getVersionDetails(changeNumber))
         .isInstanceOf(GerritChangeNotFoundException.class);
   }
 
@@ -263,8 +264,7 @@ class VersionManagementServiceTest {
         .mergeable(true)
         .labels(Map.of("label1", true, "label2", false))
         .build();
-    Assertions.assertThat(result)
-        .isEqualTo(expectedChangeInfoDto);
+    Assertions.assertThat(result).isEqualTo(expectedChangeInfoDto);
   }
 
   @Test

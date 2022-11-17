@@ -17,8 +17,7 @@
 package com.epam.digital.data.platform.management.users.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
 import com.epam.digital.data.platform.management.users.util.TestUtils;
@@ -41,18 +40,17 @@ class TokenParserServiceTest {
 
     var jwtClaims = tokenParserService.parseClaims(token);
 
-    assertEquals("49acde86-8ab9-43f4-a74b-a9c9bf8eee53", jwtClaims.getSubject());
-    assertEquals("11111111", jwtClaims.getEdrpou());
-    assertEquals("0101010101", jwtClaims.getDrfo());
-    assertEquals("Петров Петр Петровіч", jwtClaims.getFullName());
+    assertThat(jwtClaims.getSubject()).isEqualTo("49acde86-8ab9-43f4-a74b-a9c9bf8eee53");
+    assertThat(jwtClaims.getEdrpou()).isEqualTo("11111111");
+    assertThat(jwtClaims.getDrfo()).isEqualTo("0101010101");
+    assertThat(jwtClaims.getFullName()).isEqualTo("Петров Петр Петровіч");
   }
 
   @Test
   void shouldThrowJwtParsingExceptionDueToParsingException() {
-    var exception = assertThrows(JwtParsingException.class,
-        () -> tokenParserService.parseClaims("qwert"));
-
-    assertThat(exception.getMessage()).isEqualTo("Error while JWT parsing");
+    assertThatCode(() -> tokenParserService.parseClaims("qwert"))
+        .isInstanceOf(JwtParsingException.class)
+        .hasMessage("Error while JWT parsing");
   }
 
 }

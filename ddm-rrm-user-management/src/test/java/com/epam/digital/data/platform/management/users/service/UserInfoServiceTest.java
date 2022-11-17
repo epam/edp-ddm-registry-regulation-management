@@ -16,15 +16,15 @@
 
 package com.epam.digital.data.platform.management.users.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.epam.digital.data.platform.management.users.util.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class UserInfoServiceTest {
 
   UserInfoService userInfoService;
@@ -36,6 +36,6 @@ class UserInfoServiceTest {
 
     var username = userInfoService.createUsername(token);
 
-    assertEquals("e481d63f631d9bb38680c52f42e4d7f0bda3acf207abe338ee6260b331bb43b3", username);
+    assertThat(username).isEqualTo("e481d63f631d9bb38680c52f42e4d7f0bda3acf207abe338ee6260b331bb43b3");
   }
 }

@@ -17,13 +17,10 @@
 package com.epam.digital.data.platform.management.osintegration.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
-import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
-import com.epam.digital.data.platform.management.osintegration.service.OpenShiftServiceImpl;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
@@ -37,10 +34,10 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @EnableKubernetesMockClient
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class OpenShiftServiceTest {
 
   static final String NAMESPACE = "test";
@@ -73,23 +70,21 @@ class OpenShiftServiceTest {
     openShiftService.startImport(id, securityContext());
 
     Job job = client.batch().v1().jobs().inNamespace(NAMESPACE).list().getItems().get(0);
-    assertEquals(JOB_NAME, job.getMetadata().getName());
+    assertThat(job.getMetadata().getName()).isEqualTo(JOB_NAME);
   }
 
   @Test
   void shouldThrowGetProcessingExceptionDueToEmptyCeph() {
-    var exception = assertThrows(GetProcessingException.class,
-        () -> openShiftService.startImport(null, securityContext()));
-
-    assertThat(exception.getMessage()).isEqualTo("Bucket is empty, nothing to import");
+    assertThatCode(() -> openShiftService.startImport(null, securityContext()))
+        .isInstanceOf(GetProcessingException.class)
+        .hasMessage("Bucket is empty, nothing to import");
   }
 
   @Test
   void shouldConvertAnyOpenShiftExceptionToOpenShiftInvocationException() {
-    var exception = assertThrows(OpenShiftInvocationException.class,
-        () -> openShiftService.startImport(UUID.randomUUID().toString(), securityContext()));
-
-    assertThat(exception.getMessage()).isEqualTo("Unable to create Job");
+    assertThatCode(() -> openShiftService.startImport(UUID.randomUUID().toString(), securityContext()))
+        .isInstanceOf(OpenShiftInvocationException.class)
+        .hasMessage("Unable to create Job");
   }
 
   private JobBuilder createJobBuilder() {
