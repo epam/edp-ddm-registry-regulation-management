@@ -17,9 +17,7 @@
 package com.epam.digital.data.platform.management.users.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -29,19 +27,15 @@ import static org.mockito.Mockito.when;
 import com.epam.digital.data.platform.integration.ceph.model.CephObject;
 import com.epam.digital.data.platform.integration.ceph.model.CephObjectMetadata;
 import com.epam.digital.data.platform.integration.ceph.service.CephService;
+import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
+import com.epam.digital.data.platform.management.osintegration.service.VaultService;
+import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.users.exception.CephInvocationException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.VaultInvocationException;
 import com.epam.digital.data.platform.management.users.model.CephFileDto;
 import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
 import com.epam.digital.data.platform.management.users.model.ValidationResult;
-import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
-import com.epam.digital.data.platform.management.osintegration.service.VaultService;
-import com.epam.digital.data.platform.management.security.model.SecurityContext;
-import com.epam.digital.data.platform.management.users.service.UserImportService;
-import com.epam.digital.data.platform.management.users.service.UserImportServiceImpl;
-import com.epam.digital.data.platform.management.users.service.UserInfoService;
-import com.epam.digital.data.platform.management.users.service.ValidatorService;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -56,11 +50,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class UserImportServiceTest {
 
   static final UUID CEPH_ENTITY_ID = UUID.fromString("10e23e2a-6830-42a6-bf21-d0a4a90b5706");
@@ -109,10 +103,10 @@ class UserImportServiceTest {
     when(validatorService.validate(file))
         .thenThrow(new FileLoadProcessingException("File cannot be saved to Ceph - file is null or empty"));
 
-    var exception = assertThrows(FileLoadProcessingException.class,
-        () -> userImportService.storeFile(file, new SecurityContext()));
+    assertThatCode(() -> userImportService.storeFile(file, new SecurityContext()))
+        .isInstanceOf(FileLoadProcessingException.class)
+        .hasMessage("File cannot be saved to Ceph - file is null or empty");
 
-    assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
   }
 
   @Test
@@ -129,10 +123,10 @@ class UserImportServiceTest {
     final String stringCephEntity = CEPH_ENTITY_ID.toString();
     doThrow(RuntimeException.class).when(cephService).delete(FILE_BUCKET, Set.of(stringCephEntity));
 
-    var exception = assertThrows(CephInvocationException.class,
-        () -> userImportService.delete(stringCephEntity));
+    assertThatCode(() -> userImportService.delete(stringCephEntity))
+        .isInstanceOf(CephInvocationException.class)
+        .hasMessage("Failed delete file to ceph, cephKey: " + stringCephEntity);
 
-    assertThat(exception.getMessage()).isEqualTo("Failed delete file to ceph, cephKey: " + stringCephEntity);
   }
 
   @Test
@@ -154,7 +148,7 @@ class UserImportServiceTest {
 
     verify(cephService).getKeys(FILE_BUCKET, StringUtils.EMPTY);
     verify(cephService).getMetadata(FILE_BUCKET, setOfKeys);
-    assertEquals(expectedFilesInfo, filesInfo);
+    assertThat(filesInfo).isEqualTo(expectedFilesInfo);
   }
 
   @Test
@@ -162,10 +156,9 @@ class UserImportServiceTest {
     when(userInfoService.createUsername("userToken")).thenReturn("userName");
     when(cephService.getKeys(FILE_BUCKET, StringUtils.EMPTY)).thenThrow(new RuntimeException());
 
-    var exception = assertThrows(CephInvocationException.class,
-        () -> userImportService.getFileInfo(new SecurityContext("userToken")));
-
-    assertThat(exception.getMessage()).isEqualTo("Failed retrieve files info");
+    assertThatCode(() -> userImportService.getFileInfo(new SecurityContext("userToken")))
+        .isInstanceOf(CephInvocationException.class)
+        .hasMessage("Failed retrieve files info");
   }
 
   @Test
@@ -184,9 +177,9 @@ class UserImportServiceTest {
 
     CephFileDto cephFileDto = userImportService.downloadFile(CEPH_ENTITY_ID.toString());
 
-    assertArrayEquals(contentBytes, cephFileDto.getContent().readAllBytes());
-    assertEquals(fileName, cephFileDto.getFileName());
-    assertEquals(cephServiceResponse.getMetadata().getContentLength(), cephFileDto.getContentLength());
+    assertThat(cephFileDto.getContent().readAllBytes()).isEqualTo(contentBytes);
+    assertThat(cephFileDto.getFileName()).isEqualTo(fileName);
+    assertThat(cephFileDto.getContentLength()).isEqualTo(cephServiceResponse.getMetadata().getContentLength());
   }
 
   @Test
@@ -194,10 +187,9 @@ class UserImportServiceTest {
     String stringCephEntity = CEPH_ENTITY_ID.toString();
     when(cephService.get(FILE_BUCKET, stringCephEntity)).thenThrow(RuntimeException.class);
 
-    var exception = assertThrows(CephInvocationException.class,
-        () -> userImportService.downloadFile(stringCephEntity));
-
-    assertThat(exception.getMessage()).isEqualTo("Failed download file from ceph, cephKey: " + stringCephEntity);
+    assertThatCode(() -> userImportService.downloadFile(stringCephEntity))
+        .isInstanceOf(CephInvocationException.class)
+        .hasMessage("Failed download file from ceph, cephKey: " + stringCephEntity);
   }
 
   @Test
@@ -209,11 +201,10 @@ class UserImportServiceTest {
         .build();
     when(cephService.get(FILE_BUCKET, stringCephEntity)).thenReturn(Optional.of(cephServiceResponse));
 
-    var exception = assertThrows(GetProcessingException.class,
-        () -> userImportService.downloadFile(stringCephEntity));
+    assertThatCode(() -> userImportService.downloadFile(stringCephEntity))
+        .isInstanceOf(GetProcessingException.class)
+        .hasMessage("Failed download file from ceph - missed file name, cephKey: " + stringCephEntity);
 
-    assertThat(exception.getMessage())
-        .isEqualTo("Failed download file from ceph - missed file name, cephKey: " + stringCephEntity);
   }
 
   @Test
@@ -223,9 +214,9 @@ class UserImportServiceTest {
     when(vaultService.encrypt(any())).thenThrow(new RuntimeException());
     when(validatorService.validate(file)).thenReturn(validationResult);
 
-    var exception = assertThrows(VaultInvocationException.class,
-        () -> userImportService.storeFile(file, new SecurityContext()));
+    assertThatCode(() -> userImportService.storeFile(file, new SecurityContext()))
+        .isInstanceOf(VaultInvocationException.class)
+        .hasMessage("Exception during Vault content encryption");
 
-    assertThat(exception.getMessage()).isEqualTo("Exception during Vault content encryption");
   }
 }

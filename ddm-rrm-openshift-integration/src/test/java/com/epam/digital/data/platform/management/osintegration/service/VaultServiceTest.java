@@ -16,20 +16,18 @@
 
 package com.epam.digital.data.platform.management.osintegration.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.epam.digital.data.platform.management.osintegration.service.VaultService;
-import com.epam.digital.data.platform.management.osintegration.service.VaultServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.vault.core.VaultOperations;
 import org.springframework.vault.core.VaultTransitOperations;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class VaultServiceTest {
 
   static final String VAULT_KEY = "key";
@@ -55,7 +53,7 @@ class VaultServiceTest {
 
     var encryptedContent = vaultService.encrypt(content);
 
-    assertEquals(content, encryptedContent);
+    assertThat(encryptedContent).isEqualTo(content);
   }
 
   @Test
@@ -65,6 +63,6 @@ class VaultServiceTest {
 
     var decryptedContent = vaultService.decrypt(content);
 
-    assertEquals(content, decryptedContent);
+    assertThat(decryptedContent).isEqualTo(content);
   }
 }

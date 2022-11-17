@@ -43,9 +43,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 public class DataModelServiceTest {
   static final String DATA_MODEL_SNAPSHOT_TABLES_TABLE_SAMPLE_JSON = "repositories/data-model-snapshot/tables/table_sample.json";
   static final String DATA_MODEL_SNAPSHOT_DIRECTORY = "repositories/data-model-snapshot/tables";

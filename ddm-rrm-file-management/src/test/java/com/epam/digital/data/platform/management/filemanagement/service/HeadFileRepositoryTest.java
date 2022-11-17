@@ -16,8 +16,6 @@
 
 package com.epam.digital.data.platform.management.filemanagement.service;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
@@ -38,9 +36,9 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 public class HeadFileRepositoryTest {
 
   @Mock
@@ -81,7 +79,6 @@ public class HeadFileRepositoryTest {
     Mockito.verify(jGitService).getFilesInPath("version", path);
     Mockito.verify(jGitService).getDates("version", normalizePath);
     Mockito.verify(mapper).toVersionedFileInfoDto(normalizePath, fileDatesDto);
-
   }
 
   @Test
@@ -99,9 +96,12 @@ public class HeadFileRepositoryTest {
   @Test
   @SneakyThrows
   void readFileTest() {
-    Mockito.when(jGitService.getFileContent(any(), any())).thenReturn("");
-    var fileContent = repository.readFile("/");
+    var path = RandomString.make();
+    var content = RandomString.make();
+    Mockito.when(jGitService.getFileContent("version", path)).thenReturn(content);
+    var fileContent = repository.readFile(path);
     Assertions.assertThat(fileContent).isNotNull();
+    Assertions.assertThat(fileContent).isEqualTo(content);
   }
 
   @Test
@@ -115,10 +115,14 @@ public class HeadFileRepositoryTest {
   @Test
   @SneakyThrows
   void isFileExistsTest() {
-    ArrayList<String> t = new ArrayList<>();
-    t.add("fileName");
-    Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
+    ArrayList<String> files = new ArrayList<>();
+    files.add("fileName");
+
+    final String normalize = FilenameUtils.normalize("/");
+    Mockito.when(jGitService.getFilesInPath("version", normalize)).thenReturn(files);
     var fileExists = repository.isFileExists("/fileName");
+
     Assertions.assertThat(fileExists).isTrue();
+    Mockito.verify(jGitService).getFilesInPath("version", normalize);
   }
 }

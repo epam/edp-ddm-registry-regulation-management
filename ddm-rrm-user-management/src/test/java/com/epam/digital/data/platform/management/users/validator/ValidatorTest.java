@@ -16,15 +16,22 @@
 
 package com.epam.digital.data.platform.management.users.validator;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.epam.digital.data.platform.management.users.exception.FileEncodingException;
 import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.model.ValidationResult;
-import com.epam.digital.data.platform.management.users.validator.Validator;
 import com.epam.digital.data.platform.management.users.validator.format.FileEncodingValidator;
 import com.epam.digital.data.platform.management.users.validator.format.FileExtensionValidator;
 import com.epam.digital.data.platform.management.users.validator.generic.FileExistenceValidator;
 import com.epam.digital.data.platform.management.users.validator.generic.FileNameValidator;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
 import org.apache.any23.encoding.EncodingDetector;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,21 +39,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class ValidatorTest {
 
   @Mock
@@ -86,9 +82,9 @@ class ValidatorTest {
     verify(file).isEmpty();
     verify(file).getInputStream();
     verify(file, times(2)).getOriginalFilename();
-    assertEquals(fileName, validationResult.getFileName());
-    assertEquals(encoding, validationResult.getEncoding());
-    assertEquals("csv", validationResult.getExtension());
+    assertThat(validationResult.getFileName()).isEqualTo(fileName);
+    assertThat(validationResult.getEncoding()).isEqualTo(encoding);
+    assertThat(validationResult.getExtension()).isEqualTo("csv");
   }
 
 
@@ -109,15 +105,14 @@ class ValidatorTest {
       validator.validate(file, validationResult);
 
       verify(file).getOriginalFilename();
-      assertEquals(fileName, validationResult.getFileName());
+      assertThat(validationResult.getFileName()).isEqualTo(fileName);
     }
 
     @Test
     void shouldThrowFileLoadProcessingException() {
-      var exception = assertThrows(FileLoadProcessingException.class,
-          () -> validator.validate(file, new ValidationResult()));
-
-      assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file name is missed");
+      assertThatCode(() -> validator.validate(file, new ValidationResult()))
+          .isInstanceOf(FileLoadProcessingException.class)
+          .hasMessage("File cannot be saved to Ceph - file name is missed");
     }
   }
 
@@ -142,10 +137,9 @@ class ValidatorTest {
     void shouldThrowFileLoadProcessingException() {
       when(file.isEmpty()).thenReturn(true);
 
-      var exception = assertThrows(FileLoadProcessingException.class,
-          () -> validator.validate(file, new ValidationResult()));
-
-      assertThat(exception.getMessage()).isEqualTo("File cannot be saved to Ceph - file is null or empty");
+      assertThatCode(() -> validator.validate(file, new ValidationResult()))
+          .isInstanceOf(FileLoadProcessingException.class)
+          .hasMessage("File cannot be saved to Ceph - file is null or empty");
     }
   }
 
@@ -172,7 +166,7 @@ class ValidatorTest {
       validator.validate(file, validationResult);
 
       verify(file).getInputStream();
-      assertEquals(encoding, validationResult.getEncoding());
+      assertThat(validationResult.getEncoding()).isEqualTo(encoding);
     }
 
     @Test
@@ -182,11 +176,11 @@ class ValidatorTest {
       when(file.getInputStream()).thenReturn(stream);
       when(encodingDetector.guessEncoding(stream)).thenReturn("ISO_8859_1");
 
-      var exception = assertThrows(FileEncodingException.class,
-          () -> validator.validate(file, new ValidationResult()));
+      assertThatCode(() -> validator.validate(file, new ValidationResult()))
+          .isInstanceOf(FileEncodingException.class)
+          .hasMessage("Wrong file encoding, should be UTF-8");
 
       verify(file).getInputStream();
-      assertThat(exception.getMessage()).isEqualTo("Wrong file encoding, should be UTF-8");
     }
 
     @Test
@@ -196,11 +190,11 @@ class ValidatorTest {
       when(file.getInputStream()).thenReturn(stream);
       when(encodingDetector.guessEncoding(stream)).thenThrow(new RuntimeException());
 
-      var exception = assertThrows(FileLoadProcessingException.class,
-          () -> validator.validate(file, new ValidationResult()));
+      assertThatCode(() -> validator.validate(file, new ValidationResult()))
+          .isInstanceOf(FileLoadProcessingException.class)
+          .hasMessage("Error during encoding validation");
 
       verify(file).getInputStream();
-      assertThat(exception.getMessage()).isEqualTo("Error during encoding validation");
     }
   }
 
@@ -221,17 +215,17 @@ class ValidatorTest {
       validator.validate(file, validationResult);
 
       verify(file).getOriginalFilename();
-      assertEquals("csv", validationResult.getExtension());
+      assertThat(validationResult.getExtension()).isEqualTo("csv");
     }
 
     @Test
     void shouldThrowFileExtensionException() {
       when(file.getOriginalFilename()).thenReturn("test.txt");
 
-      var exception = assertThrows(FileExtensionException.class,
-          () -> validator.validate(file, new ValidationResult()));
+      assertThatCode(() -> validator.validate(file, new ValidationResult()))
+          .isInstanceOf(FileExtensionException.class)
+          .hasMessage("Wrong or missed file extension, should be: csv");
 
-      assertThat(exception.getMessage()).isEqualTo("Wrong or missed file extension, should be: csv");
     }
   }
 }

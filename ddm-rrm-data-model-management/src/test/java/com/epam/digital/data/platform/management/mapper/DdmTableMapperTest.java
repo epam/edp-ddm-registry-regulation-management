@@ -21,20 +21,22 @@ import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import data.model.snapshot.model.DdmTable;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mapstruct.factory.Mappers;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class DdmTableMapperTest {
 
-  DdmTableMapper mapper = new DdmTableMapperImpl();
+  DdmTableMapper mapper = Mappers.getMapper(DdmTableMapper.class);
 
   @Test
   @SneakyThrows
   void mapToDdmTableTest() {
-    String description = "Table description";
-    String name = "Table name";
+    var description = RandomString.make();
+    var name = RandomString.make();
 
     final var tableInfoDto = new TableInfoDto();
     tableInfoDto.setDescription(description);

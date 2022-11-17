@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.assertj.core.api.Assertions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
@@ -81,7 +81,7 @@ class SettingServiceTest {
         .build();
     settingServiceImpl.updateSettings(VERSION_ID, expected);
     SettingsInfoDto actual = settingServiceImpl.getSettings(VERSION_ID);
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -110,6 +110,6 @@ class SettingServiceTest {
         .themeFile("white-theme.js")
         .build();
     SettingsInfoDto actual = settingServiceImpl.getSettings(VERSION_ID);
-    assertEquals(expected, actual);
+    assertThat(actual).isEqualTo(expected);
   }
 }
