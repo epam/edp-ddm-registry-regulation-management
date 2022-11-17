@@ -4,14 +4,16 @@ void call() {
             "-n ${NAMESPACE} | base64 --decode", returnStdout: true)
     String JENKINS_ADMIN_PASSWORD = sh(script: "oc get secret jenkins-admin-token -o jsonpath={.data.password} " +
             "-n ${NAMESPACE} | base64 --decode", returnStdout: true)
-    String JENKINS_URL_WITH_CREDS = "http://$JENKINS_ADMIN_USERNAME:$JENKINS_ADMIN_PASSWORD@jenkins.${NAMESPACE}.svc:8080"
+    String JENKINS_PATH = sh(script: "oc get route jenkins -o jsonpath={.spec.path} -n $NAMESPACE", returnStdout: true).replaceAll("/\\z", "")
+    String JENKINS_URL_WITH_CREDS = "http://$JENKINS_ADMIN_USERNAME:$JENKINS_ADMIN_PASSWORD@jenkins.${NAMESPACE}.svc:8080$JENKINS_PATH"
     String gerritSecretName = "gerrit-ciuser-password"
     String registryRepoName = "registry-regulations"
     String gerritUser = sh(script: "oc get secret $gerritSecretName -o jsonpath={.data.user} " +
             "-n $NAMESPACE | base64 --decode", returnStdout: true)
     String gerritPass = sh(script: "oc get secret $gerritSecretName -o jsonpath={.data.password} " +
             "-n $NAMESPACE | base64 --decode", returnStdout: true)
-    String gerritHost = "gerrit.${NAMESPACE}.svc.cluster.local:8080"
+    String gerritPath = sh(script: "oc get route gerrit -o jsonpath={.spec.path} -n $NAMESPACE", returnStdout: true).replaceAll("/\\z", "")
+    String gerritHost = "gerrit.${NAMESPACE}.svc.cluster.local:8080$gerritPath"
     String repoUrl = "http://$gerritUser:$gerritPass@$gerritHost/$registryRepoName"
     String isRepoExists = sh(script: "set +x; git ls-remote $repoUrl | grep master > /dev/null", returnStatus: true)
 

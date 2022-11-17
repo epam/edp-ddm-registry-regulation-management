@@ -77,6 +77,7 @@ vault:
 gerrit:
   secret: gerrit-ciuser-password
   url: http://gerrit:8080
+  basePath: /gerrit
   repository: registry-regulations
   headBranch: master
   repositoryDirectory: /repositories

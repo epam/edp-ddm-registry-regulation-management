@@ -119,3 +119,10 @@ Create officer-portal realm name in Keycloak
 {{- define "keycloak.officerRealm" -}}
 {{- printf "%s-%s" .Values.namespace .Values.keycloak.officerRealmName }}
 {{- end -}}
+
+{{/*
+Define Gerrit URL
+*/}}
+{{- define "gerrit.url" -}}
+{{- printf "%s%s" .Values.gerrit.url .Values.gerrit.basePath }}
+{{- end }}
