@@ -21,11 +21,16 @@ import static org.mockito.ArgumentMatchers.any;
 import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.Assertions;
+import org.apache.commons.io.FilenameUtils;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,37 +60,56 @@ public class HeadFileRepositoryTest {
   @Test
   @SneakyThrows
   void getFileListTest() {
+    var path = RandomString.make();
+    var normalizePath = FilenameUtils.normalize(Path.of(path, path).toString(), true);
+    var fileDatesDto = FileDatesDto.builder().create(LocalDateTime.now())
+        .update(LocalDateTime.now()).build();
     List<String> list = new ArrayList<>();
-    Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(list);
-    List<VersionedFileInfoDto> fileList = repository.getFileList("/");
-    Assertions.assertNotNull(fileList);
+    list.add(path);
+
+    Mockito.when(jGitService.getFilesInPath("version", path)).thenReturn(list);
+    Mockito.when(jGitService.getDates("version", normalizePath)).thenReturn(fileDatesDto);
+
+    List<VersionedFileInfoDto> fileList = repository.getFileList(path);
+    Assertions.assertThat(fileList).isNotNull();
+    var versionedFileInfoDto = fileList.stream()
+        .filter(file -> path.equals(file.getName())).findFirst().orElse(null);
+
+    Assertions.assertThat(versionedFileInfoDto).isNotNull();
+    Assertions.assertThat(versionedFileInfoDto.getName()).isEqualTo(path);
+
+    Mockito.verify(jGitService).getFilesInPath("version", path);
+    Mockito.verify(jGitService).getDates("version", normalizePath);
+    Mockito.verify(mapper).toVersionedFileInfoDto(normalizePath, fileDatesDto);
+
   }
 
   @Test
   void writeNotSupportTest() {
-    Assertions.assertThrows(UnsupportedOperationException.class,
-        () -> repository.writeFile("/", "content"));
+    Assertions.assertThatCode(() -> repository.writeFile("/", "content"))
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void deleteNotSupportTest() {
-    Assertions.assertThrows(UnsupportedOperationException.class,
-        () -> repository.deleteFile("/"));
+    Assertions.assertThatCode(() -> repository.deleteFile("/"))
+        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   @SneakyThrows
   void readFileTest() {
     Mockito.when(jGitService.getFileContent(any(), any())).thenReturn("");
-    String fileContent = repository.readFile("/");
-    Assertions.assertNotNull(fileContent);
+    var fileContent = repository.readFile("/");
+    Assertions.assertThat(fileContent).isNotNull();
   }
 
   @Test
   @SneakyThrows
   void pullRepositoryTest() {
     repository.updateRepository();
-    Mockito.verify(jGitService, Mockito.times(1)).cloneRepoIfNotExist("version");
+    Mockito.verify(jGitService, Mockito.times(1))
+        .cloneRepoIfNotExist("version");
   }
 
   @Test
@@ -94,7 +118,7 @@ public class HeadFileRepositoryTest {
     ArrayList<String> t = new ArrayList<>();
     t.add("fileName");
     Mockito.when(jGitService.getFilesInPath(any(), any())).thenReturn(t);
-    boolean fileExists = repository.isFileExists("/fileName");
-    Assertions.assertTrue(fileExists);
+    var fileExists = repository.isFileExists("/fileName");
+    Assertions.assertThat(fileExists).isTrue();
   }
 }

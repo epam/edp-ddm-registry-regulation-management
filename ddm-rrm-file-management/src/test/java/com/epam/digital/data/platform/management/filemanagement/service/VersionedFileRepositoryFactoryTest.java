@@ -22,7 +22,7 @@ import com.epam.digital.data.platform.management.gerritintegration.service.Gerri
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import java.util.Map;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,35 +47,35 @@ public class VersionedFileRepositoryFactoryTest {
   @SneakyThrows
   void getRepositoryVersionedTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
-    ChangeInfoDto changeInfo = new  ChangeInfoDto();
+    var changeInfo = new  ChangeInfoDto();
     changeInfo.setChangeId("1");
-    final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
+    var mock = Mockito.mock(ChangeInfoDto.class);
     Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     VersionedFileRepository repo = factory.getRepoByVersion("version");
-    Assertions.assertInstanceOf(VersionedFileRepositoryImpl.class, repo);
+    Assertions.assertThat(repo).isInstanceOf(VersionedFileRepositoryImpl.class);
   }
 
   @Test
   @SneakyThrows
   void getRepositoryHeadTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
-    VersionedFileRepository repo = factory.getRepoByVersion("master");
-    Assertions.assertInstanceOf(HeadFileRepositoryImpl.class, repo);
+    var repo = factory.getRepoByVersion("master");
+    Assertions.assertThat(repo).isInstanceOf(HeadFileRepositoryImpl.class);
   }
 
   @Test
   @SneakyThrows
   void getAvailReposTest() {
     Mockito.when(config.getHeadBranch()).thenReturn("master");
-    ChangeInfoDto changeInfo = new  ChangeInfoDto();
+    var changeInfo = new  ChangeInfoDto();
     changeInfo.setChangeId("1");
-    final ChangeInfoDto mock = Mockito.mock(ChangeInfoDto.class);
+    var mock = Mockito.mock(ChangeInfoDto.class);
     Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
     Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
     factory.getRepoByVersion("version");
     factory.getRepoByVersion("master");
     Map<String, VersionedFileRepository> repositories = factory.getAvailableRepos();
-    Assertions.assertEquals(2, repositories.entrySet().size());
+    Assertions.assertThat(repositories.entrySet().size()).isEqualTo(2);
   }
 }
