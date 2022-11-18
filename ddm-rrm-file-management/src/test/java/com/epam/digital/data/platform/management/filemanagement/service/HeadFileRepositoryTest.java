@@ -82,6 +82,25 @@ public class HeadFileRepositoryTest {
   }
 
   @Test
+  @SneakyThrows
+  void getFileListDatesNullTest() {
+    var path = RandomString.make();
+    var normalizePath = FilenameUtils.normalize(Path.of(path, path).toString(), true);
+    List<String> list = new ArrayList<>();
+    list.add(path);
+
+    Mockito.when(jGitService.getFilesInPath("version", path)).thenReturn(list);
+    Mockito.when(jGitService.getDates("version", normalizePath)).thenReturn(null);
+    Assertions.assertThatCode(() -> repository.getFileList(path))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Got null dates on existing file in the git repo");
+
+    Mockito.verify(jGitService).getFilesInPath("version", path);
+    Mockito.verify(jGitService).getDates("version", normalizePath);
+    Mockito.verify(mapper, Mockito.never()).toVersionedFileInfoDto(normalizePath, null);
+  }
+
+  @Test
   void writeNotSupportTest() {
     Assertions.assertThatCode(() -> repository.writeFile("/", "content"))
         .isInstanceOf(UnsupportedOperationException.class);

@@ -18,16 +18,24 @@ package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
+import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
+import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
+import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.SneakyThrows;
@@ -48,6 +56,10 @@ class VersionManagementServiceTest {
 
   @Mock
   private GerritService gerritService;
+  @Mock
+  private FormService formService;
+  @Mock
+  private BusinessProcessService businessProcessService;
   @Mock
   private JGitService jGitService;
   @Mock
@@ -117,6 +129,83 @@ class VersionManagementServiceTest {
     Assertions.assertThat(actualDetailsOfHeadMaster)
         .hasSize(1)
         .element(0).isEqualTo("details");
+  }
+
+  @Test
+  @SneakyThrows
+  void declineTest() {
+    var changeId = RandomString.make();
+    Mockito.doNothing().when(gerritService).declineChange(changeId);
+    Assertions.assertThatCode(() -> managementService.decline(changeId))
+        .doesNotThrowAnyException();
+
+    Mockito.verify(gerritService).declineChange(changeId);
+  }
+
+  @Test
+  @SneakyThrows
+  void markReviewedTest() {
+    var changeId = RandomString.make();
+    Mockito.when(gerritService.review(changeId)).thenReturn(true);
+
+    Assertions.assertThatCode(() -> managementService.markReviewed(changeId))
+        .doesNotThrowAnyException();
+    Mockito.verify(gerritService).review(changeId);
+    Assertions.assertThat(managementService.markReviewed(changeId)).isTrue();
+  }
+
+  @Test
+  @SneakyThrows
+  void submitTest() {
+    var changeId = RandomString.make();
+    Mockito.doNothing().when(gerritService).submitChanges(changeId);
+    Assertions.assertThatCode(() -> managementService.submit(changeId))
+        .doesNotThrowAnyException();
+
+    Mockito.verify(gerritService).submitChanges(changeId);
+  }
+
+  @Test
+  @SneakyThrows
+  void getVersionChangesTest() {
+    var changeId = RandomString.make();
+    var formInfoDto = FormInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+        .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
+        .title("Update physical factors").build();
+    List<FormInfoDto> formList = new ArrayList<>();
+    formList.add(formInfoDto);
+    Mockito.when(formService.getChangedFormsListByVersion(changeId)).thenReturn(formList);
+
+    var bp = BusinessProcessInfoDto.builder()
+        .name("business-process")
+        .title("Really test name")
+        .path("bpmn/business-process.bpmn")
+        .status(FileStatus.NEW)
+        .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .build();
+    List<BusinessProcessInfoDto> bpList = new ArrayList<>();
+    bpList.add(bp);
+    Mockito.when(businessProcessService.getChangedProcessesByVersion(changeId))
+        .thenReturn(bpList);
+
+    final var versionChanges = managementService.getVersionChanges(changeId);
+    Mockito.verify(formService).getChangedFormsListByVersion(changeId);
+    Mockito.verify(versionManagementMapper).formInfoDtoToChangeInfo(formInfoDto);
+    Mockito.verify(businessProcessService).getChangedProcessesByVersion(changeId);
+    Mockito.verify(versionManagementMapper).bpInfoDtoToChangeInfo(bp);
+
+    Assertions.assertThat(versionChanges).isNotNull();
+    final List<EntityChangesInfoDto> changedForms = versionChanges.getChangedForms();
+    Assertions.assertThat(changedForms.get(0).getName()).isEqualTo(formInfoDto.getName());
+    Assertions.assertThat(changedForms.get(0).getStatus()).isEqualTo(formInfoDto.getStatus());
+    Assertions.assertThat(changedForms.get(0).getTitle()).isEqualTo(formInfoDto.getTitle());
+
+    final List<EntityChangesInfoDto> changedBusinessProcesses = versionChanges.getChangedBusinessProcesses();
+    Assertions.assertThat(changedBusinessProcesses.get(0).getName()).isEqualTo(bp.getName());
+    Assertions.assertThat(changedBusinessProcesses.get(0).getTitle()).isEqualTo(bp.getTitle());
+    Assertions.assertThat(changedBusinessProcesses.get(0).getStatus()).isEqualTo(bp.getStatus());
   }
 
   @Test
