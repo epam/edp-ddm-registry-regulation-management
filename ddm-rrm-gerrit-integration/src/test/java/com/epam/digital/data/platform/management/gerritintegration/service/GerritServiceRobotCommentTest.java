@@ -15,11 +15,13 @@
  */
 package com.epam.digital.data.platform.management.gerritintegration.service;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.refEq;
 
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.model.RobotCommentInputDto;
+import com.google.gerrit.extensions.api.changes.ReviewInput;
 import com.google.gerrit.extensions.api.changes.ReviewResult;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
@@ -29,6 +31,8 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.http.HttpStatus;
@@ -36,18 +40,21 @@ import org.springframework.http.HttpStatus;
 @ExtendWith(SpringExtension.class)
 public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
 
+  @Captor
+  private ArgumentCaptor<ReviewInput> captor;
+
   @Test
   @SneakyThrows
   void robotCommentTest() {
     var changeId = RandomString.make();
     Mockito.when(changes.id(changeId)).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
-    Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
+    Mockito.when(revisionApi.review(captor.capture())).thenReturn(new ReviewResult());
     var comment = RandomString.make();
     var requestDto = new RobotCommentInputDto();
     requestDto.setComment(comment);
     gerritService.robotComment(requestDto, changeId);
-    Mockito.verify(revisionApi, Mockito.times(1)).review(any());
+    Mockito.verify(revisionApi, Mockito.times(1)).review(captor.getValue());
   }
 
   @Test
@@ -56,10 +63,10 @@ public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
     var changeId = RandomString.make();
     Mockito.when(changes.id(changeId)).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
-    Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
+    Mockito.when(revisionApi.review(refEq(new ReviewInput()))).thenReturn(new ReviewResult());
     RobotCommentInputDto requestDto = new RobotCommentInputDto();
     gerritService.robotComment(requestDto, changeId);
-    Mockito.verify(revisionApi, Mockito.times(1)).review(any());
+    Mockito.verify(revisionApi, Mockito.times(1)).review(refEq(new ReviewInput()));
   }
 
   @Test
@@ -68,11 +75,11 @@ public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
     var changeId = RandomString.make();
     Mockito.when(changes.id(changeId)).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.current()).thenReturn(revisionApi);
-    Mockito.when(revisionApi.review(any())).thenReturn(new ReviewResult());
+    Mockito.when(revisionApi.review(refEq(new ReviewInput()))).thenReturn(new ReviewResult());
     RobotCommentInputDto requestDto = new RobotCommentInputDto();
     requestDto.setComment(Strings.EMPTY);
     gerritService.robotComment(requestDto, changeId);
-    Mockito.verify(revisionApi, Mockito.times(1)).review(any());
+    Mockito.verify(revisionApi, Mockito.times(1)).review(refEq(new ReviewInput()));
   }
 
   @Test
@@ -84,7 +91,7 @@ public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
     Assertions.assertThatCode(
             () -> gerritService.robotComment(new RobotCommentInputDto(), changeId))
         .isInstanceOf(GerritCommunicationException.class);
-    Mockito.verify(revisionApi, Mockito.never()).review(any());
+    Mockito.verify(revisionApi, Mockito.never()).review(eq(new ReviewInput()));
   }
 
   @Test
@@ -97,7 +104,7 @@ public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
     Assertions.assertThatCode(
             () -> gerritService.robotComment(new RobotCommentInputDto(), changeId))
         .isInstanceOf(GerritChangeNotFoundException.class);
-    Mockito.verify(revisionApi, Mockito.never()).review(any());
+    Mockito.verify(revisionApi, Mockito.never()).review(new ReviewInput());
   }
 
   @Test
@@ -109,6 +116,6 @@ public class GerritServiceRobotCommentTest extends AbstractGerritServiceTest {
     Assertions.assertThatCode(
             () -> gerritService.robotComment(new RobotCommentInputDto(), changeId))
         .isInstanceOf(GerritCommunicationException.class);
-    Mockito.verify(revisionApi, Mockito.never()).review(any());
+    Mockito.verify(revisionApi, Mockito.never()).review(new ReviewInput());
   }
 }

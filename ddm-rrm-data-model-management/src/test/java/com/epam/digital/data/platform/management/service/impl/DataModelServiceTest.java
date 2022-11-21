@@ -16,9 +16,7 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-
+import com.epam.digital.data.platform.management.TestUtils;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.exception.TableParseException;
 import com.epam.digital.data.platform.management.mapper.TableShortInfoMapper;
@@ -76,7 +74,7 @@ public class DataModelServiceTest {
   @SneakyThrows
   void listTest() {
     final TableInfoDto table = getTable();
-    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenReturn(table);
+    Mockito.when(objectMapper.readValue(TestUtils.getContent("table_sample.json"), TableInfoDto.class)).thenReturn(table);
     final List<TableShortInfoDto> list = tableService.list();
     Assertions.assertThat(list).isNotEmpty();
     final TableShortInfoDto tableDetailsShort = list.get(0);
@@ -91,7 +89,7 @@ public class DataModelServiceTest {
   void getTest() {
     final String tableName = "table_sample";
     final TableInfoDto table = getTable();
-    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenReturn(table);
+    Mockito.when(objectMapper.readValue(TestUtils.getContent("table_sample.json"), TableInfoDto.class)).thenReturn(table);
     final TableInfoDto tableInfoDto = tableService.get(tableName);
     Assertions.assertThat(tableInfoDto).isNotNull();
     Assertions.assertThat(tableInfoDto.getName()).isEqualTo(table.getName());
@@ -110,7 +108,7 @@ public class DataModelServiceTest {
   @SneakyThrows
   void getTableParseExceptionTest() {
     final String tableName = "table_sample";
-    Mockito.when(objectMapper.readValue(anyString(), eq(TableInfoDto.class))).thenThrow(
+    Mockito.when(objectMapper.readValue(TestUtils.getContent("table_sample.json"), TableInfoDto.class)).thenThrow(
         JsonProcessingException.class);
     Assertions.assertThatThrownBy(() -> tableService.get(tableName))
         .isInstanceOf(TableParseException.class);

@@ -57,7 +57,7 @@ public class BusinessProcessValidatorTest {
   void testBpValidationCorrectBpTest() {
     var content = Files.readString(getFile("bp-correct.xml").toPath(), StandardCharsets.UTF_8);
     businessProcessValidator.isValid(content, context);
-    Mockito.verify(context, Mockito.never()).buildConstraintViolationWithTemplate(anyString());
+    Mockito.verify(context, Mockito.never()).buildConstraintViolationWithTemplate("messageTemplate");
   }
 
   @Test
@@ -109,6 +109,7 @@ public class BusinessProcessValidatorTest {
         StandardCharsets.UTF_8);
     businessProcessValidator.isValid(content, context);
     Mockito.verify(context, Mockito.never()).buildConstraintViolationWithTemplate(anyString());
+    //check if there is no error, but not real value
   }
 
   private File getFile(String location) {

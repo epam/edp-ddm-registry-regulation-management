@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.restapi.exception;
 
 
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -152,7 +152,7 @@ class ApplicationExceptionHandlerTest {
   @Test
   @SneakyThrows
   void shouldReturnGetProcessingException() {
-    when(userImportService.getFileInfo(any())).thenThrow(
+    when(userImportService.getFileInfo(eq(new SecurityContext()))).thenThrow(
         new GetProcessingException("ERROR", new RuntimeException()));
 
     mockMvc.perform(get(BASE_URL))

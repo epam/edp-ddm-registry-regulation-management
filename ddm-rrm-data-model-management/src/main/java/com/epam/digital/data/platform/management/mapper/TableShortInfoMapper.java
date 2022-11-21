@@ -21,6 +21,9 @@ import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+/**
+ * Map TableInfoDto to TableShortInfoDto
+ */
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
 public interface TableShortInfoMapper {
 

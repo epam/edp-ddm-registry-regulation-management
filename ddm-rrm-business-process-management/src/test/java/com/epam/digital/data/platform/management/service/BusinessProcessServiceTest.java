@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.service;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -145,7 +144,8 @@ public class BusinessProcessServiceTest {
             () -> businessProcessService.createProcess("business-process", PROCESS_CONTENT, VERSION_ID))
         .isInstanceOf(BusinessProcessAlreadyExistsException.class);
 
-    Mockito.verify(repository, never()).writeFile(any(), any());
+    Mockito.verify(repository, never()).writeFile(eq("business-process"), anyString());
+    //check if business process with this name was not created, but not real value
   }
 
   @Test
@@ -169,6 +169,7 @@ public class BusinessProcessServiceTest {
     Mockito.verify(repository).isFileExists("bpmn/business-process.bpmn");
     Mockito.verify(repository)
         .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), anyString());
+    //check if there is no error, but not real value
   }
 
   @Test

@@ -16,8 +16,10 @@
 package data.model.snapshot.processor;
 
 import static data.model.snapshot.processor.DdmColumnReader.SUBJECT_TABLE_PRIMARY_KEY;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.refEq;
 
+import data.model.snapshot.model.DdmColumn;
 import data.model.snapshot.repository.DdmColumnRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +51,7 @@ public class DdmColumnReaderTest {
 
     columnReader.readNamedObject(column);
 
-    Mockito.verify(columnRepository, Mockito.never()).save(any());
+    Mockito.verify(columnRepository, Mockito.never()).save(refEq(new DdmColumn()));
   }
 
   @Test
@@ -60,9 +62,10 @@ public class DdmColumnReaderTest {
     Mockito.when(column.getParent()).thenReturn(table);
     Mockito.when(column.isPartOfForeignKey()).thenReturn(false);
     Mockito.when(column.getType()).thenReturn(dataType);
-
+    var ddmColumn = new DdmColumn();
+    ddmColumn.setNotNullFlag(true);
     columnReader.readNamedObject(column);
-    Mockito.verify(columnRepository).save(any());
+    Mockito.verify(columnRepository).save(eq(ddmColumn));
   }
 
 }

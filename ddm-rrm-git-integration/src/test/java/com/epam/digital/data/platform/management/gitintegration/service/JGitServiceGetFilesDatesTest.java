@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
@@ -174,7 +175,7 @@ class JGitServiceGetFilesDatesTest extends AbstractJGitServiceTest {
         .hasMessage("Repository %s doesn't exists", repoName)
         .hasNoCause();
 
-    Mockito.verify(jGitWrapper, never()).open(Mockito.any());
+    Mockito.verify(jGitWrapper, never()).open(eq(new File(filePath)));
   }
 
   @SneakyThrows

@@ -23,6 +23,8 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -30,7 +32,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(SpringExtension.class)
@@ -39,6 +40,9 @@ class SettingServiceTest {
   private static final String VERSION_ID = "version";
   private static final String GLOBAL_VARS_PATH = "global-vars/camunda-global-system-vars.yml";
   private static final String SETTINGS_PATH = "settings/settings.yml";
+
+  @Captor
+  private ArgumentCaptor<String> captor;
 
   @Mock
   private VersionedFileRepositoryFactory repositoryFactory;
@@ -59,6 +63,14 @@ class SettingServiceTest {
       "          - \"ya.ru\"\n" +
       "    titleFull: \"<Назва реєстру>\"\n" +
       "    title: \"mdtuddm\"\n";
+
+  private static final String SETTINGS_EMPTY_CONTENT = "settings:\n" +
+      "  general:\n" +
+        "    titleFull: null\n" +
+        "    title: null\n";
+  private static final String GLOBAL_SETTINGS_EMPTY_VALUE = "themeFile: null\n" +
+      "supportEmail: null\n";
+
 
   @BeforeEach
   @SneakyThrows
@@ -91,9 +103,14 @@ class SettingServiceTest {
     Assertions.assertThatCode(() -> settingServiceImpl.updateSettings(VERSION_ID, settings))
         .doesNotThrowAnyException();
     Mockito.verify(repository)
-        .writeFile(eq("settings/settings.yml"), anyString());
+        .writeFile(eq("settings/settings.yml"), captor.capture());
+    String settingsContent = captor.getValue();
     Mockito.verify(repository)
-        .writeFile(eq("global-vars/camunda-global-system-vars.yml"), anyString());
+        .writeFile(eq("global-vars/camunda-global-system-vars.yml"), captor.capture());
+    String globalVars = captor.getValue();
+    Assertions.assertThat(settingsContent).isEqualTo(SETTINGS_EMPTY_CONTENT);
+    Assertions.assertThat(globalVars).isEqualTo(GLOBAL_SETTINGS_EMPTY_VALUE);
+    //check if there is no error, but not real value
   }
 
   @Test

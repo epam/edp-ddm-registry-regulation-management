@@ -15,8 +15,6 @@
  */
 package com.epam.digital.data.platform.management.gerritintegration.service;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.google.gerrit.extensions.api.changes.ChangeApi;
@@ -54,18 +52,18 @@ public class GerritServiceTopicTest extends AbstractGerritServiceTest {
     var topic2 = RandomString.make();
 
     var changeApi = Mockito.mock(ChangeApi.class);
-    Mockito.when(changes.id(any())).thenReturn(changeApi);
+    Mockito.when(changes.id("changeId")).thenReturn(changeApi);
 
     ArgumentCaptor<String> valueCapture = ArgumentCaptor.forClass(String.class);
     Mockito.when(changeApi.topic()).thenAnswer(e -> valueCapture.getValue());
     Mockito.doNothing().when(changeApi).topic(valueCapture.capture());
 
-    gerritService.setTopic(topic1, "");
+    gerritService.setTopic(topic1, "changeId");
     Assertions.assertThat(valueCapture.getValue()).isEqualTo(topic1);
-    var rTopic1 = gerritService.getTopic("");
-    gerritService.setTopic(topic2, "");
+    var rTopic1 = gerritService.getTopic("changeId");
+    gerritService.setTopic(topic2, "changeId");
     Assertions.assertThat(valueCapture.getValue()).isEqualTo(topic2);
-    var rTopic2 = gerritService.getTopic("");
+    var rTopic2 = gerritService.getTopic("changeId");
 
     Assertions.assertThat(rTopic1).isEqualTo(topic1);
     Assertions.assertThat(rTopic2).isEqualTo(topic2);

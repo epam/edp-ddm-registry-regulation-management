@@ -32,7 +32,6 @@ import com.epam.digital.data.platform.management.restapi.exception.ApplicationEx
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.service.DataModelService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
-import com.epam.digital.data.platform.starter.localization.MessageTitle;
 import data.model.snapshot.model.DdmTable;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -179,8 +178,8 @@ class MasterVersionTableControllerTest {
       );
 
       Mockito.verify(tableService).get(tableName);
-      Mockito.verify(messageResolver, Mockito.never()).getMessage(Mockito.anyString());
-      Mockito.verify(messageResolver, Mockito.never()).getMessage(Mockito.any(MessageTitle.class));
+      Mockito.verify(messageResolver, Mockito.never()).getMessage("TABLE_PARSE_EXCEPTION");
+      Mockito.verify(messageResolver, Mockito.never()).getMessage(FileValidatorErrorMessageTitle.from("TABLE_PARSE_EXCEPTION"));
     }
   }
 }

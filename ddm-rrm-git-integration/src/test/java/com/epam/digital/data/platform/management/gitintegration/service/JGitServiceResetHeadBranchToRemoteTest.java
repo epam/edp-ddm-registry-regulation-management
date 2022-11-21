@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
@@ -216,7 +215,7 @@ class JGitServiceResetHeadBranchToRemoteTest extends AbstractJGitServiceTest {
         .hasNoCause()
         .hasMessage("Repository " + headBranch + " doesn't exists");
 
-    Mockito.verify(jGitWrapper, never()).open(any());
+    Mockito.verify(jGitWrapper, never()).open(repo);
   }
 
   @SneakyThrows

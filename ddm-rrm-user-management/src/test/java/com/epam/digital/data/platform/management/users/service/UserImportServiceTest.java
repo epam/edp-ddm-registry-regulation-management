@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.users.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -95,7 +96,7 @@ class UserImportServiceTest {
 
     userImportService.storeFile(file, new SecurityContext("userToken"));
 
-    verify(cephService).put(eq(FILE_BUCKET), any(), eq(CEPH_OBJECT_CONTENT_TYPE), any(), any());
+    verify(cephService).put(eq(FILE_BUCKET), anyString(), eq(CEPH_OBJECT_CONTENT_TYPE), any(), any());
   }
 
   @Test
@@ -211,7 +212,6 @@ class UserImportServiceTest {
   void storeFileShouldThrowVaultInvocationExceptionWithErrorFromVault() {
     var validationResult = new ValidationResult();
     validationResult.setFileName(file.getOriginalFilename());
-    when(vaultService.encrypt(any())).thenThrow(new RuntimeException());
     when(validatorService.validate(file)).thenReturn(validationResult);
 
     assertThatCode(() -> userImportService.storeFile(file, new SecurityContext()))

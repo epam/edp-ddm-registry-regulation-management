@@ -16,8 +16,9 @@
 package data.model.snapshot.processor;
 
 import static data.model.snapshot.processor.DdmForeignKeyReader.SUBJECT_TABLE;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
+import data.model.snapshot.model.DdmForeignKey;
 import data.model.snapshot.repository.DdmForeignKeyRepository;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,14 +67,15 @@ public class DdmForeignKeyReaderTest {
     Mockito.when(table.getName()).thenReturn(SUBJECT_TABLE);
     foreignKeyReader.readNamedObject(foreignKey);
 
-    Mockito.verify(foreignKeyRepository, Mockito.never()).save(any());
+    Mockito.verify(foreignKeyRepository, Mockito.never()).save(eq(new DdmForeignKey()));
   }
 
   @Test
   void readNamedObjectSaveCalledTest() {
     foreignKeyReader.readNamedObject(foreignKey);
-
-    Mockito.verify(foreignKeyRepository).save(any());
+    var ddmForeignKey = new DdmForeignKey();
+    ddmForeignKey.setName(foreignKey.getName());
+    Mockito.verify(foreignKeyRepository).save(eq(ddmForeignKey));
   }
 
 }

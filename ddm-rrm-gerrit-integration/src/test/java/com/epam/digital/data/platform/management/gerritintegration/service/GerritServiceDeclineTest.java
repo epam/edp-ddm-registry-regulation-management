@@ -15,8 +15,6 @@
  */
 package com.epam.digital.data.platform.management.gerritintegration.service;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.google.gerrit.extensions.restapi.RestApiException;
@@ -35,7 +33,7 @@ public class GerritServiceDeclineTest extends AbstractGerritServiceTest {
   @Test
   @SneakyThrows
   void declineChangeTest() {
-    Mockito.when(changes.id(any())).thenReturn(changeApiRestClient);
+    Mockito.when(changes.id("changeId")).thenReturn(changeApiRestClient);
     Assertions.assertThatCode(() -> gerritService.declineChange("changeId"))
         .doesNotThrowAnyException();
     Mockito.verify(changeApiRestClient, Mockito.times(1)).abandon();
@@ -44,7 +42,7 @@ public class GerritServiceDeclineTest extends AbstractGerritServiceTest {
   @Test
   @SneakyThrows
   void declineChangeNotFoundExceptionTest() {
-    Mockito.when(changes.id(any())).thenThrow(
+    Mockito.when(changes.id("changeId")).thenThrow(
         new HttpStatusException(HttpStatus.NOT_FOUND.value(), "", ""));
 
     Assertions.assertThatCode(() -> gerritService.declineChange("changeId"))
@@ -56,7 +54,7 @@ public class GerritServiceDeclineTest extends AbstractGerritServiceTest {
   @Test
   @SneakyThrows
   void declineChangeHttpExceptionTest() {
-    Mockito.when(changes.id(any())).thenThrow(HttpStatusException.class);
+    Mockito.when(changes.id("changeId")).thenThrow(HttpStatusException.class);
 
     Assertions.assertThatCode(() -> gerritService.declineChange("changeId"))
         .isInstanceOf(GerritCommunicationException.class);
@@ -66,7 +64,7 @@ public class GerritServiceDeclineTest extends AbstractGerritServiceTest {
   @Test
   @SneakyThrows
   void declineChangeRestApiExceptionTest() {
-    Mockito.when(changes.id(any())).thenThrow(RestApiException.class);
+    Mockito.when(changes.id("changeId")).thenThrow(RestApiException.class);
 
     Assertions.assertThatCode(() -> gerritService.declineChange("changeId"))
         .isInstanceOf(GerritCommunicationException.class);
