@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Scope;
 import schemacrawler.inclusionrule.InclusionRule;
 import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
 import schemacrawler.schema.Catalog;
@@ -76,6 +77,7 @@ public class SchemaCrawlerConfiguration {
   }
 
   @Bean
+  @Scope("prototype")
   @Lazy
   public Catalog catalog(DataSource dataSource, SchemaCrawlerOptions options)
       throws SQLException, SchemaCrawlerException {
