@@ -17,8 +17,6 @@
 package com.epam.digital.data.platform.management.restapi.controller;
 
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -197,7 +195,7 @@ class UserImportControllerTest {
       deleteFile("user-token", result -> {
       }, status().isForbidden());
 
-      Mockito.verify(userImportService, Mockito.never()).delete(anyString());
+      Mockito.verify(userImportService, Mockito.never()).delete(TestUtils.getContent("user-token"));
     }
   }
 
@@ -256,7 +254,7 @@ class UserImportControllerTest {
       startImport("user-token", result -> {
       }, status().isForbidden());
 
-      Mockito.verify(openShiftService, Mockito.never()).startImport(anyString(), any());
+      Mockito.verify(openShiftService, Mockito.never()).startImport("sdgf", new SecurityContext());
     }
   }
 }

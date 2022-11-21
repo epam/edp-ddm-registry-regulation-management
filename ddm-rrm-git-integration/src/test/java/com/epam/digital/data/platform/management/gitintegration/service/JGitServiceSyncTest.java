@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.gitintegration.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -36,6 +37,7 @@ import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CommitCommand;
 import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.GitCommand;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.RemoteAddCommand;
@@ -51,12 +53,15 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -85,11 +90,14 @@ class JGitServiceSyncTest {
   @Mock
   private GitFileService gitFileService;
 
+  @Captor
+  private ArgumentCaptor<URIish> captor;
+
   @BeforeEach
   @SneakyThrows
   public void setUp() {
     Mockito.when(gerritPropertiesConfig.getRepositoryDirectory()).thenReturn(tempDir.getPath());
-    Mockito.doCallRealMethod().when(gitRetryable).call(any());
+    Mockito.doCallRealMethod().when(gitRetryable).call(any(GitCommand.class));
   }
 
   @Test
@@ -358,7 +366,7 @@ class JGitServiceSyncTest {
     when(addStatus.isClean()).thenReturn(false);
     CommitCommand commitCommand = mock(CommitCommand.class);
     when(git.commit()).thenReturn(commitCommand);
-    when(commitCommand.setMessage(any())).thenReturn(commitCommand);
+    when(commitCommand.setMessage("message")).thenReturn(commitCommand);
     when(commitCommand.setAmend(true)).thenReturn(commitCommand);
     when(commitCommand.setAmend(true)).thenReturn(commitCommand);
     when(commitCommand.call()).thenAnswer(invocation -> {
@@ -371,8 +379,8 @@ class JGitServiceSyncTest {
     //push changes method
     RemoteAddCommand remoteAddCommand = mock(RemoteAddCommand.class);
     when(git.remoteAdd()).thenReturn(remoteAddCommand);
-    when(remoteAddCommand.setName(any())).thenReturn(remoteAddCommand);
-    when(remoteAddCommand.setUri(any())).thenReturn(remoteAddCommand);
+    when(remoteAddCommand.setName("origin")).thenReturn(remoteAddCommand);
+    when(remoteAddCommand.setUri(captor.capture())).thenReturn(remoteAddCommand);
     when(remoteAddCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called remote add command for {}", Thread.currentThread().getName());
@@ -381,9 +389,9 @@ class JGitServiceSyncTest {
     });
     PushCommand pushCommand = mock(PushCommand.class);
     when(git.push()).thenReturn(pushCommand);
-    when(pushCommand.setRefSpecs(any(RefSpec.class))).thenReturn(pushCommand);
-    when(pushCommand.setCredentialsProvider(any())).thenReturn(pushCommand);
-    when(pushCommand.setRemote(any())).thenReturn(pushCommand);
+    when(pushCommand.setRefSpecs(refEq(new RefSpec("HEAD:refs/for/master")))).thenReturn(pushCommand);
+    when(pushCommand.setCredentialsProvider(refEq(new UsernamePasswordCredentialsProvider(gerritPropertiesConfig.getUser(), gerritPropertiesConfig.getPassword())))).thenReturn(pushCommand);
+    when(pushCommand.setRemote("origin")).thenReturn(pushCommand);
     when(pushCommand.call()).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called push command for {}", Thread.currentThread().getName());

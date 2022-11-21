@@ -15,9 +15,10 @@
  */
 package data.model.snapshot.processor;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.liquibase.extension.DdmConstants;
+import data.model.snapshot.model.DdmTable;
 import data.model.snapshot.repository.DdmTableRepository;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -67,7 +68,7 @@ public class DdmTableReaderTest {
 
     Mockito.verify(ddmViewReader).readNamedObject(table);
 
-    Mockito.verify(ddmTableRepository, Mockito.never()).save(any());
+    Mockito.verify(ddmTableRepository, Mockito.never()).save(eq(new DdmTable()));
     Mockito.verify(ddmColumnReader, Mockito.never()).readNamedObject(column);
     Mockito.verify(ddmForeignKeyReader, Mockito.never()).readNamedObject(foreignKey);
     Mockito.verify(ddmIndexReader, Mockito.never()).readNamedObject(index);
@@ -90,7 +91,7 @@ public class DdmTableReaderTest {
 
     Mockito.verify(ddmViewReader, Mockito.never()).readNamedObject(table);
 
-    Mockito.verify(ddmTableRepository).save(any());
+    Mockito.verify(ddmTableRepository).save(ddmTableRepository.get(tableName));
     Mockito.verify(ddmColumnReader).readNamedObject(column);
     Mockito.verify(ddmForeignKeyReader).readNamedObject(foreignKey);
     Mockito.verify(ddmIndexReader).readNamedObject(index);

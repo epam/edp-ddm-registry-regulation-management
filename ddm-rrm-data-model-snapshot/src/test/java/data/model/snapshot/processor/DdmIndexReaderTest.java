@@ -16,8 +16,10 @@
 package data.model.snapshot.processor;
 
 import static com.epam.digital.data.platform.liquibase.extension.DdmConstants.SUFFIX_M2M;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.refEq;
 
+import data.model.snapshot.model.DdmIndex;
 import data.model.snapshot.repository.DdmIndexRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +50,7 @@ public class DdmIndexReaderTest {
   void readNamedObjectTest() {
     Mockito.when(index.getName()).thenReturn(SUFFIX_M2M);
     indexReader.readNamedObject(index);
-    Mockito.verify(ddmIndexRepository, Mockito.never()).save(any());
+    Mockito.verify(ddmIndexRepository, Mockito.never()).save(eq(new DdmIndex()));
   }
 
   @Test
@@ -56,9 +58,10 @@ public class DdmIndexReaderTest {
     Mockito.when(index.getName()).thenReturn("index");
     Mockito.when(index.getParent()).thenReturn(table);
     Mockito.when(table.getPrimaryKey()).thenReturn(primaryKey);
-
+    var ddmIndex = new DdmIndex();
+    ddmIndex.setName(index.getName());
     indexReader.readNamedObject(index);
-    Mockito.verify(ddmIndexRepository).save(any());
+    Mockito.verify(ddmIndexRepository).save(refEq(ddmIndex, "columns"));
   }
 
 }

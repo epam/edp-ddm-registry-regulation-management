@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.filemanagement.service;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
@@ -100,20 +100,24 @@ public class VersionedFileRepositoryTest {
         .create(LocalDateTime.now())
         .update(LocalDateTime.now())
         .build();
-    list.add("folder/file1");
-    list.add("folder/file2");
-    list.add("folder/file3");
+    list.add("file1");
+    list.add("file2");
+    list.add("file3");
     var changeInfo = new ChangeInfoDto();
     changeInfo.setCreated(LocalDateTime.now());
     changeInfo.setUpdated(LocalDateTime.now());
+    changeInfo.setNumber("changeId");
+    changeInfo.setChangeId("changeId");
     var filesInMR = new HashMap<String, FileInfoDto>();
     filesInMR.put("folder/file22", new FileInfoDto());
     filesInMR.put("folder/file3", new FileInfoDto());
 
-    Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
-    Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(filesInMR);
-    Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(list);
-    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
+    Mockito.when(gerritService.getListOfChangesInMR("changeId")).thenReturn(filesInMR);
+    Mockito.when(jGitService.getFilesInPath("version", "folder")).thenReturn(list);
+    Mockito.when(jGitService.getDates(eq("version"),
+            argThat(arg -> List.of("folder", "folder/file1", "folder/file2", "folder/file3").contains(arg))))
+        .thenReturn(fileDates);
     List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
     Assertions.assertThat(fileList.size()).isEqualTo(4);
@@ -127,6 +131,7 @@ public class VersionedFileRepositoryTest {
         .update(LocalDateTime.now())
         .build();
     var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId("changeId");
     changeInfo.setCreated(LocalDateTime.now());
     var addedFileInfo = new FileInfoDto();
     addedFileInfo.setStatus("A");
@@ -137,16 +142,16 @@ public class VersionedFileRepositoryTest {
     var copiedFileInfo = new FileInfoDto();
     copiedFileInfo.setStatus("C");
 
-    Mockito.when(gerritService.getMRByNumber(any())).thenReturn(changeInfo);
-    Mockito.when(gerritService.getListOfChangesInMR(any())).thenReturn(
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
+    Mockito.when(gerritService.getListOfChangesInMR("changeId")).thenReturn(
         Map.of("folder/file12", addedFileInfo,
             "folder/file2", deletedFileInfo,
             "folder/file14", renamedFileInfo,
             "folder/file3", new FileInfoDto(),
             "folder/file2copy", copiedFileInfo));
-    Mockito.when(jGitService.getFilesInPath(any(), eq("folder"))).thenReturn(
+    Mockito.when(jGitService.getFilesInPath("version", "folder")).thenReturn(
         List.of("file1", "file2", "file3", "file2copy"));
-    Mockito.when(jGitService.getDates(any(), any())).thenReturn(fileDates);
+    Mockito.when(jGitService.getDates(eq("version"), argThat(arg -> List.of("folder/file1", "folder/file2", "folder/file3", "folder/file2copy").contains(arg)))).thenReturn(fileDates);
     List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
     Assertions.assertThat(fileList.size()).isEqualTo(6);

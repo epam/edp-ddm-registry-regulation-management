@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.forms.service;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -103,6 +102,7 @@ class FormServiceTest {
         .doesNotThrowAnyException();
     Mockito.verify(repository).isFileExists("forms/form.json");
     Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString());
+    //check if there is no error, but not real value
   }
 
   @Test
@@ -126,7 +126,7 @@ class FormServiceTest {
     Assertions.assertThatThrownBy(() -> formService.createForm("formName", "content", VERSION_ID))
         .isInstanceOf(FormAlreadyExistsException.class);
 
-    Mockito.verify(repository, never()).writeFile(any(), any());
+    Mockito.verify(repository, never()).writeFile("forms/formName.json", "content");
   }
 
   @Test
@@ -146,6 +146,7 @@ class FormServiceTest {
         .doesNotThrowAnyException();
     Mockito.verify(repository).isFileExists("forms/form.json");
     Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString());
+    //check if there is no error, but not real value
   }
 
   @Test

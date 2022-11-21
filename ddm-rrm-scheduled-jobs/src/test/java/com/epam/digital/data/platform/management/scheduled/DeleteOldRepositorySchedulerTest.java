@@ -16,8 +16,6 @@
 
 package com.epam.digital.data.platform.management.scheduled;
 
-import static org.mockito.ArgumentMatchers.any;
-
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
@@ -62,7 +60,7 @@ public class DeleteOldRepositorySchedulerTest {
     List<String> ids = new ArrayList<>();
     Mockito.when(gerritService.getClosedMrIds()).thenReturn(ids);
     scheduler.deleteOldRepositories();
-    Mockito.verify(jGitService, Mockito.never()).deleteRepo(any());
+    Mockito.verifyNoInteractions(jGitService);
   }
 
   @Test

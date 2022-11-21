@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.gerritintegration.service;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
@@ -104,7 +104,8 @@ public class GerritServiceRebaseTest extends AbstractGerritServiceTest {
     var changeId = RandomString.make();
     var request = String.format("/changes/%s/rebase", changeId);
     Assertions.assertThatCode(() -> gerritService.rebase(null)).doesNotThrowAnyException();
-    Mockito.verify(gerritRestClient, Mockito.never()).postRequest(eq(request), any());
+    Mockito.verify(gerritRestClient, Mockito.never()).postRequest(eq(request), anyString());
+    //check if there is an error, but not real value
   }
 
 }
