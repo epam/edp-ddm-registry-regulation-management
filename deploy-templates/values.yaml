@@ -19,7 +19,7 @@ service:
 
 ingress:
   required: true
-  site: import-api
+  site: registry-regulation-management-api
 
 s3:
   config:
