@@ -1,6 +1,6 @@
 FROM openjdk:11.0.16-jre-slim AS builder
 WORKDIR /application
-ARG JAR_FILE=target/registry-regulation-management-*.jar
+ARG JAR_FILE=ddm-rrm/target/ddm-rrm-*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 

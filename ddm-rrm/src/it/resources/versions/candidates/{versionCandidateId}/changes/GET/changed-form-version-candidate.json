@@ -1,0 +1,9 @@
+{
+  "type": "form",
+  "components": [],
+  "title": "Changed form VC",
+  "path": "changed-form",
+  "name": "changed-form",
+  "display": "form",
+  "submissionAccess": []
+}

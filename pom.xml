@@ -11,23 +11,42 @@
     <relativePath/>
   </parent>
 
-  <artifactId>registry-regulation-management</artifactId>
+  <artifactId>registry-regulation-management-parent</artifactId>
   <version>1.7.0</version>
+  <packaging>pom</packaging>
 
-  <name>registry-regulation-management</name>
-  <description>USER IMPORT SERVICE</description>
+  <name>registry-regulation-management-parent</name>
+  <description>Registry regulation management service</description>
+
+  <modules>
+    <module>ddm-rrm-core</module>
+    <module>ddm-rrm</module>
+    <module>ddm-rrm-git-integration</module>
+    <module>ddm-rrm-data-model-snapshot</module>
+    <module>ddm-rrm-data-model-management</module>
+    <module>ddm-rrm-gerrit-integration</module>
+    <module>ddm-rrm-openshift-integration</module>
+    <module>ddm-rrm-security</module>
+    <module>ddm-rrm-file-management</module>
+    <module>ddm-rrm-scheduled-jobs</module>
+    <module>ddm-rrm-user-management</module>
+    <module>ddm-rrm-form-management</module>
+    <module>ddm-rrm-settings-management</module>
+    <module>ddm-rrm-business-process-management</module>
+    <module>ddm-rrm-version-management</module>
+    <module>ddm-rrm-rest-api</module>
+  </modules>
 
   <properties>
     <ddm.starter.logger.version>1.6.0.1</ddm.starter.logger.version>
     <spring.restdocs.mockmvc.version>2.0.6.RELEASE</spring.restdocs.mockmvc.version>
     <springdoc.openapi.ui.version>1.6.9</springdoc.openapi.ui.version>
     <ddm.starter.actuator.version>1.6.0.1</ddm.starter.actuator.version>
-    <ddm.starter.security.version>1.6.0.6</ddm.starter.security.version>
-    <ddm.ceph.client.version>1.6.0.3</ddm.ceph.client.version>
+    <ddm-starter-security.version>1.6.0.6</ddm-starter-security.version>
+    <ddm-ceph-client.version>1.6.0.3</ddm-ceph-client.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>11</java.version>
-    <junit.jupiter.version>5.6.2</junit.jupiter.version>
     <openshift-client.version>5.12.2</openshift-client.version>
     <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
     <ddm-starter-localization.version>1.6.0.1</ddm-starter-localization.version>
@@ -47,7 +66,7 @@
       **/config/**/*,
       **/util/Header*,
       <!-- Remove archiver alter -->
-      **/UserImportApplication*,
+      **/RegistryRegulationManagementApplication*,
     </sonar.coverage.exclusions>
     <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
     <ddm-maven-tails.version>0.0.1-SNAPSHOT</ddm-maven-tails.version>
@@ -71,294 +90,57 @@
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-cache</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-actuator</artifactId>
-      <version>${ddm.starter.actuator.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-ui</artifactId>
-      <version>${springdoc.openapi.ui.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-logger2</artifactId>
-      <version>${ddm.starter.logger.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-security</artifactId>
-      <version>${ddm.starter.security.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-ceph-client</artifactId>
-      <version>${ddm.ceph.client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-starter-localization</artifactId>
-      <version>${ddm-starter-localization.version}</version>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-    <dependency>
-      <groupId>org.eclipse.jgit</groupId>
-      <artifactId>org.eclipse.jgit</artifactId>
-      <version>${jgit.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.urswolfer.gerrit.client.rest</groupId>
-      <artifactId>gerrit-rest-java-client</artifactId>
-      <version>${gerrit.client.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-kubernetes-client-config</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-sleuth</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-sleuth-zipkin</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.camunda.bpm.model</groupId>
-      <artifactId>camunda-bpmn-model</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-client</artifactId>
-      <version>${openshift-client.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>openshift-client</artifactId>
-      <version>${openshift-client.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>kubernetes-server-mock</artifactId>
-      <version>${kubernetes-mock.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.fabric8</groupId>
-      <artifactId>openshift-server-mock</artifactId>
-      <version>${kubernetes-mock.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-vault-config</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.any23</groupId>
-      <artifactId>apache-any23-encoding</artifactId>
-      <version>${apache-encoding-detector.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.restdocs</groupId>
-      <artifactId>spring-restdocs-mockmvc</artifactId>
-      <version>${spring.restdocs.mockmvc.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.jayway.jsonpath</groupId>
-      <artifactId>json-path</artifactId>
-      <version>${json-path.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-jpa</artifactId>
-      <version>2.4.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>liquibase-ddm-ext</artifactId>
-      <version>1.6.0.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>us.fatehi</groupId>
-      <artifactId>schemacrawler</artifactId>
-      <version>${schemacrawler.version}</version>
     </dependency>
   </dependencies>
+
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.plugin.version}</version>
+        <version>${maven-surefire-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-test-source</id>
-            <goals>
-              <goal>add-test-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>${project.basedir}/src/it/java</source>
-              </sources>
-            </configuration>
-          </execution>
-          <execution>
-            <id>add-test-resource</id>
-            <goals>
-              <goal>add-test-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/src/it/resources</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <version>${maven.failsafe.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>pre-integration-test</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <configuration>
+              <sources>
+                <source>target/generated-sources</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${mapstruct.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>generate-rest-api-docs</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.repaint.maven</groupId>
-            <artifactId>tiles-maven-plugin</artifactId>
-            <version>2.32</version>
-            <extensions>true</extensions>
-            <configuration>
-              <buildSmells>pluginmanagement</buildSmells>
-              <filtering>true</filtering>
-              <tiles>
-                <tile>com.epam.digital.data.platform:openapi-generator-tile:${ddm-maven-tails.version}</tile>
-                <tile>com.epam.digital.data.platform:rest-api-adoc-generator-tile:${ddm-maven-tails.version}</tile>
-                <tile>com.epam.digital.data.platform:rest-api-adoc-generator-clean-tile:${ddm-maven-tails.version}</tile>
-              </tiles>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
 </project>

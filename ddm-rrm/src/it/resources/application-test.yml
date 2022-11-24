@@ -1,0 +1,15 @@
+gerrit:
+  url: http://localhost:8081
+  user: user
+  password: pass
+  head-branch: head-branch
+  repository: repository
+
+spring:
+  cloud:
+    vault:
+      enabled: false
+  cache:
+    cache-names: dates
+    caffeine:
+      spec: expireAfterAccess=5s
