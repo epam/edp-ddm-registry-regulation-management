@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.settings.exception;
+package com.epam.digital.data.platform.management;
 
-public class SettingsParsingException extends RuntimeException {
+import static org.springframework.util.StreamUtils.copyToString;
 
-  public SettingsParsingException(String message, Throwable cause) {
-    super(message, cause);
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+public final class TestUtils {
+
+  public static String getContent(String filePath) {
+    try {
+      return copyToString(TestUtils.class.getClassLoader().getResourceAsStream(filePath),
+          StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

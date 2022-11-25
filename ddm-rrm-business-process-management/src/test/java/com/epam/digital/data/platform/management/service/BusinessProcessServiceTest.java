@@ -24,6 +24,7 @@ import static org.springframework.util.StreamUtils.copyToString;
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
+import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -68,6 +69,8 @@ public class BusinessProcessServiceTest {
   @Mock
   private VersionedFileRepository repository;
   @Mock
+  private VersionedFileRepository masterRepository;
+  @Mock
   private GerritPropertiesConfig gerritPropertiesConfig;
   @Autowired
   private DocumentBuilder documentBuilder;
@@ -81,6 +84,8 @@ public class BusinessProcessServiceTest {
     businessProcessService = new BusinessProcessServiceImpl(repositoryFactory,
         businessProcessMapper, gerritPropertiesConfig, documentBuilder);
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
+    Mockito.when(repositoryFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch()))
+        .thenReturn(masterRepository);
   }
 
   @Test
@@ -107,6 +112,59 @@ public class BusinessProcessServiceTest {
         .title("Really test name")
         .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
         .status(FileStatus.NEW)
+        .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
+        .build();
+
+    Assertions.assertThat(expectedBusinessProcessesList).hasSize(1)
+        .element(0).isEqualTo(expectedBusinessProcess);
+  }
+
+  @Test
+  @SneakyThrows
+  void getBusinessProcessesByVersionWithInvalidContentTest() {
+    VersionedFileInfoDto newBusinessProcess = VersionedFileInfoDto.builder()
+        .name("business-process")
+        .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
+        .status(FileStatus.NEW)
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .build();
+    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
+
+    Mockito.when(repository.getFileList("bpmn"))
+        .thenReturn(List.of(newBusinessProcess, deletedProcess));
+    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn("Invalid content");
+
+    Assertions.assertThatThrownBy(() -> businessProcessService.getProcessesByVersion(VERSION_ID))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("Could not parse xml document");
+  }
+
+  @Test
+  @SneakyThrows
+  void getChangedBusinessProcessListByVersionTest() {
+    VersionedFileInfoDto newBusinessProcess = VersionedFileInfoDto.builder()
+        .name("business-process")
+        .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
+        .status(FileStatus.DELETED)
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .build();
+
+    Mockito.when(repository.getFileList("bpmn"))
+        .thenReturn(List.of(newBusinessProcess));
+    Mockito.when(masterRepository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(PROCESS_CONTENT);
+
+    List<BusinessProcessInfoDto> expectedBusinessProcessesList =
+        businessProcessService.getChangedProcessesByVersion(VERSION_ID);
+    BusinessProcessInfoDto expectedBusinessProcess = BusinessProcessInfoDto.builder()
+        .name("business-process")
+        .title("Really test name")
+        .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
+        .status(FileStatus.DELETED)
         .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
         .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
         .build();
@@ -150,6 +208,15 @@ public class BusinessProcessServiceTest {
 
   @Test
   @SneakyThrows
+  void createBusinessProcessInvalidContentTest() {
+    Assertions.assertThatThrownBy(
+            () -> businessProcessService.createProcess("business-process", "Invalid content", VERSION_ID))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("Could not parse xml document");
+  }
+
+  @Test
+  @SneakyThrows
   void getBusinessProcessContentTest() {
     Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
         .thenReturn(PROCESS_CONTENT);
@@ -159,6 +226,18 @@ public class BusinessProcessServiceTest {
 
     Assertions.assertThat(actualBusinessProcessContent)
         .isEqualTo(PROCESS_CONTENT);
+  }
+
+  @Test
+  @SneakyThrows
+  void getBusinessProcessContentNotFoundTest() {
+    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(null);
+
+    Assertions.assertThatThrownBy(
+        () ->businessProcessService.getProcessContent("business-process", VERSION_ID))
+        .isInstanceOf(ProcessNotFoundException.class)
+        .hasMessage("Process business-process not found");
   }
 
   @Test
@@ -175,6 +254,8 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void updateBusinessProcessTest() {
+    Mockito.when(repository.isFileExists("bpmn/business-process." + BPMN_FILE_EXTENSION)).thenReturn(true);
+    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION)).thenReturn(PROCESS_CONTENT);
     Assertions.assertThatCode(
             () -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
