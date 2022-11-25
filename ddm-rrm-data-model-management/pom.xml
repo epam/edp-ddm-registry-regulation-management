@@ -5,7 +5,7 @@
   <parent>
     <artifactId>registry-regulation-management-parent</artifactId>
     <groupId>com.epam.digital.data.platform</groupId>
-    <version>1.7.0</version>
+    <version>1.9.2</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -26,7 +26,7 @@
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-rrm-data-model-snapshot</artifactId>
-      <version>1.7.0</version>
+      <version>${project.version}</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>
