@@ -43,9 +43,6 @@ public class GerritServiceMrByNumberTest extends AbstractGerritServiceTest {
   void getMRByNumberNullableTest() {
     var versionNumber = RandomString.make();
     var testVersion = "project:+" + versionNumber;
-    var info = new ChangeInfo();
-    info._number = 10;
-    info.mergeable = true;
 
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("");
     Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
