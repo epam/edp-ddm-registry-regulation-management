@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.management.mapper;
 
 
-import com.epam.digital.data.platform.management.TestUtils;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
@@ -30,7 +29,6 @@ import org.mapstruct.factory.Mappers;
 
 class BusinessProcessMapperTest {
   private final BusinessProcessMapper mapper = Mappers.getMapper(BusinessProcessMapper.class);
-  private final String BUSINESS_PROCESS_CONTENT = TestUtils.getContent("bp-sample.bpmn");
 
   @Test
   @SneakyThrows
