@@ -407,51 +407,98 @@ class CandidateVersionControllerIT extends BaseIT {
     }
   }
 
-  @Test
-  @DisplayName("POST /versions/candidates should return 201 with version info")
-  @SneakyThrows
-  void createNewVersion() {
-    final var versionCandidateId = context.createVersionCandidate(
-        TestVersionCandidate.builder()
-            .subject("request name")
-            .topic("request description")
-            .mergeable(true)
-            .created(LocalDateTime.of(2022, 10, 28, 15, 34))
-            .updated(LocalDateTime.of(2022, 10, 28, 15, 34))
-            .build()
-    );
+  @Nested
+  class CreateVersionCandidateTest {
 
-    context.getGerritMockServer().addStubMapping(
-        stubFor(WireMock.post("/a/changes/")
-            .withRequestBody(matchingJsonPath("$.subject", equalTo("request name")))
-            .withRequestBody(matchingJsonPath("$.topic", equalTo("request description")))
-            .willReturn(aResponse().withStatus(200)
-                .withBody(String.format("{\"_number\":%s}", versionCandidateId))))
-    );
+    @Test
+    @DisplayName("POST /versions/candidates should return 201 with version info")
+    @SneakyThrows
+    void createNewVersion() {
+      final var versionCandidateId = context.createVersionCandidate(
+          TestVersionCandidate.builder()
+              .subject("request-name")
+              .topic("request description")
+              .mergeable(true)
+              .created(LocalDateTime.of(2022, 10, 28, 15, 34))
+              .updated(LocalDateTime.of(2022, 10, 28, 15, 34))
+              .build()
+      );
 
-    final var request = CreateVersionRequest.builder()
-        .name("request name")
-        .description("request description")
-        .build();
+      context.getGerritMockServer().addStubMapping(
+          stubFor(WireMock.post("/a/changes/")
+              .withRequestBody(matchingJsonPath("$.subject", equalTo("request-name")))
+              .withRequestBody(matchingJsonPath("$.topic", equalTo("request description")))
+              .willReturn(aResponse().withStatus(200)
+                  .withBody(String.format("{\"_number\":%s}", versionCandidateId))))
+      );
 
-    mockMvc.perform(
-        post("/versions/candidates")
-            .contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(new ObjectMapper().writeValueAsString(request))
-            .accept(MediaType.APPLICATION_JSON_VALUE)
-    ).andExpectAll(
-        status().isCreated(),
-        content().contentType("application/json"),
-        jsonPath("$.id", is(versionCandidateId)),
-        jsonPath("$.name", is("request name")),
-        jsonPath("$.description", is("request description")),
-        jsonPath("$.hasConflicts", is(false)),
-        jsonPath("$.creationDate", is("2022-10-28T15:34:00.000Z")),
-        jsonPath("$.latestUpdate", is("2022-10-28T15:34:00.000Z")),
-        jsonPath("$.author", is(context.getGerritProps().getUser())),
-        jsonPath("$.validations", nullValue())
-    );
-    Thread.sleep(1000);
-    Assertions.assertThat(context.getRepo(versionCandidateId)).exists();
+      final var request = CreateVersionRequest.builder()
+          .name("request-name")
+          .description("request description")
+          .build();
+
+      mockMvc.perform(
+          post("/versions/candidates")
+              .contentType(MediaType.APPLICATION_JSON_VALUE)
+              .content(new ObjectMapper().writeValueAsString(request))
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isCreated(),
+          content().contentType("application/json"),
+          jsonPath("$.id", is(versionCandidateId)),
+          jsonPath("$.name", is("request-name")),
+          jsonPath("$.description", is("request description")),
+          jsonPath("$.hasConflicts", is(false)),
+          jsonPath("$.creationDate", is("2022-10-28T15:34:00.000Z")),
+          jsonPath("$.latestUpdate", is("2022-10-28T15:34:00.000Z")),
+          jsonPath("$.author", is(context.getGerritProps().getUser())),
+          jsonPath("$.validations", nullValue())
+      );
+      Thread.sleep(1000);
+      Assertions.assertThat(context.getRepo(versionCandidateId)).exists();
+    }
+
+
+    @Test
+    @DisplayName("POST /versions/candidates should return 422 with invalid version name")
+    @SneakyThrows
+    void createInvalidNameVersion() {
+      final var request = CreateVersionRequest.builder()
+          .name("INVALID_NAME")
+          .description("request description")
+          .build();
+
+      mockMvc.perform(
+          post("/versions/candidates")
+              .contentType(MediaType.APPLICATION_JSON_VALUE)
+              .content(new ObjectMapper().writeValueAsString(request))
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isUnprocessableEntity(),
+          jsonPath("$.code").value("INVALID_VERSION_CANDIDATE_EXCEPTION"),
+          jsonPath("$.statusDetails").doesNotExist(),
+          jsonPath("$.localizedMessage").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("POST /versions/candidates should return 422 with invalid version description")
+    @SneakyThrows
+    void createInvalidDescriptionVersion() {
+      final var request = CreateVersionRequest.builder()
+          .name("request-name")
+          .description("\"Quotes are forbidden in description\"")
+          .build();
+
+      mockMvc.perform(
+          post("/versions/candidates")
+              .contentType(MediaType.APPLICATION_JSON_VALUE)
+              .content(new ObjectMapper().writeValueAsString(request))
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isUnprocessableEntity(),
+          jsonPath("$.code").value("INVALID_VERSION_CANDIDATE_EXCEPTION"),
+          jsonPath("$.statusDetails").doesNotExist(),
+          jsonPath("$.localizedMessage").doesNotExist());
+    }
   }
 }
