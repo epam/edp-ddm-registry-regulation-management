@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.model;
 
-import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

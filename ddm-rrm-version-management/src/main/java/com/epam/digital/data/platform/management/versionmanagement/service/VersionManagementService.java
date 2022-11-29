@@ -20,12 +20,15 @@ import com.epam.digital.data.platform.management.gerritintegration.model.CreateC
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
 import java.util.List;
 import org.springframework.lang.Nullable;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Service that is using to work with versions
  */
+@Validated
 public interface VersionManagementService {
 
   /**
@@ -65,7 +68,7 @@ public interface VersionManagementService {
    * @param subject version creation info
    * @return version identifier
    */
-  String createNewVersion(CreateChangeInputDto subject);
+  String createNewVersion(@VersionCandidate CreateChangeInputDto subject);
 
   /**
    * Get version details by version identifier

@@ -39,6 +39,7 @@ import com.epam.digital.data.platform.management.users.exception.FileExtensionEx
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
+import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.lang.annotation.Annotation;
 import java.util.Objects;
@@ -77,6 +78,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
   private static final String SETTINGS_PARSING_EXCEPTION = "SETTINGS_PARSING_EXCEPTION";
   private static final String BUSINESS_PROCESS_CONTENT_EXCEPTION = "BUSINESS_PROCESS_CONTENT_EXCEPTION";
+  private static final String INVALID_VERSION_CANDIDATE_EXCEPTION = "INVALID_VERSION_CANDIDATE_EXCEPTION";
   private static final String CONSTRAINT_VIOLATION_EXCEPTION = "CONSTRAINT_VIOLATION_EXCEPTION";
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
   private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
@@ -265,6 +267,11 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       log.warn("Business process content has errors");
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
           .body(newDetailedResponse(BUSINESS_PROCESS_CONTENT_EXCEPTION, exception));
+    }
+    if (getAnnotationFromConstraintViolationException(exception) instanceof VersionCandidate) {
+      log.warn("Version candidate name or description is invalid");
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(newDetailedResponse(INVALID_VERSION_CANDIDATE_EXCEPTION, exception));
     }
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

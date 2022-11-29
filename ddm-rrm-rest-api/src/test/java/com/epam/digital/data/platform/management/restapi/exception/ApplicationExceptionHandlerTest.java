@@ -33,14 +33,18 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.service.FormService;
+import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionBusinessProcessesController;
+import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionController;
 import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionFormsController;
 import com.epam.digital.data.platform.management.restapi.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.restapi.controller.UserImportController;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
+import com.epam.digital.data.platform.management.restapi.mapper.RequestToDtoMapper;
+import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
@@ -53,7 +57,9 @@ import com.epam.digital.data.platform.management.users.exception.VaultInvocation
 import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
 import com.epam.digital.data.platform.management.users.service.UserImportServiceImpl;
 import com.epam.digital.data.platform.management.users.validator.Validator;
+import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import javax.validation.ConstraintViolationException;
 import lombok.SneakyThrows;
@@ -61,6 +67,7 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -76,7 +83,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @ContextConfiguration(
     classes = {MasterVersionFormsController.class, UserImportController.class,
         ApplicationExceptionHandler.class, CandidateVersionBusinessProcessesController.class,
-        CandidateVersionFormsController.class}
+        CandidateVersionFormsController.class, CandidateVersionController.class}
 )
 @AutoConfigureMockMvc(addFilters = false)
 class ApplicationExceptionHandlerTest {
@@ -97,10 +104,12 @@ class ApplicationExceptionHandlerTest {
   BusinessProcessService businessProcessService;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
-
+  @MockBean
+  VersionManagementService versionManagementService;
   @MockBean
   OpenShiftService openShiftService;
-
+  @MockBean
+  RequestToDtoMapper mapper;
   @MockBean
   Validator validator;
 
@@ -326,7 +335,7 @@ class ApplicationExceptionHandlerTest {
 
   @Test
   @SneakyThrows
-  void shouldThrowConstraintViolationException() {
+  void shouldThrowConstraintViolationExceptionOnInvalidBP() {
     var bpName = RandomString.make();
     var versionName = RandomString.make();
     var content = TestUtils.getContent("bp-correct.xml");
@@ -337,6 +346,33 @@ class ApplicationExceptionHandlerTest {
                 versionName, bpName).content(content))
         .andExpect(status().isInternalServerError())
         .andExpectAll(
+            jsonPath("$.code").value("CONSTRAINT_VIOLATION_EXCEPTION"),
+            jsonPath("$.statusDetails").doesNotExist(),
+            jsonPath("$.localizedMessage").doesNotExist());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowConstraintViolationExceptionOnInvalidCandidate() {
+    var versionName = RandomString.make();
+    var versionDescription = RandomString.make();
+    var request = new CreateVersionRequest();
+    request.setName(versionName);
+    request.setDescription(versionDescription);
+    var createChangeInputDto = CreateChangeInputDto.builder()
+        .name(versionName)
+        .description(versionDescription)
+        .build();
+    Mockito.when(versionManagementService.createNewVersion(createChangeInputDto)).thenReturn("1");
+    Mockito.doReturn(createChangeInputDto).when(mapper).toDto(request);
+    doThrow(ConstraintViolationException.class)
+        .when(versionManagementService).createNewVersion(createChangeInputDto);
+    mockMvc.perform(post("/versions/candidates")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(new ObjectMapper().writeValueAsString(request))
+            .accept(MediaType.APPLICATION_JSON_VALUE))
+        .andExpectAll(
+            status().isInternalServerError(),
             jsonPath("$.code").value("CONSTRAINT_VIOLATION_EXCEPTION"),
             jsonPath("$.statusDetails").doesNotExist(),
             jsonPath("$.localizedMessage").doesNotExist());
