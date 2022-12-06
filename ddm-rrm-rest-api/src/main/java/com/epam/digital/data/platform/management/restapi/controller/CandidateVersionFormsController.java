@@ -174,11 +174,18 @@ public class CandidateVersionFormsController {
   }
 
   @Operation(description = "Update existing form within version-candidate",
-      parameters = @Parameter(in = ParameterIn.HEADER,
-          name = "X-Access-Token",
-          description = "Token used for endpoint security",
-          required = true,
-          schema = @Schema(type = "string")),
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
@@ -216,11 +223,18 @@ public class CandidateVersionFormsController {
   }
 
   @Operation(description = "Delete existing form within version-candidate",
-      parameters = @Parameter(in = ParameterIn.HEADER,
-          name = "X-Access-Token",
-          description = "Token used for endpoint security",
-          required = true,
-          schema = @Schema(type = "string")),
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
       responses = {
           @ApiResponse(responseCode = "204",
               description = "No Content",
@@ -242,7 +256,7 @@ public class CandidateVersionFormsController {
   @DeleteMapping("/{formName}")
   public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName) {
-    log.info("Started deleting form {} from {} version candidate", formName, versionCandidateId);
+    log.info("Started deleting {} form for {} version candidate", formName, versionCandidateId);
     formService.deleteForm(formName, versionCandidateId);
     log.info("Form {} was deleted from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.noContent().build();

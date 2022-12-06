@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.config;
 
+import com.epam.digital.data.platform.management.interceptor.FormETagHeaderInterceptor;
 import com.epam.digital.data.platform.management.security.config.SecurityContextResolver;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
   private final HandlerInterceptor livenessProbeStateInterceptor;
-
+  private final FormETagHeaderInterceptor formETagHeaderInterceptor;
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
     resolvers.add(new SecurityContextResolver());
@@ -39,5 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(livenessProbeStateInterceptor);
+    registry.addInterceptor(formETagHeaderInterceptor)
+        .addPathPatterns("/versions/candidates/**/forms/**");
   }
 }

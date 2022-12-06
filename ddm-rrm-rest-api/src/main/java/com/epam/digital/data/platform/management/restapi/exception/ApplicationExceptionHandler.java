@@ -83,6 +83,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
   private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
+  private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
 
   private final MessageResolver messageResolver;
 
@@ -276,6 +277,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(CONSTRAINT_VIOLATION_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleETagFilteringException(
+      ETagFilteringException exception) {
+    log.error("Invalid ETag for {} form from {} version candidate", exception.getFormName(), exception.getVersionCandidate());
+    return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+        .body(newDetailedResponse(ETAG_FILTERING_EXCEPTION, exception));
   }
 
   private Annotation getAnnotationFromConstraintViolationException(
