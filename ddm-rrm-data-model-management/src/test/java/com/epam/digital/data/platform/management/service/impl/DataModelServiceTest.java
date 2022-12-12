@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
@@ -65,9 +66,10 @@ public class DataModelServiceTest {
   @SneakyThrows
   void setup() {
     var file = getFile("/table_sample.json");
-    Files.deleteIfExists(Paths.get(DATA_MODEL_SNAPSHOT_TABLES_TABLE_SAMPLE_JSON));
+    Path path = Paths.get(DATA_MODEL_SNAPSHOT_TABLES_TABLE_SAMPLE_JSON);
+    Files.deleteIfExists(path);
     Files.copy(file.toPath(),
-        Paths.get(DATA_MODEL_SNAPSHOT_TABLES_TABLE_SAMPLE_JSON));
+        path);
   }
 
   @Test

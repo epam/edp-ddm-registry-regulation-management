@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.versionmanagement.model;
+package com.epam.digital.data.platform.management;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import static org.springframework.util.StreamUtils.copyToString;
 
-import java.util.List;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-@Getter
-@Setter
-@Builder
-@ToString
-@EqualsAndHashCode
-public class VersionChangesDto {
+public final class TestUtils {
 
-  private List<EntityChangesInfoDto> changedForms;
-  private List<EntityChangesInfoDto> changedBusinessProcesses;
-
+  public static String getContent(String filePath) {
+    try {
+      return copyToString(TestUtils.class.getClassLoader().getResourceAsStream(filePath),
+          StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

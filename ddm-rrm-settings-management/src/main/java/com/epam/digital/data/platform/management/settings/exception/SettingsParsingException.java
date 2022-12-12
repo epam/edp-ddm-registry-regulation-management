@@ -18,10 +18,6 @@ package com.epam.digital.data.platform.management.settings.exception;
 
 public class SettingsParsingException extends RuntimeException {
 
-  public SettingsParsingException(String message) {
-    super(message);
-  }
-
   public SettingsParsingException(String message, Throwable cause) {
     super(message, cause);
   }

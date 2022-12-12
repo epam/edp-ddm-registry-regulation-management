@@ -27,9 +27,4 @@ public class FormNotFoundException extends RuntimeException {
     super(message);
     this.formName = formName;
   }
-
-  public FormNotFoundException(String message, Throwable cause, String formName) {
-    super(message, cause);
-    this.formName = formName;
-  }
 }
