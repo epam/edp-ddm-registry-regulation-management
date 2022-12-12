@@ -31,7 +31,6 @@ import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDt
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
-import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.time.LocalDateTime;

@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.settings.service;
 
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.assertj.core.api.Assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(SpringExtension.class)
@@ -128,5 +130,17 @@ class SettingServiceTest {
         .build();
     SettingsInfoDto actual = settingServiceImpl.getSettings(VERSION_ID);
     assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @SneakyThrows
+  void getSettingsInvalidContent() {
+    Mockito.when(repository.readFile(GLOBAL_VARS_PATH))
+        .thenReturn("Illegal settings");
+    Mockito.when(repository.readFile(SETTINGS_PATH))
+        .thenReturn("Illegal global vars");
+    assertThatThrownBy(() -> settingServiceImpl.getSettings(VERSION_ID))
+        .isInstanceOf(SettingsParsingException.class)
+        .hasMessage("Could not process settings files");
   }
 }

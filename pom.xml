@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>registry-regulation-management-parent</artifactId>
-  <version>1.7.0</version>
+  <version>1.9.2</version>
   <packaging>pom</packaging>
 
   <name>registry-regulation-management-parent</name>

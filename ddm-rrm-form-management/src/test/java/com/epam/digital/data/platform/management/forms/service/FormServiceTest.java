@@ -27,6 +27,7 @@ import com.epam.digital.data.platform.management.filemanagement.service.Versione
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.forms.FormMapper;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
+import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.forms.util.TestUtils;
 import java.time.LocalDateTime;
@@ -63,6 +64,8 @@ class FormServiceTest {
   @Mock
   private VersionedFileRepository repository;
   @Mock
+  private VersionedFileRepository masterRepository;
+  @Mock
   private GerritPropertiesConfig gerritPropertiesConfig;
   @Spy
   private FormMapper formMapper = Mappers.getMapper(FormMapper.class);
@@ -73,6 +76,7 @@ class FormServiceTest {
   @SneakyThrows
   void beforeEach() {
     Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
+    Mockito.when(repositoryFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch())).thenReturn(masterRepository);
   }
 
   @Test
@@ -89,6 +93,24 @@ class FormServiceTest {
 
     var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+        .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
+        .title("Update physical factors").build();
+    Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
+  }
+
+  @Test
+  @SneakyThrows
+  void getChangedFormsListByVersionTest() {
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json").status(FileStatus.DELETED)
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
+    Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));
+    Mockito.when(masterRepository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
+
+    var resultList = formService.getChangedFormsListByVersion(VERSION_ID);
+
+    var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.DELETED).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
         .title("Update physical factors").build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
@@ -141,6 +163,16 @@ class FormServiceTest {
 
   @Test
   @SneakyThrows
+  void getFormContentNullTest() {
+    Mockito.when(repository.readFile("forms/form.json")).thenReturn(null);
+
+    Assertions.assertThatThrownBy(() -> formService.getFormContent("form", VERSION_ID))
+        .isInstanceOf(FormNotFoundException.class)
+        .hasMessage("Form form not found");
+  }
+
+  @Test
+  @SneakyThrows
   void updateFormTestNoErrorTest() {
     Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID))
         .doesNotThrowAnyException();
@@ -152,6 +184,8 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void updateFormTest() {
+    Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(true);
+    Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
     formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
     Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
