@@ -54,7 +54,7 @@
     <jgit.version>6.1.0.202203080745-r</jgit.version>
     <gerrit.client.version>0.9.4</gerrit.client.version>
     <spring-security-core.version>5.7.5</spring-security-core.version>
-    <spring-boot-starter-web.version>2.6.6</spring-boot-starter-web.version>
+    <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
 
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
