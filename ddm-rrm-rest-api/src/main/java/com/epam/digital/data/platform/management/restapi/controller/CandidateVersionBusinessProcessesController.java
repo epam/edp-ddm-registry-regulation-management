@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -130,7 +131,7 @@ public class CandidateVersionBusinessProcessesController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PostMapping("/{businessProcessName}")
   public ResponseEntity<String> createBusinessProcess(
-      @RequestBody String businessProcess,
+      @RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName) {
     log.info("Started creating business process {} for {} version candidate", businessProcessName,
@@ -217,7 +218,7 @@ public class CandidateVersionBusinessProcessesController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @PutMapping("/{businessProcessName}")
   public ResponseEntity<String> updateBusinessProcess(
-      @RequestBody String businessProcess,
+      @RequestBody @BusinessProcess String businessProcess,
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
       @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
     log.info("Started updating business process {} for {} version candidate", businessProcessName,
