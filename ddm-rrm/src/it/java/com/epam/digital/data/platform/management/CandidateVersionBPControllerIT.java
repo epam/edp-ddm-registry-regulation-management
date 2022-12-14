@@ -36,7 +36,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathFactory;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -297,7 +296,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
 
     @Test
     @DisplayName("should return 422 if trying create not valid business-process")
-    @Disabled
     @SneakyThrows
     void createBusinessProcess_notValidBusinessProcess() {
       // mock gerrit change info for version candidate
@@ -452,7 +450,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
 
     @Test
     @DisplayName("should return 422 if trying update business-process with not valid data")
-    @Disabled
     @SneakyThrows
     void updateBusinessProcess_notValidBusinessProcess() {
       // mock gerrit change info for version candidate

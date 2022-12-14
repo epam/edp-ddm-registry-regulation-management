@@ -65,7 +65,6 @@ import javax.validation.ConstraintViolationException;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -317,7 +316,6 @@ class ApplicationExceptionHandlerTest {
 
   @Test
   @SneakyThrows
-  @Disabled
   void shouldThrowConstraintViolationExceptionDuringBpValidation() {
     var bpName = RandomString.make();
     var versionName = RandomString.make();
