@@ -16,9 +16,12 @@
 
 package com.epam.digital.data.platform.management.scheduled;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,19 +34,25 @@ public class DeleteOldRepositoryScheduler {
 
   private final GerritService gerritService;
   private final JGitService jGitService;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Scheduled(cron = "${scheduled.cleanRepositoriesCron}", zone = "${scheduled.cleanRepositoriesTimezone}")
   public void deleteOldRepositories() {
-    List<String> closedMrs = gerritService.getClosedMrIds();
+    try {
+      var openedMrs = gerritService.getMRList();
+      var repositoriesDirectory = gerritPropertiesConfig.getRepositoryDirectory();
 
-    closedMrs.forEach(mr -> {
-      log.info("Try to clear repository with id: " + mr);
-      try {
-        jGitService.deleteRepo(mr);
-      } catch (Exception e) {
-        log.error("Error during deleting repository with id: " + mr);
+      try (var directories = Files.list(Path.of(repositoriesDirectory))) {
+        directories
+            .filter(path -> !path.endsWith(gerritPropertiesConfig.getHeadBranch()))
+            .filter(path -> openedMrs.stream()
+                .map(ChangeInfoDto::getNumber)
+                .noneMatch(path::endsWith))
+            .map(path -> path.getFileName().toString())
+            .forEach(jGitService::deleteRepo);
       }
-    });
+    } catch (Exception e) {
+      log.warn("Error during deleting obsolete repositories: {}", e.getMessage());
+    }
   }
-
 }

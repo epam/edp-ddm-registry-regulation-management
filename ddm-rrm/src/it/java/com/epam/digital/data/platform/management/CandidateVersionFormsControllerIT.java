@@ -42,6 +42,7 @@ import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -58,7 +59,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     void getForm() {
       // add file to "remote" repo
       final var expectedFormContent = context.getResourceContent(
-          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json");
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json").replace("\r", "");
       context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
       // mock gerrit change info for version candidate
@@ -73,7 +74,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
           content().json(expectedFormContent),
-          header().string("ETag", String.format("\"%s\"", expectedFormContent.hashCode()))
+          header().string(HttpHeaders.ETAG, String.format("\"%s\"", expectedFormContent.hashCode()))
       );
     }
 

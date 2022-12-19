@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -47,7 +48,7 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
   public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
       ModelAndView modelAndView) {
     if (!request.getMethod().equals("DELETE")) {
-      response.setHeader("ETag", getETagFromContent(getContent(request)));
+      response.setHeader(HttpHeaders.ETAG, getETagFromContent(getContent(request)));
     }
   }
 
@@ -56,10 +57,12 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
   }
 
   protected Map<String, String> getVariables(HttpServletRequest request) {
-    return (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+    return (Map<String, String>) request.getAttribute(
+        HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
   }
 
-  protected boolean validateETag(HttpServletRequest request, HttpServletResponse response, String eTag) {
+  protected boolean validateETag(HttpServletRequest request, HttpServletResponse response,
+      String eTag) {
     var content = getContent(request);
     var url = request.getRequestURL();
     if (!getETagFromContent(content).equals(eTag)) {
