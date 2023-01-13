@@ -111,7 +111,6 @@ class ApplicationExceptionHandlerTest {
   RequestToDtoMapper mapper;
   @MockBean
   Validator validator;
-
   @MockBean
   private MessageResolver messageResolver;
 

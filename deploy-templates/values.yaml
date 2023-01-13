@@ -80,7 +80,7 @@ gerrit:
   basePath: /gerrit
   repository: registry-regulations
   headBranch: master
-  repositoryDirectory: /repositories
+  repositoryDirectory: /var/lib/repos-data
 scheduled:
   repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
