@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -33,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,7 +42,9 @@ import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 @DisplayName("Forms in version candidates controller tests")
 class CandidateVersionFormsControllerIT extends BaseIT {
@@ -55,7 +59,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     void getForm() {
       // add file to "remote" repo
       final var expectedFormContent = context.getResourceContent(
-          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json");
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json").replace("\r", "");
       context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
       // mock gerrit change info for version candidate
@@ -69,7 +73,8 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       ).andExpectAll(
           status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
-          content().json(expectedFormContent)
+          content().json(expectedFormContent),
+          header().string(HttpHeaders.ETAG, String.format("\"%s\"", expectedFormContent.hashCode()))
       );
     }
 
@@ -304,7 +309,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     @Test
     @DisplayName("should return 200 and update form if there's already exists such form")
     @SneakyThrows
-    void updateForm() {
+    void updateForm_noETag() {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
@@ -323,6 +328,129 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               versionCandidateId, "valid-form")
               .contentType(MediaType.APPLICATION_JSON)
               .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form.json").getCreated();
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+
+    @Test
+    @DisplayName("should return 200 and update form if there's already exists such form")
+    @SneakyThrows
+    void updateForm_validETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "valid-form")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", eTag)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form.json").getCreated();
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+
+    @Test
+    @DisplayName("should return 200 and update form with asterisk ETag")
+    @SneakyThrows
+    void updateForm_asteriskETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", "*")
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
@@ -428,6 +556,102 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
+
+    @Test
+    @DisplayName("should return 412 if wrong ETag")
+    @SneakyThrows
+    void updateForm_invalidETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", RandomString.make())
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isPreconditionFailed()
+    );
+
+      // assert that actual content was not updated
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+
+      JSONAssert.assertNotEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+    }
+
+    @Test
+    @DisplayName("should return 412 if modified concurrently")
+    @SneakyThrows
+    void updateForm_modifiedConcurrently() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // define modified form content to update
+      final var modifiedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-version-candidate-modified.json");
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "valid-form")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      //perform update with missing eTag
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(modifiedFormContent)
+              .accept(MediaType.APPLICATION_JSON));
+
+      // perform query with outdated ETag
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", eTag)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isPreconditionFailed()
+      );
+
+      // assert that actual content was not updated after second request
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+      JSONAssert.assertEquals(modifiedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+    }
   }
 
   @Nested
@@ -437,7 +661,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     @Test
     @DisplayName("should return 204 and delete form if there's already exists such form")
     @SneakyThrows
-    void deleteForm() {
+    void deleteForm_noETag() {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
@@ -450,6 +674,95 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       mockMvc.perform(delete(
           "/versions/candidates/{versionCandidateId}/forms/{formName}",
           versionCandidateId, "john-does-form")
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      final var isFileExists = context.isFileExistsInRemoteVersionCandidateRepo(
+          "/forms/john-does-form.json");
+      Assertions.assertThat(isFileExists).isFalse();
+    }
+
+    @Test
+    @DisplayName("should return 204 and delete form if there's already exists such form")
+    @SneakyThrows
+    void deleteForm_validETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "john-does-form")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "john-does-form")
+          .header("If-Match", eTag)
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      final var isFileExists = context.isFileExistsInRemoteVersionCandidateRepo(
+          "/forms/john-does-form.json");
+      Assertions.assertThat(isFileExists).isFalse();
+    }
+
+    @Test
+    @DisplayName("should return 412 with invalid ETag")
+    @SneakyThrows
+    void deleteForm_invalidETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "john-does-form")
+          .header("If-Match", RandomString.make())
+      ).andExpect(
+          status().isPreconditionFailed()
+      );
+
+      // assert that file was not deleted
+      final var isFileExists = context.isFileExistsInRemoteVersionCandidateRepo(
+          "/forms/john-does-form.json");
+      Assertions.assertThat(isFileExists).isTrue();
+    }
+
+
+    @Test
+    @DisplayName("should return 204 and delete form with asterisk ETag")
+    @SneakyThrows
+    void deleteForm_asteriskETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}",
+          versionCandidateId, "john-does-form")
+          .header("If-Match", "*")
       ).andExpect(
           status().isNoContent()
       );
