@@ -4,6 +4,7 @@ gerrit:
   password: pass
   head-branch: head-branch
   repository: repository
+  repository-directory: ${java.io.tmpdir}/testDirectory
 
 spring:
   cloud:
@@ -15,4 +16,12 @@ spring:
       spec: expireAfterAccess=5s
 
 scheduled:
+  dataModelSnapshotCron: '-'
   cleanRepositoriesCron: '-'
+  repositoryRefreshCron: '-'
+
+registry-regulation-management:
+  async:
+    enabled: false
+  retry:
+    enabled: false

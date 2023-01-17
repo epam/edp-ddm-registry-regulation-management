@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class CandidateVersionBPControllerIT extends BaseIT {
       // add file to "remote" repo
       final var expectedBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/GET/john-does-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -126,10 +126,10 @@ class CandidateVersionBPControllerIT extends BaseIT {
       // add files to "remote" repo
       final var johnDoesBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/GET/john-does-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", johnDoesBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", johnDoesBpContent);
       final var mrSmithsBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/GET/mr-smiths-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/mr-smiths-bp.bpmn", mrSmithsBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/mr-smiths-bp.bpmn", mrSmithsBpContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -274,7 +274,7 @@ class CandidateVersionBPControllerIT extends BaseIT {
       // add file to "remote" repo
       final var expectedBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/POST/valid-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/valid-bp.bpmn", expectedBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/valid-bp.bpmn", expectedBpContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -333,7 +333,7 @@ class CandidateVersionBPControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/PUT/valid-bp-head.bpmn");
-      context.addFileToHeadRepo("/bpmn/valid-bp.bpmn", headBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/valid-bp.bpmn", headBpContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -487,7 +487,7 @@ class CandidateVersionBPControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headBpContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/DELETE/john-does-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", headBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", headBpContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();

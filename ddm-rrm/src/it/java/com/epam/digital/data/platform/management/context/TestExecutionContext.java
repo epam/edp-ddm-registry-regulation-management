@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,43 +43,121 @@ import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileSystemUtils;
 
+/**
+ * Test execution context that is accessible from every test case.
+ * <p>
+ * Used for setting up the gerrit stubs and setting up the remote repository state for test case
+ * <p>
+ * After creating the bean it's stubs common gerrit stuff such as authentication and getting gerrit
+ * version. Also sets up the remote repository for cloning it by
+ * {@link com.epam.digital.data.platform.management.core.event.ApplicationStartedEventListener} on
+ * application starting
+ */
 @Getter
 @Component
 @RequiredArgsConstructor
 public class TestExecutionContext {
 
-  @Qualifier("test-directory")
-  private final File testDirectory;
+  /**
+   * Directory thay is used as remote repository for all clones in application. Can be recreated by
+   * {@link TestExecutionContext#resetRemoteRepo()}
+   */
+  private File remoteHeadRepo;
+
+  /**
+   * Gerrit properties config for accessing in each test case. Can be modified, but the test case
+   * that is modifing it has to return the original state after test case completion.
+   */
   private final GerritPropertiesConfig gerritProps;
+
+  /**
+   * WireMock server for stubbing gerrit responses. Can be used for direct stubbing if there isn't
+   * enough the stubbing methods.
+   *
+   * @see TestExecutionContext#createVersionCandidate(TestVersionCandidate)
+   * @see TestExecutionContext#stubGerritCommon()
+   * @see TestExecutionContext#stubGerritGetChangeById(String)
+   * @see TestExecutionContext#stubGerritQueryChangesByNumber(String)
+   */
   @Qualifier("gerritMockServer")
   private final WireMockServer gerritMockServer;
 
+  /**
+   * Used for storing the version-candidate stub info for test case. There can be only one
+   * version-candidate per test case. Must be recreated in every test-case that is testing the
+   * version-candidate scope
+   */
   private TestVersionCandidate versionCandidate;
 
   @PostConstruct
+  @SneakyThrows
   public void init() {
     stubGerritCommon();
+    resetRemoteRepo();
   }
 
+  /**
+   * Used for recreating "remote repository"
+   */
+  @SneakyThrows
+  public void resetRemoteRepo() {
+    if (!Objects.isNull(remoteHeadRepo) && remoteHeadRepo.exists()) {
+      FileUtils.forceDelete(remoteHeadRepo);
+    }
+    remoteHeadRepo = Files.createTempDirectory("remote-repo").toFile();
+    try (var git = Git.init()
+        .setInitialBranch(gerritProps.getHeadBranch())
+        .setDirectory(remoteHeadRepo)
+        .call()) {
+      // init head repo
+      FileSystemUtils.copyRecursively(Path.of(ClassLoader.getSystemResource("baseRepo").toURI()),
+          remoteHeadRepo.toPath());
+      git.add().addFilepattern(".").call();
+      git.commit().setMessage("added folder structure").call();
+    }
+  }
+
+  /**
+   * @return Head-branch repo that is represanting a master version repository
+   */
   public File getHeadRepo() {
     return getRepo(gerritProps.getHeadBranch());
   }
 
+  /**
+   * Used for creating version-candidate with random info
+   *
+   * @return version-candidate number
+   *
+   * @see TestExecutionContext#createVersionCandidate(TestVersionCandidate)
+   * @see TestExecutionContext#mockVersionCandidateDoesNotExist()
+   */
   @SneakyThrows
   public String createVersionCandidate() {
     return createVersionCandidate(TestVersionCandidate.builder().build());
   }
 
+  /**
+   * Used for creating version-candidate with predefined info. Creates a branch in the remote repo
+   * that is used as ref for that version-candidate and stubs gerrit responces for it.
+   *
+   * @return version-candidate number
+   *
+   * @see TestExecutionContext#createVersionCandidate()
+   * @see TestExecutionContext#mockVersionCandidateDoesNotExist()
+   */
   @SneakyThrows
   public String createVersionCandidate(TestVersionCandidate testVersionCandidate) {
     versionCandidate = testVersionCandidate;
     final var versionCandidateId = String.valueOf(versionCandidate.getNumber());
 
-    try (final var git = Git.open(getHeadRepo())) {
+    try (final var git = Git.open(getRemoteHeadRepo())) {
       git.checkout()
           .setName(String.format("%s_ref", versionCandidateId))
           .setCreateBranch(true)
@@ -107,6 +185,14 @@ public class TestExecutionContext {
     return versionCandidateId;
   }
 
+  /**
+   * Stubs gerrit responses for non existed version-candidate
+   *
+   * @return random version candidate number
+   *
+   * @see TestExecutionContext#createVersionCandidate()
+   * @see TestExecutionContext#createVersionCandidate(TestVersionCandidate)
+   */
   @SneakyThrows
   public String mockVersionCandidateDoesNotExist() {
     final var versionCandidate = new java.util.Random().nextInt(Integer.MAX_VALUE);
@@ -124,9 +210,17 @@ public class TestExecutionContext {
     return versionCandidateId;
   }
 
+  /**
+   * Adds file to the head-branch to the remote repository. For
+   * {@link TestExecutionContext#getHeadRepo() head-branch repository} it's needed to
+   * {@link TestExecutionContext#pullHeadRepo() pull} first to see this changes in master version.
+   *
+   * @param path    new file path
+   * @param content new file content
+   */
   @SneakyThrows
-  public void addFileToHeadRepo(String path, String content) {
-    final var headRepo = getHeadRepo();
+  public void addFileToRemoteHeadRepo(String path, String content) {
+    final var headRepo = getRemoteHeadRepo();
     final var fullPath = Path.of(headRepo.getPath(), path);
     Files.writeString(fullPath, content);
 
@@ -138,9 +232,17 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Adds file to the version-candidate branch to the remote repository. It's needed to
+   * {@link TestExecutionContext#createVersionCandidate(TestVersionCandidate) create version
+   * candidate first}.
+   *
+   * @param path    new file path
+   * @param content new file content
+   */
   @SneakyThrows
   public void addFileToVersionCandidateRemote(String path, String content) {
-    final var headRepo = getHeadRepo();
+    final var headRepo = getRemoteHeadRepo();
     final var fullPath = Path.of(headRepo.getPath(), path);
 
     try (final var git = Git.open(headRepo)) {
@@ -154,9 +256,16 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Deletes file from the version-candidate branch from the remote repository. It's needed to
+   * {@link TestExecutionContext#createVersionCandidate(TestVersionCandidate) create version
+   * candidate first}.
+   *
+   * @param path file path to delete
+   */
   @SneakyThrows
   public void deleteFileFromVersionCandidateRemote(String path) {
-    final var headRepo = getHeadRepo();
+    final var headRepo = getRemoteHeadRepo();
     final var fullPath = Path.of(headRepo.getPath(), path);
 
     try (final var git = Git.open(headRepo)) {
@@ -170,9 +279,17 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Reads file from the version-candidate branch from the remote repository. It's needed to
+   * {@link TestExecutionContext#createVersionCandidate(TestVersionCandidate) create version
+   * candidate first}.
+   *
+   * @param path file path to read
+   * @return file content
+   */
   @SneakyThrows
   public String getFileFromRemoteVersionCandidateRepo(String path) {
-    final var headRepo = getHeadRepo();
+    final var headRepo = getRemoteHeadRepo();
     final var fullFilePath = Path.of(headRepo.getPath(), path);
     try (final var git = Git.open(headRepo)) {
       git.checkout().setName(String.format("%s_ref", versionCandidate.getNumber())).call();
@@ -182,9 +299,17 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Сhecks if file exists in the version-candidate branch in the remote repository. It's needed to
+   * {@link TestExecutionContext#createVersionCandidate(TestVersionCandidate) create version
+   * candidate first}.
+   *
+   * @param path file path to read
+   * @return true if file exists and false otherwise
+   */
   @SneakyThrows
   public boolean isFileExistsInRemoteVersionCandidateRepo(String path) {
-    final var headRepo = getHeadRepo();
+    final var headRepo = getRemoteHeadRepo();
     final var fullFilePath = Path.of(headRepo.getPath(), path);
     try (final var git = Git.open(headRepo)) {
       git.checkout().setName(String.format("%s_ref", versionCandidate.getNumber())).call();
@@ -194,6 +319,12 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Used for reading resourse folder content
+   *
+   * @param resourcePath path of the resource to read
+   * @return file content
+   */
   @SneakyThrows
   public String getResourceContent(String resourcePath) {
     final var resource = this.getClass().getResourceAsStream(resourcePath);
@@ -204,9 +335,16 @@ public class TestExecutionContext {
     return new String(resource.readAllBytes(), StandardCharsets.UTF_8);
   }
 
+  /**
+   * Reads git dates (creation and last updating) from head branch from remote repository for a
+   * specific path.
+   *
+   * @param path to find dates from git log
+   * @return {@link TestFileDatesDto} representation of dates
+   */
   @SneakyThrows
   public TestFileDatesDto getHeadRepoDatesByPath(String path) {
-    try (final var git = Git.open(getHeadRepo())) {
+    try (final var git = Git.open(getRemoteHeadRepo())) {
       final var commitsIterable = git.log()
           .addPath(path)
           .call();
@@ -234,8 +372,22 @@ public class TestExecutionContext {
     }
   }
 
+  /**
+   * Used for pull remote changes to the master version repository after changing the remote repo
+   */
+  @SneakyThrows
+  public void pullHeadRepo() {
+    try (var git = Git.open(getHeadRepo())) {
+      git.pull().call();
+    }
+  }
+
   public File getRepo(String repo) {
-    return new File(testDirectory, repo);
+    return new File(gerritProps.getRepositoryDirectory(), repo);
+  }
+
+  public File getTestDirectory() {
+    return new File(gerritProps.getRepositoryDirectory());
   }
 
   private void stubGerritCommon() {

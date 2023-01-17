@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,10 +48,11 @@ class MasterVersionFormsControllerIT extends BaseIT {
     @DisplayName("should return 200 with form content")
     @SneakyThrows
     void getForm() {
-      // add file to "remote" repo
+      // add file to "remote" repo and pull head repo
       final var expectedFormContent = context.getResourceContent(
           "/versions/master/forms/{formName}/GET/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", expectedFormContent);
+      context.pullHeadRepo();
 
       // perform query
       mockMvc.perform(
@@ -61,6 +62,26 @@ class MasterVersionFormsControllerIT extends BaseIT {
           status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
           content().json(expectedFormContent)
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if form hasn't been pulled")
+    @SneakyThrows
+    void getForm_formHasNotBeenPulled() {
+      // add file to "remote" repo and DO NOT pull the head repo
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/GET/john-does-form.json");
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", expectedFormContent);
+
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("FORM_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is("Form john-does-form not found"))
       );
     }
 
@@ -82,31 +103,34 @@ class MasterVersionFormsControllerIT extends BaseIT {
 
   @Nested
   @DisplayName("GET /versions/master/forms")
-  class CandidateVersionFormsGetFormListControllerIT {
+  class MasterVersionFormsGetFormListControllerIT {
 
     @Test
-    @DisplayName("should return 200 with all found forms")
+    @DisplayName("should return 200 with all pulled forms")
     @SneakyThrows
     void getFormsInMaster() {
-      // add files to "remote" repo
+      // add 2 files to "remote" repo pull head branch repo and add 1 more file to "remote"
       final var johnDoesFormContent = context.getResourceContent(
           "/versions/master/forms/GET/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
       final var mrSmithsFormContent = context.getResourceContent(
           "/versions/master/forms/GET/mr-smiths-form.json");
-      context.addFileToHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
+      context.addFileToRemoteHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
+      context.pullHeadRepo();
+      context.addFileToRemoteHeadRepo("/forms/mr-smiths-form1.json", mrSmithsFormContent);
 
       // define expected john-does-form dates
       final var expectedJohnDoesFormDates = context.getHeadRepoDatesByPath(
           "forms/john-does-form.json");
 
-      // perform query
+      // perform query and expect only 2 of the processes that are pulled on head-branch repo
       mockMvc.perform(
           get("/versions/master/forms")
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$", hasSize(2)),
           jsonPath("$[0].name", is("john-does-form")),
           jsonPath("$[0].title", is("John Doe's form")),
           jsonPath("$[0].created", is(expectedJohnDoesFormDates.getCreated())),
