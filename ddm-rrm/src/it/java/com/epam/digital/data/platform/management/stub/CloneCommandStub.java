@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,6 @@ public class CloneCommandStub extends CloneCommand {
     Assertions.assertThat(uri).isEqualTo(
         context.getGerritProps().getUrl() + "/" + context.getGerritProps().getRepository());
 
-    return super.setURI(context.getHeadRepo().getAbsolutePath());
+    return super.setURI(context.getRemoteHeadRepo().getAbsolutePath());
   }
 }

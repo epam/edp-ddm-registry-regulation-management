@@ -98,3 +98,7 @@ db:
 cache:
   names: dates
   spec: expireAfterAccess=1d
+
+registry-regulation-management:
+  retry:
+    head-branch-cloning-delay: 300000

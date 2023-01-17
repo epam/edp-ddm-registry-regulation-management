@@ -1,11 +1,11 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -282,24 +282,25 @@ class CandidateVersionControllerIT extends BaseIT {
       // add forms to "remote" repo
       final var changedFormHead = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/changed-form-head.json");
-      context.addFileToHeadRepo("/forms/changed-form.json", changedFormHead);
+      context.addFileToRemoteHeadRepo("/forms/changed-form.json", changedFormHead);
       final var unchangedForm = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/unchanged-form.json");
-      context.addFileToHeadRepo("/forms/unchanged-form.json", unchangedForm);
+      context.addFileToRemoteHeadRepo("/forms/unchanged-form.json", unchangedForm);
       final var deletedForm = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/deleted-form.json");
-      context.addFileToHeadRepo("/forms/deleted-form.json", deletedForm);
+      context.addFileToRemoteHeadRepo("/forms/deleted-form.json", deletedForm);
 
       // add business-processes to "remote" repo
       final var changedProcessHead = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/changed-process-head.bpmn");
-      context.addFileToHeadRepo("/bpmn/changed-process.bpmn", changedProcessHead);
+      context.addFileToRemoteHeadRepo("/bpmn/changed-process.bpmn", changedProcessHead);
       final var unchangedProcess = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/unchanged-process.bpmn");
-      context.addFileToHeadRepo("/bpmn/unchanged-process.bpmn", unchangedProcess);
+      context.addFileToRemoteHeadRepo("/bpmn/unchanged-process.bpmn", unchangedProcess);
       final var deletedProcess = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/deleted-process.bpmn");
-      context.addFileToHeadRepo("/bpmn/deleted-process.bpmn", deletedProcess);
+      context.addFileToRemoteHeadRepo("/bpmn/deleted-process.bpmn", deletedProcess);
+      context.pullHeadRepo();
 
       // create version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -402,7 +403,8 @@ class CandidateVersionControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
   }
@@ -454,7 +456,6 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.author", is(context.getGerritProps().getUser())),
           jsonPath("$.validations", nullValue())
       );
-      Thread.sleep(1000);
       Assertions.assertThat(context.getRepo(versionCandidateId)).exists();
     }
 

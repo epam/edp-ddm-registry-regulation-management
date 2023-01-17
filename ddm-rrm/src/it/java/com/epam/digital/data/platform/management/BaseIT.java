@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,12 @@
 package com.epam.digital.data.platform.management;
 
 import com.epam.digital.data.platform.management.context.TestExecutionContext;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.Git;
 import org.junit.jupiter.api.AfterEach;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +31,30 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.FileSystemUtils;
 
+/**
+ * Abstract integration test that is used for setuping test execution context for all integration
+ * tests
+ * <p>
+ * <ul><lh>Sets up the {@link TestExecutionContext test execution context} that is used for stubbing gerrit
+ * responces and git interaction:</lh>
+ * <li>For gerrit integration sets up the WireMock server</li>
+ * <li>For git integration uses
+ * {@link com.epam.digital.data.platform.management.stub.JGitWrapperStub jgit wrapper stub} that
+ * used {@link TestExecutionContext#getRemoteHeadRepo()} as remote repository for master version and
+ * version candidates</li></ul>
+ * <p>
+ * The {@link TestExecutionContext#getRemoteHeadRepo() "remote" repository} and
+ * {@link TestExecutionContext#getGerritMockServer() gerrit server} are cleaned before each testcase. So
+ * that each test case is isolated.
+ * <p>
+ * Used spring profiles {@code local} for plain logging and {@code test} for seting up test
+ * configuration such as disabling async and retry for strict expectations and setting repositories
+ * folder in temporary space so there's won't be no leftovers on filesystem.
+ *
+ * @see TestExecutionContext
+ * @see com.epam.digital.data.platform.management.stub
+ */
 @ActiveProfiles({"local", "test"})
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
@@ -54,16 +72,6 @@ public abstract class BaseIT {
       "dc", "http://www.omg.org/spec/DD/20100524/DC",
       "modeler", "http://camunda.org/schema/modeler/1.0");
 
-  @BeforeAll
-  @SneakyThrows
-  static void setUpStatic() {
-    var path = System.getProperty("gerrit.repository-directory");
-    if (Objects.isNull(path)) {
-      final var tempRepoDirectory = Files.createTempDirectory("testDirectory").toFile();
-      System.setProperty("gerrit.repository-directory", tempRepoDirectory.getPath());
-    }
-  }
-
   @BeforeEach
   @SneakyThrows
   void setUp() {
@@ -71,16 +79,17 @@ public abstract class BaseIT {
       Assertions.assertThat(context.getTestDirectory().mkdirs()).isTrue();
     }
 
-    final var headDir = context.getHeadRepo();
-    try (var git = Git.init()
-        .setInitialBranch(context.getGerritProps().getHeadBranch())
-        .setDirectory(headDir)
+    context.resetRemoteRepo();
+    final var remoteHeadRepo = context.getRemoteHeadRepo();
+    var headRepo = context.getHeadRepo();
+    if (headRepo.exists()) {
+      FileUtils.forceDelete(headRepo);
+    }
+    try (var ignored = Git.cloneRepository()
+        .setDirectory(context.getHeadRepo())
+        .setURI(remoteHeadRepo.getAbsolutePath())
         .call()) {
-      // init head repo
-      FileSystemUtils.copyRecursively(Path.of(ClassLoader.getSystemResource("baseRepo").toURI()),
-          headDir.toPath());
-      git.add().addFilepattern(".").call();
-      git.commit().setMessage("added folder structure").call();
+      //close ignored Git object
     }
   }
 
