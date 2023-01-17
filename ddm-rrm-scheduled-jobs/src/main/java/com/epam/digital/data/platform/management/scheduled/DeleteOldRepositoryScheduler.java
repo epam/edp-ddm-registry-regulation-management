@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DeleteOldRepositoryScheduler {
 
+  private final VersionedFileRepositoryFactory factory;
   private final GerritService gerritService;
   private final JGitService jGitService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
@@ -49,7 +51,10 @@ public class DeleteOldRepositoryScheduler {
                 .map(ChangeInfoDto::getNumber)
                 .noneMatch(path::endsWith))
             .map(path -> path.getFileName().toString())
-            .forEach(jGitService::deleteRepo);
+            .forEach(repo -> {
+              factory.deleteAvailableRepoByVersion(repo);
+              jGitService.deleteRepo(repo);
+            });
       }
     } catch (Exception e) {
       log.warn("Error during deleting obsolete repositories: {}", e.getMessage());
