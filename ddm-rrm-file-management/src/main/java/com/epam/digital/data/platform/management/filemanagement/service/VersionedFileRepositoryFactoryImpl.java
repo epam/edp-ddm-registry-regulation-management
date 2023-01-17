@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,10 @@ public class VersionedFileRepositoryFactoryImpl implements VersionedFileReposito
 
   @Override
   public VersionedFileRepository getRepoByVersion(String versionName) {
+    // clone repository if it's not exists
+    if (repositoryMap.containsKey(versionName)) {
+      jGitService.cloneRepoIfNotExist(versionName);
+    }
 
     return repositoryMap.computeIfAbsent(
         versionName, repo -> {
@@ -48,6 +52,11 @@ public class VersionedFileRepositoryFactoryImpl implements VersionedFileReposito
           repository.updateRepository();
           return repository;
         });
+  }
+
+  @Override
+  public void deleteAvailableRepoByVersion(String versionName) {
+    repositoryMap.remove(versionName);
   }
 
   @Override
