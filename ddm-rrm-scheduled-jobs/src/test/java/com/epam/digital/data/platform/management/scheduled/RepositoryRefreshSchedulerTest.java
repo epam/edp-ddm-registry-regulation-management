@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,7 @@ public class RepositoryRefreshSchedulerTest {
         LocalDateTime.of(2022, 8, 10, 17, 35));
     changeInfo.setOwner("changeInfoOwnerUsername");
     changeInfo.setMergeable(false);
-    changeInfo.setLabels(Map.of("label1", true, "label2", false));
+    changeInfo.setLabels(Map.of("label1", 1, "label2", -1));
     return changeInfo;
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ package com.epam.digital.data.platform.management.restapi.model;
 public enum ValidationType {
 
   REGULATION_INTEGRITY("Перевірка цілісності регламенту"),
-  TEST("Перевірка тестами");
+  TEST("Перевірка тестами"),
+  DEPLOYMENT_STATUS("Стан розгортання регламенту");
 
   private String name;
 

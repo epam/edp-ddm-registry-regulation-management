@@ -22,7 +22,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -160,7 +159,7 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.creationDate", is("2022-10-28T15:12:00.000Z")),
           jsonPath("$.latestUpdate", is("2022-10-29T06:47:00.000Z")),
           jsonPath("$.author", is(context.getGerritProps().getUser())),
-          jsonPath("$.validations", nullValue())
+          jsonPath("$.validations[0].result", is("UNKNOWN"))
       );
     }
 
@@ -454,7 +453,7 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.creationDate", is("2022-10-28T15:34:00.000Z")),
           jsonPath("$.latestUpdate", is("2022-10-28T15:34:00.000Z")),
           jsonPath("$.author", is(context.getGerritProps().getUser())),
-          jsonPath("$.validations", nullValue())
+          jsonPath("$.validations[0].result", is("UNKNOWN"))
       );
       Assertions.assertThat(context.getRepo(versionCandidateId)).exists();
     }
