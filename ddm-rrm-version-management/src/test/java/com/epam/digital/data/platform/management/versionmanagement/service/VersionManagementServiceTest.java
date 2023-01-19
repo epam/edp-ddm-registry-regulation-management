@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ class VersionManagementServiceTest {
         LocalDateTime.of(2022, 8, 10, 14, 35));
     changeInfo.setOwner("changeInfoOwnerUsername");
     changeInfo.setMergeable(true);
-    changeInfo.setLabels(Map.of("label1", true, "label2", false));
+    changeInfo.setLabels(Map.of("label1", 1, "label2", -1));
 
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
 
@@ -111,7 +111,7 @@ class VersionManagementServiceTest {
         .updated(LocalDateTime.of(2022, 8, 10, 14, 35))
         .owner("changeInfoOwnerUsername")
         .mergeable(true)
-        .labels(Map.of("label1", true, "label2", false))
+        .labels(Map.of("label1", 1, "label2", -1))
         .build();
     Assertions.assertThat(actualVersionsList)
         .hasSize(1)
@@ -332,7 +332,7 @@ class VersionManagementServiceTest {
     changeInfo.setUpdated(null);
     changeInfo.setOwner("changeInfoOwnerUsername");
     changeInfo.setMergeable(true);
-    changeInfo.setLabels(Map.of("label1", true, "label2", false));
+    changeInfo.setLabels(Map.of("label1", 1, "label2", -1));
     Mockito.when(gerritService.getLastMergedMR()).thenReturn(changeInfo);
 
     var result = managementService.getMasterInfo();
@@ -350,7 +350,7 @@ class VersionManagementServiceTest {
         .updated(null)
         .owner("changeInfoOwnerUsername")
         .mergeable(true)
-        .labels(Map.of("label1", true, "label2", false))
+        .labels(Map.of("label1", 1, "label2", -1))
         .build();
     Assertions.assertThat(result).isEqualTo(expectedChangeInfoDto);
   }
@@ -387,7 +387,7 @@ class VersionManagementServiceTest {
         LocalDateTime.of(2022, 8, 10, 14, 35));
     changeInfo.setOwner("changeInfoOwnerUsername");
     changeInfo.setMergeable(true);
-    changeInfo.setLabels(Map.of("label1", false, "label2", false));
+    changeInfo.setLabels(Map.of("label1", -1, "label2", -1));
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
     var expected = VersionInfoDto.builder()
         .id("changeInfoId")
@@ -402,7 +402,7 @@ class VersionManagementServiceTest {
         .updated(LocalDateTime.of(2022, 8, 10, 14, 35))
         .owner("changeInfoOwnerUsername")
         .mergeable(true)
-        .labels(Map.of("label1", false, "label2", false))
+        .labels(Map.of("label1", -1, "label2", -1))
         .build();
     var actual = managementService.getVersionDetails(version);
     Assertions.assertThat(actual).isEqualTo(expected);

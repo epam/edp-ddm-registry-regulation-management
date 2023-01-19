@@ -27,6 +27,7 @@ import com.epam.digital.data.platform.management.dto.TestFileDatesDto;
 import com.epam.digital.data.platform.management.dto.TestVersionCandidate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.google.gerrit.extensions.common.LabelInfo;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -426,7 +427,7 @@ public class TestExecutionContext {
         Map.entry("current_revision", versionCandidate.getCurrentRevision()),
         Map.entry("revisions", Map.of(versionCandidate.getCurrentRevision(),
             Map.of("ref", versionCandidate.getRef()))),
-        Map.entry("labels", Map.of())
+        Map.entry("labels", Map.of("Verified", new LabelInfo()))
     );
     gerritMockServer.addStubMapping(stubFor(get(urlPathEqualTo(String.format("/a/changes/%s", id))
         ).willReturn(aResponse()
