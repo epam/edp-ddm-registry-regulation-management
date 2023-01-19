@@ -11,6 +11,8 @@ registryRegulationManagement:
   volume:
     claimName: registry-regulation-management-pvc
     size: 5Gi
+  retry:
+    headBranchCloningDelay: 300000
 
 port: 8080
 
@@ -98,7 +100,3 @@ db:
 cache:
   names: dates
   spec: expireAfterAccess=1d
-
-registry-regulation-management:
-  retry:
-    head-branch-cloning-delay: 300000

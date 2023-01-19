@@ -39,7 +39,7 @@ data:
 
     registry-regulation-management:
       retry:
-        head-branch-cloning-delay: {{ .Values.registry-regulation-management.retry.head-branch-cloning-delay }}
+        head-branch-cloning-delay: {{ .Values.registryRegulationManagement.retry.headBranchCloningDelay }}
 
     spring:
       registry-datasource:
