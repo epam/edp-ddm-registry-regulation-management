@@ -21,7 +21,7 @@ service:
 
 ingress:
   required: true
-  site: registry-regulation-management-api
+  site: rrm-api
 
 s3:
   config:
