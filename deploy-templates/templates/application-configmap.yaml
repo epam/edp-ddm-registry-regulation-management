@@ -40,14 +40,18 @@ data:
     registry-regulation-management:
       retry:
         head-branch-cloning-delay: {{ .Values.registryRegulationManagement.retry.headBranchCloningDelay }}
+        data-model-context-creating-delay: {{ .Values.registryRegulationManagement.retry.dataModelContextCreatingDelay }}
+      data-source:
+        driver-class-name: {{ .Values.registryRegulationManagement.dataSource.driverClassName }}
+        base-jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}
+        registry-schema: {{ .Values.registryRegulationManagement.dataSource.registrySchema }}
+        public-schema: {{ .Values.registryRegulationManagement.dataSource.publicSchema }}
 
     spring:
       registry-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
-        connection-timeout: {{.Values.db.connectionTimeout}}
       public-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
-        connection-timeout: {{.Values.db.connectionTimeout}}
       cache:
         cache-names: {{.Values.cache.names}}
         caffeine:

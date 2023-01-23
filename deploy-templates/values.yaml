@@ -13,6 +13,11 @@ registryRegulationManagement:
     size: 5Gi
   retry:
     headBranchCloningDelay: 300000
+    dataModelContextCreatingDelay: 300000
+  dataSource:
+    driverClassName: org.postgresql.Driver
+    registrySchema: registry
+    publicSchema: public
 
 port: 8080
 
@@ -95,7 +100,6 @@ db:
   url: citus-master
   secret: citus-roles-secrets
   port: 5432
-  connectionTimeout: 4000
 
 cache:
   names: dates

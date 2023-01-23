@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import static org.springframework.util.StreamUtils.copyToString;
 
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.context.VersionContext;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.mapper.BusinessProcessMapper;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
@@ -65,7 +65,7 @@ public class BusinessProcessServiceTest {
   private ArgumentCaptor<String> captor;
 
   @Mock
-  private VersionedFileRepositoryFactory repositoryFactory;
+  private VersionContext versionContext;
   @Mock
   private VersionedFileRepository repository;
   @Mock
@@ -81,10 +81,10 @@ public class BusinessProcessServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    businessProcessService = new BusinessProcessServiceImpl(repositoryFactory,
+    businessProcessService = new BusinessProcessServiceImpl(versionContext,
         businessProcessMapper, gerritPropertiesConfig, documentBuilder);
-    Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
-    Mockito.when(repositoryFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch()))
+    Mockito.when(versionContext.getBean(VERSION_ID, VersionedFileRepository.class)).thenReturn(repository);
+    Mockito.when(versionContext.getBean(gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class))
         .thenReturn(masterRepository);
   }
 

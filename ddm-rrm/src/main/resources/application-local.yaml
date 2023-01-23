@@ -106,3 +106,11 @@ scheduled:
 registry-regulation-management:
   retry:
     head-branch-cloning-delay: 300000
+    data-model-context-creating-delay: 300000
+  data-source:
+    driver-class-name: org.postgresql.Driver
+    base-jdbc-url: jdbc:postgresql://localhost:5432
+    username: postgres
+    password: password
+    registry-schema: registry
+    public-schema: public
