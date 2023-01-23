@@ -90,11 +90,11 @@ vault:
   key: key
 
 gerrit:
-  url: https://gerrit
-  repository: registry-regulations
+  url: http://localhost:8080
+  repository: registry
   repository-directory: ${java.io.tmpdir}
-  user: user
-  password: password
+  user: admin
+  password: cz0TTIfcgGtWixZ84pGL27ziSX2nHMKgBrysP3uJsQ
   head-branch: master
 
 scheduled:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ public class DdmTableReader implements DdmNamedObjectReader<Table> {
     var ddmTable = getDdmTable(tableName);
     ddmTable.setDescription(table.getRemarks());
     ddmTable.setObjectReference(null); // metadata
-    ddmTable.setHistoryFlag(null); // metadata
     ddmTableRepository.save(ddmTable);
 
     table.getColumns().forEach(ddmColumnReader::readNamedObject);
