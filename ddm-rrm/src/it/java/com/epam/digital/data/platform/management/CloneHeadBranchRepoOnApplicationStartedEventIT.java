@@ -31,8 +31,8 @@ import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
 @Slf4j
-@DisplayName("Application start event listening")
-class ApplicationStartedEventListenerIT extends BaseIT {
+@DisplayName("Clone head branch repo on application start event IT")
+class CloneHeadBranchRepoOnApplicationStartedEventIT extends BaseIT {
 
   @Autowired
   private ApplicationEventPublisher applicationEventPublisher;

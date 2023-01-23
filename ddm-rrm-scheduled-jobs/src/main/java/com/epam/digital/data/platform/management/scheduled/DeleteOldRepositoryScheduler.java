@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.core.context.VersionContext;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
@@ -33,7 +33,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DeleteOldRepositoryScheduler {
 
-  private final VersionedFileRepositoryFactory factory;
+  private final VersionContext versionContext;
   private final GerritService gerritService;
   private final JGitService jGitService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
@@ -52,7 +52,7 @@ public class DeleteOldRepositoryScheduler {
                 .noneMatch(path::endsWith))
             .map(path -> path.getFileName().toString())
             .forEach(repo -> {
-              factory.deleteAvailableRepoByVersion(repo);
+              versionContext.destroyContext(repo);
               jGitService.deleteRepo(repo);
             });
       }

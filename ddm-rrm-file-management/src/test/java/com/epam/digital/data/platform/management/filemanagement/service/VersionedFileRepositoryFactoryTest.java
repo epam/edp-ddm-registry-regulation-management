@@ -20,10 +20,10 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,7 +32,8 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class VersionedFileRepositoryFactoryTest {
+@DisplayName("VersionedFileRepositoryFactory Test")
+class VersionedFileRepositoryFactoryTest {
 
   private static final String HEAD_BRANCH = "master";
 
@@ -44,7 +45,7 @@ public class VersionedFileRepositoryFactoryTest {
   @Mock
   private GerritPropertiesConfig config;
   @InjectMocks
-  private VersionedFileRepositoryFactoryImpl factory;
+  private VersionedFileRepositoryFactory factory;
 
   @BeforeEach
   void setUp() {
@@ -52,7 +53,7 @@ public class VersionedFileRepositoryFactoryTest {
   }
 
   @Test
-  @SneakyThrows
+  @DisplayName("should create bean with type VersionedFileRepositoryImpl for version candidate")
   void getRepositoryVersionedTest() {
     var refs = RandomString.make();
     var changeId = RandomString.make();
@@ -64,53 +65,39 @@ public class VersionedFileRepositoryFactoryTest {
     Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(changeInfo);
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
 
-    VersionedFileRepository repo = factory.getRepoByVersion(version);
+    var repo = factory.createBean(version);
     Assertions.assertThat(repo).isInstanceOf(VersionedFileRepositoryImpl.class);
 
     Mockito.verify(jGitService).cloneRepoIfNotExist(version);
     Mockito.verify(gerritService).getChangeInfo(changeInfo.getChangeId());
     Mockito.verify(jGitService).fetch(version, changeInfo.getRefs());
-
-    var cachedRepo = factory.getRepoByVersion(version);
-    Assertions.assertThat(cachedRepo).isSameAs(repo);
-    Mockito.verify(jGitService, Mockito.times(2)).cloneRepoIfNotExist(version);
   }
 
   @Test
-  @SneakyThrows
+  @DisplayName("should create bean with type HeadFileRepositoryImpl for head branch version")
   void getRepositoryHeadTest() {
-    var repo = factory.getRepoByVersion(HEAD_BRANCH);
+    var repo = factory.createBean(HEAD_BRANCH);
 
     Assertions.assertThat(repo).isInstanceOf(HeadFileRepositoryImpl.class);
 
     Mockito.verify(jGitService).cloneRepoIfNotExist(HEAD_BRANCH);
   }
 
-
   @Test
-  @SneakyThrows
-  void deleteRepositoryTest() {
-    Mockito.when(config.getHeadBranch()).thenReturn("master");
+  @DisplayName("recreate should be true if repository doesn't exists and false otherwise")
+  void shouldBeRecreatedTest() {
+    var version = "version";
 
-    factory.getRepoByVersion("master");
-    Assertions.assertThat(factory.getAvailableRepos()).hasSize(1);
+    Mockito.doReturn(false).when(jGitService).repoExists(HEAD_BRANCH);
+    Mockito.doReturn(true).when(jGitService).repoExists(version);
 
-    factory.deleteAvailableRepoByVersion("master");
-    Assertions.assertThat(factory.getAvailableRepos()).isEmpty();
+    Assertions.assertThat(factory.shouldBeRecreated(HEAD_BRANCH)).isTrue();
+    Assertions.assertThat(factory.shouldBeRecreated(version)).isFalse();
   }
 
   @Test
-  @SneakyThrows
-  void getAvailReposTest() {
-    var changeInfo = new ChangeInfoDto();
-    changeInfo.setChangeId("1");
-    var mock = Mockito.mock(ChangeInfoDto.class);
-    Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(mock);
-    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
-
-    factory.getRepoByVersion("version");
-    factory.getRepoByVersion("master");
-
-    Assertions.assertThat(factory.getAvailableRepos()).hasSize(2);
+  @DisplayName("beanType should be VersionedFileRepository")
+  void getBeanTypeTest() {
+    Assertions.assertThat(factory.getBeanType()).isEqualTo(VersionedFileRepository.class);
   }
 }

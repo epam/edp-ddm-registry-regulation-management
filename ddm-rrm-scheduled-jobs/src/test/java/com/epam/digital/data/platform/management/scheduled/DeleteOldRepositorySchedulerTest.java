@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
+import com.epam.digital.data.platform.management.core.context.VersionContext;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
@@ -52,7 +52,7 @@ public class DeleteOldRepositorySchedulerTest {
   @Mock
   private GerritPropertiesConfig gerritPropertiesConfig;
   @Mock
-  private VersionedFileRepositoryFactory factory;
+  private VersionContext context;
 
   @InjectMocks
   private DeleteOldRepositoryScheduler scheduler;
@@ -74,7 +74,7 @@ public class DeleteOldRepositorySchedulerTest {
     scheduler.deleteOldRepositories();
 
     Mockito.verify(jGitService).deleteRepo(repo);
-    Mockito.verify(factory).deleteAvailableRepoByVersion(repo);
+    Mockito.verify(context).destroyContext(repo);
   }
 
   @Test
