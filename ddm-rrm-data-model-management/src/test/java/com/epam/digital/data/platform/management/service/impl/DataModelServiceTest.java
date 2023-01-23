@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,6 @@ public class DataModelServiceTest {
     final TableShortInfoDto tableDetailsShort = list.get(0);
     Assertions.assertThat(tableDetailsShort.getName()).isEqualTo(table.getName());
     Assertions.assertThat(tableDetailsShort.getDescription()).isEqualTo(table.getDescription());
-    Assertions.assertThat(tableDetailsShort.getHistoryFlag()).isEqualTo(table.getHistoryFlag());
     Assertions.assertThat(tableDetailsShort.getObjectReference()).isEqualTo(table.getObjectReference());
   }
 
@@ -131,7 +130,6 @@ public class DataModelServiceTest {
   private TableInfoDto getTable() {
     TableInfoDto table = new TableInfoDto();
     table.setName("table_sample");
-    table.setHistoryFlag(false);
     table.setDescription("John Doe's table");
     table.setObjectReference(true);
     return table;

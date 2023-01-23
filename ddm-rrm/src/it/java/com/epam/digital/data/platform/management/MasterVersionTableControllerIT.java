@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,8 +72,7 @@ public class MasterVersionTableControllerIT extends BaseIT {
         content().contentType(MediaType.APPLICATION_JSON),
         jsonPath("$.[0].name", is("table_sample")),
         jsonPath("$.[0].description", is("John Doe's table")),
-        jsonPath("$.[0].objectReference", is(true)),
-        jsonPath("$.[0].historyFlag", is(false))
+        jsonPath("$.[0].objectReference", is(true))
     );
   }
 
@@ -89,8 +88,7 @@ public class MasterVersionTableControllerIT extends BaseIT {
         content().contentType(MediaType.APPLICATION_JSON),
         jsonPath("$.name", is(name)),
         jsonPath("$.description", is("John Doe's table")),
-        jsonPath("$.objectReference", is(true)),
-        jsonPath("$.historyFlag", is(false))
+        jsonPath("$.objectReference", is(true))
     );
   }
 

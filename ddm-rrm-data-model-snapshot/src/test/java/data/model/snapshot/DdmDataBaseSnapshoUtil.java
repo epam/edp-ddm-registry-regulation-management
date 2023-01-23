@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ public class DdmDataBaseSnapshoUtil {
     Map<String, DdmTable> map = new HashMap<>();
     DdmTable table = new DdmTable("table");
     table.setDescription("Table description");
-    table.setHistoryFlag(false);
     table.setObjectReference(false);
     table.setPrimaryKey(getPrimaryKey());
     table.setColumns(getTableColumns());

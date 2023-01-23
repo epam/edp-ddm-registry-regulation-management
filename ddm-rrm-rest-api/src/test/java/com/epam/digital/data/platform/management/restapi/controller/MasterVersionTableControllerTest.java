@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,6 @@ class MasterVersionTableControllerTest {
         .name("John Doe's table")
         .description("John Doe get table")
         .objectReference(true)
-        .historyFlag(false)
         .build();
     Mockito.doReturn(List.of(expectedTablesResponse))
         .when(tableService).list();
@@ -88,8 +87,7 @@ class MasterVersionTableControllerTest {
         content().contentType(MediaType.APPLICATION_JSON),
         jsonPath("$.[0].name", is("John Doe's table")),
         jsonPath("$.[0].description", is("John Doe get table")),
-        jsonPath("$.[0].objectReference", is(true)),
-        jsonPath("$.[0].historyFlag", is(false))
+        jsonPath("$.[0].objectReference", is(true))
     ).andDo(document("versions/master/tables/GET"));
 
     Mockito.verify(tableService).list();
@@ -110,14 +108,12 @@ class MasterVersionTableControllerTest {
       expectedTablesResponse.setName(tableName);
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
-      expectedTablesResponse.setHistoryFlag(false);
       Mockito.doReturn(expectedTablesResponse)
           .when(tableService).get(tableName);
       final var expectedDdmTable = new DdmTable();
       expectedDdmTable.setName(tableName);
       expectedDdmTable.setDescription("John Doe get table");
       expectedDdmTable.setObjectReference(true);
-      expectedDdmTable.setHistoryFlag(false);
       Mockito.doReturn(expectedDdmTable).when(mapper).convertToDdmTable(expectedTablesResponse);
 
       mockMvc.perform(
@@ -127,8 +123,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is(tableName)),
           jsonPath("$.description", is("John Doe get table")),
-          jsonPath("$.objectReference", is(true)),
-          jsonPath("$.historyFlag", is(false))
+          jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/master/tables/{tableName}/GET"));
 
       Mockito.verify(tableService).get(tableName);

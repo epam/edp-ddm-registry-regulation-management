@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,13 +41,11 @@ class DdmTableMapperTest {
     final var tableInfoDto = new TableInfoDto();
     tableInfoDto.setDescription(description);
     tableInfoDto.setName(name);
-    tableInfoDto.setHistoryFlag(false);
     tableInfoDto.setObjectReference(true);
 
     final var expectedDdmTable = new DdmTable();
     expectedDdmTable.setDescription(description);
     expectedDdmTable.setName(name);
-    expectedDdmTable.setHistoryFlag(false);
     expectedDdmTable.setObjectReference(true);
 
     Assertions.assertThat(expectedDdmTable).isEqualTo(mapper.convertToDdmTable(tableInfoDto));
