@@ -77,7 +77,6 @@ class CandidateVersionTableControllerTest {
         .name("John Doe's table")
         .description("John Doe get table")
         .objectReference(true)
-        .historyFlag(false)
         .build();
     Mockito.doReturn(List.of(expectedTablesResponse))
         .when(tableService).list();
@@ -89,8 +88,7 @@ class CandidateVersionTableControllerTest {
         content().contentType(MediaType.APPLICATION_JSON),
         jsonPath("$.[0].name", is("John Doe's table")),
         jsonPath("$.[0].description", is("John Doe get table")),
-        jsonPath("$.[0].objectReference", is(true)),
-        jsonPath("$.[0].historyFlag", is(false))
+        jsonPath("$.[0].objectReference", is(true))
     ).andDo(document("versions/candidates/{versionCandidateId}/tables/GET"));
 
     Mockito.verify(tableService).list();
@@ -119,7 +117,6 @@ class CandidateVersionTableControllerTest {
       expectedDdmTable.setName(tableName);
       expectedDdmTable.setDescription("John Doe get table");
       expectedDdmTable.setObjectReference(true);
-      expectedDdmTable.setHistoryFlag(false);
       Mockito.doReturn(expectedDdmTable).when(mapper).convertToDdmTable(expectedTablesResponse);
 
       mockMvc.perform(
@@ -130,8 +127,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is(tableName)),
           jsonPath("$.description", is("John Doe get table")),
-          jsonPath("$.objectReference", is(true)),
-          jsonPath("$.historyFlag", is(false))
+          jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/candidates/{versionCandidateId}/{tableName}/GET"));
 
       Mockito.verify(tableService).get(tableName);
