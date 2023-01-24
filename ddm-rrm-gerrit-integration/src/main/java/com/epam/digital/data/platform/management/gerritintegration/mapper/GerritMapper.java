@@ -26,7 +26,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -54,9 +53,7 @@ public interface GerritMapper {
     }
     return labels.entrySet()
         .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> Optional.ofNullable(e.getValue().value)
-            .map(Integer::valueOf)
-            .orElse(0)));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> toLabelValue(e.getValue())));
   }
 
   @Named("toLocalDateTime")
@@ -65,5 +62,15 @@ public interface GerritMapper {
       return null;
     }
     return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
+  }
+
+  default Integer toLabelValue(LabelInfo labelInfo) {
+    if (Objects.nonNull(labelInfo.approved)) {
+      return 1;
+    }
+    if (Objects.nonNull(labelInfo.rejected)) {
+      return -1;
+    }
+    return 0;
   }
 }

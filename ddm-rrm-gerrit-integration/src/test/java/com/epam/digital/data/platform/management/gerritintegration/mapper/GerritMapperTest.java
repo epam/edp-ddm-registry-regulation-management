@@ -88,7 +88,7 @@ class GerritMapperTest {
   void toLabelMapTestApprovedTrue() {
     var labelInfo = new LabelInfo();
     var key = RandomString.make();
-    labelInfo.value = 1;
+    labelInfo.approved = new AccountInfo(1);
     Map<String, LabelInfo> labelInfoMap = new HashMap<>();
     labelInfoMap.put(key, labelInfo);
     Map<String, Integer> actual = gerritMapper.toLabelMap(labelInfoMap);
@@ -110,7 +110,7 @@ class GerritMapperTest {
   @Test
   void toLabelMapTestApprovedFalse() {
     var labelInfo = new LabelInfo();
-    labelInfo.value = -1;
+    labelInfo.rejected = new AccountInfo(1);
     var key = RandomString.make();
     Map<String, LabelInfo> labelInfoMap = new HashMap<>();
     labelInfoMap.put(key, labelInfo);
