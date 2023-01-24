@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var expectedFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json").replace("\r", "");
-      context.addFileToHeadRepo("/forms/john-does-form.json", expectedFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -130,10 +130,10 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add files to "remote" repo
       final var johnDoesFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/GET/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", johnDoesFormContent);
       final var mrSmithsFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/GET/mr-smiths-form.json");
-      context.addFileToHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
+      context.addFileToRemoteHeadRepo("/forms/mr-smiths-form.json", mrSmithsFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -281,7 +281,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var expectedFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", expectedFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", expectedFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -313,7 +313,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -370,7 +370,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -435,7 +435,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -564,7 +564,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -603,7 +603,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/PUT/valid-form-head.json");
-      context.addFileToHeadRepo("/forms/valid-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -665,7 +665,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -691,7 +691,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -725,7 +725,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();
@@ -753,7 +753,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
       // add file to "remote" repo
       final var headFormContent = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/forms/{formName}/DELETE/john-does-form.json");
-      context.addFileToHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();

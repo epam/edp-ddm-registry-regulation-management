@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,11 @@ class MasterVersionBPControllerIT extends BaseIT {
     @DisplayName("should return 200 with business-process content")
     @SneakyThrows
     void getBusinessProcess() {
-      // add file to "remote" repo
+      // add file to "remote" repo and pull head repo
       final var expectedBpContent = context.getResourceContent(
           "/versions/master/business-processes/{businessProcessName}/GET/john-does-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
+      context.pullHeadRepo();
 
       // perform query
       mockMvc.perform(
@@ -53,6 +54,26 @@ class MasterVersionBPControllerIT extends BaseIT {
           status().isOk(),
           content().contentType(MediaType.TEXT_XML),
           content().xml(expectedBpContent)
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if business-process hasn't been pulled from remote")
+    @SneakyThrows
+    void getBusinessProcess_businessProcessHasNotBeenPulled() {
+      // add file to "remote" repo and DO NOT pull the head repo
+      final var expectedBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/GET/john-does-bp.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", expectedBpContent);
+
+      mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("PROCESS_NOT_FOUND_EXCEPTION")),
+          jsonPath("$.details", is("Process john-does-bp not found"))
       );
     }
 
@@ -74,31 +95,34 @@ class MasterVersionBPControllerIT extends BaseIT {
 
   @Nested
   @DisplayName("GET /versions/master/business-processes")
-  class CandidateVersionBPGetBpListControllerIT {
+  class MasterVersionBPGetBpListControllerIT {
 
     @Test
-    @DisplayName("should return 200 with all found business-processes")
+    @DisplayName("should return 200 with all pulled business-processes")
     @SneakyThrows
     void getBusinessProcessesByVersionId() {
-      // add files to "remote" repo
+      // add 2 files to "remote" repo pull head branch repo and add 1 more file to "remote"
       final var johnDoesBpContent = context.getResourceContent(
           "/versions/master/business-processes/GET/john-does-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/john-does-bp.bpmn", johnDoesBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", johnDoesBpContent);
       final var mrSmithsBpContent = context.getResourceContent(
           "/versions/master/business-processes/GET/mr-smiths-bp.bpmn");
-      context.addFileToHeadRepo("/bpmn/mr-smiths-bp.bpmn", mrSmithsBpContent);
+      context.addFileToRemoteHeadRepo("/bpmn/mr-smiths-bp.bpmn", mrSmithsBpContent);
+      context.pullHeadRepo();
+      context.addFileToRemoteHeadRepo("/bpmn/mr-smiths-bp1.bpmn", mrSmithsBpContent);
 
       // define expected john-does-bp dates
       final var expectedJohnDoesBpDates = context.getHeadRepoDatesByPath(
           "bpmn/john-does-bp.bpmn");
 
-      // perform query
+      // perform query and expect only 2 of the processes that are pulled on head-branch repo
       mockMvc.perform(
           get("/versions/master/business-processes")
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$", hasSize(2)),
           jsonPath("$[0].name", is("john-does-bp")),
           jsonPath("$[0].title", is("John Doe's BP")),
           jsonPath("$[0].created", is(expectedJohnDoesBpDates.getCreated())),

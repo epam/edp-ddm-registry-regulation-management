@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,12 @@ package com.epam.digital.data.platform.management.configuration;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
-import com.epam.digital.data.platform.management.mock.VaultOperationsMock;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitWrapper;
+import com.epam.digital.data.platform.management.mock.VaultOperationsMock;
 import com.epam.digital.data.platform.management.stub.JGitWrapperStub;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import java.io.File;
 import java.net.URL;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -45,13 +44,6 @@ public class TestConfiguration {
   @Primary
   public JGitWrapper jGitWrapperStub() {
     return new JGitWrapperStub();
-  }
-
-  @Bean
-  @SneakyThrows
-  @Qualifier("test-directory")
-  public File testDirectory(@Value("${gerrit.repository-directory}") String tempDirPath) {
-    return new File(tempDirPath);
   }
 
   @Bean(destroyMethod = "stop")

@@ -11,6 +11,8 @@ registryRegulationManagement:
   volume:
     claimName: registry-regulation-management-pvc
     size: 5Gi
+  retry:
+    headBranchCloningDelay: 300000
 
 port: 8080
 
