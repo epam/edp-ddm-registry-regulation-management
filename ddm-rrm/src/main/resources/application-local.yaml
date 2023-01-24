@@ -102,3 +102,7 @@ scheduled:
   repositoryRefreshTimezone: UTC
   cleanRepositoriesCron: '0 */5 * ? * *'
   cleanRepositoriesTimezone: UTC
+
+registry-regulation-management:
+  retry:
+    head-branch-cloning-delay: 300000
