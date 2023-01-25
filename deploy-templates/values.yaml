@@ -93,7 +93,7 @@ scheduled:
 
 db:
   url: citus-master
-  secret: operational-pguser-postgres
+  secret: citus-roles-secrets
   port: 5432
   connectionTimeout: 4000
 

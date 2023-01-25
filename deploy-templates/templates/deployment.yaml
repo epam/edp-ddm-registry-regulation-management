@@ -128,15 +128,15 @@ spec:
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: user
+              - key: regRegulationRoleName
                 path: spring.public-datasource.username
-              - key: password
+              - key: regRegulationRolePass
                 path: spring.public-datasource.password
         - name: {{ .Chart.Name }}-db-credentials-registry
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: user
+              - key: regRegulationRoleName
                 path: spring.registry-datasource.username
-              - key: password
+              - key: regRegulationRolePass
                 path: spring.registry-datasource.password
