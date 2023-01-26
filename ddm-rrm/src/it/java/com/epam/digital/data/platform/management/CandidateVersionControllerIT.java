@@ -300,11 +300,10 @@ class CandidateVersionControllerIT extends BaseIT {
       final var deletedProcess = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/deleted-process.bpmn");
       context.addFileToRemoteHeadRepo("/bpmn/deleted-process.bpmn", deletedProcess);
+      final var addedGroup = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/changes/GET/bp-grouping.yml");
+      context.addFileToRemoteHeadRepo("/bp-grouping/bp-grouping.yml", addedGroup);
 
-      //add data-model files to "remote" repo
-      final var changedCreateTablesHead = context.getResourceContent(
-          "/versions/candidates/{versionCandidateId}/changes/GET/changed-createTables-head.xml");
-      context.addFileToRemoteHeadRepo("/data-model/createTables.xml", changedCreateTablesHead);
       context.pullHeadRepo();
 
       // create version candidate
@@ -331,6 +330,11 @@ class CandidateVersionControllerIT extends BaseIT {
           changedProcessVC);
       context.deleteFileFromVersionCandidateRemote("bpmn/deleted-process.bpmn");
 
+      final var changedGrouping = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/changes/GET/changed-bp-grouping.yml");
+      context.addFileToVersionCandidateRemote("/bp-grouping/bp-grouping.yml",
+          changedGrouping);
+
       //change data-model in version candidate remote
       final var addedCreateSearchConditions = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/added-createSearchConditions.xml");
@@ -350,7 +354,8 @@ class CandidateVersionControllerIT extends BaseIT {
           "forms/changed-form.json", Map.of("status", "R"),
           "forms/deleted-form.json", Map.of("status", "D"),
           "data-model/createTables.xml", Map.of("status", "R"),
-          "data-model/createSearchConditions.xml", Map.of("status", "A")
+          "data-model/createSearchConditions.xml", Map.of("status", "A"),
+          "bp-grouping/bp-grouping.yml", Map.of("status", "A")
       );
       context.getGerritMockServer().addStubMapping(
           stubFor(WireMock.get(urlPathEqualTo(String.format("/a/changes/%s/revisions/current/files",
@@ -386,6 +391,9 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.changedBusinessProcesses[2].name", is("deleted-process")),
           jsonPath("$.changedBusinessProcesses[2].title", is("Deleted process")),
           jsonPath("$.changedBusinessProcesses[2].status", is("DELETED")),
+          jsonPath("$.changedGroups[0].name", is("bp-grouping.yml")),
+          jsonPath("$.changedGroups[0].status", is("NEW")),
+          jsonPath("$.changedBusinessProcesses[2].status", is("DELETED")),
           jsonPath("$.changedDataModelFiles", hasSize(2)),
           jsonPath("$.changedDataModelFiles[0].name", is("createSearchConditions")),
           jsonPath("$.changedDataModelFiles[0].fileType", is(nullValue())),
@@ -412,7 +420,7 @@ class CandidateVersionControllerIT extends BaseIT {
           content().contentType("application/json"),
           jsonPath("$.changedForms", hasSize(0)),
           jsonPath("$.changedBusinessProcesses", hasSize(0)),
-          jsonPath("$.changedDataModelFiles", hasSize(0))
+          jsonPath("$.changedGroups", hasSize(0))
       );
     }
 

@@ -33,6 +33,8 @@ public class VersionChangesInfo {
   private List<EntityChangesInfo> changedBusinessProcesses;
   @Schema(required = true, description = "List of changed data-model files")
   private List<DataModelChangesInfo> changedDataModelFiles;
+  @Schema(required = true, description = "List of changed groups")
+  private List<EntityChangesInfo> changedGroups;
 
   @Builder
   @Getter

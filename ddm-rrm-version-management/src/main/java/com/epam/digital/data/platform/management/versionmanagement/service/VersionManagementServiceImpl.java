@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.service.FormService;
@@ -23,6 +24,7 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
@@ -32,6 +34,7 @@ import com.epam.digital.data.platform.management.versionmanagement.model.EntityC
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -51,6 +54,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final FormService formService;
   private final BusinessProcessService businessProcessService;
   private final DataModelFileManagementService dataModelFileManagementService;
+  private final GroupService groupService;
 
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
@@ -133,10 +137,14 @@ public class VersionManagementServiceImpl implements VersionManagementService {
 
     log.debug("Changed: {} forms and {} business-processes", forms.size(),
         businessProcesses.size());
+    var groups = versionManagementMapper.groupingToChangeInfo(
+        groupService.getChangesByVersion(versionCandidateId));
+
     return VersionChangesDto.builder()
         .changedBusinessProcesses(businessProcesses)
         .changedForms(forms)
         .changedDataModelFiles(dataModelChanges)
+        .changedGroups(groups == null ? new ArrayList<>() : List.of(groups))
         .build();
   }
 

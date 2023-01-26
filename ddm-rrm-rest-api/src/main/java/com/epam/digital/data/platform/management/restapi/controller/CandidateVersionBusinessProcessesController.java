@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
@@ -54,6 +55,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CandidateVersionBusinessProcessesController {
 
   private final BusinessProcessService businessProcessService;
+  private final GroupService groupService;
 
   @Operation(description = "Get business processes list",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -267,6 +269,7 @@ public class CandidateVersionBusinessProcessesController {
     log.info("Started deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);
     businessProcessService.deleteProcess(businessProcessName, versionCandidateId);
+    groupService.deleteProcessDefinition(businessProcessName, versionCandidateId);
     log.info("Finished deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);
     return ResponseEntity.noContent().build();

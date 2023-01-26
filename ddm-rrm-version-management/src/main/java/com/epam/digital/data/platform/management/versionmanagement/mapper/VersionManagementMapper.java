@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.epam.digital.data.platform.management.versionmanagement.mapper;
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
+import com.epam.digital.data.platform.management.groups.model.GroupChangesDetails;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileStatus;
@@ -43,6 +43,8 @@ public interface VersionManagementMapper {
   EntityChangesInfoDto bpInfoDtoToChangeInfo(BusinessProcessInfoDto dto);
 
   EntityChangesInfoDto formInfoDtoToChangeInfo(FormInfoDto dto);
+
+  EntityChangesInfoDto groupingToChangeInfo(GroupChangesDetails dto);
 
   @ValueMapping(source = "UNCHANGED", target = MappingConstants.NULL)
   ChangedFileStatus toChangedFileStatus(FileStatus status);

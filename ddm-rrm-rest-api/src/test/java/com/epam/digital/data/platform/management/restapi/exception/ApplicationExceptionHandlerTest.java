@@ -17,6 +17,12 @@
 package com.epam.digital.data.platform.management.restapi.exception;
 
 
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_FIELD_REQUIRED_EXCEPTION;
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_NAME_REGEX_EXCEPTION;
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_NAME_REQUIRED_EXCEPTION;
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_NAME_UNIQUE_EXCEPTION;
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION;
+import static com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler.GROUPS_PROCESS_DEFINITION_EXCEPTION;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -26,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,13 +41,25 @@ import com.epam.digital.data.platform.management.exception.BusinessProcessAlread
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.groups.exception.GroupDuplicateProcessDefinitionException;
+import com.epam.digital.data.platform.management.groups.exception.GroupEmptyProcessDefinitionException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameRegexException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameRequiredException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameUniqueException;
+import com.epam.digital.data.platform.management.groups.exception.GroupsParseException;
+import com.epam.digital.data.platform.management.groups.exception.GroupsRequiredException;
+import com.epam.digital.data.platform.management.groups.model.GroupListDetails;
+import com.epam.digital.data.platform.management.groups.service.GroupService;
+import com.epam.digital.data.platform.management.groups.validation.BpGroupingValidator;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.osintegration.service.OpenShiftService;
 import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionBusinessProcessesController;
 import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionController;
 import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionFormsController;
+import com.epam.digital.data.platform.management.restapi.controller.CandidateVersionGroupsController;
 import com.epam.digital.data.platform.management.restapi.controller.MasterVersionFormsController;
+import com.epam.digital.data.platform.management.restapi.controller.MasterVersionGroupsController;
 import com.epam.digital.data.platform.management.restapi.controller.UserImportController;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
@@ -82,7 +101,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @ContextConfiguration(
     classes = {MasterVersionFormsController.class, UserImportController.class,
         ApplicationExceptionHandler.class, CandidateVersionBusinessProcessesController.class,
-        CandidateVersionFormsController.class, CandidateVersionController.class}
+        CandidateVersionFormsController.class, CandidateVersionController.class,
+        MasterVersionGroupsController.class, CandidateVersionGroupsController.class}
 )
 @AutoConfigureMockMvc(addFilters = false)
 class ApplicationExceptionHandlerTest {
@@ -101,6 +121,10 @@ class ApplicationExceptionHandlerTest {
   FormService formService;
   @MockBean
   BusinessProcessService businessProcessService;
+  @MockBean
+  GroupService groupService;
+  @MockBean
+  BpGroupingValidator groupingValidator;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
   @MockBean
@@ -373,5 +397,166 @@ class ApplicationExceptionHandlerTest {
             jsonPath("$.code").value("CONSTRAINT_VIOLATION_EXCEPTION"),
             jsonPath("$.statusDetails").doesNotExist(),
             jsonPath("$.localizedMessage").doesNotExist());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowsGroupsParsingException() {
+    final var headBranch = RandomString.make();
+    Mockito.doReturn(headBranch)
+        .when(gerritPropertiesConfig).getHeadBranch();
+
+    doThrow(GroupsParseException.class).when(groupService)
+        .getGroupsByVersion(headBranch);
+
+    mockMvc.perform(
+        get("/versions/master/business-process-groups")
+            .accept(MediaType.APPLICATION_JSON)
+    ).andExpectAll(
+        status().isInternalServerError(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.code").value("GROUPS_PARSING_EXCEPTION"),
+        jsonPath("$.localizedMessage").doesNotExist());
+
+    Mockito.verify(groupService).getGroupsByVersion(headBranch);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowsGroupsParsingExceptionOnVersionCandidate() {
+    final var version = RandomString.make();
+    Mockito.doReturn(version)
+        .when(gerritPropertiesConfig).getHeadBranch();
+
+    doThrow(GroupsParseException.class).when(groupService)
+        .getGroupsByVersion(version);
+
+    mockMvc.perform(
+        get("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+            .accept(MediaType.APPLICATION_JSON)
+    ).andExpectAll(
+        status().isInternalServerError(),
+        content().contentType(MediaType.APPLICATION_JSON),
+        jsonPath("$.code").value("GROUPS_PARSING_EXCEPTION"),
+        jsonPath("$.localizedMessage").doesNotExist());
+
+    Mockito.verify(groupService).getGroupsByVersion(version);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowGroupsRequiredException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupsRequiredException("Groups are mandatory field")).when(groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_FIELD_REQUIRED_EXCEPTION),
+            jsonPath("$.details").value("Groups are mandatory field")
+        );
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldTrowGroupEmptyProcessDefinitionException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupEmptyProcessDefinitionException("Process definition cannot be empty")).when(
+            groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_PROCESS_DEFINITION_EXCEPTION),
+            jsonPath("$.details").value("Process definition cannot be empty")
+        );
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldTrowGroupDuplicateProcessDefinitionException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupDuplicateProcessDefinitionException(
+        "Has found process definition duplicate")).when(groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION),
+            jsonPath("$.details").value("Has found process definition duplicate")
+        );
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldTrowGroupNameRegexException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupNameRegexException("Name is not match with regex")).when(groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_NAME_REGEX_EXCEPTION),
+            jsonPath("$.details").value("Name is not match with regex")
+        );
+
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldTrowGroupNameRequiredException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupNameRequiredException("Group name is mandatory")).when(groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_NAME_REQUIRED_EXCEPTION),
+            jsonPath("$.details").value("Group name is mandatory")
+        );
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldTrowGroupNameUniqueException() {
+    final var version = RandomString.make();
+    final var grouping = GroupListDetails.builder().build();
+    doThrow(new GroupNameUniqueException("Groups name has to be unique")).when(groupingValidator)
+        .validate(grouping);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/business-process-groups", version)
+                .content(new ObjectMapper().writeValueAsString(grouping))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnprocessableEntity())
+        .andExpectAll(
+            jsonPath("$.code").value(GROUPS_NAME_UNIQUE_EXCEPTION),
+            jsonPath("$.details").value("Groups name has to be unique")
+        );
   }
 }

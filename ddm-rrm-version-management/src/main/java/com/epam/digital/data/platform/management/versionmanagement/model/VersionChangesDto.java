@@ -32,6 +32,7 @@ public class VersionChangesDto {
 
   private List<EntityChangesInfoDto> changedForms;
   private List<EntityChangesInfoDto> changedBusinessProcesses;
+  private List<EntityChangesInfoDto> changedGroups;
   private List<DataModelChangesInfoDto> changedDataModelFiles;
 
 }

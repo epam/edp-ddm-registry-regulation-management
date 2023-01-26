@@ -243,10 +243,15 @@ class CandidateVersionControllerTest {
         .fileType(DataModelFileType.TABLES_FILE)
         .status(DataModelFileStatus.CHANGED)
         .build();
+    final var expectedChangedGroups = EntityChangesInfoDto.builder()
+        .title("JohnDoe's group")
+        .status(ChangedFileStatus.NEW)
+        .build();
     final var expectedChanges = VersionChangesDto.builder()
         .changedForms(List.of(expectedChangedForm))
         .changedBusinessProcesses(List.of(expectedChangedProcess))
         .changedDataModelFiles(List.of(expectedChangedDataModelFiles))
+        .changedGroups(List.of(expectedChangedGroups))
         .build();
 
     Mockito.doReturn(expectedChanges)
@@ -260,13 +265,14 @@ class CandidateVersionControllerTest {
         content().contentType(MediaType.APPLICATION_JSON_VALUE),
         jsonPath("$.changedForms", hasSize(1)),
         jsonPath("$.changedBusinessProcesses", hasSize(1)),
-        jsonPath("$.changedDataModelFiles", hasSize(1)),
         jsonPath("$.changedForms[0].name", equalTo("formToBeUpdated")),
         jsonPath("$.changedForms[0].title", equalTo("JohnDoe's form")),
         jsonPath("$.changedForms[0].status", equalTo("CHANGED")),
         jsonPath("$.changedBusinessProcesses[0].name", equalTo("newProcess")),
         jsonPath("$.changedBusinessProcesses[0].title", equalTo("JohnDoe's process")),
-        jsonPath("$.changedBusinessProcesses[0].status", equalTo("NEW"))
+        jsonPath("$.changedBusinessProcesses[0].status", equalTo("NEW")),
+        jsonPath("$.changedGroups[0].title", equalTo("JohnDoe's group")),
+        jsonPath("$.changedGroups[0].status", equalTo("NEW"))
     ).andDo(document("versions/candidates/{versionCandidateId}/changes/GET"));
 
     Mockito.verify(versionManagementService).getVersionChanges("1");

@@ -28,6 +28,13 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.groups.exception.GroupDuplicateProcessDefinitionException;
+import com.epam.digital.data.platform.management.groups.exception.GroupEmptyProcessDefinitionException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameRegexException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameRequiredException;
+import com.epam.digital.data.platform.management.groups.exception.GroupNameUniqueException;
+import com.epam.digital.data.platform.management.groups.exception.GroupsParseException;
+import com.epam.digital.data.platform.management.groups.exception.GroupsRequiredException;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
@@ -72,6 +79,12 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String REGISTRY_DATA_BASE_CONNECTION_ERROR = "REGISTRY_DATA_BASE_CONNECTION_ERROR";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
+  public static final String GROUPS_FIELD_REQUIRED_EXCEPTION = "GROUPS_FIELD_REQUIRED_EXCEPTION";
+  public static final String GROUPS_NAME_REQUIRED_EXCEPTION = "GROUPS_NAME_REQUIRED_EXCEPTION";
+  public static final String GROUPS_NAME_UNIQUE_EXCEPTION = "GROUPS_NAME_UNIQUE_EXCEPTION";
+  public static final String GROUPS_NAME_REGEX_EXCEPTION = "GROUPS_NAME_REGEX_EXCEPTION";
+  public static final String GROUPS_PROCESS_DEFINITION_EXCEPTION = "GROUPS_PROCESS_DEFINITION_EXCEPTION";
+  public static final String GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION = "GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
   private static final String IMPORT_CEPH_ERROR = "IMPORT_CEPH_ERROR";
   private static final String GET_CEPH_ERROR = "GET_CEPH_ERROR";
@@ -81,6 +94,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String GIT_COMMAND_ERROR = "GIT_COMMAND_ERROR";
   public static final String CONFLICT_ERROR = "CONFLICT_ERROR";
   private static final String SETTINGS_PARSING_EXCEPTION = "SETTINGS_PARSING_EXCEPTION";
+  private static final String GROUPS_PARSING_EXCEPTION = "GROUPS_PARSING_EXCEPTION";
   private static final String BUSINESS_PROCESS_CONTENT_EXCEPTION = "BUSINESS_PROCESS_CONTENT_EXCEPTION";
   private static final String INVALID_VERSION_CANDIDATE_EXCEPTION = "INVALID_VERSION_CANDIDATE_EXCEPTION";
   private static final String CONSTRAINT_VIOLATION_EXCEPTION = "CONSTRAINT_VIOLATION_EXCEPTION";
@@ -315,6 +329,61 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(DATA_MODEL_FILE_NOT_FOUND, exception));
   }
+
+  @ExceptionHandler(GroupsParseException.class)
+  public ResponseEntity<DetailedErrorResponse> handleParseGroupsException(
+      GroupsParseException exception) {
+    log.error("Could not parse groups file");
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(newDetailedResponse(GROUPS_PARSING_EXCEPTION, exception));
+  }
+  @ExceptionHandler(GroupEmptyProcessDefinitionException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupEmptyProcessDefinitionException(
+      GroupEmptyProcessDefinitionException exception) {
+    log.error("Process definitions cannot be empty");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_PROCESS_DEFINITION_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(GroupNameRegexException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupNameRegexException(
+      GroupNameRegexException exception) {
+    log.error("Group name doesn't match with regex");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_NAME_REGEX_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(GroupNameRequiredException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupNameRequiredException(
+      GroupNameRequiredException exception) {
+    log.error("Group name is mandatory field");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_NAME_REQUIRED_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(GroupNameUniqueException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupNameUniqueException(
+      GroupNameUniqueException exception) {
+    log.error("Group names has to be unique");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_NAME_UNIQUE_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler(GroupsRequiredException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupsRequiredException(
+      GroupsRequiredException exception) {
+    log.error("Groups are mandatory field");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_FIELD_REQUIRED_EXCEPTION, exception));
+  }
+  @ExceptionHandler(GroupDuplicateProcessDefinitionException.class)
+  public ResponseEntity<DetailedErrorResponse> handleGroupDuplicateProcessDefinitionException(
+      GroupDuplicateProcessDefinitionException exception) {
+    log.error("Has found process definition duplicates");
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        .body(newDetailedResponse(GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION, exception));
+  }
+
 
   private Annotation getAnnotationFromConstraintViolationException(
       ConstraintViolationException exception) {

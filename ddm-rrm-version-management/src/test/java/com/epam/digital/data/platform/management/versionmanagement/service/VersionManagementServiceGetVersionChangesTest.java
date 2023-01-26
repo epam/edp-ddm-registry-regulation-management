@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.groups.model.GroupChangesDetails;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileStatus;
@@ -45,7 +46,11 @@ class VersionManagementServiceGetVersionChangesTest extends VersionManagementSer
     mockFormList(changeId);
     mockBpList(changeId);
     mockDataModelList(changeId);
-
+    var group = GroupChangesDetails.builder()
+        .name("bp-grouping.yml")
+        .status(FileStatus.NEW)
+        .build();
+    Mockito.when(groupService.getChangesByVersion(changeId)).thenReturn(group);
     final var actualVersionChanges = managementService.getVersionChanges(changeId);
 
     Assertions.assertThat(actualVersionChanges).isNotNull();
@@ -55,10 +60,14 @@ class VersionManagementServiceGetVersionChangesTest extends VersionManagementSer
         .containsAll(expectedBpChanges());
     Assertions.assertThat(actualVersionChanges.getChangedDataModelFiles())
         .containsAll(expectedDataModelChanges());
+    final var changedGroups = actualVersionChanges.getChangedGroups();
+    Assertions.assertThat(changedGroups.get(0).getStatus().name()).isEqualTo(group.getStatus().name());
+    Assertions.assertThat(changedGroups.get(0).getName()).isEqualTo(group.getName());
 
     Mockito.verify(formService).getChangedFormsListByVersion(changeId);
     Mockito.verify(businessProcessService).getChangedProcessesByVersion(changeId);
     Mockito.verify(dataModelService).listDataModelFiles(changeId);
+    Mockito.verify(groupService).getChangesByVersion(changeId);
   }
 
   private static List<DataModelChangesInfoDto> expectedDataModelChanges() {

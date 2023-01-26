@@ -25,6 +25,11 @@
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-business-process-group-management</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>ddm-rrm-data-model-management</artifactId>
       <version>${project.version}</version>
     </dependency>

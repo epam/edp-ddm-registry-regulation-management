@@ -126,12 +126,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     repo.deleteFile(getProcessPath(processName));
   }
 
-  private String getNameFromContent(String processContent) {
+  private String getAttributeFromContent(String processContent, String attribute) {
     Document doc = parseBusinessProcess(processContent);
     doc.getDocumentElement().normalize();
     NodeList nodeList = doc.getElementsByTagName("bpmn:process");
     Node node = nodeList.item(0);
-    return node.getAttributes().getNamedItem("name").getTextContent();
+    return node.getAttributes().getNamedItem(attribute).getTextContent();
   }
 
   private String getProcessPath(String processName) {
@@ -168,7 +168,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
       }
       processes.add(mapper.toBusinessProcess(versionedFileInfoDto,
-          getDatesFromContent(processContent), getNameFromContent(processContent)));
+          getDatesFromContent(processContent), getAttributeFromContent(processContent, "name")));
     }
     return processes;
   }

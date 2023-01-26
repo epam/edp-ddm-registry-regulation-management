@@ -34,6 +34,7 @@
     <module>ddm-rrm-business-process-management</module>
     <module>ddm-rrm-version-management</module>
     <module>ddm-rrm-rest-api</module>
+    <module>ddm-rrm-business-process-group-management</module>
   </modules>
 
   <properties>

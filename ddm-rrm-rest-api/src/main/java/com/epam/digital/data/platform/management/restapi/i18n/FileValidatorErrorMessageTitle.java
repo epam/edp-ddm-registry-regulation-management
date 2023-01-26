@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,19 @@ public enum FileValidatorErrorMessageTitle implements MessageTitle {
   TABLE_NOT_FOUND_EXCEPTION(ApplicationExceptionHandler.TABLE_NOT_FOUND_EXCEPTION,
       "file-validator.error.table-not-found"),
   BUSINESS_PROCESS_ALREADY_EXISTS(ApplicationExceptionHandler.BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION,
-      "file-validator.error.tittle.bp-already-exists");
+      "file-validator.error.tittle.bp-already-exists"),
+  GROUPS_FIELD_REQUIRED_EXCEPTION(ApplicationExceptionHandler.GROUPS_FIELD_REQUIRED_EXCEPTION,
+      "group-validator.error.group.required"),
+  GROUPS_NAME_REQUIRED_EXCEPTION(ApplicationExceptionHandler.GROUPS_NAME_REQUIRED_EXCEPTION,
+      "group-validator.error.group.name.required"),
+  GROUPS_NAME_UNIQUE_EXCEPTION(ApplicationExceptionHandler.GROUPS_NAME_UNIQUE_EXCEPTION,
+      "group-validator.error.group.name.unique"),
+  GROUPS_NAME_REGEX_EXCEPTION(ApplicationExceptionHandler.GROUPS_NAME_REGEX_EXCEPTION,
+      "group-validator.error.group.name.regex"),
+  GROUPS_PROCESS_DEFINITION_EXCEPTION(ApplicationExceptionHandler.GROUPS_PROCESS_DEFINITION_EXCEPTION,
+      "group-validator.error.group.process-definition.required"),
+  GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION(ApplicationExceptionHandler.GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION,
+      "group-validator.error.group.process-definition.duplicate");
   private final String errorCode;
   private final String titleKey;
 

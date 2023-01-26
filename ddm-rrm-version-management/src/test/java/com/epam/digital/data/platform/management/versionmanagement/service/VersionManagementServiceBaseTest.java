@@ -20,6 +20,7 @@ import com.epam.digital.data.platform.management.core.event.publisher.RegistryRe
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
@@ -54,4 +55,7 @@ public abstract class VersionManagementServiceBaseTest {
   DataModelFileManagementService dataModelService;
   @MockBean
   RegistryRegulationManagementEventPublisher publisher;
+
+  @MockBean
+  GroupService groupService;
 }

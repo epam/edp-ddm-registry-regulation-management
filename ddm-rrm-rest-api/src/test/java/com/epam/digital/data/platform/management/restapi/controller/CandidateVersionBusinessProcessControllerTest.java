@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
@@ -53,6 +54,8 @@ class CandidateVersionBusinessProcessControllerTest {
 
   @MockBean
   BusinessProcessServiceImpl businessProcessService;
+  @MockBean
+  GroupService groupService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -193,5 +196,6 @@ class CandidateVersionBusinessProcessControllerTest {
     );
 
     Mockito.verify(businessProcessService).deleteProcess(processId, versionCandidateId);
+    Mockito.verify(groupService).deleteProcessDefinition(processId, versionCandidateId);
   }
 }
