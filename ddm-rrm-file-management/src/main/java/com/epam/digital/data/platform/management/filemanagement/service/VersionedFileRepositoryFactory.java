@@ -16,7 +16,7 @@
 package com.epam.digital.data.platform.management.filemanagement.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionBeanFactory;
+import com.epam.digital.data.platform.management.core.context.VersionComponentFactory;
 import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class VersionedFileRepositoryFactory implements
-    VersionBeanFactory<VersionedFileRepository> {
+    VersionComponentFactory<VersionedFileRepository> {
 
   private final GerritPropertiesConfig config;
   private final JGitService jGitService;
@@ -36,7 +36,7 @@ public class VersionedFileRepositoryFactory implements
 
   @Override
   @NonNull
-  public VersionedFileRepository createBean(@NonNull String versionId) {
+  public VersionedFileRepository createComponent(@NonNull String versionId) {
     var repo = config.getHeadBranch().equals(versionId)
         ? new HeadFileRepositoryImpl(versionId, jGitService, gerritService, mapper)
         : new VersionedFileRepositoryImpl(versionId, jGitService, gerritService, mapper);
@@ -52,7 +52,7 @@ public class VersionedFileRepositoryFactory implements
 
   @Override
   @NonNull
-  public Class<VersionedFileRepository> getBeanType() {
+  public Class<VersionedFileRepository> getComponentType() {
     return VersionedFileRepository.class;
   }
 }

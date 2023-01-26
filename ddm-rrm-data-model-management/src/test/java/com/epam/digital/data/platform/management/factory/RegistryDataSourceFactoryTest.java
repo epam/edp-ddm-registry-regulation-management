@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.datasource.factory;
+package com.epam.digital.data.platform.management.factory;
 
 import com.epam.digital.data.platform.management.config.DataSourceConfigurationProperties;
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
 import net.bytebuddy.utility.RandomString;
 import org.assertj.core.api.Assertions;
@@ -32,7 +33,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     RegistryDataSourceFactory.class,
-    DataSourceConfigurationProperties.class
+    DataSourceConfigurationProperties.class,
+    GerritPropertiesConfig.class
 })
 @EnableConfigurationProperties
 @TestPropertySource(properties = {
@@ -40,7 +42,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
     "registry-regulation-management.data-source.base-jdbc-url = jdbc:postgresql://localhost:5432",
     "registry-regulation-management.data-source.username = postgres",
     "registry-regulation-management.data-source.password = password",
-    "registry-regulation-management.data-source.registry-schema = registry"
+    "registry-regulation-management.data-source.registry-data-base = registry",
+    "registry-regulation-management.data-source.registry-dev-data-base-prefix = registry_dev_",
+    "gerrit.head-branch = master"
 })
 @DisplayName("Registry data source factory test")
 class RegistryDataSourceFactoryTest {
@@ -49,11 +53,25 @@ class RegistryDataSourceFactoryTest {
   RegistryDataSourceFactory factory;
 
   @Test
-  @DisplayName("created bean should have type RegistryDataSource")
-  void createBeanTest() {
+  @DisplayName("created component should have database name registry_dev_196 for version-candidate")
+  void createComponentTest_versionCandidate() {
     var versionId = "196";
 
-    var actualDs = factory.createBean(versionId);
+    var actualDs = factory.createComponent(versionId);
+    Assertions.assertThat(actualDs)
+        .isInstanceOf(RegistryDataSource.class)
+        .hasFieldOrPropertyWithValue("jdbcUrl", "jdbc:postgresql://localhost:5432/registry_dev_196")
+        .hasFieldOrPropertyWithValue("username", "postgres")
+        .hasFieldOrPropertyWithValue("password", "password")
+        .hasFieldOrPropertyWithValue("driverClassName", "org.postgresql.Driver");
+  }
+
+  @Test
+  @DisplayName("created component should have database name registry for master version")
+  void createComponentTest_master() {
+    var versionId = "master";
+
+    var actualDs = factory.createComponent(versionId);
     Assertions.assertThat(actualDs)
         .isInstanceOf(RegistryDataSource.class)
         .hasFieldOrPropertyWithValue("jdbcUrl", "jdbc:postgresql://localhost:5432/registry")
@@ -63,7 +81,7 @@ class RegistryDataSourceFactoryTest {
   }
 
   @Test
-  @DisplayName("bean should not be recreated")
+  @DisplayName("component should not be recreated")
   void recreateTest() {
     var versionId = RandomString.make();
     Assertions.assertThat(factory.shouldBeRecreated(versionId)).isFalse();

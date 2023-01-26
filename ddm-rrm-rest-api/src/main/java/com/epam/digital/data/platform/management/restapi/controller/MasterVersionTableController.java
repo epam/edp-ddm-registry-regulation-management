@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
@@ -49,6 +50,8 @@ public class MasterVersionTableController {
 
   private final DataModelService tableService;
 
+  private final GerritPropertiesConfig gerritPropertiesConfig;
+
   @Operation(description = "Get tables list from master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
@@ -72,9 +75,10 @@ public class MasterVersionTableController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
   public ResponseEntity<List<TableShortInfoDto>> getTables() {
-    log.info("getTables called");
-    final List<TableShortInfoDto> master = tableService.list();
-    log.info("There were found {} tables", master.size());
+    var versionId = gerritPropertiesConfig.getHeadBranch();
+    log.info("Getting list of tables for master version '{}' started", versionId);
+    final List<TableShortInfoDto> master = tableService.list(versionId);
+    log.info("There were found {} tables for master version '{}'", master.size(), versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON).body(master);
   }
@@ -107,9 +111,11 @@ public class MasterVersionTableController {
   @GetMapping("/{tableName}")
   public ResponseEntity<DdmTable> getTable(
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
-    log.info("getTable called");
-    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(tableService.get(tableName));
-    log.info("Table '{}' was found", tableName);
+    var versionId = gerritPropertiesConfig.getHeadBranch();
+    log.info("Getting table by name '{}' for master version '{}' started", tableName, versionId);
+    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
+        tableService.get(gerritPropertiesConfig.getHeadBranch(), tableName));
+    log.info("Table '{}' was found in master version '{}'", tableName, versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(ddmTable);

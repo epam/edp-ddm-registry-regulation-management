@@ -34,12 +34,6 @@ schema-crawler:
   exclude-tables:
     - registry.databasechangelog
     - registry.databasechangeloglock
-    - registry.subject
-    - registry.subject_hst
-    - registry.subject_settings
-    - registry.subject_settings_hst
-    - registry.subject_equal_subject_type_equal_subject_code_v
-    - registry.subject_settings_equal_settings_id_v
   exclude-table-prefixes: ddm,test
   exclude-table-suffixes: hst
   exclude-field-prefixes: ddm,dcm
@@ -100,8 +94,6 @@ gerrit:
 scheduled:
   repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
-  cleanRepositoriesCron: '0 */5 * ? * *'
-  cleanRepositoriesTimezone: UTC
 
 registry-regulation-management:
   retry:
@@ -112,5 +104,8 @@ registry-regulation-management:
     base-jdbc-url: jdbc:postgresql://localhost:5432
     username: postgres
     password: password
-    registry-schema: registry
-    public-schema: public
+    registry-data-base: registry
+    registry-dev-data-base-prefix: registry_dev_
+  scheduled:
+    clean-obsolete-version-contexts-cron: '0 */5 * ? * *'
+    clean-obsolete-version-contexts-timezone: UTC

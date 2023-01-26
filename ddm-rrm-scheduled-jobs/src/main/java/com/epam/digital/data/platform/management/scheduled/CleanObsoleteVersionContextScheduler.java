@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
@@ -31,15 +31,17 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DeleteOldRepositoryScheduler {
+public class CleanObsoleteVersionContextScheduler {
 
-  private final VersionContext versionContext;
+  private final VersionContextComponentManager versionContextComponentManager;
   private final GerritService gerritService;
   private final JGitService jGitService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
-  @Scheduled(cron = "${scheduled.cleanRepositoriesCron}", zone = "${scheduled.cleanRepositoriesTimezone}")
-  public void deleteOldRepositories() {
+  @Scheduled(
+      cron = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts-cron}",
+      zone = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts-timezone}")
+  public void cleanObsoleteVersionContexts() {
     try {
       var openedMrs = gerritService.getMRList();
       var repositoriesDirectory = gerritPropertiesConfig.getRepositoryDirectory();
@@ -52,7 +54,7 @@ public class DeleteOldRepositoryScheduler {
                 .noneMatch(path::endsWith))
             .map(path -> path.getFileName().toString())
             .forEach(repo -> {
-              versionContext.destroyContext(repo);
+              versionContextComponentManager.destroyContext(repo);
               jGitService.deleteRepo(repo);
             });
       }

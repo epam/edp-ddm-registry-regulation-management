@@ -16,8 +16,8 @@
 
 package com.epam.digital.data.platform.management.core.config;
 
-import com.epam.digital.data.platform.management.core.context.VersionBeanFactory;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionComponentFactory;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,19 +27,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configuration class that is used for creating and registering {@link VersionContext} bean
+ * Configuration class that is used for creating and registering
+ * {@link VersionContextComponentManager} bean
  */
 @RequiredArgsConstructor
 @Configuration
 public class VersionContextConfig {
 
-  private final Collection<VersionBeanFactory<?>> versionBeanFactories;
+  private final Collection<VersionComponentFactory<?>> versionBeanFactories;
 
   @Bean
-  public VersionContext versionContext() {
-    Map<Class<?>, VersionBeanFactory<?>> versionBeanFactoryMap = versionBeanFactories.stream()
-        .collect(Collectors.toMap(VersionBeanFactory::getBeanType, Function.identity()));
+  public VersionContextComponentManager versionContext() {
+    Map<Class<?>, VersionComponentFactory<?>> versionBeanFactoryMap = versionBeanFactories.stream()
+        .collect(Collectors.toMap(VersionComponentFactory::getComponentType, Function.identity()));
 
-    return new VersionContext(versionBeanFactoryMap);
+    return new VersionContextComponentManager(versionBeanFactoryMap);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import schemacrawler.inclusionrule.InclusionRule;
 import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
@@ -36,7 +35,6 @@ import schemacrawler.schemacrawler.SchemaInfoLevelBuilder;
 import schemacrawler.utility.SchemaCrawlerUtility;
 
 @Configuration
-@Profile("!test")
 public class SchemaCrawlerConfiguration {
 
   @Bean

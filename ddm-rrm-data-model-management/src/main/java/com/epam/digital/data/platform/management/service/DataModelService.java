@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package com.epam.digital.data.platform.management.service;
 
+import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
-import com.epam.digital.data.platform.management.exception.TableParseException;
-import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import java.util.List;
+import org.springframework.lang.NonNull;
 
 /**
  * Provides methods to work with tables
@@ -27,18 +28,26 @@ import java.util.List;
 public interface DataModelService {
 
   /**
-   * Get {@link List} of {@link TableShortInfoDto}
+   * Get {@link List} of {@link TableShortInfoDto} in given version
+   *
+   * @param versionId id of version to search tables in
    * @return {@link List} of {@link TableShortInfoDto}
-   * @throws TableParseException if any of the tables could not be parsed
+   *
+   * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
-  List<TableShortInfoDto> list();
+  @NonNull
+  List<TableShortInfoDto> list(@NonNull String versionId);
 
   /**
-   * Get {@link TableInfoDto} by table name
-   * @param name table name
+   * Get {@link TableInfoDto} by table name in given version
+   *
+   * @param tableName table name
+   * @param versionId id of version to search table in
    * @return {@link TableInfoDto}
-   * @throws TableParseException if table could not be parsed
-   * @throws TableNotFoundException if table doesn't exist
+   *
+   * @throws TableNotFoundException              if table doesn't exist
+   * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
-  TableInfoDto get(String name);
+  @NonNull
+  TableInfoDto get(@NonNull String versionId, @NonNull String tableName);
 }

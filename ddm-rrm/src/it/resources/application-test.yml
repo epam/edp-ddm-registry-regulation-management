@@ -17,7 +17,6 @@ spring:
 
 scheduled:
   dataModelSnapshotCron: '-'
-  cleanRepositoriesCron: '-'
   repositoryRefreshCron: '-'
 
 registry-regulation-management:
@@ -25,3 +24,14 @@ registry-regulation-management:
     enabled: false
   retry:
     enabled: false
+  scheduled:
+    clean-obsolete-version-contexts-cron: '-'
+
+schema-crawler:
+  schema: public
+  exclude-tables:
+    - public.databasechangelog
+    - public.databasechangeloglock
+  exclude-table-prefixes: ddm,test
+  exclude-table-suffixes: hst
+  exclude-field-prefixes: ddm,dcm

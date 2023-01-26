@@ -32,8 +32,6 @@ data:
     scheduled:
       repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
-      cleanRepositoriesCron: {{ .Values.scheduled.cleanRepositoriesCron }}
-      cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
       dataModelSnapshotCron: {{ .Values.scheduled.dataModelSnapshotCron }}
       dataModelSnapshotTimeZone: {{ .Values.scheduled.dataModelSnapshotTimeZone }}
 
@@ -44,8 +42,12 @@ data:
       data-source:
         driver-class-name: {{ .Values.registryRegulationManagement.dataSource.driverClassName }}
         base-jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}
-        registry-schema: {{ .Values.registryRegulationManagement.dataSource.registrySchema }}
-        public-schema: {{ .Values.registryRegulationManagement.dataSource.publicSchema }}
+        registry-data-base: {{ .Values.registryRegulationManagement.dataSource.registryDataBase }}
+        registry-dev-data-base-prefix: {{ .Values.registryRegulationManagement.dataSource.registryDevDataBasePrefix }}
+      subject-table-name: {{ .Values.registryRegulationManagement.subjectTableName }}
+      scheduled:
+        clean-obsolete-version-contexts-cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsCron }}
+        clean-obsolete-version-contexts-timezone: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsTimezone }}
 
     spring:
       registry-datasource:

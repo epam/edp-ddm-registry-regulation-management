@@ -30,27 +30,27 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-    TestVersionBeanFactory.class,
-    RecreateTestVersionBeanFactory.class,
+    TestVersionComponentFactory.class,
+    RecreateTestVersionComponentFactory.class,
     VersionContextConfig.class
 })
 @DisplayName("com.epam.digital.data.platform.management.core.context.VersionContext")
-class VersionContextTest {
+class VersionContextComponentManagerTest {
 
   @Autowired
-  VersionContext versionContext;
+  VersionContextComponentManager versionContextComponentManager;
 
   @Test
   @DisplayName("should return the same object for same parameters if recreate - false")
   void testGetBean_sameBeanForSameVersion() {
     var versionId = "master";
 
-    var resultBean = versionContext.getBean(versionId, String.class);
+    var resultBean = versionContextComponentManager.getComponent(versionId, String.class);
     Assertions.assertThat(resultBean)
         .isNotNull()
         .contains(versionId);
 
-    var storedBean = versionContext.getBean(versionId, String.class);
+    var storedBean = versionContextComponentManager.getComponent(versionId, String.class);
     Assertions.assertThat(storedBean).isSameAs(resultBean);
   }
 
@@ -59,11 +59,11 @@ class VersionContextTest {
   void testGetBean_differentBeanForSameVersion() {
     var versionId = "master";
 
-    var resultBean = versionContext.getBean(versionId, Integer.class);
+    var resultBean = versionContextComponentManager.getComponent(versionId, Integer.class);
     Assertions.assertThat(resultBean)
         .isNotNull();
 
-    var storedBean = versionContext.getBean(versionId, Integer.class);
+    var storedBean = versionContextComponentManager.getComponent(versionId, Integer.class);
     Assertions.assertThat(storedBean).isNotSameAs(resultBean);
   }
 
@@ -73,12 +73,12 @@ class VersionContextTest {
     var version1 = "version1";
     var version2 = "version2";
 
-    var resultVersion1Bean = versionContext.getBean(version1, String.class);
+    var resultVersion1Bean = versionContextComponentManager.getComponent(version1, String.class);
     Assertions.assertThat(resultVersion1Bean)
         .isNotNull()
         .contains(version1);
 
-    var storedBean = versionContext.getBean(version2, String.class);
+    var storedBean = versionContextComponentManager.getComponent(version2, String.class);
     Assertions.assertThat(storedBean).isNotEqualTo(version2);
   }
 
@@ -87,9 +87,10 @@ class VersionContextTest {
   void testGetBean_illegalArgument() {
     var version = RandomString.make();
 
-    Assertions.assertThatThrownBy(() -> versionContext.getBean(version, Object.class))
+    Assertions.assertThatThrownBy(
+            () -> versionContextComponentManager.getComponent(version, Object.class))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("No VersionBeanFactory is registered for bean type %s", Object.class);
+        .hasMessage("No VersionBeanFactory is registered for component type %s", Object.class);
   }
 
 
@@ -99,14 +100,15 @@ class VersionContextTest {
   void destroyContext() {
     var version1 = "version1";
     var version2 = "version2";
-    versionContext.getBean(version1, String.class);
-    versionContext.getBean(version2, String.class);
+    versionContextComponentManager.getComponent(version1, String.class);
+    versionContextComponentManager.getComponent(version2, String.class);
 
-    var contextMap = (Map<String, ?>) ReflectionTestUtils.getField(versionContext, "contextMap");
+    var contextMap = (Map<String, ?>) ReflectionTestUtils.getField(versionContextComponentManager,
+        "contextMap");
     Assertions.assertThat(contextMap)
         .containsKeys(version1, version2);
 
-    versionContext.destroyContext(version1);
+    versionContextComponentManager.destroyContext(version1);
     Assertions.assertThat(contextMap)
         .doesNotContainKey(version1)
         .containsKey(version2);

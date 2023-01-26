@@ -56,6 +56,8 @@
     <spring-security-core.version>5.7.5</spring-security-core.version>
     <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
 
+    <zonky-embedded-postgres.version>2.0.2</zonky-embedded-postgres.version>
+
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>
     <json-path.version>2.6.0</json-path.version>

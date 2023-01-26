@@ -17,7 +17,7 @@
 package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
@@ -40,7 +40,7 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class DeleteOldRepositorySchedulerTest {
+public class CleanObsoleteVersionContextSchedulerTest {
 
   @TempDir
   private File tempDir;
@@ -52,10 +52,10 @@ public class DeleteOldRepositorySchedulerTest {
   @Mock
   private GerritPropertiesConfig gerritPropertiesConfig;
   @Mock
-  private VersionContext context;
+  private VersionContextComponentManager context;
 
   @InjectMocks
-  private DeleteOldRepositoryScheduler scheduler;
+  private CleanObsoleteVersionContextScheduler scheduler;
 
   @BeforeEach
   void setUp() {
@@ -66,12 +66,12 @@ public class DeleteOldRepositorySchedulerTest {
 
   @Test
   @SneakyThrows
-  void deleteOldRepositoriesSuccessTest() {
+  void cleanObsoleteVersionContextsTest() {
     var repo = RandomString.make();
     Files.createDirectory(Path.of(tempDir.getAbsolutePath(), repo));
     Mockito.when(gerritService.getMRList()).thenReturn(List.of());
 
-    scheduler.deleteOldRepositories();
+    scheduler.cleanObsoleteVersionContexts();
 
     Mockito.verify(jGitService).deleteRepo(repo);
     Mockito.verify(context).destroyContext(repo);
@@ -79,20 +79,20 @@ public class DeleteOldRepositorySchedulerTest {
 
   @Test
   @SneakyThrows
-  void deleteOldRepositories_noHeadBranchDeleting() {
+  void cleanObsoleteVersionContexts_noHeadBranchDeleting() {
     var headBranch = RandomString.make();
     Files.createDirectory(Path.of(tempDir.getAbsolutePath(), headBranch));
     Mockito.when(gerritPropertiesConfig.getHeadBranch()).thenReturn(headBranch);
     Mockito.when(gerritService.getMRList()).thenReturn(List.of());
 
-    scheduler.deleteOldRepositories();
+    scheduler.cleanObsoleteVersionContexts();
 
     Mockito.verifyNoInteractions(jGitService);
   }
 
   @Test
   @SneakyThrows
-  void deleteOldRepositories_noObsoleteRepos() {
+  void cleanObsoleteVersionContexts_noObsoleteRepos() {
     var repo = RandomString.make();
     Files.createDirectory(Path.of(tempDir.getAbsolutePath(), repo));
     var changeInfo = new ChangeInfoDto();
@@ -100,16 +100,16 @@ public class DeleteOldRepositorySchedulerTest {
     var mrList = List.of(changeInfo);
     Mockito.when(gerritService.getMRList()).thenReturn(mrList);
 
-    scheduler.deleteOldRepositories();
+    scheduler.cleanObsoleteVersionContexts();
 
     Mockito.verifyNoInteractions(jGitService);
   }
 
   @Test
   @SneakyThrows
-  void exceptionNotThrownTest_gerritCommunication() {
+  void cleanObsoleteVersionContexts_gerritCommunication() {
     Mockito.doThrow(GerritCommunicationException.class).when(gerritService).getMRList();
-    Assertions.assertThatCode(() -> scheduler.deleteOldRepositories())
+    Assertions.assertThatCode(() -> scheduler.cleanObsoleteVersionContexts())
         .doesNotThrowAnyException();
   }
 
@@ -120,7 +120,7 @@ public class DeleteOldRepositorySchedulerTest {
     Mockito.when(gerritService.getMRList()).thenReturn(List.of());
     Mockito.doThrow(GitCommandException.class).when(jGitService).deleteRepo(repo);
 
-    Assertions.assertThatCode(() -> scheduler.deleteOldRepositories())
+    Assertions.assertThatCode(() -> scheduler.cleanObsoleteVersionContexts())
         .doesNotThrowAnyException();
   }
 }

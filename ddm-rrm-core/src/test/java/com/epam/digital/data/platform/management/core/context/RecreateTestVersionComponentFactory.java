@@ -14,31 +14,29 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.datasource.factory;
+package com.epam.digital.data.platform.management.core.context;
 
-import com.epam.digital.data.platform.management.config.DataSourceConfigurationProperties;
-import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
+import java.util.Random;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-/**
- * Factory that is used for creating version based {@link RegistryDataSource}
- */
 @Component
-public class RegistryDataSourceFactory extends AbstractDataSourceFactory<RegistryDataSource> {
+public class RecreateTestVersionComponentFactory implements VersionComponentFactory<Integer> {
 
-  public RegistryDataSourceFactory(DataSourceConfigurationProperties dsProps) {
-    super(dsProps);
+  @Override
+  @NonNull
+  public Integer createComponent(@NonNull String versionId) {
+    return new Random().nextInt();
   }
 
   @Override
-  protected String getSchema() {
-    return dsProps.getRegistrySchema();
+  public boolean shouldBeRecreated(@NonNull String versionId) {
+    return true;
   }
 
   @Override
   @NonNull
-  public Class<RegistryDataSource> getBeanType() {
-    return RegistryDataSource.class;
+  public Class<Integer> getComponentType() {
+    return Integer.class;
   }
 }
