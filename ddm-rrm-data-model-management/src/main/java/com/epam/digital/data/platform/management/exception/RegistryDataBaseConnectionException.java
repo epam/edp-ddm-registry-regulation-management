@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+package com.epam.digital.data.platform.management.exception;
 
-@Getter
-@Setter
-@RequiredArgsConstructor
-@EqualsAndHashCode(of = "permissionId")
-public class RolePermissionShortInfoDto {
-  private int permissionId;
-  private String roleName;
-  private String objectName;
-  private String columnName;
-  private DdmRolePermissionOperation operation;
+/**
+ * Exception that is thrown if it couldn't create a connection to master version database
+ */
+public class RegistryDataBaseConnectionException extends RuntimeException {
+
+  public RegistryDataBaseConnectionException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,71 +15,108 @@
  */
 package com.epam.digital.data.platform.management.service.impl;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.exception.VersionComponentCreationException;
+import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
+import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
-import com.epam.digital.data.platform.management.exception.TableParseException;
-import com.epam.digital.data.platform.management.mapper.TableShortInfoMapper;
-import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.mapper.SchemaCrawlerMapper;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.service.DataModelService;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import schemacrawler.schema.Catalog;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class DataModelServiceImpl implements DataModelService {
 
-  public static final String DIRECTORY_PATH = "repositories/data-model-snapshot/tables";
-  private static final String JSON_FILE_EXTENSION = "json";
-  private final TableShortInfoMapper mapper;
-  private final ObjectMapper objectMapper;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final VersionContextComponentManager versionContextComponentManager;
+  private final SchemaCrawlerMapper mapper;
 
   @Override
-  public List<TableShortInfoDto> list() {
-    log.debug("Trying to get list of tables");
-    final File[] files = new File(DIRECTORY_PATH).listFiles();
-    if (files == null) {
-      log.debug("No one table found.");
-      return new ArrayList<>();
-    }
-    List<TableShortInfoDto> tableDetails = new ArrayList<>();
-    for (File file : files) {
-      final String baseName = FilenameUtils.getBaseName(file.getName());
-      log.trace("Getting table {}", baseName);
-      tableDetails.add(mapper.toTableShortInfoDto(get(baseName)));
-    }
-    log.debug("There were found {} tables", tableDetails.size());
-    return tableDetails;
+  @NonNull
+  public List<TableShortInfoDto> list(@NonNull String versionId) {
+    log.debug("Trying to get list of tables in version '{}'", versionId);
 
+    var catalog = getCatalog(versionId);
+    if (Objects.isNull(catalog)) {
+      return List.of();
+    }
+
+    var tablesDetails = mapper.toTableShortInfoDtos(catalog.getTables());
+    tablesDetails.sort(Comparator.comparing(TableShortInfoDto::getName));
+
+    log.debug("There were found {} tables for version '{}'", tablesDetails.size(), versionId);
+    return tablesDetails;
   }
 
   @Override
-  public TableInfoDto get(String name) {
-    log.debug("Trying to get table with name '{}'", name);
-    try (FileInputStream fis = new FileInputStream(getProcessPath(name))) {
-      String data = IOUtils.toString(fis, StandardCharsets.UTF_8.name());
-      log.debug("Table with name '{}' was found", name);
-      return objectMapper.readValue(data, TableInfoDto.class);
-    } catch (FileNotFoundException e) {
-      throw new TableNotFoundException(String.format("Table with name '%s' doesn't exist.", name));
-    } catch (IOException e) {
-      throw new TableParseException(String.format("Cannot read the table with name '%s'.", name));
+  @NonNull
+  public TableInfoDto get(@NonNull String versionId, @NonNull String tableName) {
+    log.debug("Trying to get table with name '{}' in version '{}'", tableName, versionId);
+    var catalog = getCatalog(versionId);
+    if (Objects.isNull(catalog)) {
+      throw tableNotFoundException(versionId, tableName);
+    }
+
+    var table = catalog.getTables().stream()
+        .filter(t -> t.getName().equals(tableName))
+        .reduce((t, t2) -> {
+          throw new IllegalStateException("There cannot be several tables with same name");
+        }).orElseThrow(() -> tableNotFoundException(versionId, tableName));
+
+    log.debug("Table with name '{}' was found in version '{}'", tableName, versionId);
+    return mapper.toTableInfoDto(table);
+  }
+
+  @Nullable
+  private Catalog getCatalog(String versionId) {
+    try {
+      log.trace("trying getting schema catalog for version '{}'", versionId);
+      return versionContextComponentManager.getComponent(versionId, Catalog.class);
+    } catch (VersionComponentCreationException e) {
+      if (gerritPropertiesConfig.getHeadBranch().equals(versionId)) {
+        log.error("Couldn't connect to master version data-base: {}", e.getMessage());
+        throw registryDataBaseConnectionException(e);
+      } else {
+        log.warn("Couldn't connect to version-candidate {} data-base: {}", versionId,
+            e.getMessage());
+        checkMainDataBaseConnection();
+        return null;
+      }
     }
   }
 
-  private String getProcessPath(String processName) {
-    return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName),
-        JSON_FILE_EXTENSION);
+  private void checkMainDataBaseConnection() {
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+    log.trace("trying getting connection to database master version '{}'", masterVersionId);
+    var datasource = versionContextComponentManager.getComponent(masterVersionId,
+        RegistryDataSource.class);
+    try (var ignoredConnection = datasource.getConnection()) {
+    } catch (SQLException sqlException) {
+      throw registryDataBaseConnectionException(sqlException);
+    }
+  }
+
+  private TableNotFoundException tableNotFoundException(String versionId, String tableName) {
+    return new TableNotFoundException(
+        String.format("Table with name '%s' doesn't exist in version '%s'.", tableName, versionId));
+  }
+
+  private RegistryDataBaseConnectionException registryDataBaseConnectionException(Throwable cause) {
+    return new RegistryDataBaseConnectionException(
+        String.format("Couldn't connect to registry data-base: %s", cause.getMessage()), cause);
   }
 }

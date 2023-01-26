@@ -21,17 +21,17 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TestVersionBeanFactory implements VersionBeanFactory<String> {
+public class TestVersionComponentFactory implements VersionComponentFactory<String> {
 
   @Override
   @NonNull
-  public String createBean(@NonNull String versionId) {
+  public String createComponent(@NonNull String versionId) {
     return versionId + RandomString.make();
   }
 
   @Override
   @NonNull
-  public Class<String> getBeanType() {
+  public Class<String> getComponentType() {
     return String.class;
   }
 }

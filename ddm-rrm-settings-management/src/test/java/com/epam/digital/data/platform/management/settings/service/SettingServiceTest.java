@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
@@ -47,7 +47,7 @@ class SettingServiceTest {
   private ArgumentCaptor<String> captor;
 
   @Mock
-  private VersionContext versionContext;
+  private VersionContextComponentManager versionContextComponentManager;
   @Mock
   private VersionedFileRepository repository;
   @InjectMocks
@@ -78,7 +78,7 @@ class SettingServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(versionContext.getBean(VERSION_ID, VersionedFileRepository.class))
+    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
         .thenReturn(repository);
   }
 

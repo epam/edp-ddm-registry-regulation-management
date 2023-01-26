@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management;
 
 import com.epam.digital.data.platform.management.context.TestExecutionContext;
 import java.util.Map;
+import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -79,7 +80,9 @@ public abstract class BaseIT {
       Assertions.assertThat(context.getTestDirectory().mkdirs()).isTrue();
     }
 
+    context.stubGerritCommon();
     context.resetRemoteRepo();
+    context.resetHeadBranchDataBase();
     final var remoteHeadRepo = context.getRemoteHeadRepo();
     var headRepo = context.getHeadRepo();
     if (headRepo.exists()) {
@@ -97,5 +100,9 @@ public abstract class BaseIT {
   @SneakyThrows
   void tearDown() {
     FileUtils.forceDelete(context.getTestDirectory());
+    context.getGerritMockServer().resetAll();
+    if (Objects.nonNull(context.getVersionCandidate())) {
+      context.dropDataBase(String.valueOf(context.getVersionCandidate().getNumber()));
+    }
   }
 }

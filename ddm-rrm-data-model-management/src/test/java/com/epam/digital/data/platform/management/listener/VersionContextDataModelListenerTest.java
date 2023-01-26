@@ -19,9 +19,8 @@ package com.epam.digital.data.platform.management.listener;
 import com.epam.digital.data.platform.management.core.config.AsyncConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.RetryConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEvent;
-import com.epam.digital.data.platform.management.datasource.PublicDataSource;
 import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +54,7 @@ class VersionContextDataModelListenerTest {
   private ApplicationEventPublisher applicationEventPublisher;
 
   @MockBean
-  VersionContext versionContext;
+  VersionContextComponentManager versionContextComponentManager;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
 
@@ -79,15 +78,12 @@ class VersionContextDataModelListenerTest {
   @DisplayName("should init creating registry and public data sources on application start")
   @SneakyThrows
   void handleApplicationStartedEvent() {
-    Mockito.doReturn(null).when(versionContext).getBean(HEAD_BRANCH, RegistryDataSource.class);
-    Mockito.doReturn(null).when(versionContext).getBean(HEAD_BRANCH, PublicDataSource.class);
+    Mockito.doReturn(null).when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
 
     applicationEventPublisher.publishEvent(applicationStartedEvent);
 
-    Mockito.verify(versionContext, Mockito.timeout(1000))
-        .getBean(HEAD_BRANCH, RegistryDataSource.class);
-    Mockito.verify(versionContext, Mockito.timeout(1000))
-        .getBean(HEAD_BRANCH, PublicDataSource.class);
+    Mockito.verify(versionContextComponentManager, Mockito.timeout(1000))
+        .getComponent(HEAD_BRANCH, RegistryDataSource.class);
   }
 
   @Test
@@ -97,30 +93,25 @@ class VersionContextDataModelListenerTest {
     Mockito
         .doThrow(RuntimeException.class)
         .doReturn(null)
-        .when(versionContext).getBean(HEAD_BRANCH, RegistryDataSource.class);
+        .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
 
     applicationEventPublisher.publishEvent(applicationStartedEvent);
 
-    Mockito.verify(versionContext, Mockito.timeout(1000).times(2))
-        .getBean(HEAD_BRANCH, RegistryDataSource.class);
-    Mockito.verify(versionContext, Mockito.timeout(1000).times(2))
-        .getBean(HEAD_BRANCH, PublicDataSource.class);
+    Mockito.verify(versionContextComponentManager, Mockito.timeout(1000).times(2))
+        .getComponent(HEAD_BRANCH, RegistryDataSource.class);
   }
 
   @Test
   @DisplayName("should init creating registry and public data sources on creating version-candidate")
   @SneakyThrows
   void handleVersionCandidateCreatedEvent() {
-    Mockito.doReturn(null).when(versionContext)
-        .getBean(VERSION_CANDIDATE, RegistryDataSource.class);
-    Mockito.doReturn(null).when(versionContext).getBean(VERSION_CANDIDATE, PublicDataSource.class);
+    Mockito.doReturn(null).when(versionContextComponentManager)
+        .getComponent(VERSION_CANDIDATE, RegistryDataSource.class);
 
     applicationEventPublisher.publishEvent(versionCandidateCreatedEvent);
 
-    Mockito.verify(versionContext, Mockito.timeout(1000))
-        .getBean(VERSION_CANDIDATE, RegistryDataSource.class);
-    Mockito.verify(versionContext, Mockito.timeout(1000))
-        .getBean(VERSION_CANDIDATE, PublicDataSource.class);
+    Mockito.verify(versionContextComponentManager, Mockito.timeout(1000))
+        .getComponent(VERSION_CANDIDATE, RegistryDataSource.class);
   }
 
   @Test
@@ -130,14 +121,12 @@ class VersionContextDataModelListenerTest {
     Mockito
         .doThrow(RuntimeException.class)
         .doReturn(null)
-        .when(versionContext).getBean(VERSION_CANDIDATE, RegistryDataSource.class);
+        .when(versionContextComponentManager).getComponent(VERSION_CANDIDATE, RegistryDataSource.class);
 
     applicationEventPublisher.publishEvent(versionCandidateCreatedEvent);
 
-    Mockito.verify(versionContext, Mockito.timeout(1000).times(2))
-        .getBean(VERSION_CANDIDATE, RegistryDataSource.class);
-    Mockito.verify(versionContext, Mockito.timeout(1000).times(2))
-        .getBean(VERSION_CANDIDATE, PublicDataSource.class);
+    Mockito.verify(versionContextComponentManager, Mockito.timeout(1000).times(2))
+        .getComponent(VERSION_CANDIDATE, RegistryDataSource.class);
   }
 }
 

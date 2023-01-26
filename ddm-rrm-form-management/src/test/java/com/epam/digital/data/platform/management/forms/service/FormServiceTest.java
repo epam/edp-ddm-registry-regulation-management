@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -60,7 +60,7 @@ class FormServiceTest {
   private final String FORM_CONTENT = TestUtils.getContent("form-sample.json");
 
   @Mock
-  private VersionContext versionContext;
+  private VersionContextComponentManager versionContextComponentManager;
   @Mock
   private VersionedFileRepository repository;
   @Mock
@@ -75,9 +75,9 @@ class FormServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(versionContext.getBean(VERSION_ID, VersionedFileRepository.class))
+    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
         .thenReturn(repository);
-    Mockito.when(versionContext.getBean(gerritPropertiesConfig.getHeadBranch(),
+    Mockito.when(versionContextComponentManager.getComponent(gerritPropertiesConfig.getHeadBranch(),
         VersionedFileRepository.class)).thenReturn(masterRepository);
   }
 

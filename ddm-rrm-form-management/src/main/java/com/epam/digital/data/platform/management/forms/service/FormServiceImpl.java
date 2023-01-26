@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.forms.service;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -46,7 +46,7 @@ public class FormServiceImpl implements FormService {
   private static final String JSON_FILE_EXTENSION = "json";
   public static final String FORM_CREATED_FIELD = "created";
   public static final String FORM_MODIFIED_FIELD = "modified";
-  private final VersionContext versionContext;
+  private final VersionContextComponentManager versionContextComponentManager;
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
@@ -65,7 +65,8 @@ public class FormServiceImpl implements FormService {
   @Override
   public void createForm(String formName, String content, String versionName) {
     var time = LocalDateTime.now();
-    var repo = versionContext.getBean(versionName, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     String formPath = getFormPath(formName);
     if (repo.isFileExists(formPath)) {
       throw new FormAlreadyExistsException(
@@ -77,7 +78,8 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public String getFormContent(String formName, String versionName) {
-    var repo = versionContext.getBean(versionName, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     String formContent = repo.readFile(getFormPath(formName));
     if (formContent == null) {
       throw new FormNotFoundException("Form " + formName + " not found", formName);
@@ -89,7 +91,8 @@ public class FormServiceImpl implements FormService {
   public void updateForm(String content, String formName, String versionName) {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
-    var repo = versionContext.getBean(versionName, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     if (repo.isFileExists(formPath)) {
       String oldContent = repo.readFile(formPath);
@@ -106,7 +109,8 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void deleteForm(String formName, String versionName) {
-    var repo = versionContext.getBean(versionName, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     repo.deleteFile(getFormPath(formName));
   }
 
@@ -116,9 +120,10 @@ public class FormServiceImpl implements FormService {
   }
 
   private List<FormInfoDto> getFormListByVersion(String versionName, FileStatus skippedStatus) {
-    var repo = versionContext.getBean(versionName, VersionedFileRepository.class);
-    var masterRepo = versionContext.getBean(gerritPropertiesConfig.getHeadBranch(),
+    var repo = versionContextComponentManager.getComponent(versionName,
         VersionedFileRepository.class);
+    var masterRepo = versionContextComponentManager.getComponent(
+        gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class);
     List<VersionedFileInfoDto> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormInfoDto> forms = new ArrayList<>();
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {

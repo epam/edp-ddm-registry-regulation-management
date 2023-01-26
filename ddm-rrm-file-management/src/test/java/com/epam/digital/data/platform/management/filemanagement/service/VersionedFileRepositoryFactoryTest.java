@@ -53,7 +53,7 @@ class VersionedFileRepositoryFactoryTest {
   }
 
   @Test
-  @DisplayName("should create bean with type VersionedFileRepositoryImpl for version candidate")
+  @DisplayName("should create component with type VersionedFileRepositoryImpl for version candidate")
   void getRepositoryVersionedTest() {
     var refs = RandomString.make();
     var changeId = RandomString.make();
@@ -65,7 +65,7 @@ class VersionedFileRepositoryFactoryTest {
     Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(changeInfo);
     Mockito.when(gerritService.getMRByNumber(version)).thenReturn(changeInfo);
 
-    var repo = factory.createBean(version);
+    var repo = factory.createComponent(version);
     Assertions.assertThat(repo).isInstanceOf(VersionedFileRepositoryImpl.class);
 
     Mockito.verify(jGitService).cloneRepoIfNotExist(version);
@@ -74,9 +74,9 @@ class VersionedFileRepositoryFactoryTest {
   }
 
   @Test
-  @DisplayName("should create bean with type HeadFileRepositoryImpl for head branch version")
+  @DisplayName("should create component with type HeadFileRepositoryImpl for head branch version")
   void getRepositoryHeadTest() {
-    var repo = factory.createBean(HEAD_BRANCH);
+    var repo = factory.createComponent(HEAD_BRANCH);
 
     Assertions.assertThat(repo).isInstanceOf(HeadFileRepositoryImpl.class);
 
@@ -96,8 +96,8 @@ class VersionedFileRepositoryFactoryTest {
   }
 
   @Test
-  @DisplayName("beanType should be VersionedFileRepository")
-  void getBeanTypeTest() {
-    Assertions.assertThat(factory.getBeanType()).isEqualTo(VersionedFileRepository.class);
+  @DisplayName("componentType should be VersionedFileRepository")
+  void getComponentTypeTest() {
+    Assertions.assertThat(factory.getComponentType()).isEqualTo(VersionedFileRepository.class);
   }
 }

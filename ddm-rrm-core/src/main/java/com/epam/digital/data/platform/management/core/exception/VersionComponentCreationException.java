@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.model.dto;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
+package com.epam.digital.data.platform.management.core.exception;
 
-@Data
-public class DataBaseSnapshotShortInfoDto {
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 
-  private Map<String, TableInfoDto> ddmTables = new HashMap<>();
-  private Map<Integer, RolePermissionShortInfoDto> ddmRolePermissions = new HashMap<>();
+/**
+ * Exception that is thrown in case if there were faced any exception during creating component in
+ * {@link VersionContextComponentManager version context}
+ */
+public class VersionComponentCreationException extends RuntimeException {
+
+  public VersionComponentCreationException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

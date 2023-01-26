@@ -17,11 +17,10 @@
 package com.epam.digital.data.platform.management.listener;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.event.ApplicationStartedEventListener;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEvent;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEventListener;
-import com.epam.digital.data.platform.management.datasource.PublicDataSource;
 import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +30,9 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 /**
- * Listener that tries to create data sources for version candidate
+ * Listener that preloads version context for:
+ * <li>new created version candidate (on {@link VersionCandidateCreatedEvent})
+ * <li>master version (on {@link ApplicationStartedEvent})
  */
 @Slf4j
 @Component
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Component;
 public class VersionContextDataModelListener implements VersionCandidateCreatedEventListener,
     ApplicationStartedEventListener {
 
-  private final VersionContext versionContext;
+  private final VersionContextComponentManager versionContextComponentManager;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Override
@@ -48,7 +49,7 @@ public class VersionContextDataModelListener implements VersionCandidateCreatedE
       backoff = @Backoff(delayExpression = "${registry-regulation-management.retry.data-model-context-creating-delay:300000}"))
   public void handleVersionCandidateCreatedEvent(VersionCandidateCreatedEvent event) {
     var versionCandidateId = event.getVersionCandidateNumber();
-    createBeans(versionCandidateId);
+    initVersionContext(versionCandidateId);
   }
 
   @Override
@@ -57,13 +58,12 @@ public class VersionContextDataModelListener implements VersionCandidateCreatedE
       backoff = @Backoff(delayExpression = "${registry-regulation-management.retry.data-model-context-creating-delay:300000}"))
   public void handleApplicationStartedEvent(ApplicationStartedEvent event) {
     var versionId = gerritPropertiesConfig.getHeadBranch();
-    createBeans(versionId);
+    initVersionContext(versionId);
   }
 
-  private void createBeans(String versionId) {
+  private void initVersionContext(String versionId) {
     try {
-      versionContext.getBean(versionId, PublicDataSource.class);
-      versionContext.getBean(versionId, RegistryDataSource.class);
+      versionContextComponentManager.getComponent(versionId, RegistryDataSource.class);
     } catch (Exception e) {
       log.warn("Exception occurred during creating data sources for version {}: {}",
           versionId, e.getMessage(), e);

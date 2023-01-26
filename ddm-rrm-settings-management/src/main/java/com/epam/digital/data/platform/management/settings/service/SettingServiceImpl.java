@@ -15,7 +15,7 @@
  */
 package com.epam.digital.data.platform.management.settings.service;
 
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.settings.model.CamundaGlobalSystemVarsFileRepresentationDto;
@@ -40,12 +40,12 @@ public class SettingServiceImpl implements SettingService {
 
   private static final String GLOBAL_SETTINGS_PATH = "global-vars/camunda-global-system-vars.yml";
   private static final String VERSION_SETTINGS_PATH = "settings/settings.yml";
-  private final VersionContext versionContext;
+  private final VersionContextComponentManager versionContextComponentManager;
 
   @Override
   public SettingsInfoDto getSettings(String versionCandidateId) {
     log.debug("Trying to get repo");
-    var repo = versionContext.getBean(versionCandidateId, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionCandidateId, VersionedFileRepository.class);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     String camundaGlobalVarsContent = repo.readFile(GLOBAL_SETTINGS_PATH);
     String settingsContent = repo.readFile(VERSION_SETTINGS_PATH);
@@ -58,7 +58,7 @@ public class SettingServiceImpl implements SettingService {
     YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(
         YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
     log.debug("YAMLMapper was initialized. Trying to get repo");
-    var repo = versionContext.getBean(versionCandidateId, VersionedFileRepository.class);
+    var repo = versionContextComponentManager.getComponent(versionCandidateId, VersionedFileRepository.class);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(
         settings.getThemeFile(),

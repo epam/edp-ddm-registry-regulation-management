@@ -31,8 +31,8 @@ public class DataSourceConfigurationProperties {
   private String baseJdbcUrl;
   private String username;
   private String password;
-  private String registrySchema;
-  private String publicSchema;
+  private String registryDataBase;
+  private String registryDevDataBasePrefix;
   private String connectionTimeout;
 
 }

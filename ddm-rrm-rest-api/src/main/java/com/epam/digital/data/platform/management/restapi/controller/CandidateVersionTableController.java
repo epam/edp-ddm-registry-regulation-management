@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
 import com.epam.digital.data.platform.management.service.DataModelService;
 import data.model.snapshot.model.DdmTable;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/versions/candidates")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class CandidateVersionTableController {
 
   private final DdmTableMapper ddmTableMapper;
@@ -76,11 +79,11 @@ public class CandidateVersionTableController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{versionCandidateId}/tables")
   public ResponseEntity<List<TableShortInfoDto>> getTables(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-      String versionCandidateId) {
-    log.info("getTables called");
-    final var tables = tableService.list();
-    log.info("There were found {} tables", tables.size());
+      @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId) {
+    log.info("Getting list of tables for version-candidate '{}' started", versionCandidateId);
+    final var tables = tableService.list(String.valueOf(versionCandidateId));
+    log.info("There were found {} tables for master version-candidate '{}'", tables.size(),
+        versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON).body(tables);
   }
@@ -112,12 +115,13 @@ public class CandidateVersionTableController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{versionCandidateId}/tables/{tableName}")
   public ResponseEntity<DdmTable> getTable(
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
-      String versionCandidateId,
+      @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId,
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
-    log.info("getTable called");
-    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(tableService.get(tableName));
-    log.info("Table '{}' was found", tableName);
+    log.info("Getting table by name '{}' for version-candidate '{}' started", tableName,
+        versionCandidateId);
+    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
+        tableService.get(String.valueOf(versionCandidateId), tableName));
+    log.info("Table '{}' was found in version-candidate '{}'", tableName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
         .body(ddmTable);

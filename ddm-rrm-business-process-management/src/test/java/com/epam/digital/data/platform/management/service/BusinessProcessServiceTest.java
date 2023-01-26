@@ -23,7 +23,7 @@ import static org.springframework.util.StreamUtils.copyToString;
 
 import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.core.context.VersionContext;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -65,7 +65,7 @@ public class BusinessProcessServiceTest {
   private ArgumentCaptor<String> captor;
 
   @Mock
-  private VersionContext versionContext;
+  private VersionContextComponentManager versionContextComponentManager;
   @Mock
   private VersionedFileRepository repository;
   @Mock
@@ -75,16 +75,20 @@ public class BusinessProcessServiceTest {
   @Autowired
   private DocumentBuilder documentBuilder;
   @Spy
-  private BusinessProcessMapper businessProcessMapper = Mappers.getMapper(BusinessProcessMapper.class);
+  private BusinessProcessMapper businessProcessMapper = Mappers.getMapper(
+      BusinessProcessMapper.class);
   private BusinessProcessServiceImpl businessProcessService;
 
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    businessProcessService = new BusinessProcessServiceImpl(versionContext,
+    businessProcessService = new BusinessProcessServiceImpl(versionContextComponentManager,
         businessProcessMapper, gerritPropertiesConfig, documentBuilder);
-    Mockito.when(versionContext.getBean(VERSION_ID, VersionedFileRepository.class)).thenReturn(repository);
-    Mockito.when(versionContext.getBean(gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class))
+    Mockito.when(
+            versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
+        .thenReturn(repository);
+    Mockito.when(versionContextComponentManager.getComponent(gerritPropertiesConfig.getHeadBranch(),
+            VersionedFileRepository.class))
         .thenReturn(masterRepository);
   }
 
@@ -98,7 +102,8 @@ public class BusinessProcessServiceTest {
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
-    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
+    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED)
+        .build();
 
     Mockito.when(repository.getFileList("bpmn"))
         .thenReturn(List.of(newBusinessProcess, deletedProcess));
@@ -130,7 +135,8 @@ public class BusinessProcessServiceTest {
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
-    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
+    VersionedFileInfoDto deletedProcess = VersionedFileInfoDto.builder().status(FileStatus.DELETED)
+        .build();
 
     Mockito.when(repository.getFileList("bpmn"))
         .thenReturn(List.of(newBusinessProcess, deletedProcess));
@@ -210,7 +216,8 @@ public class BusinessProcessServiceTest {
   @SneakyThrows
   void createBusinessProcessInvalidContentTest() {
     Assertions.assertThatThrownBy(
-            () -> businessProcessService.createProcess("business-process", "Invalid content", VERSION_ID))
+            () -> businessProcessService.createProcess("business-process", "Invalid content",
+                VERSION_ID))
         .isInstanceOf(RuntimeException.class)
         .hasMessage("Could not parse xml document");
   }
@@ -235,7 +242,7 @@ public class BusinessProcessServiceTest {
         .thenReturn(null);
 
     Assertions.assertThatThrownBy(
-        () ->businessProcessService.getProcessContent("business-process", VERSION_ID))
+            () -> businessProcessService.getProcessContent("business-process", VERSION_ID))
         .isInstanceOf(ProcessNotFoundException.class)
         .hasMessage("Process business-process not found");
   }
@@ -243,7 +250,8 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void updateBusinessProcessNoErrorTest() {
-    Assertions.assertThatCode(() -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
+    Assertions.assertThatCode(
+            () -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
     Mockito.verify(repository).isFileExists("bpmn/business-process.bpmn");
     Mockito.verify(repository)
@@ -254,8 +262,10 @@ public class BusinessProcessServiceTest {
   @Test
   @SneakyThrows
   void updateBusinessProcessTest() {
-    Mockito.when(repository.isFileExists("bpmn/business-process." + BPMN_FILE_EXTENSION)).thenReturn(true);
-    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION)).thenReturn(PROCESS_CONTENT);
+    Mockito.when(repository.isFileExists("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(true);
+    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(PROCESS_CONTENT);
     Assertions.assertThatCode(
             () -> businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID))
         .doesNotThrowAnyException();
