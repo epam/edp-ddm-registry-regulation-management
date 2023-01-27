@@ -48,8 +48,8 @@ public class SchemaCrawlerFactory implements VersionComponentFactory<Catalog> {
   public Catalog createComponent(@NonNull String versionId) {
     var registryDs = versionContextComponentManager.getComponent(versionId, RegistryDataSource.class);
 
-    try {
-      return SchemaCrawlerUtility.getCatalog(registryDs.getConnection(), options);
+    try (var conn = registryDs.getConnection()) {
+      return SchemaCrawlerUtility.getCatalog(conn, options);
     } catch (SchemaCrawlerException | SQLException e) {
       throw new VersionComponentCreationException(
           String.format("Schema crawler catalog couldn't be created: %s", e.getMessage()), e);
