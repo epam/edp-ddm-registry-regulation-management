@@ -140,3 +140,11 @@ spec:
                 path: spring.registry-datasource.username
               - key: regRegulationRolePass
                 path: spring.registry-datasource.password
+        - name: {{ .Chart.Name }}-db-credentials-registry-2
+          secret:
+            secretName: {{ .Values.db.secret }}
+            items:
+              - key: regRegulationRoleName
+                path: registry-regulation-management.data-source.username
+              - key: regRegulationRolePass
+                path: registry-regulation-management.data-source.password
