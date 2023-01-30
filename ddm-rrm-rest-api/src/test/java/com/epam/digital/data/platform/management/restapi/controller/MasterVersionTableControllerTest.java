@@ -88,7 +88,7 @@ class MasterVersionTableControllerTest {
           .objectReference(true)
           .build();
       Mockito.doReturn(List.of(expectedTablesResponse))
-          .when(tableService).list(HEAD_BRANCH);
+          .when(tableService).listTables(HEAD_BRANCH);
 
       mockMvc.perform(
           get("/versions/master/tables")
@@ -100,7 +100,7 @@ class MasterVersionTableControllerTest {
           jsonPath("$.[0].objectReference", is(true))
       ).andDo(document("versions/master/tables/GET"));
 
-      Mockito.verify(tableService).list(HEAD_BRANCH);
+      Mockito.verify(tableService).listTables(HEAD_BRANCH);
     }
 
     @Test
@@ -108,7 +108,7 @@ class MasterVersionTableControllerTest {
     @SneakyThrows
     void listTablesTest_registryDataBaseConnectionException() {
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).list(HEAD_BRANCH);
+          .when(tableService).listTables(HEAD_BRANCH);
 
       mockMvc.perform(
           get("/versions/master/tables")
@@ -121,7 +121,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).list(HEAD_BRANCH);
+      Mockito.verify(tableService).listTables(HEAD_BRANCH);
     }
   }
 
@@ -141,7 +141,7 @@ class MasterVersionTableControllerTest {
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
       Mockito.doReturn(expectedTablesResponse)
-          .when(tableService).get(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName);
       final var expectedDdmTable = new DdmTable();
       expectedDdmTable.setName(tableName);
       expectedDdmTable.setDescription("John Doe get table");
@@ -158,7 +158,7 @@ class MasterVersionTableControllerTest {
           jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/master/tables/{tableName}/GET"));
 
-      Mockito.verify(tableService).get(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
     }
 
     @Test
@@ -167,7 +167,7 @@ class MasterVersionTableControllerTest {
     void getTableNotFoundException() {
       final var tableName = "tableName";
       Mockito.doThrow(new TableNotFoundException("Table tableName wasn't found"))
-          .when(tableService).get(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName);
       Mockito.doReturn("localized message").when(messageResolver)
           .getMessage(FileValidatorErrorMessageTitle.TABLE_NOT_FOUND_EXCEPTION);
 
@@ -182,7 +182,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).get(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
     }
 
     @Test
@@ -191,7 +191,7 @@ class MasterVersionTableControllerTest {
     void getTableTest_RegistryDataBaseConnectionException() {
       final var tableName = "tableName";
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).get(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName);
 
       mockMvc.perform(
           get("/versions/master/tables/{tableName}", tableName)
@@ -204,7 +204,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).get(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
     }
   }
 }

@@ -81,7 +81,7 @@ public class CandidateVersionTableController {
   public ResponseEntity<List<TableShortInfoDto>> getTables(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId) {
     log.info("Getting list of tables for version-candidate '{}' started", versionCandidateId);
-    final var tables = tableService.list(String.valueOf(versionCandidateId));
+    final var tables = tableService.listTables(String.valueOf(versionCandidateId));
     log.info("There were found {} tables for master version-candidate '{}'", tables.size(),
         versionCandidateId);
     return ResponseEntity.ok()
@@ -120,7 +120,7 @@ public class CandidateVersionTableController {
     log.info("Getting table by name '{}' for version-candidate '{}' started", tableName,
         versionCandidateId);
     final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
-        tableService.get(String.valueOf(versionCandidateId), tableName));
+        tableService.getTable(String.valueOf(versionCandidateId), tableName));
     log.info("Table '{}' was found in version-candidate '{}'", tableName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)

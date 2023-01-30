@@ -87,7 +87,7 @@ class CandidateVersionTableControllerTest {
           .objectReference(true)
           .build();
       Mockito.doReturn(List.of(expectedTablesResponse))
-          .when(tableService).list(versionCandidate);
+          .when(tableService).listTables(versionCandidate);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables", versionCandidate)
@@ -99,7 +99,7 @@ class CandidateVersionTableControllerTest {
           jsonPath("$.[0].objectReference", is(true))
       ).andDo(document("versions/candidates/{versionCandidateId}/tables/GET"));
 
-      Mockito.verify(tableService).list(versionCandidate);
+      Mockito.verify(tableService).listTables(versionCandidate);
     }
 
     @Test
@@ -145,7 +145,7 @@ class CandidateVersionTableControllerTest {
     void getTable_registryDataBaseConnectionException() {
       var versionCandidate = "142";
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).list(versionCandidate);
+          .when(tableService).listTables(versionCandidate);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables", versionCandidate)
@@ -158,7 +158,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).list(versionCandidate);
+      Mockito.verify(tableService).listTables(versionCandidate);
     }
   }
 
@@ -179,7 +179,7 @@ class CandidateVersionTableControllerTest {
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
       Mockito.doReturn(expectedTablesResponse)
-          .when(tableService).get(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName);
       final var expectedDdmTable = new DdmTable();
       expectedDdmTable.setName(tableName);
       expectedDdmTable.setDescription("John Doe get table");
@@ -197,7 +197,7 @@ class CandidateVersionTableControllerTest {
           jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/candidates/{versionCandidateId}/{tableName}/GET"));
 
-      Mockito.verify(tableService).get(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName);
     }
 
     @Test
@@ -247,7 +247,7 @@ class CandidateVersionTableControllerTest {
       var versionCandidate = "42";
       final var tableName = "tableName";
       Mockito.doThrow(new TableNotFoundException("Table tableName wasn't found"))
-          .when(tableService).get(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName);
       Mockito.doReturn("localized message").when(messageResolver)
           .getMessage(FileValidatorErrorMessageTitle.TABLE_NOT_FOUND_EXCEPTION);
 
@@ -263,7 +263,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).get(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName);
     }
 
     @Test
@@ -273,7 +273,7 @@ class CandidateVersionTableControllerTest {
       var versionCandidate = "142";
       final var tableName = "tableName";
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).get(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables/{tableName}", versionCandidate,
@@ -287,7 +287,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).get(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName);
     }
   }
 }

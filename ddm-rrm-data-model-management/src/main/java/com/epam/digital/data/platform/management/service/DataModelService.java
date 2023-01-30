@@ -19,12 +19,15 @@ import com.epam.digital.data.platform.management.exception.RegistryDataBaseConne
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.validation.TableName;
 import java.util.List;
 import org.springframework.lang.NonNull;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Provides methods to work with tables
  */
+@Validated
 public interface DataModelService {
 
   /**
@@ -36,7 +39,7 @@ public interface DataModelService {
    * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
   @NonNull
-  List<TableShortInfoDto> list(@NonNull String versionId);
+  List<TableShortInfoDto> listTables(@NonNull String versionId);
 
   /**
    * Get {@link TableInfoDto} by table name in given version
@@ -49,5 +52,5 @@ public interface DataModelService {
    * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
   @NonNull
-  TableInfoDto get(@NonNull String versionId, @NonNull String tableName);
+  TableInfoDto getTable(@NonNull String versionId, @TableName @NonNull String tableName);
 }

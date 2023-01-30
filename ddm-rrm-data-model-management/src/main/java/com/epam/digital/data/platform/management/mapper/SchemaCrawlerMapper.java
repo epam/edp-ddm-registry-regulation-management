@@ -60,7 +60,12 @@ public abstract class SchemaCrawlerMapper {
   @Value("${registry-regulation-management.subject-table-name:subject}")
   private String subjectTable;
 
-  public abstract List<TableShortInfoDto> toTableShortInfoDtos(Collection<Table> tables);
+  public List<TableShortInfoDto> toTableShortInfoDtos(Collection<Table> tables) {
+    return tables.stream()
+        .filter(table -> !table.getName().endsWith(DdmConstants.SUFFIX_VIEW))
+        .map(this::toTableShortInfoDto)
+        .collect(Collectors.toList());
+  }
 
   @Mapping(target = "description", source = "remarks")
   @Mapping(target = "objectReference", source = "importedForeignKeys")

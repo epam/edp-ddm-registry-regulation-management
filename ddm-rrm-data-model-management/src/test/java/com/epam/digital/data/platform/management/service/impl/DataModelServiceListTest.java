@@ -83,7 +83,7 @@ class DataModelServiceListTest extends DataModelServiceBaseTest {
     Mockito.doReturn(List.of(tableWithoutObjectReference, tableWithObjectReference, subjectTable))
         .when(catalog).getTables();
 
-    final var resultList = tableService.list(versionId);
+    final var resultList = tableService.listTables(versionId);
     Assertions.assertThat(resultList).hasSize(3);
     Assertions.assertThat(resultList)
         .element(0)
@@ -109,9 +109,24 @@ class DataModelServiceListTest extends DataModelServiceBaseTest {
     Mockito.doThrow(VersionComponentCreationException.class)
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, Catalog.class);
 
-    Assertions.assertThatThrownBy(() -> tableService.list(HEAD_BRANCH))
+    Assertions.assertThatThrownBy(() -> tableService.listTables(HEAD_BRANCH))
         .isInstanceOf(RegistryDataBaseConnectionException.class)
         .hasMessageContaining("Couldn't connect to registry data-base: ");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})
+  @DisplayName("should not contain table with '_v' suffix")
+  void listTest_shouldNotContainTableWithViewSuffix(String versionId) {
+    var catalog = Mockito.mock(Catalog.class);
+    Mockito.doReturn(catalog)
+        .when(versionContextComponentManager).getComponent(versionId, Catalog.class);
+
+    // Mock view
+    var view = Mockito.mock(Table.class);
+    Mockito.doReturn("view_v").when(view).getName();
+
+    Assertions.assertThat(tableService.listTables(versionId)).isEmpty();
   }
 
   @Test
@@ -127,7 +142,7 @@ class DataModelServiceListTest extends DataModelServiceBaseTest {
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doReturn(connection).when(registryDataSource).getConnection();
 
-    final var resultList = tableService.list(VERSION_ID);
+    final var resultList = tableService.listTables(VERSION_ID);
     Assertions.assertThat(resultList).isEmpty();
     Mockito.verify(connection).close();
   }
@@ -144,7 +159,7 @@ class DataModelServiceListTest extends DataModelServiceBaseTest {
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doThrow(SQLException.class).when(registryDataSource).getConnection();
 
-    Assertions.assertThatThrownBy(() -> tableService.list(VERSION_ID))
+    Assertions.assertThatThrownBy(() -> tableService.listTables(VERSION_ID))
         .isInstanceOf(RegistryDataBaseConnectionException.class)
         .hasMessageContaining("Couldn't connect to registry data-base: ");
   }
