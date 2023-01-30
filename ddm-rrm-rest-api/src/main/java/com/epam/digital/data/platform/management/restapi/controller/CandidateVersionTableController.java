@@ -15,12 +15,12 @@
  */
 package com.epam.digital.data.platform.management.restapi.controller;
 
-import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
-import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.restapi.model.TableInfo;
+import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
 import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
 import com.epam.digital.data.platform.management.service.DataModelService;
-import data.model.snapshot.model.DdmTable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class CandidateVersionTableController {
 
-  private final DdmTableMapper ddmTableMapper;
+  private final ControllerMapper controllerMapper;
 
   private final DataModelService tableService;
 
@@ -62,7 +62,7 @@ public class CandidateVersionTableController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  array = @ArraySchema(schema = @Schema(implementation = TableShortInfoDto.class)))),
+                  array = @ArraySchema(schema = @Schema(implementation = TableInfoShort.class)))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -78,14 +78,15 @@ public class CandidateVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{versionCandidateId}/tables")
-  public ResponseEntity<List<TableShortInfoDto>> getTables(
+  public ResponseEntity<List<TableInfoShort>> getTables(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId) {
     log.info("Getting list of tables for version-candidate '{}' started", versionCandidateId);
     final var tables = tableService.listTables(String.valueOf(versionCandidateId));
     log.info("There were found {} tables for master version-candidate '{}'", tables.size(),
         versionCandidateId);
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_JSON).body(tables);
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(controllerMapper.toTableInfosShort(tables));
   }
 
   @Operation(description = "Get specific table full details from version-candidate",
@@ -98,7 +99,7 @@ public class CandidateVersionTableController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DdmTable.class))),
+                  schema = @Schema(implementation = TableInfo.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -114,17 +115,15 @@ public class CandidateVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{versionCandidateId}/tables/{tableName}")
-  public ResponseEntity<DdmTable> getTable(
+  public ResponseEntity<TableInfo> getTable(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId,
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     log.info("Getting table by name '{}' for version-candidate '{}' started", tableName,
         versionCandidateId);
-    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
-        tableService.getTable(String.valueOf(versionCandidateId), tableName));
+    final var tableInfoDto = tableService.getTable(String.valueOf(versionCandidateId), tableName);
     log.info("Table '{}' was found in version-candidate '{}'", tableName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(ddmTable);
+        .body(controllerMapper.toTableInfo(tableInfoDto));
   }
-
 }

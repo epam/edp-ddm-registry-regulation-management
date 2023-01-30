@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package data.model.snapshot.model;
 
-import java.util.HashMap;
-import java.util.Map;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package com.epam.digital.data.platform.management.restapi.model;
 
-@Data
-@NoArgsConstructor
-public class DdmTable {
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+public class TableInfoShort {
+
+  @Schema(required = true, description = "Table name")
   private String name;
+  @Schema(required = true, description = "Flag that indicates that the entity is an object in the subject data-model")
   private Boolean objectReference;
+  @Schema(description = "Table description", nullable = true)
   private String description;
-
-  private Map<String, DdmColumn> columns = new HashMap<>();
-  private Map<String, DdmForeignKey> foreignKeys = new HashMap<>();
-  private DdmPrimaryKeyConstraint primaryKey;
-  private Map<String, DdmUniqueConstraint> uniqueConstraints = new HashMap<>();
-  private Map<String, DdmIndex> indices = new HashMap<>();
-
-  public DdmTable(String name) {
-    this.name = name;
-  }
 }

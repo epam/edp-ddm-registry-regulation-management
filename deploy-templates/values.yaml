@@ -96,8 +96,6 @@ gerrit:
 scheduled:
   repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
-  dataModelSnapshotCron: '0 */5 * ? * *'
-  dataModelSnapshotTimeZone: UTC
 
 db:
   url: citus-master

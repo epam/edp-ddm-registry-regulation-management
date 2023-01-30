@@ -114,7 +114,6 @@ public class MasterVersionTableControllerIT extends BaseIT {
           jsonPath("$.columns.string_column.notNullFlag", is(false)),
           jsonPath("$.foreignKeys.fk_master_table_subject.name", is("fk_master_table_subject")),
           jsonPath("$.foreignKeys.fk_master_table_subject.targetTable", is("subject")),
-          jsonPath("$.foreignKeys.fk_master_table_subject.sourceTable", is("master_table")),
           jsonPath("$.foreignKeys.fk_master_table_subject.columnPairs", hasSize(1)),
           jsonPath("$.foreignKeys.fk_master_table_subject.columnPairs[0].sourceColumnName",
               is("subject_id")),

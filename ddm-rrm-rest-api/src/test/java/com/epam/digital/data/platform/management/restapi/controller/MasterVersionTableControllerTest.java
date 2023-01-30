@@ -26,14 +26,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
-import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.service.DataModelService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
-import data.model.snapshot.model.DdmTable;
 import java.util.List;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,8 +56,6 @@ class MasterVersionTableControllerTest {
   DataModelService tableService;
   @MockBean
   MessageResolver messageResolver;
-  @MockBean
-  DdmTableMapper mapper;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
   MockMvc mockMvc;
@@ -142,11 +138,6 @@ class MasterVersionTableControllerTest {
       expectedTablesResponse.setObjectReference(true);
       Mockito.doReturn(expectedTablesResponse)
           .when(tableService).getTable(HEAD_BRANCH, tableName);
-      final var expectedDdmTable = new DdmTable();
-      expectedDdmTable.setName(tableName);
-      expectedDdmTable.setDescription("John Doe get table");
-      expectedDdmTable.setObjectReference(true);
-      Mockito.doReturn(expectedDdmTable).when(mapper).convertToDdmTable(expectedTablesResponse);
 
       mockMvc.perform(
           get("/versions/master/tables/{tableName}", tableName)

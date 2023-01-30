@@ -111,8 +111,6 @@ public abstract class SchemaCrawlerMapper {
   public abstract Map<String, ForeignKeyShortInfoDto> mapForeignKeys(
       Map<String, ForeignKey> columns);
 
-  @Mapping(target = "targetTable", expression = "java(foreignKey.getColumnReferences().get(0).getPrimaryKeyColumn().getParent().getName())")
-  @Mapping(target = "sourceTable", expression = "java(foreignKey.getColumnReferences().get(0).getForeignKeyColumn().getParent().getName())")
   public ForeignKeyShortInfoDto toForeignKeyShortInfoDto(ForeignKey foreignKey) {
     if (Objects.isNull(foreignKey)) {
       return null;
@@ -121,8 +119,6 @@ public abstract class SchemaCrawlerMapper {
     foreignKeyShortInfoDto.setName(foreignKey.getName());
     foreignKeyShortInfoDto.setTargetTable(
         foreignKey.getColumnReferences().get(0).getPrimaryKeyColumn().getParent().getName());
-    foreignKeyShortInfoDto.setSourceTable(
-        foreignKey.getColumnReferences().get(0).getForeignKeyColumn().getParent().getName());
 
     foreignKeyShortInfoDto.setColumnPairs(mapColumnPairs(foreignKey.getColumnReferences()));
 

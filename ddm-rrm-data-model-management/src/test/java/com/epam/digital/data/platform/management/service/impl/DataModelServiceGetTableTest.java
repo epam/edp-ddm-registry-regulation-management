@@ -192,8 +192,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
         .hasSize(1)
         .extracting("another_table_fk")
         .hasFieldOrPropertyWithValue("name", "another_table_fk")
-        .hasFieldOrPropertyWithValue("targetTable", "another_table")
-        .hasFieldOrPropertyWithValue("sourceTable", tableName);
+        .hasFieldOrPropertyWithValue("targetTable", "another_table");
     Assertions.assertThat(
             resultTableInfoDto.getForeignKeys().get("another_table_fk").getColumnPairs())
         .hasSize(1)
@@ -334,8 +333,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
         .hasSize(1)
         .extracting("subject__subject_id__fk")
         .hasFieldOrPropertyWithValue("name", "subject__subject_id__fk")
-        .hasFieldOrPropertyWithValue("targetTable", SUBJECT_TABLE)
-        .hasFieldOrPropertyWithValue("sourceTable", tableName);
+        .hasFieldOrPropertyWithValue("targetTable", SUBJECT_TABLE);
     Assertions.assertThat(
             resultTableInfoDto.getForeignKeys().get("subject__subject_id__fk").getColumnPairs())
         .hasSize(1)

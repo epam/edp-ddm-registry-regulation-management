@@ -32,8 +32,6 @@ data:
     scheduled:
       repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
-      dataModelSnapshotCron: {{ .Values.scheduled.dataModelSnapshotCron }}
-      dataModelSnapshotTimeZone: {{ .Values.scheduled.dataModelSnapshotTimeZone }}
 
     registry-regulation-management:
       retry:

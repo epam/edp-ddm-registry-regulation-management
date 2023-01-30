@@ -13,26 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package data.model.snapshot.config;
+package com.epam.digital.data.platform.management.config;
 
-import data.model.snapshot.config.properties.SchemaCrawlerProperties;
-import java.sql.SQLException;
 import java.util.Arrays;
-import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import schemacrawler.inclusionrule.InclusionRule;
 import schemacrawler.inclusionrule.RegularExpressionInclusionRule;
-import schemacrawler.schema.Catalog;
 import schemacrawler.schemacrawler.LimitOptionsBuilder;
 import schemacrawler.schemacrawler.LoadOptionsBuilder;
-import schemacrawler.schemacrawler.SchemaCrawlerException;
 import schemacrawler.schemacrawler.SchemaCrawlerOptions;
 import schemacrawler.schemacrawler.SchemaCrawlerOptionsBuilder;
 import schemacrawler.schemacrawler.SchemaInfoLevelBuilder;
-import schemacrawler.utility.SchemaCrawlerUtility;
 
 @Configuration
 public class SchemaCrawlerConfiguration {
@@ -72,13 +64,5 @@ public class SchemaCrawlerConfiguration {
     return SchemaCrawlerOptionsBuilder.newSchemaCrawlerOptions()
         .withLimitOptions(limitOptionsBuilder.toOptions())
         .withLoadOptions(loadOptionsBuilder.toOptions());
-  }
-
-  @Bean
-  @Scope("prototype")
-  @Lazy
-  public Catalog catalog(DataSource dataSource, SchemaCrawlerOptions options)
-      throws SQLException, SchemaCrawlerException {
-    return SchemaCrawlerUtility.getCatalog(dataSource.getConnection(), options);
   }
 }

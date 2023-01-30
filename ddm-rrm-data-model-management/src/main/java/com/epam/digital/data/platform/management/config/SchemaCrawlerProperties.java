@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package data.model.snapshot.config;
+package com.epam.digital.data.platform.management.config;
 
-import javax.sql.DataSource;
+import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
+@Getter
+@Setter
 @Configuration
-public class PersistenceRegistryConfiguration {
+@ConfigurationProperties(prefix = "registry-regulation-management.schema-crawler")
+public class SchemaCrawlerProperties {
 
-  @Primary
-  @Bean
-  @ConfigurationProperties(prefix = "spring.registry-datasource")
-  public DataSource registryDataSource() {
-    return DataSourceBuilder.create().build();
-  }
+  private String schema;
+  private List<String> excludeTablePrefixes;
+  private List<String> excludeTableSuffixes;
+  private List<String> excludeTables;
+  private List<String> excludeFieldPrefixes;
 }

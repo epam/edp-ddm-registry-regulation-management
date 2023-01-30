@@ -16,11 +16,11 @@
 package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.mapper.DdmTableMapper;
-import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.restapi.model.TableInfo;
+import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
 import com.epam.digital.data.platform.management.service.DataModelService;
-import data.model.snapshot.model.DdmTable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -46,7 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class MasterVersionTableController {
 
-  private final DdmTableMapper ddmTableMapper;
+  private final ControllerMapper controllerMapper;
 
   private final DataModelService tableService;
 
@@ -62,7 +62,7 @@ public class MasterVersionTableController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  array = @ArraySchema(schema = @Schema(implementation = TableShortInfoDto.class)))),
+                  array = @ArraySchema(schema = @Schema(implementation = TableInfoShort.class)))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -74,13 +74,14 @@ public class MasterVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping
-  public ResponseEntity<List<TableShortInfoDto>> getTables() {
+  public ResponseEntity<List<TableInfoShort>> getTables() {
     var versionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting list of tables for master version '{}' started", versionId);
-    final List<TableShortInfoDto> master = tableService.listTables(versionId);
-    log.info("There were found {} tables for master version '{}'", master.size(), versionId);
+    final var tables = tableService.listTables(versionId);
+    log.info("There were found {} tables for master version '{}'", tables.size(), versionId);
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_JSON).body(master);
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(controllerMapper.toTableInfosShort(tables));
   }
 
   @Operation(description = "Get specific table full details",
@@ -93,7 +94,7 @@ public class MasterVersionTableController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DdmTable.class))),
+                  schema = @Schema(implementation = TableInfo.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -109,16 +110,14 @@ public class MasterVersionTableController {
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @GetMapping("/{tableName}")
-  public ResponseEntity<DdmTable> getTable(
+  public ResponseEntity<TableInfo> getTable(
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     var versionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting table by name '{}' for master version '{}' started", tableName, versionId);
-    final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
-        tableService.getTable(gerritPropertiesConfig.getHeadBranch(), tableName));
+    final var tableInfoDto = tableService.getTable(versionId, tableName);
     log.info("Table '{}' was found in master version '{}'", tableName, versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
-        .body(ddmTable);
+        .body(controllerMapper.toTableInfo(tableInfoDto));
   }
-
 }
