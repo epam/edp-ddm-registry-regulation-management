@@ -39,6 +39,7 @@ import com.epam.digital.data.platform.management.users.exception.FileEncodingExc
 import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.validation.TableName;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
@@ -279,6 +280,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     if (annotation instanceof ExistingVersionCandidate) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(newDetailedResponse(CHANGE_NOT_FOUND, exception));
+    }
+    if (annotation instanceof TableName) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(newDetailedResponse(HttpStatus.BAD_REQUEST.getReasonPhrase(), exception));
     }
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

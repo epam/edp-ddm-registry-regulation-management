@@ -163,7 +163,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
 
     Mockito.doReturn(List.of(table)).when(catalog).getTables();
 
-    final var resultTableInfoDto = tableService.get(versionId, tableName);
+    final var resultTableInfoDto = tableService.getTable(versionId, tableName);
     Assertions.assertThat(resultTableInfoDto)
         .hasFieldOrPropertyWithValue("name", "table_sample")
         .hasFieldOrPropertyWithValue("description", "John Doe's table")
@@ -311,7 +311,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
 
     Mockito.doReturn(List.of(table)).when(catalog).getTables();
 
-    final var resultTableInfoDto = tableService.get(versionId, tableName);
+    final var resultTableInfoDto = tableService.getTable(versionId, tableName);
     Assertions.assertThat(resultTableInfoDto)
         .hasFieldOrPropertyWithValue("name", "table_with_object_reference")
         .hasFieldOrPropertyWithValue("description", "Table with object reference")
@@ -366,7 +366,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
 
     final var tableName = "table_sample1";
 
-    Assertions.assertThatThrownBy(() -> tableService.get(versionId, tableName))
+    Assertions.assertThatThrownBy(() -> tableService.getTable(versionId, tableName))
         .isInstanceOf(TableNotFoundException.class)
         .hasMessage("Table with name 'table_sample1' doesn't exist in version '%s'.", versionId);
   }
@@ -389,7 +389,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
 
     Mockito.doReturn(List.of(table1, table2)).when(catalog).getTables();
 
-    Assertions.assertThatThrownBy(() -> tableService.get(versionId, tableName))
+    Assertions.assertThatThrownBy(() -> tableService.getTable(versionId, tableName))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("There cannot be several tables with same name");
   }
@@ -407,7 +407,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doReturn(connection).when(registryDataSource).getConnection();
 
-    Assertions.assertThatThrownBy(() -> tableService.get(VERSION_ID, "some_table"))
+    Assertions.assertThatThrownBy(() -> tableService.getTable(VERSION_ID, "some_table"))
         .isInstanceOf(TableNotFoundException.class)
         .hasMessage("Table with name 'some_table' doesn't exist in version '162'.");
     Mockito.verify(connection).close();
@@ -425,7 +425,7 @@ class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doThrow(SQLException.class).when(registryDataSource).getConnection();
 
-    Assertions.assertThatThrownBy(() -> tableService.get(VERSION_ID, "some_table"))
+    Assertions.assertThatThrownBy(() -> tableService.getTable(VERSION_ID, "some_table"))
         .isInstanceOf(RegistryDataBaseConnectionException.class)
         .hasMessageContaining("Couldn't connect to registry data-base: ");
   }

@@ -266,6 +266,24 @@ class CandidateVersionTableControllerIT extends BaseIT {
     }
 
     @Test
+    @DisplayName("should return 400 if table name is not valid")
+    @SneakyThrows
+    void getTableTest_tableNameNotValid() {
+      final var versionCandidateId = context.createVersionCandidate();
+
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/tables/{tableName}", versionCandidateId,
+              "table_with_suffix_v")
+      ).andExpectAll(
+          status().isBadRequest(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.traceId", is(notNullValue())),
+          jsonPath("$.code", is("Bad Request")),
+          jsonPath("$.details", is("getTable.tableName: Table cannot be ended with suffix '_v'."))
+      );
+    }
+
+    @Test
     @DisplayName("should return 404 if version-candidate doesn't exist")
     @SneakyThrows
     void getTableTest_versionCandidateDoesNotExists() {

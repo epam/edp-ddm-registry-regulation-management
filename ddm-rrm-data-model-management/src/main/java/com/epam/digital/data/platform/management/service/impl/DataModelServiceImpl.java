@@ -47,7 +47,7 @@ public class DataModelServiceImpl implements DataModelService {
 
   @Override
   @NonNull
-  public List<TableShortInfoDto> list(@NonNull String versionId) {
+  public List<TableShortInfoDto> listTables(@NonNull String versionId) {
     log.debug("Trying to get list of tables in version '{}'", versionId);
 
     var catalog = getCatalog(versionId);
@@ -64,7 +64,7 @@ public class DataModelServiceImpl implements DataModelService {
 
   @Override
   @NonNull
-  public TableInfoDto get(@NonNull String versionId, @NonNull String tableName) {
+  public TableInfoDto getTable(@NonNull String versionId, @NonNull String tableName) {
     log.debug("Trying to get table with name '{}' in version '{}'", tableName, versionId);
     var catalog = getCatalog(versionId);
     if (Objects.isNull(catalog)) {

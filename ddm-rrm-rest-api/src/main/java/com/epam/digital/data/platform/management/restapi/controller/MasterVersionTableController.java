@@ -77,7 +77,7 @@ public class MasterVersionTableController {
   public ResponseEntity<List<TableShortInfoDto>> getTables() {
     var versionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting list of tables for master version '{}' started", versionId);
-    final List<TableShortInfoDto> master = tableService.list(versionId);
+    final List<TableShortInfoDto> master = tableService.listTables(versionId);
     log.info("There were found {} tables for master version '{}'", master.size(), versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON).body(master);
@@ -114,7 +114,7 @@ public class MasterVersionTableController {
     var versionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting table by name '{}' for master version '{}' started", tableName, versionId);
     final DdmTable ddmTable = ddmTableMapper.convertToDdmTable(
-        tableService.get(gerritPropertiesConfig.getHeadBranch(), tableName));
+        tableService.getTable(gerritPropertiesConfig.getHeadBranch(), tableName));
     log.info("Table '{}' was found in master version '{}'", tableName, versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
