@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,12 @@ import static com.epam.digital.data.platform.management.restapi.model.ResultValu
 import static com.epam.digital.data.platform.management.restapi.model.ResultValues.UNKNOWN;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
 import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.epam.digital.data.platform.management.restapi.model.TableInfo;
+import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
 import com.epam.digital.data.platform.management.restapi.model.Validation;
 import com.epam.digital.data.platform.management.restapi.model.ValidationType;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
@@ -68,4 +72,8 @@ public interface ControllerMapper {
         .result(STATUSES.get(labels.get(VERIFIED_LABEL)))
         .build());
   }
+
+  TableInfo toTableInfo(TableInfoDto tableInfoDto);
+
+  List<TableInfoShort> toTableInfosShort(List<TableShortInfoDto> tableShortInfoDto);
 }

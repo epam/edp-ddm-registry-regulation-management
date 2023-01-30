@@ -29,15 +29,6 @@ spring:
 hibernate:
   dialect: org.hibernate.dialect.H2Dialect
 
-schema-crawler:
-  schema: ${DB_SCHEMA:registry}
-  exclude-tables:
-    - registry.databasechangelog
-    - registry.databasechangeloglock
-  exclude-table-prefixes: ddm,test
-  exclude-table-suffixes: hst
-  exclude-field-prefixes: ddm,dcm
-
 server:
   port: 7070
 
@@ -109,3 +100,11 @@ registry-regulation-management:
   scheduled:
     clean-obsolete-version-contexts-cron: '0 */5 * ? * *'
     clean-obsolete-version-contexts-timezone: UTC
+  schema-crawler:
+    schema: ${DB_SCHEMA:registry}
+    exclude-tables:
+      - registry.databasechangelog
+      - registry.databasechangeloglock
+    exclude-table-prefixes: ddm,test
+    exclude-table-suffixes: hst
+    exclude-field-prefixes: ddm,dcm
