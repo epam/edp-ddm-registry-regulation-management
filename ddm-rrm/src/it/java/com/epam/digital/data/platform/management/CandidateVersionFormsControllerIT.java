@@ -59,7 +59,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     void getForm() {
       // add file to "remote" repo
       final var expectedFormContent = context.getResourceContent(
-          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json").replace("\r", "");
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/GET/john-does-form.json");
       context.addFileToRemoteHeadRepo("/forms/john-does-form.json", expectedFormContent);
 
       // mock gerrit change info for version candidate
