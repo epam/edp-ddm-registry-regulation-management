@@ -48,7 +48,6 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.lib.CommitBuilder;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -241,39 +240,19 @@ class JGitServiceSyncTest {
     String version = "version";
 
     var file = new File(tempDir, version);
-    Assertions.assertThat(file.createNewFile()).isTrue();
+    Assertions.assertThat(file.mkdirs()).isTrue();
 
     String path = "forms";
+    File amendFile = new File(file, path);
+    Assertions.assertThat(amendFile.createNewFile()).isTrue();
+    Counter counter = new Counter(1);
 
-    Counter counter = new Counter(2);
-
-    when(jGitWrapper.open(file)).thenReturn(git);
-    when(git.getRepository()).thenReturn(repository);
-    when(gerritPropertiesConfig.getHeadBranch()).thenReturn("master");
-
-    TreeWalk treeWalk = mock(TreeWalk.class);
-    when(jGitWrapper.getTreeWalk(repository, path)).thenAnswer(invocation -> {
-      Thread.sleep(100);
-      log.info("Called retrieving the tree walker by revision for {}",
-          Thread.currentThread().getName());
-      counter.check(0);
-      return treeWalk;
-    });
-
-    ObjectId objectId = mock(ObjectId.class);
-    when(treeWalk.getObjectId(0)).thenReturn(objectId);
-
-    ObjectLoader objectLoader = mock(ObjectLoader.class);
-
-    when(objectLoader.getCachedBytes()).thenReturn("content".getBytes());
-    when(objectLoader.getBytes()).thenReturn("content".getBytes());
-
-    when(repository.open(objectId)).thenAnswer(invocation -> {
+    when(jGitWrapper.readFileContent(amendFile.toPath())).thenAnswer(invocation -> {
       Thread.sleep(100);
       log.info("Called retrieving file content from the tree for {}",
           Thread.currentThread().getName());
-      counter.check(1);
-      return objectLoader;
+      counter.check(0);
+      return "content";
     });
 
     int numberOfThreads = 5;
