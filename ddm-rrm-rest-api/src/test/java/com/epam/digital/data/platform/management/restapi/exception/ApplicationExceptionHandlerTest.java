@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import com.epam.digital.data.platform.management.restapi.controller.CandidateVer
 import com.epam.digital.data.platform.management.restapi.controller.MasterVersionFormsController;
 import com.epam.digital.data.platform.management.restapi.controller.UserImportController;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.restapi.mapper.RequestToDtoMapper;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
@@ -108,7 +108,7 @@ class ApplicationExceptionHandlerTest {
   @MockBean
   OpenShiftService openShiftService;
   @MockBean
-  RequestToDtoMapper mapper;
+  ControllerMapper mapper;
   @MockBean
   Validator validator;
   @MockBean

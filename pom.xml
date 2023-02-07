@@ -22,7 +22,6 @@
     <module>ddm-rrm-core</module>
     <module>ddm-rrm</module>
     <module>ddm-rrm-git-integration</module>
-    <module>ddm-rrm-data-model-snapshot</module>
     <module>ddm-rrm-data-model-management</module>
     <module>ddm-rrm-gerrit-integration</module>
     <module>ddm-rrm-openshift-integration</module>
@@ -55,6 +54,9 @@
     <gerrit.client.version>0.9.4</gerrit.client.version>
     <spring-security-core.version>5.7.5</spring-security-core.version>
     <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
+    <liquibase-ddm-ext.version>1.6.0.2</liquibase-ddm-ext.version>
+
+    <zonky-embedded-postgres.version>2.0.2</zonky-embedded-postgres.version>
 
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
     <maven.failsafe.plugin.version>2.22.2</maven.failsafe.plugin.version>

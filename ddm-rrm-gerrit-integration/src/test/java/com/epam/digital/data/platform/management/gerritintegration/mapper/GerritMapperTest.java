@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,23 +88,35 @@ class GerritMapperTest {
   void toLabelMapTestApprovedTrue() {
     var labelInfo = new LabelInfo();
     var key = RandomString.make();
-    labelInfo.approved = new AccountInfo(RandomString.make(), RandomString.make());
+    labelInfo.approved = new AccountInfo(1);
     Map<String, LabelInfo> labelInfoMap = new HashMap<>();
     labelInfoMap.put(key, labelInfo);
-    Map<String, Boolean> actual = gerritMapper.toLabelMap(labelInfoMap);
+    Map<String, Integer> actual = gerritMapper.toLabelMap(labelInfoMap);
     Assertions.assertThat(actual).isNotNull();
-    Assertions.assertThat(actual.get(key)).isTrue();
+    Assertions.assertThat(actual.get(key)).isEqualTo(1);
+  }
+
+  @Test
+  void toLabelMapTestApprovedUnknown() {
+    var labelInfo = new LabelInfo();
+    var key = RandomString.make();
+    Map<String, LabelInfo> labelInfoMap = new HashMap<>();
+    labelInfoMap.put(key, labelInfo);
+    Map<String, Integer> actual = gerritMapper.toLabelMap(labelInfoMap);
+    Assertions.assertThat(actual).isNotNull();
+    Assertions.assertThat(actual.get(key)).isEqualTo(0);
   }
 
   @Test
   void toLabelMapTestApprovedFalse() {
     var labelInfo = new LabelInfo();
+    labelInfo.rejected = new AccountInfo(1);
     var key = RandomString.make();
     Map<String, LabelInfo> labelInfoMap = new HashMap<>();
     labelInfoMap.put(key, labelInfo);
-    Map<String, Boolean> actual = gerritMapper.toLabelMap(labelInfoMap);
+    Map<String, Integer> actual = gerritMapper.toLabelMap(labelInfoMap);
     Assertions.assertThat(actual).isNotNull();
-    Assertions.assertThat(actual.get(key)).isFalse();
+    Assertions.assertThat(actual.get(key)).isEqualTo(-1);
   }
 
   @Test

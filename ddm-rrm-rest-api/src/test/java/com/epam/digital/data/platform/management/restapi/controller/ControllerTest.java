@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.starter.security.PermitAllWebSecurityConfig;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,6 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.restdocs.RestDocumentationExtension;
@@ -36,6 +38,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"platform.security.enabled=false"})
 @Import({PermitAllWebSecurityConfig.class, JacksonConfig.class})
 @ExtendWith(RestDocumentationExtension.class)
+@ComponentScan(basePackageClasses = ControllerMapper.class)
 @ContextConfiguration
 public @interface ControllerTest {
 

@@ -1,11 +1,11 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -129,4 +129,12 @@ public interface JGitService {
    * @throws GitCommandException in case of repository deletion errors
    */
   void deleteRepo(String repositoryName);
+
+  /**
+   * Checks if repository exists on FileSystem
+   *
+   * @param repositoryName name of the specified repository
+   * @return true if repo exists and false otherwise
+   */
+  boolean repoExists(String repositoryName);
 }

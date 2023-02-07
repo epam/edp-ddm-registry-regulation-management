@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package com.epam.digital.data.platform.management.restapi.exception;
 
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
+import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
-import com.epam.digital.data.platform.management.exception.TableParseException;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
@@ -31,6 +31,7 @@ import com.epam.digital.data.platform.management.osintegration.exception.GetProc
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
 import com.epam.digital.data.platform.management.security.enumeration.Header;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.users.exception.CephInvocationException;
@@ -38,6 +39,7 @@ import com.epam.digital.data.platform.management.users.exception.FileEncodingExc
 import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.validation.TableName;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
@@ -65,7 +67,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   public static final String FORM_ALREADY_EXISTS_EXCEPTION = "FORM_ALREADY_EXISTS_EXCEPTION";
   public static final String BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION = "BUSINESS_PROCESS_ALREADY_EXISTS_EXCEPTION";
   public static final String TABLE_NOT_FOUND_EXCEPTION = "TABLE_NOT_FOUND_EXCEPTION";
-  public static final String TABLE_PARSE_EXCEPTION = "TABLE_PARSE_EXCEPTION";
+  public static final String REGISTRY_DATA_BASE_CONNECTION_ERROR = "REGISTRY_DATA_BASE_CONNECTION_ERROR";
   public static final String FILE_SIZE_ERROR = "FILE_SIZE_ERROR";
   public static final String JWT_PARSING_ERROR = "JWT_PARSING_ERROR";
   private static final String FORBIDDEN_OPERATION = "FORBIDDEN_OPERATION";
@@ -189,12 +191,12 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(TABLE_NOT_FOUND_EXCEPTION, exception));
   }
 
-  @ExceptionHandler(TableParseException.class)
+  @ExceptionHandler(RegistryDataBaseConnectionException.class)
   public ResponseEntity<DetailedErrorResponse> handleTableParseException(
-      TableParseException exception) {
-    log.error("Table parse exception", exception);
+      RegistryDataBaseConnectionException exception) {
+    log.error("Couldn't connect to master version database", exception);
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(newDetailedResponse(TABLE_PARSE_EXCEPTION, exception));
+        .body(newDetailedResponse(REGISTRY_DATA_BASE_CONNECTION_ERROR, exception));
   }
 
   @ExceptionHandler
@@ -264,15 +266,24 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   @ExceptionHandler
   public ResponseEntity<DetailedErrorResponse> handleConstraintViolationException(
       ConstraintViolationException exception) {
-    if (getAnnotationFromConstraintViolationException(exception) instanceof BusinessProcess) {
+    var annotation = getAnnotationFromConstraintViolationException(exception);
+    if (annotation instanceof BusinessProcess) {
       log.warn("Business process content has errors");
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
           .body(newDetailedResponse(BUSINESS_PROCESS_CONTENT_EXCEPTION, exception));
     }
-    if (getAnnotationFromConstraintViolationException(exception) instanceof VersionCandidate) {
+    if (annotation instanceof VersionCandidate) {
       log.warn("Version candidate name or description is invalid");
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
           .body(newDetailedResponse(INVALID_VERSION_CANDIDATE_EXCEPTION, exception));
+    }
+    if (annotation instanceof ExistingVersionCandidate) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(newDetailedResponse(CHANGE_NOT_FOUND, exception));
+    }
+    if (annotation instanceof TableName) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(newDetailedResponse(HttpStatus.BAD_REQUEST.getReasonPhrase(), exception));
     }
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -282,7 +293,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   @ExceptionHandler
   public ResponseEntity<DetailedErrorResponse> handleETagFilteringException(
       ETagFilteringException exception) {
-    log.error("Invalid ETag for {} form from {} version candidate", exception.getFormName(), exception.getVersionCandidate());
+    log.error("Invalid ETag for {} form from {} version candidate", exception.getFormName(),
+        exception.getVersionCandidate());
     return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
         .body(newDetailedResponse(ETAG_FILTERING_EXCEPTION, exception));
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.mapper.BusinessProcessMapper;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
@@ -56,7 +56,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private static final String DIRECTORY_PATH = "bpmn";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
-  private final VersionedFileRepositoryFactory repoFactory;
+  private final VersionContextComponentManager versionContextComponentManager;
   private final BusinessProcessMapper mapper;
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
@@ -77,7 +77,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   @Override
   public void createProcess(String processName, String content, String versionName) {
     var processPath = getProcessPath(processName);
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     if (repo.isFileExists(processPath)) {
       throw new BusinessProcessAlreadyExistsException(
           String.format("Process with path '%s' already exists", processPath));
@@ -88,7 +89,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public String getProcessContent(String processName, String versionName) {
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     String processContent;
     processContent = repo.readFile(getProcessPath(processName));
     if (processContent == null) {
@@ -99,7 +101,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void updateProcess(String content, String processName, String versionName) {
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     String processPath = getProcessPath(processName);
     var time = LocalDateTime.now();
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
@@ -118,7 +121,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void deleteProcess(String processName, String versionName) {
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionName);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     repo.deleteFile(getProcessPath(processName));
   }
 
@@ -145,12 +149,13 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
       FileStatus skippedStatus) {
-    VersionedFileRepository repo;
-    VersionedFileRepository masterRepo;
     List<VersionedFileInfoDto> fileList;
-    repo = repoFactory.getRepoByVersion(versionName);
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
     fileList = repo.getFileList(DIRECTORY_PATH);
-    masterRepo = repoFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch());
+    var masterRepo = versionContextComponentManager.getComponent(
+        gerritPropertiesConfig.getHeadBranch(),
+        VersionedFileRepository.class);
     List<BusinessProcessInfoDto> processes = new ArrayList<>();
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {

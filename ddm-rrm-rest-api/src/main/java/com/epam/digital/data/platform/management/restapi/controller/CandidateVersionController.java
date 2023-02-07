@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
-import com.epam.digital.data.platform.management.restapi.mapper.RequestToDtoMapper;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfo;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
-import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,7 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CandidateVersionController {
 
   private final VersionManagementService versionManagementService;
-  private final RequestToDtoMapper requestToDtoMapper;
+  private final ControllerMapper controllerMapper;
 
   @Operation(description = "Get list of existing opened version-candidates",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -198,13 +197,13 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> createNewVersion(
       @RequestBody CreateVersionRequest requestDto) {
     log.info("Creating new version with name {}", requestDto.getName());
-    final CreateChangeInputDto changeInputDto = requestToDtoMapper.toDto(requestDto);
+    final CreateChangeInputDto changeInputDto = controllerMapper.toDto(requestDto);
     var versionId = versionManagementService.createNewVersion(changeInputDto);
     var changeInfo = versionManagementService.getVersionDetails(versionId);
     log.info("Version candidate with name {} was created: version id - {}", requestDto.getName(),
         versionId);
     return ResponseEntity.created(URI.create("/versions/candidates/" + versionId))
-        .body(mapToVersionInfoDetailed(changeInfo));
+        .body(controllerMapper.toVersionInfoDetailed(changeInfo));
   }
 
   @Operation(description = "Acquire version-candidate full details",
@@ -237,7 +236,8 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
       @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting detailed info about {} version candidate", versionCandidateId);
-    var response  = mapToVersionInfoDetailed(versionManagementService.getVersionDetails(versionCandidateId));
+    var response  = controllerMapper.toVersionInfoDetailed(
+        versionManagementService.getVersionDetails(versionCandidateId));
     log.info("Finished getting detailed info about {} version candidate", versionCandidateId);
     return ResponseEntity.ok().body(response);
   }
@@ -312,18 +312,5 @@ public class CandidateVersionController {
     versionManagementService.rebase(versionCandidateId);
     log.info("Version candidate {} successfully rebased", versionCandidateId);
     return ResponseEntity.ok().build();
-  }
-
-  private VersionInfoDetailed mapToVersionInfoDetailed(
-      VersionInfoDto versionInfoDto) {
-    return VersionInfoDetailed.builder()
-        .id(String.valueOf(versionInfoDto.getNumber()))
-        .author(versionInfoDto.getOwner())
-        .creationDate(versionInfoDto.getCreated())
-        .description(versionInfoDto.getDescription())
-        .hasConflicts(Boolean.FALSE.equals(versionInfoDto.getMergeable()))
-        .latestUpdate(versionInfoDto.getUpdated())
-        .name(versionInfoDto.getSubject())
-        .build();
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
-import com.epam.digital.data.platform.management.restapi.mapper.RequestToDtoMapper;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
+import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.epam.digital.data.platform.management.restapi.model.Validation;
+import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
@@ -40,6 +43,7 @@ import com.epam.digital.data.platform.management.versionmanagement.service.Versi
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +65,7 @@ class CandidateVersionControllerTest {
   VersionManagementServiceImpl versionManagementService;
 
   @MockBean
-  RequestToDtoMapper mapper;
+  ControllerMapper mapper;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -110,9 +114,23 @@ class CandidateVersionControllerTest {
         .created(LocalDateTime.of(2022, 8, 10, 11, 30))
         .updated(LocalDateTime.of(2022, 8, 10, 11, 40))
         .mergeable(true)
+        .labels(Map.of("Verified", 1))
         .build();
     Mockito.doReturn(expectedVersionDetails).when(versionManagementService)
         .getVersionDetails("1");
+
+    var expectedVersionInfoDetailed = VersionInfoDetailed.builder()
+        .id("1")
+        .name("JohnDoe's version candidate")
+        .description("Version candidate to change form")
+        .author("JohnDoe@epam.com")
+        .creationDate(LocalDateTime.of(2022, 8, 10, 11, 30))
+        .latestUpdate(LocalDateTime.of(2022, 8, 10, 11, 40))
+        .hasConflicts(false)
+        .validations(List.of(Validation.builder().result(ResultValues.SUCCESS).build()))
+        .build();
+    Mockito.doReturn(expectedVersionInfoDetailed)
+        .when(mapper).toVersionInfoDetailed(expectedVersionDetails);
 
     var request = new CreateVersionRequest();
     request.setName("JohnDoe's version candidate");
@@ -137,7 +155,7 @@ class CandidateVersionControllerTest {
         jsonPath("$.latestUpdate", is("2022-08-10T11:40:00.000Z")),
         jsonPath("$.hasConflicts", is(false)),
         jsonPath("$.inspections", nullValue()),
-        jsonPath("$.validations", nullValue())
+        jsonPath("$.validations[0].result", is("SUCCESS"))
     ).andDo(document("versions/candidates/POST"));
 
     Mockito.verify(versionManagementService).getVersionDetails("1");
@@ -155,9 +173,23 @@ class CandidateVersionControllerTest {
         .created(LocalDateTime.of(2022, 8, 10, 11, 30))
         .updated(LocalDateTime.of(2022, 8, 10, 11, 40))
         .mergeable(true)
+        .labels(Map.of("Verified", 1))
+        .build();
+    var expectedVersionInfoDetailed = VersionInfoDetailed.builder()
+        .id("1")
+        .name("JohnDoe's version candidate")
+        .description("Version candidate to change form")
+        .author("JohnDoe@epam.com")
+        .creationDate(LocalDateTime.of(2022, 8, 10, 11, 30))
+        .latestUpdate(LocalDateTime.of(2022, 8, 10, 11, 40))
+        .hasConflicts(false)
+        .validations(List.of(Validation.builder().result(ResultValues.SUCCESS).build()))
         .build();
     Mockito.doReturn(expectedVersionDetails)
         .when(versionManagementService).getVersionDetails("1");
+    Mockito.doReturn(expectedVersionInfoDetailed)
+        .when(mapper).toVersionInfoDetailed(expectedVersionDetails);
+
 
     mockMvc.perform(
         get("/versions/candidates/{versionCandidateId}", "1")
@@ -172,7 +204,7 @@ class CandidateVersionControllerTest {
         jsonPath("$.latestUpdate", is("2022-08-10T11:40:00.000Z")),
         jsonPath("$.hasConflicts", is(false)),
         jsonPath("$.inspections", nullValue()),
-        jsonPath("$.validations", nullValue())
+        jsonPath("$.validations[0].result", is("SUCCESS"))
     ).andDo(document("versions/candidates/{versionCandidateId}/GET"));
 
     Mockito.verify(versionManagementService).getVersionDetails("1");

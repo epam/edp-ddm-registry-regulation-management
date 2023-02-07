@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.forms.FormMapper;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
@@ -44,11 +44,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 class FormServiceTest {
@@ -60,7 +60,7 @@ class FormServiceTest {
   private final String FORM_CONTENT = TestUtils.getContent("form-sample.json");
 
   @Mock
-  private VersionedFileRepositoryFactory repositoryFactory;
+  private VersionContextComponentManager versionContextComponentManager;
   @Mock
   private VersionedFileRepository repository;
   @Mock
@@ -75,14 +75,17 @@ class FormServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
-    Mockito.when(repositoryFactory.getRepoByVersion(gerritPropertiesConfig.getHeadBranch())).thenReturn(masterRepository);
+    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
+        .thenReturn(repository);
+    Mockito.when(versionContextComponentManager.getComponent(gerritPropertiesConfig.getHeadBranch(),
+        VersionedFileRepository.class)).thenReturn(masterRepository);
   }
 
   @Test
   @SneakyThrows
   void getFormListByVersionTest() {
-    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json").status(FileStatus.NEW)
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
     var deletedForm = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
@@ -101,7 +104,8 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void getChangedFormsListByVersionTest() {
-    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json").status(FileStatus.DELETED)
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.DELETED)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));

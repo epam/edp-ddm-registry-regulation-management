@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package com.epam.digital.data.platform.management.settings.service;
 
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.settings.model.CamundaGlobalSystemVarsFileRepresentationDto;
 import com.epam.digital.data.platform.management.settings.model.SettingsFileRepresentationDto;
@@ -37,14 +37,15 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class SettingServiceImpl implements SettingService {
+
   private static final String GLOBAL_SETTINGS_PATH = "global-vars/camunda-global-system-vars.yml";
   private static final String VERSION_SETTINGS_PATH = "settings/settings.yml";
-  private final VersionedFileRepositoryFactory repoFactory;
+  private final VersionContextComponentManager versionContextComponentManager;
 
   @Override
   public SettingsInfoDto getSettings(String versionCandidateId) {
     log.debug("Trying to get repo");
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
+    var repo = versionContextComponentManager.getComponent(versionCandidateId, VersionedFileRepository.class);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     String camundaGlobalVarsContent = repo.readFile(GLOBAL_SETTINGS_PATH);
     String settingsContent = repo.readFile(VERSION_SETTINGS_PATH);
@@ -57,11 +58,13 @@ public class SettingServiceImpl implements SettingService {
     YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(
         YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
     log.debug("YAMLMapper was initialized. Trying to get repo");
-    VersionedFileRepository repo = repoFactory.getRepoByVersion(versionCandidateId);
+    var repo = versionContextComponentManager.getComponent(versionCandidateId, VersionedFileRepository.class);
     log.debug("Finished getting repo for {} version", versionCandidateId);
-    CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(settings.getThemeFile(),
+    CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(
+        settings.getThemeFile(),
         settings.getSupportEmail());
-    SettingsFileRepresentationDto settingDto = new SettingsFileRepresentationDto(settings.getTitleFull(),
+    SettingsFileRepresentationDto settingDto = new SettingsFileRepresentationDto(
+        settings.getTitleFull(),
         settings.getTitle()/*, settings.getBlacklistedDomains()*/); // TODO uncomment after validator-cli update
     writeSettingsContent(repo, mapper, settingDto);
     writeGlobalVarsContent(repo, mapper, camundaDto);
@@ -76,9 +79,11 @@ public class SettingServiceImpl implements SettingService {
     log.debug("ObjectMapper was initialized");
     try {
       log.debug("Parsing settings files");
-      SettingsFileRepresentationDto settingDto = mapper.readValue(settingsContent, SettingsFileRepresentationDto.class);
+      SettingsFileRepresentationDto settingDto = mapper.readValue(settingsContent,
+          SettingsFileRepresentationDto.class);
       log.debug("Parsed settings file");
-      CamundaGlobalSystemVarsFileRepresentationDto camundaDto = mapper.readValue(camundaGlobalVarsContent, CamundaGlobalSystemVarsFileRepresentationDto.class);
+      CamundaGlobalSystemVarsFileRepresentationDto camundaDto = mapper.readValue(
+          camundaGlobalVarsContent, CamundaGlobalSystemVarsFileRepresentationDto.class);
       log.debug("Parsed global var file");
       return SettingsInfoDto.builder()
 //          .blacklistedDomains(settingDto.getBlacklistedDomains()) TODO uncomment after validator-cli update

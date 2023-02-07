@@ -14,12 +14,12 @@
   <dependencies>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-rrm-data-model-snapshot</artifactId>
+      <artifactId>ddm-rrm-gerrit-integration</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-rrm-file-management</artifactId>
+      <artifactId>ddm-rrm-git-integration</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
