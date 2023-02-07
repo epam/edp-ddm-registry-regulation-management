@@ -32,22 +32,26 @@ data:
     scheduled:
       repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
       repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
-      cleanRepositoriesCron: {{ .Values.scheduled.cleanRepositoriesCron }}
-      cleanRepositoriesTimezone: {{ .Values.scheduled.cleanRepositoriesTimezone }}
-      dataModelSnapshotCron: {{ .Values.scheduled.dataModelSnapshotCron }}
-      dataModelSnapshotTimeZone: {{ .Values.scheduled.dataModelSnapshotTimeZone }}
 
     registry-regulation-management:
       retry:
         head-branch-cloning-delay: {{ .Values.registryRegulationManagement.retry.headBranchCloningDelay }}
+        data-model-context-creating-delay: {{ .Values.registryRegulationManagement.retry.dataModelContextCreatingDelay }}
+      data-source:
+        driver-class-name: {{ .Values.registryRegulationManagement.dataSource.driverClassName }}
+        base-jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}
+        registry-data-base: {{ .Values.registryRegulationManagement.dataSource.registryDataBase }}
+        registry-dev-data-base-prefix: {{ .Values.registryRegulationManagement.dataSource.registryDevDataBasePrefix }}
+      subject-table-name: {{ .Values.registryRegulationManagement.subjectTableName }}
+      scheduled:
+        clean-obsolete-version-contexts-cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsCron }}
+        clean-obsolete-version-contexts-timezone: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsTimezone }}
 
     spring:
       registry-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
-        connection-timeout: {{.Values.db.connectionTimeout}}
       public-datasource:
         jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
-        connection-timeout: {{.Values.db.connectionTimeout}}
       cache:
         cache-names: {{.Values.cache.names}}
         caffeine:

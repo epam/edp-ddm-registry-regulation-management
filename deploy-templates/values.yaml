@@ -13,6 +13,16 @@ registryRegulationManagement:
     size: 5Gi
   retry:
     headBranchCloningDelay: 300000
+    dataModelContextCreatingDelay: 300000
+  dataSource:
+    driverClassName: org.postgresql.Driver
+    registryDataBase: registry
+    registryDevDataBasePrefix: registry_dev_
+    publicSchema: public
+  subjectTableName: subject
+  scheduled:
+    cleanObsoleteVersionContextsCron: '0 */5 * ? * *'
+    cleanObsoleteVersionContextsTimeZone: UTC
 
 port: 8080
 
@@ -86,16 +96,11 @@ gerrit:
 scheduled:
   repositoryRefreshCron: '0 */5 * ? * *'
   repositoryRefreshTimezone: UTC
-  cleanRepositoriesCron: '0 */5 * ? * *'
-  cleanRepositoriesTimezone: UTC
-  dataModelSnapshotCron: '0 */5 * ? * *'
-  dataModelSnapshotTimeZone: UTC
 
 db:
   url: citus-master
-  secret: operational-pguser-postgres
+  secret: citus-roles-secrets
   port: 5432
-  connectionTimeout: 4000
 
 cache:
   names: dates

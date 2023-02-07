@@ -19,6 +19,8 @@ package com.epam.digital.data.platform.management.gitintegration.service;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.ObjectId;
@@ -59,5 +61,9 @@ public class JGitWrapper {
           String.format("Exception occurred during getting repository tree walk: %s",
               e.getMessage()), e);
     }
+  }
+
+  public String readFileContent(Path path) throws IOException {
+    return Files.readString(path);
   }
 }

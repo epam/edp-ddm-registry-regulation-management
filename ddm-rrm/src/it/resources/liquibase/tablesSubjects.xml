@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2023 EPAM Systems.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+
+  <changeSet author="registry owner" id="enum subject_type">
+    <comment>CREATE TYPE type_subject_type</comment>
+    <xsi:createType name="type_subject_type">
+      <xsi:asEnum>
+        <xsi:label translation="Фізична особа">INDIVIDUAL</xsi:label>
+        <xsi:label translation="ФОП">ENTREPRENEUR</xsi:label>
+        <xsi:label translation="Юридична особа">LEGAL</xsi:label>
+        <xsi:label translation="Чиновник">OFFICER</xsi:label>
+      </xsi:asEnum>
+    </xsi:createType>
+  </changeSet>
+
+  <changeSet author="registry owner" id="enum subject_status">
+    <comment>CREATE TYPE type_subject_status</comment>
+    <xsi:createType name="type_subject_status">
+      <xsi:asEnum>
+        <xsi:label translation="скасовано">CANCELED</xsi:label>
+        <xsi:label translation="зареєстровано">REGISTERED</xsi:label>
+        <xsi:label translation="в стані припинення">SUSPENDING</xsi:label>
+        <xsi:label translation="припинено">SUSPENDED</xsi:label>
+        <xsi:label translation="порушено справу про банкрутство">BANKRUPTCY</xsi:label>
+        <xsi:label translation="порушено справу про банкрутство (санація)">SANCTION</xsi:label>
+        <xsi:label translation="зареєстровано, свідоцтво про державну реєстрацію недійсне">
+          NOTVALID
+        </xsi:label>
+      </xsi:asEnum>
+    </xsi:createType>
+  </changeSet>
+
+  <changeSet author="registry owner" id="table subject">
+    <createTable tableName="subject" xsi:historyFlag="true">
+      <column name="subject_id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_subject"/>
+      </column>
+      <column name="subject_code" type="TEXT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="subject_type" type="type_subject_type"/>
+      <column name="subject_status" type="type_subject_status"/>
+      <column name="subject_name" type="TEXT"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="registry owner" id="table subject_settings">
+    <createTable tableName="subject_settings" xsi:historyFlag="true">
+      <column name="subject_settings_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_subject_settings"/>
+      </column>
+      <column name="settings_id" type="UUID">
+        <constraints nullable="false"/>
+      </column>
+      <column name="subject_id" type="UUID">
+        <constraints nullable="false"
+          foreignKeyName="fk_subject_subject_id"
+          referencedTableName="subject"
+          referencedColumnNames="subject_id"/>
+      </column>
+
+    </createTable>
+  </changeSet>
+
+  <!--
+  needs role application_role
+  <changeSet author="registry owner" id="searchCondition MDTUDDM-6273">
+    <comment>CREATE search condition subject_subject_type_legal_equal_subject_code</comment>
+    <xsi:createSearchCondition name="subject_equal_subject_type_equal_subject_code">
+      <xsi:table name="subject" alias="s">
+        <xsi:column name="subject_id" returning="true"/>
+        <xsi:column name="subject_status" returning="true"/>
+        <xsi:column name="subject_code" searchType="equal"/>
+        <xsi:column name="subject_type" searchType="equal"/>
+      </xsi:table>
+    </xsi:createSearchCondition>
+  </changeSet>
+
+  <changeSet author="registry owner" id="searchCondition MDTUDDM-6961">
+    <comment>CREATE search condition subject_settings_settings_id_equal</comment>
+    <xsi:createSearchCondition name="subject_settings_equal_settings_id">
+      <xsi:table name="subject_settings" alias="ss">
+        <xsi:column name="subject_settings_id" returning="true"/>
+        <xsi:column name="settings_id" searchType="equal"/>
+      </xsi:table>
+    </xsi:createSearchCondition>
+  </changeSet>
+  -->
+
+</databaseChangeLog>
+

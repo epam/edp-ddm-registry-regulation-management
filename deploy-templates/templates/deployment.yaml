@@ -73,6 +73,9 @@ spec:
             - mountPath: /app/secrets/dbcredentials-registry
               name: {{ .Chart.Name }}-db-credentials-registry
               readOnly: true
+            - mountPath: /app/secrets/dbcredentials-registry-2
+              name: {{ .Chart.Name }}-db-credentials-registry-2
+              readOnly: true
           env:
             - name: USER_IMPORT_CEPH_BUCKET_NAME
               valueFrom:
@@ -128,15 +131,23 @@ spec:
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: user
+              - key: regRegulationRoleName
                 path: spring.public-datasource.username
-              - key: password
+              - key: regRegulationRolePass
                 path: spring.public-datasource.password
         - name: {{ .Chart.Name }}-db-credentials-registry
           secret:
             secretName: {{ .Values.db.secret }}
             items:
-              - key: user
+              - key: regRegulationRoleName
                 path: spring.registry-datasource.username
-              - key: password
+              - key: regRegulationRolePass
                 path: spring.registry-datasource.password
+        - name: {{ .Chart.Name }}-db-credentials-registry-2
+          secret:
+            secretName: {{ .Values.db.secret }}
+            items:
+              - key: regRegulationRoleName
+                path: registry-regulation-management.data-source.username
+              - key: regRegulationRolePass
+                path: registry-regulation-management.data-source.password

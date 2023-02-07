@@ -22,11 +22,17 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 
+import com.epam.digital.data.platform.management.config.DataSourceConfigurationProperties;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
 import com.epam.digital.data.platform.management.dto.TestFileDatesDto;
 import com.epam.digital.data.platform.management.dto.TestVersionCandidate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.google.gerrit.extensions.common.LabelInfo;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,6 +52,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 
@@ -65,16 +72,22 @@ import org.springframework.util.FileSystemUtils;
 public class TestExecutionContext {
 
   /**
-   * Directory thay is used as remote repository for all clones in application. Can be recreated by
+   * Directory that is used as remote repository for all clones in application. Can be recreated by
    * {@link TestExecutionContext#resetRemoteRepo()}
    */
   private File remoteHeadRepo;
 
   /**
-   * Gerrit properties config for accessing in each test case. Can be modified, but the test case
-   * that is modifing it has to return the original state after test case completion.
+   * Gerrit's properties config for accessing in each test case. Can be modified, but the test case
+   * that is modifying it has to return the original state after test case completion.
    */
   private final GerritPropertiesConfig gerritProps;
+
+  /**
+   * Datasource's properties config for accessing in each test case. Can be modified, but the test
+   * case that is modifying it has to return the original state after test case completion.
+   */
+  private final DataSourceConfigurationProperties dataSourceProps;
 
   /**
    * WireMock server for stubbing gerrit responses. Can be used for direct stubbing if there isn't
@@ -95,11 +108,26 @@ public class TestExecutionContext {
    */
   private TestVersionCandidate versionCandidate;
 
+  /**
+   * Instance of current running embedded postgres. Used for creating and accessing databases.
+   *
+   * @see TestExecutionContext#createDataBase(String)
+   * @see TestExecutionContext#dropDataBase(String)
+   * @see TestExecutionContext#prepareRegistryDataSource(String, String)
+   */
+  private EmbeddedPostgres embeddedPostgres;
+
+  /**
+   * Modifiable version of {@link VersionContextComponentManager}
+   */
+  private final TestVersionContextComponentManager versionContext;
+
   @PostConstruct
   @SneakyThrows
   public void init() {
-    stubGerritCommon();
     resetRemoteRepo();
+    this.embeddedPostgres = EmbeddedPostgres.builder().start();
+    resetHeadBranchDataBase();
   }
 
   /**
@@ -110,7 +138,7 @@ public class TestExecutionContext {
     if (!Objects.isNull(remoteHeadRepo) && remoteHeadRepo.exists()) {
       FileUtils.forceDelete(remoteHeadRepo);
     }
-    remoteHeadRepo = Files.createTempDirectory("remote-repo").toFile();
+    remoteHeadRepo = new File(gerritProps.getRepositoryDirectory(), "remote-repo");
     try (var git = Git.init()
         .setInitialBranch(gerritProps.getHeadBranch())
         .setDirectory(remoteHeadRepo)
@@ -124,7 +152,16 @@ public class TestExecutionContext {
   }
 
   /**
-   * @return Head-branch repo that is represanting a master version repository
+   * Drops and recreates database for master version
+   */
+  public void resetHeadBranchDataBase() {
+    dropDataBase(gerritProps.getHeadBranch());
+    createDataBase(gerritProps.getHeadBranch());
+    prepareRegistryDataSource(gerritProps.getHeadBranch(), "liquibase/master-liquibase.xml");
+  }
+
+  /**
+   * @return Head-branch repo that is representing a master version repository
    */
   public File getHeadRepo() {
     return getRepo(gerritProps.getHeadBranch());
@@ -145,7 +182,8 @@ public class TestExecutionContext {
 
   /**
    * Used for creating version-candidate with predefined info. Creates a branch in the remote repo
-   * that is used as ref for that version-candidate and stubs gerrit responces for it.
+   * that is used as ref for that version-candidate and stubs gerrit responses for it. Also creates
+   * database for this version-candidate
    *
    * @return version-candidate number
    *
@@ -181,6 +219,9 @@ public class TestExecutionContext {
     stubGerritQueryChangesByNumber(versionCandidateId);
     stubGerritGetChangeById(testVersionCandidate.getChangeId());
     stubGerritGetChangeById(versionCandidateId);
+
+    createDataBase(versionCandidateId);
+    prepareRegistryDataSource(versionCandidateId, "liquibase/master-liquibase.xml");
 
     return versionCandidateId;
   }
@@ -300,7 +341,7 @@ public class TestExecutionContext {
   }
 
   /**
-   * Сhecks if file exists in the version-candidate branch in the remote repository. It's needed to
+   * Checks if file exists in the version-candidate branch in the remote repository. It's needed to
    * {@link TestExecutionContext#createVersionCandidate(TestVersionCandidate) create version
    * candidate first}.
    *
@@ -320,7 +361,7 @@ public class TestExecutionContext {
   }
 
   /**
-   * Used for reading resourse folder content
+   * Used for reading resource folder content
    *
    * @param resourcePath path of the resource to read
    * @return file content
@@ -390,7 +431,10 @@ public class TestExecutionContext {
     return new File(gerritProps.getRepositoryDirectory());
   }
 
-  private void stubGerritCommon() {
+  /**
+   * Stubs common gerrit requests such as login and get version
+   */
+  public void stubGerritCommon() {
     gerritMockServer.addStubMapping(stubFor(
         get("/login/").willReturn(aResponse().withStatus(200))));
     gerritMockServer.addStubMapping(stubFor(
@@ -426,7 +470,7 @@ public class TestExecutionContext {
         Map.entry("current_revision", versionCandidate.getCurrentRevision()),
         Map.entry("revisions", Map.of(versionCandidate.getCurrentRevision(),
             Map.of("ref", versionCandidate.getRef()))),
-        Map.entry("labels", Map.of())
+        Map.entry("labels", Map.of("Verified", new LabelInfo()))
     );
     gerritMockServer.addStubMapping(stubFor(get(urlPathEqualTo(String.format("/a/changes/%s", id))
         ).willReturn(aResponse()
@@ -445,5 +489,61 @@ public class TestExecutionContext {
             .withStatus(200)
             .withBody("{}")))
     );
+  }
+
+  /**
+   * Creates database for specified version
+   *
+   * @param versionId id of version to create database for
+   */
+  @SneakyThrows
+  public void createDataBase(String versionId) {
+    var registryDs = getRegistryDataSource(versionId);
+    try (var conn = embeddedPostgres.getPostgresDatabase().getConnection();
+        var stmt = conn.createStatement()) {
+      stmt.executeUpdate(String.format("CREATE DATABASE %s;", getRegistryDbName(versionId)));
+    }
+    versionContext.setComponent(versionId, RegistryDataSource.class, registryDs);
+  }
+
+  /**
+   * Drops database for specified version
+   *
+   * @param versionId id of version to drop database for
+   */
+  @SneakyThrows
+  public void dropDataBase(String versionId) {
+    try (var conn = embeddedPostgres.getPostgresDatabase().getConnection();
+        var stmt = conn.createStatement()) {
+      stmt.executeUpdate(
+          String.format("DROP DATABASE IF EXISTS %s WITH (FORCE);", getRegistryDbName(versionId)));
+    }
+  }
+
+  /**
+   * Prepares versions database with specified liquibase script
+   *
+   * @param versionId               id of version to prepare database for
+   * @param liquibaseScriptLocation the location of the liquibase script
+   */
+  @SneakyThrows
+  public void prepareRegistryDataSource(String versionId, String liquibaseScriptLocation) {
+    var registryDs = getRegistryDataSource(versionId);
+
+    var preparer = LiquibasePreparer.forClasspathLocation(liquibaseScriptLocation);
+    preparer.prepare(registryDs);
+  }
+
+  private RegistryDataSource getRegistryDataSource(String versionId) {
+    var registryDs = embeddedPostgres.getDatabase(dataSourceProps.getUsername(),
+        getRegistryDbName(versionId));
+    return DataSourceBuilder.derivedFrom(registryDs)
+        .type(RegistryDataSource.class)
+        .build();
+  }
+
+  private String getRegistryDbName(String versionId) {
+    return String.format("%s_%s", dataSourceProps.getRegistryDataBase(),
+        versionId.replace("-", "_"));
   }
 }

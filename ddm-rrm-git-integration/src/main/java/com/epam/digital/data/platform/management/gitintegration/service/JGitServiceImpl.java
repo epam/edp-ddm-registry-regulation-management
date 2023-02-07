@@ -1,11 +1,11 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import com.epam.digital.data.platform.management.gitintegration.model.FileDatesD
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -57,13 +56,13 @@ import org.eclipse.jgit.api.errors.UnmergedPathsException;
 import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.jgit.util.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -214,13 +213,9 @@ public class JGitServiceImpl implements JGitService {
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
-    try (
-        var git = openRepo(repositoryDirectory);
-        var repository = git.getRepository();
-        var treeWalk = jGitWrapper.getTreeWalk(repository, filePath)
-    ) {
-      log.trace("Reading file content from treeWalk");
-      return Objects.isNull(treeWalk) ? null : getFileContent(repository, treeWalk);
+    try {
+      log.trace("Reading file content");
+      return getFileContent(repositoryDirectory, filePath);
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
@@ -282,6 +277,11 @@ public class JGitServiceImpl implements JGitService {
           String.format("Exception occurred during deleting repository %s: %s", repoName,
               e.getMessage()), e);
     }
+  }
+
+  @Override
+  public boolean repoExists(String repositoryName) {
+    return getRepositoryDir(repositoryName).exists();
   }
 
   @NonNull
@@ -396,12 +396,18 @@ public class JGitServiceImpl implements JGitService {
     return LocalDateTime.ofEpochSecond(commit.getCommitTime(), 0, ZoneOffset.UTC);
   }
 
-  @NonNull
-  private static String getFileContent(@NonNull Repository repository, @NonNull TreeWalk treeWalk) {
+  @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
+  private String getFileContent(@NonNull File repositoryDirectory, @NonNull String filePath) {
+    if (StringUtils.isEmptyOrNull(filePath)) {
+      throw new IllegalArgumentException("Empty path not permitted.");
+    }
+
     try {
-      var objectId = treeWalk.getObjectId(0);
-      var loader = repository.open(objectId);
-      return new String(loader.getBytes(), StandardCharsets.UTF_8);
+      var file = new File(repositoryDirectory, FilenameUtils.normalizeNoEndSeparator(filePath));
+      if (!file.exists()) {
+        return null;
+      }
+      return jGitWrapper.readFileContent(file.toPath());
     } catch (IOException e) {
       throw new GitCommandException(
           String.format("Exception occurred during reading file content by path: %s",

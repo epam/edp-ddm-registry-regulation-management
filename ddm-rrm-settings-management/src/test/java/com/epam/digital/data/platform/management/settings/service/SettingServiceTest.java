@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,16 @@
 
 package com.epam.digital.data.platform.management.settings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
+
+import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepositoryFactory;
 import com.epam.digital.data.platform.management.settings.exception.SettingsParsingException;
 import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,11 +35,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.assertj.core.api.Assertions;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(SpringExtension.class)
 class SettingServiceTest {
@@ -47,14 +47,15 @@ class SettingServiceTest {
   private ArgumentCaptor<String> captor;
 
   @Mock
-  private VersionedFileRepositoryFactory repositoryFactory;
+  private VersionContextComponentManager versionContextComponentManager;
   @Mock
   private VersionedFileRepository repository;
   @InjectMocks
   private SettingServiceImpl settingServiceImpl;
 
-  private static final String GLOBAL_SETTINGS_VALUE = "supportEmail: \"support@registry.gov.ua\"\n" +
-      "themeFile: \"white-theme.js\"\n";
+  private static final String GLOBAL_SETTINGS_VALUE =
+      "supportEmail: \"support@registry.gov.ua\"\n" +
+          "themeFile: \"white-theme.js\"\n";
   private static final String SETTINGS_VALUE = "settings:\n" +
       "  general:\n" +
       "    validation:\n" +
@@ -68,8 +69,8 @@ class SettingServiceTest {
 
   private static final String SETTINGS_EMPTY_CONTENT = "settings:\n" +
       "  general:\n" +
-        "    titleFull: null\n" +
-        "    title: null\n";
+      "    titleFull: null\n" +
+      "    title: null\n";
   private static final String GLOBAL_SETTINGS_EMPTY_VALUE = "themeFile: null\n" +
       "supportEmail: null\n";
 
@@ -77,7 +78,8 @@ class SettingServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(repositoryFactory.getRepoByVersion(VERSION_ID)).thenReturn(repository);
+    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
+        .thenReturn(repository);
   }
 
   @Test

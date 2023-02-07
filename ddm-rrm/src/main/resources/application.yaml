@@ -31,20 +31,15 @@ spring:
 hibernate:
   dialect: org.hibernate.dialect.H2Dialect
 
-schema-crawler:
-  schema: ${DB_SCHEMA:registry}
-  exclude-tables:
-    - registry.databasechangelog
-    - registry.databasechangeloglock
-    - registry.subject
-    - registry.subject_hst
-    - registry.subject_settings
-    - registry.subject_settings_hst
-    - registry.subject_equal_subject_type_equal_subject_code_v
-    - registry.subject_settings_equal_settings_id_v
-  exclude-table-prefixes: ddm,test
-  exclude-table-suffixes: hst
-  exclude-field-prefixes: ddm,dcm
+registry-regulation-management:
+  schema-crawler:
+    schema: ${DB_SCHEMA:registry}
+    exclude-tables:
+      - registry.databasechangelog
+      - registry.databasechangeloglock
+    exclude-table-prefixes: ddm,test
+    exclude-table-suffixes: hst
+    exclude-field-prefixes: ddm,dcm
 
 
 s3:

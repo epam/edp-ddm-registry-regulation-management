@@ -21,6 +21,7 @@ spring:
           - /app/secrets/openshift
           - /app/secrets/dbcredentials-public
           - /app/secrets/dbcredentials-registry
+          - /app/secrets/dbcredentials-registry-2
     vault:
       uri: ${VAULT_URI}
       authentication: KUBERNETES

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2023 EPAM Systems.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.epam.digital.data.platform.management.gerritintegration.mapper;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
@@ -31,13 +47,13 @@ public interface GerritMapper {
   @Mapping(target = "owner", source = "owner.username")
   ChangeInfoDto toChangeInfoDto(ChangeInfo changeInfo);
 
-  default Map<String,Boolean> toLabelMap(Map<String, LabelInfo> labels) {
+  default Map<String, Integer> toLabelMap(Map<String, LabelInfo> labels) {
     if (labels == null) {
       return null;
     }
     return labels.entrySet()
         .stream()
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().approved != null));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> toLabelValue(e.getValue())));
   }
 
   @Named("toLocalDateTime")
@@ -46,5 +62,15 @@ public interface GerritMapper {
       return null;
     }
     return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.of("UTC"));
+  }
+
+  default Integer toLabelValue(LabelInfo labelInfo) {
+    if (Objects.nonNull(labelInfo.approved)) {
+      return 1;
+    }
+    if (Objects.nonNull(labelInfo.rejected)) {
+      return -1;
+    }
+    return 0;
   }
 }
