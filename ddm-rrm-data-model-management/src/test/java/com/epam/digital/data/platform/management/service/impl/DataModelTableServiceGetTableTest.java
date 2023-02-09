@@ -43,7 +43,7 @@ import schemacrawler.schema.PrimaryKey;
 import schemacrawler.schema.Table;
 
 @DisplayName("DataModelServiceImpl#get(String, String)")
-class DataModelServiceGetTableTest extends DataModelServiceBaseTest {
+class DataModelTableServiceGetTableTest extends DataModelTableServiceBaseTest {
 
   @ParameterizedTest
   @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})

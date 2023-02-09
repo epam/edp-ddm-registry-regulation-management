@@ -28,7 +28,7 @@ import org.springframework.validation.annotation.Validated;
  * Provides methods to work with tables
  */
 @Validated
-public interface DataModelService {
+public interface DataModelTableService {
 
   /**
    * Get {@link List} of {@link TableShortInfoDto} in given version

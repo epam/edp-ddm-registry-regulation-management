@@ -15,11 +15,6 @@
   <dependencies>
     <dependency>
       <groupId>com.epam.digital.data.platform</groupId>
-      <artifactId>ddm-rrm-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.epam.digital.data.platform</groupId>
       <artifactId>liquibase-ddm-ext</artifactId>
       <version>${liquibase-ddm-ext.version}</version>
     </dependency>
@@ -35,6 +30,11 @@
       <groupId>us.fatehi</groupId>
       <artifactId>schemacrawler</artifactId>
       <version>${schemacrawler.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.epam.digital.data.platform</groupId>
+      <artifactId>ddm-rrm-file-management</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

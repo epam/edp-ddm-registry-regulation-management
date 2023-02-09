@@ -30,7 +30,7 @@ import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.service.DataModelService;
+import com.epam.digital.data.platform.management.service.DataModelTableService;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.util.List;
@@ -52,7 +52,7 @@ import org.springframework.web.context.WebApplicationContext;
 class CandidateVersionTableControllerTest {
 
   @MockBean
-  DataModelService tableService;
+  DataModelTableService tableService;
   @MockBean
   VersionManagementService versionManagementService;
   @MockBean

@@ -1,0 +1,24 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
+
+  <changeSet author="registry owner" id="table first_registry_table">
+    <createTable tableName="first_registry_table" ext:historyFlag="true"
+      remarks="Найперша таблиця реєстру">
+      <column name="first_registry_table_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_katotg_level1_id"/>
+      </column>
+      <column name="code" type="TEXT" remarks="Код запису">
+        <constraints nullable="false" unique="true"/>
+      </column>
+      <column name="name" type="TEXT" remarks="Назва запису">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>
