@@ -38,4 +38,46 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.cjnygard</groupId>
+        <artifactId>rest-maven-plugin</artifactId>
+        <version>0.1.4</version>
+        <executions>
+          <execution>
+            <id>download-ext-schema</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>rest-request</goal>
+            </goals>
+            <configuration>
+              <endpoint>
+                ${artifactory.extensions-url}/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd
+              </endpoint>
+              <method>GET</method>
+              <outputDir>${basedir}/target/classes/liquibase-schema</outputDir>
+              <outputFilename>liquibase-ext-schema.xsd</outputFilename>
+            </configuration>
+          </execution>
+          <execution>
+            <id>download-dbchangelog</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>rest-request</goal>
+            </goals>
+            <configuration>
+              <endpoint>
+                ${artifactory.extensions-url}/com/epam/digital/data/platform/dbchangelog/${dbchangelog.version}/dbchangelog-${dbchangelog.version}.xsd
+              </endpoint>
+              <method>GET</method>
+              <outputDir>${basedir}/target/classes/liquibase-schema</outputDir>
+              <outputFilename>dbchangelog.xsd</outputFilename>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

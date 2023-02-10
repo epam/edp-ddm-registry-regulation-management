@@ -29,7 +29,7 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
@@ -60,7 +60,7 @@ class MasterVersionDataModelTablesControllerTest {
   public static final String HEAD_BRANCH = "master";
 
   @MockBean
-  DataModelFileService fileService;
+  DataModelFileManagementService fileService;
   @MockBean
   MessageResolver messageResolver;
   MockMvc mockMvc;

@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.management.config.DataModelConfigurationPr
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DataModelFileServiceImpl implements DataModelFileService {
+public class DataModelFileManagementServiceImpl implements DataModelFileManagementService {
 
   private final DataModelConfigurationProperties dataModelProps;
   private final VersionContextComponentManager versionContextComponentManager;
@@ -57,5 +57,18 @@ public class DataModelFileServiceImpl implements DataModelFileService {
     log.debug("File '{}' content was read for version '{}', content length - '{}'", tablesFilePath,
         versionId, tableFileContent.length());
     return tableFileContent;
+  }
+
+  @Override
+  public void putTablesFileContent(@NonNull String versionId, @NonNull String fileContent) {
+    var tablesFilePath = dataModelProps.getTablesFilePath();
+    log.debug("Putting content to file '{}' for version '{}'", tablesFilePath, versionId);
+
+    var repo = versionContextComponentManager.getComponent(versionId,
+        VersionedFileRepository.class);
+
+    repo.writeFile(tablesFilePath, fileContent);
+    log.debug("File '{}' content was updated in version '{}', new content length - '{}'",
+        tablesFilePath, versionId, fileContent.length());
   }
 }

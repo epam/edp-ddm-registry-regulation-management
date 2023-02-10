@@ -16,12 +16,12 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import static com.epam.digital.data.platform.management.service.impl.DataModelFileServiceBaseTest.TABLES_FILE_PATH;
+import static com.epam.digital.data.platform.management.service.impl.DataModelFileManagementServiceBaseTest.TABLES_FILE_PATH;
 
 import com.epam.digital.data.platform.management.config.DataModelConfigurationProperties;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -36,18 +36,18 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
     DataModelConfigurationProperties.class,
-    DataModelFileServiceImpl.class
+    DataModelFileManagementServiceImpl.class
 })
 @EnableConfigurationProperties
 @TestPropertySource(properties = {
     "registry-regulation-management.data-model.tables-file-path=" + TABLES_FILE_PATH
 })
-abstract class DataModelFileServiceBaseTest {
+abstract class DataModelFileManagementServiceBaseTest {
 
   public static final String TABLES_FILE_PATH = "data-model/tables.xml";
 
   @Autowired
-  DataModelFileService dataModelFileService;
+  DataModelFileManagementService dataModelFileManagementService;
 
   @MockBean
   VersionContextComponentManager versionContextComponentManager;

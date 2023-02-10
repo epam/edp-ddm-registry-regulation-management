@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResp
 import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
 import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
-import com.epam.digital.data.platform.management.service.DataModelTableService;
+import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -50,7 +50,7 @@ public class CandidateVersionTableController {
 
   private final ControllerMapper controllerMapper;
 
-  private final DataModelTableService tableService;
+  private final ReadDataBaseTablesService tableService;
 
   @Operation(description = "Get tables list from version-candidate", parameters = {
       @Parameter(in = ParameterIn.HEADER,

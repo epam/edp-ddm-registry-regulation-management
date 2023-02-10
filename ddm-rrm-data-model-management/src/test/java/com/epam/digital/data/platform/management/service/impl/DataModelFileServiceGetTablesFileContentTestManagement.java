@@ -25,7 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @DisplayName("DataModelFileService#getTablesFileContent(String)")
-class DataModelFileServiceGetTablesFileContentTest extends DataModelFileServiceBaseTest {
+class DataModelFileServiceGetTablesFileContentTestManagement extends
+    DataModelFileManagementServiceBaseTest {
 
   @Test
   @DisplayName("should return tables file content if tables file exists")
@@ -36,7 +37,7 @@ class DataModelFileServiceGetTablesFileContentTest extends DataModelFileServiceB
     Mockito.doReturn(true).when(versionedFileRepository).isFileExists(TABLES_FILE_PATH);
     Mockito.doReturn(expectedFileContent).when(versionedFileRepository).readFile(TABLES_FILE_PATH);
 
-    final var actualFileContent = dataModelFileService.getTablesFileContent(versionId);
+    final var actualFileContent = dataModelFileManagementService.getTablesFileContent(versionId);
 
     Assertions.assertThat(actualFileContent)
         .isSameAs(expectedFileContent);
@@ -54,7 +55,7 @@ class DataModelFileServiceGetTablesFileContentTest extends DataModelFileServiceB
 
     Mockito.doReturn(false).when(versionedFileRepository).isFileExists(TABLES_FILE_PATH);
 
-    Assertions.assertThatThrownBy(() -> dataModelFileService.getTablesFileContent(versionId))
+    Assertions.assertThatThrownBy(() -> dataModelFileManagementService.getTablesFileContent(versionId))
         .isInstanceOf(DataModelFileNotFoundInVersionException.class)
         .hasMessage("Data-model file %s is not found in version %s", TABLES_FILE_PATH, versionId);
 
@@ -72,7 +73,7 @@ class DataModelFileServiceGetTablesFileContentTest extends DataModelFileServiceB
     Mockito.doReturn(true).when(versionedFileRepository).isFileExists(TABLES_FILE_PATH);
     Mockito.doReturn(null).when(versionedFileRepository).readFile(TABLES_FILE_PATH);
 
-    Assertions.assertThatThrownBy(() -> dataModelFileService.getTablesFileContent(versionId))
+    Assertions.assertThatThrownBy(() -> dataModelFileManagementService.getTablesFileContent(versionId))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("File content cannot be null");
 

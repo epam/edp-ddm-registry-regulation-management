@@ -73,6 +73,11 @@
     </sonar.coverage.exclusions>
     <apiDocsUrl>http://localhost:7070/v3/api-docs</apiDocsUrl>
     <ddm-maven-tails.version>0.0.1-SNAPSHOT</ddm-maven-tails.version>
+
+    <artifactory.extensions-url>${artifactory.baseUrl}/repository/extensions
+    </artifactory.extensions-url>
+
+    <dbchangelog.version>4.5</dbchangelog.version>
   </properties>
 
   <dependencyManagement>
@@ -151,4 +156,14 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>local</id>
+      <properties>
+        <artifactory.baseUrl>
+          https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com
+        </artifactory.baseUrl>
+      </properties>
+    </profile>
+  </profiles>
 </project>

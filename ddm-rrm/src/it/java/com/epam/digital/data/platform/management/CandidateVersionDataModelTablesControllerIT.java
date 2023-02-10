@@ -18,12 +18,14 @@ package com.epam.digital.data.platform.management;
 
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,7 +39,7 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
   class CandidateVersionDataModelTablesGetControllerIT {
 
     @Test
-    @DisplayName("should return 200 with business-process content")
+    @DisplayName("should return 200 with tables file content")
     @SneakyThrows
     void getDataModelTablesContent() {
       // add file to "remote" repo
@@ -56,6 +58,18 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
           status().isOk(),
           content().contentType(MediaType.APPLICATION_XML),
           content().bytes(expectedContent.getBytes(StandardCharsets.UTF_8))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 400 if try to put string as version-candidate")
+    @SneakyThrows
+    void getDataModelTablesContent_versionCandidateCannotBeString() {
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/data-model/tables", "master")
+      ).andExpectAll(
+          status().isBadRequest(),
+          content().string("")
       );
     }
 
@@ -80,7 +94,7 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 404 if business-process doesn't exist")
+    @DisplayName("should return 404 if tables file doesn't exist")
     @SneakyThrows
     void getDataModelTablesContent_tablesFileDoesNotExist() {
       // mock gerrit change info for version candidate
@@ -97,6 +111,99 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
           jsonPath("$.details", is(String.format(
               "Data-model file data-model/createTables.xml is not found in version %s",
               versionCandidateId)))
+      );
+    }
+  }
+
+  @Nested
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/data-model/tables")
+  class CandidateVersionDataModelTablesPutControllerIT {
+
+    @Test
+    @DisplayName("should return 200 with tables file content")
+    @SneakyThrows
+    void putDataModelTablesContent() {
+      final var expectedContent = context.getResourceContent(
+              "/versions/candidates/{versionCandidateId}/data-model/tables/PUT/createTables-valid.xml");
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", versionCandidateId)
+              .contentType(MediaType.APPLICATION_XML)
+              .content(expectedContent.getBytes(StandardCharsets.UTF_8))
+              .accept(MediaType.APPLICATION_XML)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_XML),
+          content().bytes(expectedContent.getBytes(StandardCharsets.UTF_8))
+      );
+
+      Assertions.assertThat(
+              context.getFileFromRemoteVersionCandidateRepo("/data-model/createTables.xml"))
+          .isEqualTo(expectedContent);
+    }
+
+    @Test
+    @DisplayName("should return 400 if try to put string as version-candidate")
+    @SneakyThrows
+    void putDataModelTablesContent_versionCandidateCannotBeString() {
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", "master")
+              .contentType(MediaType.APPLICATION_XML)
+              .content("anyContent")
+      ).andExpectAll(
+          status().isBadRequest(),
+          content().string("")
+      );
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void putDataModelTablesContent_versionCandidateDoesNotExist() {
+      // mock gerrit change info doesn't exist
+      final var versionCandidateId = context.mockVersionCandidateDoesNotExist();
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", versionCandidateId)
+              .contentType(MediaType.APPLICATION_XML)
+              .content("anyContent")
+              .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("CHANGE_NOT_FOUND")),
+          jsonPath("$.details",
+              is("putTablesFileContent.versionCandidateId: Version candidate does not exist."))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 422 if tables-file is not valid")
+    @SneakyThrows
+    void putDataModelTablesContent_tablesFileDoesNotExist() {
+      final var expectedContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/data-model/tables/PUT/createTables-invalid.xml");
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", versionCandidateId)
+              .contentType(MediaType.APPLICATION_XML)
+              .content(expectedContent)
+              .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isUnprocessableEntity(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("INVALID_CHANGELOG")),
+          jsonPath("$.details",
+              is("putTablesFileContent.fileContent: cvc-elt.1.a: Cannot find the declaration of element 'databaseBrokenChangeLog'."))
       );
     }
   }

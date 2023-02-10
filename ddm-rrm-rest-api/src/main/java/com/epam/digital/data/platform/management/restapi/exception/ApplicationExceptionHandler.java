@@ -40,6 +40,7 @@ import com.epam.digital.data.platform.management.users.exception.FileEncodingExc
 import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.validation.DDMExtensionChangelogFile;
 import com.epam.digital.data.platform.management.validation.TableName;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
@@ -88,6 +89,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
   private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
   private static final String DATA_MODEL_FILE_NOT_FOUND = "DATA_MODEL_FILE_NOT_FOUND";
+  private static final String INVALID_CHANGELOG = "INVALID_CHANGELOG";
 
   private final MessageResolver messageResolver;
 
@@ -286,6 +288,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     if (annotation instanceof TableName) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(newDetailedResponse(HttpStatus.BAD_REQUEST.getReasonPhrase(), exception));
+    }
+    if (annotation instanceof DDMExtensionChangelogFile) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(newDetailedResponse(INVALID_CHANGELOG, exception));
     }
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

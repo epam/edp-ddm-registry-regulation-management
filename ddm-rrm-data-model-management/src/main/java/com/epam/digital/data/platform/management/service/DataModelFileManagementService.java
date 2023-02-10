@@ -17,12 +17,15 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
+import com.epam.digital.data.platform.management.validation.DDMExtensionChangelogFile;
 import org.springframework.lang.NonNull;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Service that provides methods for accessing data-model files in different versions
  */
-public interface DataModelFileService {
+@Validated
+public interface DataModelFileManagementService {
 
   /**
    * Returns content of file that contains tables changes declaration. File path has to be
@@ -35,4 +38,14 @@ public interface DataModelFileService {
    */
   @NonNull
   String getTablesFileContent(@NonNull String versionId);
+
+  /**
+   * Creates or updates file that contains tables changes declaration. File path has to be
+   * configured as {@code registry-regulation-management.data-model.tables-file-path} property
+   *
+   * @param versionId   id of a version to update file content in
+   * @param fileContent the new file content of the file
+   */
+  void putTablesFileContent(@NonNull String versionId,
+      @NonNull @DDMExtensionChangelogFile String fileContent);
 }

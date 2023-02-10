@@ -20,7 +20,7 @@ import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
-import com.epam.digital.data.platform.management.service.DataModelTableService;
+import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -48,7 +48,7 @@ public class MasterVersionTableController {
 
   private final ControllerMapper controllerMapper;
 
-  private final DataModelTableService tableService;
+  private final ReadDataBaseTablesService tableService;
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
 

@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,11 +29,17 @@ import com.epam.digital.data.platform.management.exception.DataModelFileNotFound
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
+import com.epam.digital.data.platform.management.validation.DDMExtensionChangelogFile;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.metadata.ConstraintDescriptor;
 import lombok.SneakyThrows;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -56,7 +63,7 @@ class CandidateVersionDataModelTablesControllerTest {
   public static final String VERSION_CANDIDATE_ID_STRING = String.valueOf(VERSION_CANDIDATE_ID);
 
   @MockBean
-  DataModelFileService fileService;
+  DataModelFileManagementService fileService;
   @MockBean
   VersionManagementService versionManagementService;
   @MockBean
@@ -102,7 +109,7 @@ class CandidateVersionDataModelTablesControllerTest {
     @Test
     @DisplayName("should return 400 if try to put string as version-candidate")
     @SneakyThrows
-    void getTable_badRequest() {
+    void getFileContent_badRequest() {
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/data-model/tables", "master")
       ).andExpectAll(
@@ -114,9 +121,9 @@ class CandidateVersionDataModelTablesControllerTest {
     }
 
     @Test
-    @DisplayName("should return 404 it version-candidate doesn't exist")
+    @DisplayName("should return 404 if version-candidate doesn't exist")
     @SneakyThrows
-    void getTable_versionCandidateNotFound() {
+    void getFileContent_versionCandidateNotFound() {
       Mockito.doThrow(GerritChangeNotFoundException.class).when(versionManagementService)
           .getVersionDetails(VERSION_CANDIDATE_ID_STRING);
 
@@ -163,7 +170,7 @@ class CandidateVersionDataModelTablesControllerTest {
     @Test
     @DisplayName("should return 500 at any unexpected error")
     @SneakyThrows
-    void listTablesTest_unexpectedError() {
+    void getFileContent_unexpectedError() {
       Mockito.doThrow(RuntimeException.class)
           .when(fileService).getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
 
@@ -179,6 +186,147 @@ class CandidateVersionDataModelTablesControllerTest {
       );
 
       Mockito.verify(fileService).getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
+    }
+  }
+
+  @Nested
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/data-model/tables")
+  @ControllerTest({
+      CandidateVersionDataModelTablesController.class,
+      ApplicationExceptionHandler.class
+  })
+  class CandidateVersionDataModelTablesControllerPutFileContentTest {
+
+    @Test
+    @DisplayName("should return 200 with tables file content")
+    @SneakyThrows
+    void putFileContent_happyPath() {
+      final var expectedTableContent = TestUtils.getContent("controller/createTables.xml");
+
+      Mockito.doReturn(expectedTableContent).when(fileService)
+          .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
+
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .contentType(MediaType.APPLICATION_XML)
+              .content(expectedTableContent)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_XML),
+          content().bytes(expectedTableContent.getBytes(StandardCharsets.UTF_8))
+      ).andDo(document("versions/candidates/{versionCandidateId}/data-model/tables/GET"));
+
+      Mockito.verify(fileService)
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+      Mockito.verify(fileService).getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
+    }
+
+    @Test
+    @DisplayName("should return 400 if try to put string as version-candidate")
+    @SneakyThrows
+    void putFileContent_badRequest() {
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", "master")
+              .contentType(MediaType.APPLICATION_XML)
+              .content("any content")
+      ).andExpectAll(
+          status().isBadRequest(),
+          content().string("")
+      );
+
+      Mockito.verifyNoInteractions(fileService);
+    }
+
+    @Test
+    @DisplayName("should return 404 if version-candidate doesn't exist")
+    @SneakyThrows
+    void putFileContent_versionCandidateNotFound() {
+      Mockito.doThrow(GerritChangeNotFoundException.class).when(versionManagementService)
+          .getVersionDetails(VERSION_CANDIDATE_ID_STRING);
+
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .contentType(MediaType.APPLICATION_XML)
+              .content("anyContent")
+      ).andExpectAll(
+          status().isNotFound(),
+          jsonPath("$.traceId").hasJsonPath(),
+          jsonPath("$.code").value(is("CHANGE_NOT_FOUND")),
+          jsonPath("$.details").value(
+              is("putTablesFileContent.versionCandidateId: Version candidate does not exist.")),
+          jsonPath("$.localizedMessage").doesNotHaveJsonPath(),
+          content().contentType(MediaType.APPLICATION_JSON)
+      );
+
+      Mockito.verifyNoInteractions(fileService);
+    }
+
+    @Test
+    @DisplayName("should return 422 if faced ConstraintViolationException")
+    @SneakyThrows
+    void putFileContent_constraintViolationException() {
+      // mock exception
+      var exception = Mockito.mock(ConstraintViolationException.class);
+      var constraintViolation = Mockito.mock(ConstraintViolation.class);
+      var constraintDescriptor = Mockito.mock(ConstraintDescriptor.class);
+      var annotation = Mockito.mock(DDMExtensionChangelogFile.class);
+      Mockito.doReturn(annotation).when(constraintDescriptor).getAnnotation();
+      Mockito.doReturn(constraintDescriptor).when(constraintViolation).getConstraintDescriptor();
+      Mockito.doReturn(Set.of(constraintViolation)).when(exception).getConstraintViolations();
+      Mockito.doReturn("ExtendedChangelogFile message").when(exception).getMessage();
+
+      var expectedTableContent = RandomString.make();
+
+      Mockito.doThrow(exception)
+          .when(fileService)
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .contentType(MediaType.APPLICATION_XML)
+              .content(expectedTableContent)
+      ).andExpectAll(
+          status().isUnprocessableEntity(),
+          jsonPath("$.traceId").hasJsonPath(),
+          jsonPath("$.code").value(is("INVALID_CHANGELOG")),
+          jsonPath("$.details").value(is("ExtendedChangelogFile message")),
+          jsonPath("$.localizedMessage").doesNotHaveJsonPath(),
+          content().contentType(MediaType.APPLICATION_JSON)
+      );
+
+      Mockito.verify(fileService)
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+      Mockito.verify(fileService, Mockito.never())
+          .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
+    }
+
+    @Test
+    @DisplayName("should return 500 at any unexpected error")
+    @SneakyThrows
+    void putFileContent_unexpectedError() {
+      final var expectedTableContent = TestUtils.getContent("controller/createTables.xml");
+
+      Mockito.doThrow(RuntimeException.class)
+          .when(fileService)
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+
+      mockMvc.perform(
+          put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .contentType(MediaType.APPLICATION_XML)
+              .content(expectedTableContent)
+      ).andExpectAll(
+          status().isInternalServerError(),
+          jsonPath("$.traceId").hasJsonPath(),
+          jsonPath("$.code").value(is("RUNTIME_ERROR")),
+          jsonPath("$.details").doesNotHaveJsonPath(),
+          jsonPath("$.localizedMessage").doesNotHaveJsonPath(),
+          content().contentType(MediaType.APPLICATION_JSON)
+      );
+
+      Mockito.verify(fileService)
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+      Mockito.verify(fileService, Mockito.never())
+          .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
     }
   }
 }

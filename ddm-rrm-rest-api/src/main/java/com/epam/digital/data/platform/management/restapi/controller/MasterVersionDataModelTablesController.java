@@ -17,7 +17,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class MasterVersionDataModelTablesController {
 
-  private final DataModelFileService dataModelFileService;
+  private final DataModelFileManagementService dataModelFileManagementService;
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
@@ -72,7 +72,7 @@ public class MasterVersionDataModelTablesController {
   public ResponseEntity<String> getTablesFileContent() {
     var versionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Getting tables file content from master version '{}' started", versionId);
-    final var fileContent = dataModelFileService.getTablesFileContent(versionId);
+    final var fileContent = dataModelFileManagementService.getTablesFileContent(versionId);
     log.info("There were found tables file content for master version '{}'", versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_XML)

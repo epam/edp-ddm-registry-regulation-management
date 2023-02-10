@@ -17,7 +17,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
-import com.epam.digital.data.platform.management.service.DataModelFileService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -32,10 +32,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Registry regulations master version data-model tables file management Rest API")
+@Tag(name = "Registry regulations version-candidate data-model tables file management Rest API")
 @RestController
 @RequestMapping("/versions/candidates/{versionCandidateId}/data-model/tables")
 @RequiredArgsConstructor
@@ -43,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class CandidateVersionDataModelTablesController {
 
-  private final DataModelFileService dataModelFileService;
+  private final DataModelFileManagementService dataModelFileManagementService;
 
   @Operation(description = "Get data-model tables file content from requested version-candidate", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -73,11 +75,51 @@ public class CandidateVersionDataModelTablesController {
   public ResponseEntity<String> getTablesFileContent(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId) {
     log.info("Getting tables file content from version '{}' started", versionCandidateId);
-    final var fileContent = dataModelFileService.getTablesFileContent(
+    final var fileContent = dataModelFileManagementService.getTablesFileContent(
         String.valueOf(versionCandidateId));
     log.info("There were found tables file content for version '{}'", versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_XML)
         .body(fileContent);
+  }
+
+  @Operation(description = "Put data-model tables file content to specified version-candidate", parameters = {
+      @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string"))},
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_XML_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Version-candidate doesn't exist",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PutMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE})
+  public ResponseEntity<String> putTablesFileContent(
+      @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId,
+      @RequestBody String tablesFileContent) {
+    var versionId = String.valueOf(versionCandidateId);
+    log.info("Putting tables file content to version '{}' started", versionId);
+    dataModelFileManagementService.putTablesFileContent(versionId, tablesFileContent);
+    log.debug("Tables file content in version '{}' updated, reading it again for response.",
+        versionId);
+    final var updatedFileContent = dataModelFileManagementService.getTablesFileContent(versionId);
+    log.info("There were updated tables file content for version '{}'", versionCandidateId);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_XML)
+        .body(updatedFileContent);
   }
 }
