@@ -34,5 +34,3 @@ registry-regulation-management:
     exclude-table-prefixes: ddm,test
     exclude-table-suffixes: hst
     exclude-field-prefixes: ddm,dcm
-  data-model:
-    tables-file-path: data-model/createTables.xml

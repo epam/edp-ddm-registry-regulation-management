@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.config;
+package com.epam.digital.data.platform.management.model.dto;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-/**
- * Class that contains configuration properties for prefix
- * {@code registry-regulation-management.data-model} for accessing data model properties, such as
- * data-model file paths in registry repository
- */
+@Builder
 @Getter
-@Setter
-@Configuration
-@ConfigurationProperties("registry-regulation-management.data-model")
-public class DataModelConfigurationProperties {
+@EqualsAndHashCode
+public class DataModelFileDto {
 
-  private String tablesFilePath;
+  private final String fileName;
+  private final DataModelFileStatus status;
+  private final DataModelFileType type;
 
 }
+

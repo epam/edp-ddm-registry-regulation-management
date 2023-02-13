@@ -73,7 +73,7 @@ class MasterVersionFormsControllerTest {
         .name("John Doe's form")
         .path("forms/John Doe's form.json")
         .title("John Doe added new component")
-        .status(FileStatus.CURRENT)
+        .status(FileStatus.UNCHANGED)
         .created(LocalDateTime.of(2022, 7, 29, 15, 6))
         .updated(LocalDateTime.of(2022, 7, 29, 15, 7))
         .build();

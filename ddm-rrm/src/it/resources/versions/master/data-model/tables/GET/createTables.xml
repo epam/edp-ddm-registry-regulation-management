@@ -27,7 +27,7 @@
     <createTable tableName="first_registry_table" ext:historyFlag="true"
       remarks="Найперша таблиця реєстру">
       <column name="first_registry_table_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_katotg_level1_id"/>
+        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_first_registry_table_id"/>
       </column>
       <column name="code" type="TEXT" remarks="Код запису">
         <constraints nullable="false" unique="true"/>

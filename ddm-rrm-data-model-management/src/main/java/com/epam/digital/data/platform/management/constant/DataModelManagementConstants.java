@@ -13,28 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.versionmanagement.model;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+package com.epam.digital.data.platform.management.constant;
 
-@Getter
-@Setter
-@Builder
-@ToString
-@EqualsAndHashCode
-public class EntityChangesInfoDto {
+public final class DataModelManagementConstants {
 
-  private String name;
-  private String title;
-  private ChangedFileStatus status;
+  public static final String DATA_MODEL_FOLDER = "data-model";
 
-  public enum ChangedFileStatus {
-    NEW,
-    CHANGED,
-    DELETED
+  private DataModelManagementConstants() {
   }
 }

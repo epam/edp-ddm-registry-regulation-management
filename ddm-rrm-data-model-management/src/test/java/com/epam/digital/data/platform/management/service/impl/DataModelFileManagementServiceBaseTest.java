@@ -16,12 +16,14 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import static com.epam.digital.data.platform.management.service.impl.DataModelFileManagementServiceBaseTest.TABLES_FILE_PATH;
+import static com.epam.digital.data.platform.management.constant.DataModelManagementConstants.DATA_MODEL_FOLDER;
 
-import com.epam.digital.data.platform.management.config.DataModelConfigurationProperties;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.mapper.DataModelFileManagementMapper;
+import com.epam.digital.data.platform.management.model.dto.DataModelFileType;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -29,22 +31,20 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-    DataModelConfigurationProperties.class,
     DataModelFileManagementServiceImpl.class
 })
+@ComponentScan(basePackageClasses = DataModelFileManagementMapper.class)
 @EnableConfigurationProperties
-@TestPropertySource(properties = {
-    "registry-regulation-management.data-model.tables-file-path=" + TABLES_FILE_PATH
-})
 abstract class DataModelFileManagementServiceBaseTest {
 
-  public static final String TABLES_FILE_PATH = "data-model/tables.xml";
+  public static final String TABLES_FILE_PATH = FilenameUtils.normalize(
+      DATA_MODEL_FOLDER + "/" + DataModelFileType.TABLES_FILE.getFileName() + ".xml");
 
   @Autowired
   DataModelFileManagementService dataModelFileManagementService;

@@ -17,7 +17,9 @@
 package com.epam.digital.data.platform.management.service;
 
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
+import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
 import com.epam.digital.data.platform.management.validation.DDMExtensionChangelogFile;
+import java.util.List;
 import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 
@@ -28,8 +30,7 @@ import org.springframework.validation.annotation.Validated;
 public interface DataModelFileManagementService {
 
   /**
-   * Returns content of file that contains tables changes declaration. File path has to be
-   * configured as {@code registry-regulation-management.data-model.tables-file-path} property
+   * Returns content of file that contains tables changes declaration
    *
    * @param versionId id of a version to search file content in
    * @return the content of file (cannot be null)
@@ -40,12 +41,20 @@ public interface DataModelFileManagementService {
   String getTablesFileContent(@NonNull String versionId);
 
   /**
-   * Creates or updates file that contains tables changes declaration. File path has to be
-   * configured as {@code registry-regulation-management.data-model.tables-file-path} property
+   * Creates or updates file that contains tables changes declaration
    *
    * @param versionId   id of a version to update file content in
    * @param fileContent the new file content of the file
    */
   void putTablesFileContent(@NonNull String versionId,
       @NonNull @DDMExtensionChangelogFile String fileContent);
+
+  /**
+   * Get list of data model files in specified version
+   *
+   * @param versionId id of a version to list data-model files in
+   * @return {@link List} of {@link DataModelFileDto} representations of data-model files
+   */
+  @NonNull
+  List<DataModelFileDto> listDataModelFiles(@NonNull String versionId);
 }

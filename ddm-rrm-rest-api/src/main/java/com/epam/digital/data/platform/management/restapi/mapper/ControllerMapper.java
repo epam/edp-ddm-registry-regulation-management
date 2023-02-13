@@ -29,7 +29,9 @@ import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
 import com.epam.digital.data.platform.management.restapi.model.Validation;
 import com.epam.digital.data.platform.management.restapi.model.ValidationType;
+import com.epam.digital.data.platform.management.restapi.model.VersionChangesInfo;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import java.util.List;
 import java.util.Map;
@@ -76,4 +78,6 @@ public interface ControllerMapper {
   TableInfo toTableInfo(TableInfoDto tableInfoDto);
 
   List<TableInfoShort> toTableInfosShort(List<TableShortInfoDto> tableShortInfoDto);
+
+  VersionChangesInfo toVersionChangesInfo(VersionChangesDto dto);
 }

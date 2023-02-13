@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FilenameUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -108,9 +109,8 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("DATA_MODEL_FILE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format(
-              "Data-model file data-model/createTables.xml is not found in version %s",
-              versionCandidateId)))
+          jsonPath("$.details", is(String.format("Data-model file %s is not found in version %s",
+              FilenameUtils.normalize("data-model/createTables.xml"), versionCandidateId)))
       );
     }
   }
@@ -124,7 +124,7 @@ class CandidateVersionDataModelTablesControllerIT extends BaseIT {
     @SneakyThrows
     void putDataModelTablesContent() {
       final var expectedContent = context.getResourceContent(
-              "/versions/candidates/{versionCandidateId}/data-model/tables/PUT/createTables-valid.xml");
+          "/versions/candidates/{versionCandidateId}/data-model/tables/PUT/createTables-valid.xml");
 
       // mock gerrit change info for version candidate
       final var versionCandidateId = context.createVersionCandidate();

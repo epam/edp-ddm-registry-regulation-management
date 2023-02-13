@@ -29,14 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
-import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
-import com.epam.digital.data.platform.management.restapi.model.ResultValues;
-import com.epam.digital.data.platform.management.restapi.model.Validation;
-import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
+import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto.DataModelFileStatus;
+import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto.DataModelFileType;
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto.ChangedFileStatus;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementServiceImpl;
@@ -63,9 +62,6 @@ class CandidateVersionControllerTest {
 
   @MockBean
   VersionManagementServiceImpl versionManagementService;
-
-  @MockBean
-  ControllerMapper mapper;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -119,26 +115,12 @@ class CandidateVersionControllerTest {
     Mockito.doReturn(expectedVersionDetails).when(versionManagementService)
         .getVersionDetails("1");
 
-    var expectedVersionInfoDetailed = VersionInfoDetailed.builder()
-        .id("1")
-        .name("JohnDoe's version candidate")
-        .description("Version candidate to change form")
-        .author("JohnDoe@epam.com")
-        .creationDate(LocalDateTime.of(2022, 8, 10, 11, 30))
-        .latestUpdate(LocalDateTime.of(2022, 8, 10, 11, 40))
-        .hasConflicts(false)
-        .validations(List.of(Validation.builder().result(ResultValues.SUCCESS).build()))
-        .build();
-    Mockito.doReturn(expectedVersionInfoDetailed)
-        .when(mapper).toVersionInfoDetailed(expectedVersionDetails);
-
     var request = new CreateVersionRequest();
     request.setName("JohnDoe's version candidate");
     request.setDescription("Version candidate to change form");
     final var dto = CreateChangeInputDto.builder().name(request.getName())
         .description(request.getDescription()).build();
     Mockito.when(versionManagementService.createNewVersion(dto)).thenReturn("1");
-    Mockito.doReturn(dto).when(mapper).toDto(request);
     mockMvc.perform(
         post("/versions/candidates")
             .contentType(MediaType.APPLICATION_JSON)
@@ -175,21 +157,8 @@ class CandidateVersionControllerTest {
         .mergeable(true)
         .labels(Map.of("Verified", 1))
         .build();
-    var expectedVersionInfoDetailed = VersionInfoDetailed.builder()
-        .id("1")
-        .name("JohnDoe's version candidate")
-        .description("Version candidate to change form")
-        .author("JohnDoe@epam.com")
-        .creationDate(LocalDateTime.of(2022, 8, 10, 11, 30))
-        .latestUpdate(LocalDateTime.of(2022, 8, 10, 11, 40))
-        .hasConflicts(false)
-        .validations(List.of(Validation.builder().result(ResultValues.SUCCESS).build()))
-        .build();
     Mockito.doReturn(expectedVersionDetails)
         .when(versionManagementService).getVersionDetails("1");
-    Mockito.doReturn(expectedVersionInfoDetailed)
-        .when(mapper).toVersionInfoDetailed(expectedVersionDetails);
-
 
     mockMvc.perform(
         get("/versions/candidates/{versionCandidateId}", "1")
@@ -262,16 +231,22 @@ class CandidateVersionControllerTest {
     final var expectedChangedForm = EntityChangesInfoDto.builder()
         .name("formToBeUpdated")
         .title("JohnDoe's form")
-        .status(FileStatus.CHANGED)
+        .status(ChangedFileStatus.CHANGED)
         .build();
     final var expectedChangedProcess = EntityChangesInfoDto.builder()
         .name("newProcess")
         .title("JohnDoe's process")
-        .status(FileStatus.NEW)
+        .status(ChangedFileStatus.NEW)
+        .build();
+    final var expectedChangedDataModelFiles = DataModelChangesInfoDto.builder()
+        .name("createTables")
+        .fileType(DataModelFileType.TABLES_FILE)
+        .status(DataModelFileStatus.CHANGED)
         .build();
     final var expectedChanges = VersionChangesDto.builder()
         .changedForms(List.of(expectedChangedForm))
         .changedBusinessProcesses(List.of(expectedChangedProcess))
+        .changedDataModelFiles(List.of(expectedChangedDataModelFiles))
         .build();
 
     Mockito.doReturn(expectedChanges)
@@ -285,6 +260,7 @@ class CandidateVersionControllerTest {
         content().contentType(MediaType.APPLICATION_JSON_VALUE),
         jsonPath("$.changedForms", hasSize(1)),
         jsonPath("$.changedBusinessProcesses", hasSize(1)),
+        jsonPath("$.changedDataModelFiles", hasSize(1)),
         jsonPath("$.changedForms[0].name", equalTo("formToBeUpdated")),
         jsonPath("$.changedForms[0].title", equalTo("JohnDoe's form")),
         jsonPath("$.changedForms[0].status", equalTo("CHANGED")),

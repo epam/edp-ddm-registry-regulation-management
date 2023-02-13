@@ -19,6 +19,6 @@ package com.epam.digital.data.platform.management.filemanagement.model;
 public enum FileStatus {
   NEW,
   CHANGED,
-  CURRENT,
+  UNCHANGED,
   DELETED
 }

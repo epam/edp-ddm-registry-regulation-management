@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,8 @@ class MasterVersionDataModelTablesControllerIT extends BaseIT {
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("DATA_MODEL_FILE_NOT_FOUND")),
           jsonPath("$.details",
-              is("Data-model file data-model/createTables.xml is not found in version head-branch"))
+              is(String.format("Data-model file %s is not found in version head-branch",
+                  FilenameUtils.normalize("data-model/createTables.xml"))))
       );
     }
 
@@ -90,7 +92,8 @@ class MasterVersionDataModelTablesControllerIT extends BaseIT {
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("DATA_MODEL_FILE_NOT_FOUND")),
           jsonPath("$.details",
-              is("Data-model file data-model/createTables.xml is not found in version head-branch"))
+              is(String.format("Data-model file %s is not found in version head-branch",
+                  FilenameUtils.normalize("data-model/createTables.xml"))))
       );
     }
   }

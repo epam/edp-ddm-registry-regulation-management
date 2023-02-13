@@ -16,14 +16,19 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-import com.epam.digital.data.platform.management.config.DataModelConfigurationProperties;
+import com.epam.digital.data.platform.management.constant.DataModelManagementConstants;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
+import com.epam.digital.data.platform.management.mapper.DataModelFileManagementMapper;
+import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
+import com.epam.digital.data.platform.management.model.dto.DataModelFileType;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
+import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -32,17 +37,16 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DataModelFileManagementServiceImpl implements DataModelFileManagementService {
 
-  private final DataModelConfigurationProperties dataModelProps;
   private final VersionContextComponentManager versionContextComponentManager;
+  private final DataModelFileManagementMapper mapper;
 
   @Override
   @NonNull
   public String getTablesFileContent(@NonNull String versionId) {
-    var tablesFilePath = dataModelProps.getTablesFilePath();
+    var tablesFilePath = getTablesFilePath();
     log.debug("Reading content from file '{}' for version '{}'", tablesFilePath, versionId);
 
-    var repo = versionContextComponentManager.getComponent(versionId,
-        VersionedFileRepository.class);
+    var repo = getVersionedFileRepo(versionId);
 
     log.trace("Checking if file '{}' exists in version '{}' repository", tablesFilePath, versionId);
     if (!repo.isFileExists(tablesFilePath)) {
@@ -61,14 +65,38 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
 
   @Override
   public void putTablesFileContent(@NonNull String versionId, @NonNull String fileContent) {
-    var tablesFilePath = dataModelProps.getTablesFilePath();
+    var tablesFilePath = getTablesFilePath();
     log.debug("Putting content to file '{}' for version '{}'", tablesFilePath, versionId);
 
-    var repo = versionContextComponentManager.getComponent(versionId,
-        VersionedFileRepository.class);
+    var repo = getVersionedFileRepo(versionId);
 
     repo.writeFile(tablesFilePath, fileContent);
     log.debug("File '{}' content was updated in version '{}', new content length - '{}'",
         tablesFilePath, versionId, fileContent.length());
+  }
+
+  @Override
+  @NonNull
+  public List<DataModelFileDto> listDataModelFiles(@NonNull String versionId) {
+    log.debug("Getting list of data-model files for version '{}'", versionId);
+
+    var repo = getVersionedFileRepo(versionId);
+    var foundFiles = repo.getFileList(DataModelManagementConstants.DATA_MODEL_FOLDER);
+
+    log.debug("Found '{}' files in version '{}'", foundFiles.size(), versionId);
+    return mapper.toChangedDataModelFileDtoList(foundFiles);
+  }
+
+  private String getTablesFilePath() {
+    return getDataModelFilePath(DataModelFileType.TABLES_FILE.getFileName());
+  }
+
+  private String getDataModelFilePath(String fileName) {
+    return FilenameUtils.normalize(
+        String.format("%s/%s.xml", DataModelManagementConstants.DATA_MODEL_FOLDER, fileName));
+  }
+
+  private VersionedFileRepository getVersionedFileRepo(String versionId) {
+    return versionContextComponentManager.getComponent(versionId, VersionedFileRepository.class);
   }
 }

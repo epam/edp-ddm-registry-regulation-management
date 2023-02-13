@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 @DisplayName("DataModelFileService#getTablesFileContent(String)")
-class DataModelFileServiceGetTablesFileContentTestManagement extends
+class DataModelFileManagementServiceGetTablesFileContentTest extends
     DataModelFileManagementServiceBaseTest {
 
   @Test

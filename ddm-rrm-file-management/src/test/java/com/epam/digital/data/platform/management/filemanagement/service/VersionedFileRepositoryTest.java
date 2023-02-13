@@ -155,7 +155,7 @@ public class VersionedFileRepositoryTest {
     List<VersionedFileInfoDto> fileList = repository.getFileList("folder");
     Assertions.assertThat(fileList).isNotNull();
     Assertions.assertThat(fileList.size()).isEqualTo(6);
-    Assertions.assertThat(FileStatus.CURRENT).isEqualTo(getFileStatusByName(fileList, "file1"));
+    Assertions.assertThat(FileStatus.UNCHANGED).isEqualTo(getFileStatusByName(fileList, "file1"));
     Assertions.assertThat(FileStatus.DELETED).isEqualTo(getFileStatusByName(fileList, "file2"));
     Assertions.assertThat(FileStatus.CHANGED).isEqualTo(getFileStatusByName(fileList, "file3"));
     Assertions.assertThat(FileStatus.NEW).isEqualTo(getFileStatusByName(fileList, "file12"));

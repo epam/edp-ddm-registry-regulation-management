@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,13 +46,6 @@ public interface VersionManagementService {
    */
   @Nullable
   VersionInfoDto getMasterInfo();
-
-  /**
-   * Details of head master
-   *
-   * @return {@link List} of {@link String}
-   */
-  List<String> getDetailsOfHeadMaster(String path);
 
   /**
    * Details of current version

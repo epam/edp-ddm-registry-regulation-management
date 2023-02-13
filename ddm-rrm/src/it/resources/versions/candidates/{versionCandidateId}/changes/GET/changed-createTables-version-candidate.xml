@@ -25,15 +25,24 @@
 
   <changeSet author="registry owner" id="table first_registry_table">
     <createTable tableName="first_registry_table" ext:historyFlag="true"
-      remarks="The very first registry table">
+      remarks="Найперша таблиця реєстру">
       <column name="first_registry_table_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
         <constraints nullable="false" primaryKey="true" primaryKeyName="pk_first_registry_table_id"/>
       </column>
-      <column name="code" type="TEXT" remarks="Row code">
+      <column name="code" type="TEXT" remarks="Код запису">
         <constraints nullable="false" unique="true"/>
       </column>
-      <column name="name" type="TEXT" remarks="Row name">
+      <column name="name" type="TEXT" remarks="Назва запису">
         <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet author="registry owner" id="table second_registry_table">
+    <createTable tableName="second_registry_table" ext:historyFlag="true"
+      remarks="Друга таблиця реєстру">
+      <column name="second_registry_table_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="second_registry_table_id"/>
       </column>
     </createTable>
   </changeSet>

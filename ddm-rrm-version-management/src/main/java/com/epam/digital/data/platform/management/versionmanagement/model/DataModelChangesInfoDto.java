@@ -26,15 +26,18 @@ import lombok.ToString;
 @Builder
 @ToString
 @EqualsAndHashCode
-public class EntityChangesInfoDto {
+public class DataModelChangesInfoDto {
 
   private String name;
-  private String title;
-  private ChangedFileStatus status;
+  private DataModelFileType fileType;
+  private DataModelFileStatus status;
 
-  public enum ChangedFileStatus {
+  public enum DataModelFileType {
+    TABLES_FILE
+  }
+
+  public enum DataModelFileStatus {
     NEW,
-    CHANGED,
-    DELETED
+    CHANGED
   }
 }

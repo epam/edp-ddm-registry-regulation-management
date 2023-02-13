@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,9 +19,9 @@ import com.epam.digital.data.platform.management.gerritintegration.model.CreateC
 import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
+import com.epam.digital.data.platform.management.restapi.model.VersionChangesInfo;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfo;
 import com.epam.digital.data.platform.management.restapi.model.VersionInfoDetailed;
-import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -236,13 +236,13 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
       @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting detailed info about {} version candidate", versionCandidateId);
-    var response  = controllerMapper.toVersionInfoDetailed(
+    var response = controllerMapper.toVersionInfoDetailed(
         versionManagementService.getVersionDetails(versionCandidateId));
     log.info("Finished getting detailed info about {} version candidate", versionCandidateId);
     return ResponseEntity.ok().body(response);
   }
 
-  @Operation(description = "Get version changes by id",
+  @Operation(description = "Get version changes by version-candidate id",
       parameters = @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
           required = true,
@@ -252,7 +252,7 @@ public class CandidateVersionController {
           @ApiResponse(responseCode = "200",
               description = "OK",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = VersionChangesDto.class))),
+                  schema = @Schema(implementation = VersionChangesInfo.class))),
           @ApiResponse(responseCode = "401",
               description = "Unauthorized",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
@@ -269,13 +269,15 @@ public class CandidateVersionController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))
       })
   @GetMapping("/{versionCandidateId}/changes")
-  public ResponseEntity<VersionChangesDto> getVersionChanges(
+  public ResponseEntity<VersionChangesInfo> getVersionChanges(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
       String versionCandidateId) {
     log.info("Getting changes for version {}", versionCandidateId);
     var versionChanges = versionManagementService.getVersionChanges(versionCandidateId);
     log.info("Version changes for version {} found", versionCandidateId);
-    return ResponseEntity.ok().body(versionChanges);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(controllerMapper.toVersionChangesInfo(versionChanges));
   }
 
 

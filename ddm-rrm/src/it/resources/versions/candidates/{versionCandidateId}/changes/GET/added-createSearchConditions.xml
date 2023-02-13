@@ -1,4 +1,4 @@
-<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 
 <!--
   ~ Copyright 2023 EPAM Systems.
@@ -22,19 +22,14 @@
   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com/repository/extensions/com/epam/digital/data/platform/liquibase-ext-schema/latest/liquibase-ext-schema-latest.xsd">
-
-  <changeSet author="registry owner" id="table first_registry_table">
-    <createTable tableName="first_registry_table" ext:historyFlag="true"
-      remarks="The very first registry table">
-      <column name="first_registry_table_id" type="UUID" defaultValueComputed="uuid_generate_v4()">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="pk_first_registry_table_id"/>
-      </column>
-      <column name="code" type="TEXT" remarks="Row code">
-        <constraints nullable="false" unique="true"/>
-      </column>
-      <column name="name" type="TEXT" remarks="Row name">
-        <constraints nullable="false"/>
-      </column>
-    </createTable>
+  <changeSet author="registry owner" id="processing_consent_returning_SC">
+    <ext:createSearchCondition name="processing_consent_starts_with_edrpou_returning" limit="100">
+      <ext:table name="pd_processing_consent_file_subject" alias="pfs">
+        <ext:column name="consent_subject_id" returning="false"/>
+        <ext:column name="edrpou" searchType="startsWith"/>
+        <ext:column name="legal_entity_name" sorting="asc"/>
+      </ext:table>
+    </ext:createSearchCondition>
   </changeSet>
+
 </databaseChangeLog>

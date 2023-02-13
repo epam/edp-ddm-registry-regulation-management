@@ -22,6 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -299,6 +300,11 @@ class CandidateVersionControllerIT extends BaseIT {
       final var deletedProcess = context.getResourceContent(
           "/versions/candidates/{versionCandidateId}/changes/GET/deleted-process.bpmn");
       context.addFileToRemoteHeadRepo("/bpmn/deleted-process.bpmn", deletedProcess);
+
+      //add data-model files to "remote" repo
+      final var changedCreateTablesHead = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/changes/GET/changed-createTables-head.xml");
+      context.addFileToRemoteHeadRepo("/data-model/createTables.xml", changedCreateTablesHead);
       context.pullHeadRepo();
 
       // create version candidate
@@ -325,6 +331,16 @@ class CandidateVersionControllerIT extends BaseIT {
           changedProcessVC);
       context.deleteFileFromVersionCandidateRemote("bpmn/deleted-process.bpmn");
 
+      //change data-model in version candidate remote
+      final var addedCreateSearchConditions = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/changes/GET/added-createSearchConditions.xml");
+      context.addFileToVersionCandidateRemote("/data-model/createSearchConditions.xml",
+          addedCreateSearchConditions);
+      final var changedCreateTablesVC = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/changes/GET/changed-createTables-version-candidate.xml");
+      context.addFileToVersionCandidateRemote("/data-model/createTables.xml",
+          changedCreateTablesVC);
+
       // mock gerrit response about changed files
       final var filesResponse = Map.of(
           "bpmn/added-process.bpmn", Map.of("status", "A"),
@@ -332,7 +348,9 @@ class CandidateVersionControllerIT extends BaseIT {
           "bpmn/deleted-process.bpmn", Map.of("status", "D"),
           "forms/added-form.json", Map.of("status", "A"),
           "forms/changed-form.json", Map.of("status", "R"),
-          "forms/deleted-form.jsom", Map.of("status", "D")
+          "forms/deleted-form.json", Map.of("status", "D"),
+          "data-model/createTables.xml", Map.of("status", "R"),
+          "data-model/createSearchConditions.xml", Map.of("status", "A")
       );
       context.getGerritMockServer().addStubMapping(
           stubFor(WireMock.get(urlPathEqualTo(String.format("/a/changes/%s/revisions/current/files",
@@ -367,7 +385,14 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.changedBusinessProcesses[1].status", is("CHANGED")),
           jsonPath("$.changedBusinessProcesses[2].name", is("deleted-process")),
           jsonPath("$.changedBusinessProcesses[2].title", is("Deleted process")),
-          jsonPath("$.changedBusinessProcesses[2].status", is("DELETED"))
+          jsonPath("$.changedBusinessProcesses[2].status", is("DELETED")),
+          jsonPath("$.changedDataModelFiles", hasSize(2)),
+          jsonPath("$.changedDataModelFiles[0].name", is("createSearchConditions")),
+          jsonPath("$.changedDataModelFiles[0].fileType", is(nullValue())),
+          jsonPath("$.changedDataModelFiles[0].status", is("NEW")),
+          jsonPath("$.changedDataModelFiles[1].name", is("createTables")),
+          jsonPath("$.changedDataModelFiles[1].fileType", is("TABLES_FILE")),
+          jsonPath("$.changedDataModelFiles[1].status", is("CHANGED"))
       );
     }
 
@@ -386,7 +411,8 @@ class CandidateVersionControllerIT extends BaseIT {
           status().isOk(),
           content().contentType("application/json"),
           jsonPath("$.changedForms", hasSize(0)),
-          jsonPath("$.changedBusinessProcesses", hasSize(0))
+          jsonPath("$.changedBusinessProcesses", hasSize(0)),
+          jsonPath("$.changedDataModelFiles", hasSize(0))
       );
     }
 
