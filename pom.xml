@@ -56,7 +56,7 @@
     <spring-security-core.version>5.7.5</spring-security-core.version>
     <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
     <liquibase-ddm-ext.version>1.6.0.2</liquibase-ddm-ext.version>
-
+    <postgresql.version>42.3.3</postgresql.version>
     <zonky-embedded-postgres.version>2.0.2</zonky-embedded-postgres.version>
 
     <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
