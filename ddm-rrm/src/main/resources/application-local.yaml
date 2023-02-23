@@ -82,10 +82,6 @@ gerrit:
   password: cz0TTIfcgGtWixZ84pGL27ziSX2nHMKgBrysP3uJsQ
   head-branch: master
 
-scheduled:
-  repositoryRefreshCron: '0 */5 * ? * *'
-  repositoryRefreshTimezone: UTC
-
 registry-regulation-management:
   retry:
     head-branch-cloning-delay: 300000
@@ -100,6 +96,12 @@ registry-regulation-management:
   scheduled:
     clean-obsolete-version-contexts-cron: '0 */5 * ? * *'
     clean-obsolete-version-contexts-timezone: UTC
+    version-candidate-repo-refresh:
+      cron: '0 */5 * ? * *'
+      timezone: UTC
+    master-repo-refresh:
+      cron: '0 */5 * ? * *'
+      timezone: UTC
   schema-crawler:
     schema: ${DB_SCHEMA:registry}
     exclude-tables:
