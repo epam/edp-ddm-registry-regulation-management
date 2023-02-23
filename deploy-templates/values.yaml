@@ -22,8 +22,9 @@ registryRegulationManagement:
     connectionTimeoutInMillis: 10000
   subjectTableName: subject
   scheduled:
-    cleanObsoleteVersionContextsCron: '0 */5 * ? * *'
-    cleanObsoleteVersionContextsTimeZone: UTC
+    cleanObsoleteVersionContexts:
+      cron: '0 0 20 ? * *'
+      timezone: UTC
     masterRepoRefresh:
       cron: '0 */5 * ? * *'
       timezone: UTC

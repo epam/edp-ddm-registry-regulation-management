@@ -39,8 +39,8 @@ public class CleanObsoleteVersionContextScheduler {
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Scheduled(
-      cron = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts-cron}",
-      zone = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts-timezone}")
+      cron = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts.cron}",
+      zone = "${registry-regulation-management.scheduled.clean-obsolete-version-contexts.timezone}")
   public void cleanObsoleteVersionContexts() {
     try {
       var openedMrs = gerritService.getMRList();

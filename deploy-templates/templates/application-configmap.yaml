@@ -41,8 +41,9 @@ data:
         connection-timeout-in-millis: {{ .Values.registryRegulationManagement.dataSource.connectionTimeoutInMillis }}
       subject-table-name: {{ .Values.registryRegulationManagement.subjectTableName }}
       scheduled:
-        clean-obsolete-version-contexts-cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsCron }}
-        clean-obsolete-version-contexts-timezone: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsTimezone }}
+        clean-obsolete-version-contexts:
+          cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContexts.cron }}
+          timezone: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContexts.timezone }}
         version-candidate-repo-refresh:
           cron: {{ .Values.scheduled.repositoryRefreshCron }}
           timezone: {{ .Values.scheduled.repositoryRefreshTimezone }}

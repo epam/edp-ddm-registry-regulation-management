@@ -21,7 +21,8 @@ registry-regulation-management:
   retry:
     enabled: false
   scheduled:
-    clean-obsolete-version-contexts-cron: '-'
+    clean-obsolete-version-contexts:
+      cron: '-'
     master-repo-refresh:
       cron: '-'
     version-candidate-repo-refresh:

@@ -95,8 +95,9 @@ registry-regulation-management:
     registry-dev-data-base-prefix: registry_dev_
     connection-timeout-in-millis: 10000
   scheduled:
-    clean-obsolete-version-contexts-cron: '0 */5 * ? * *'
-    clean-obsolete-version-contexts-timezone: UTC
+    clean-obsolete-version-contexts:
+      cron: '0 0 20 ? * *'
+      timezone: UTC
     version-candidate-repo-refresh:
       cron: '0 */5 * ? * *'
       timezone: UTC
