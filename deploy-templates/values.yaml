@@ -19,6 +19,7 @@ registryRegulationManagement:
     registryDataBase: registry
     registryDevDataBasePrefix: registry_dev_
     publicSchema: public
+    connectionTimeoutInMillis: 10000
   subjectTableName: subject
   scheduled:
     cleanObsoleteVersionContextsCron: '0 */5 * ? * *'

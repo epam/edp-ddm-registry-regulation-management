@@ -93,6 +93,7 @@ registry-regulation-management:
     password: password
     registry-data-base: registry
     registry-dev-data-base-prefix: registry_dev_
+    connection-timeout-in-millis: 10000
   scheduled:
     clean-obsolete-version-contexts-cron: '0 */5 * ? * *'
     clean-obsolete-version-contexts-timezone: UTC

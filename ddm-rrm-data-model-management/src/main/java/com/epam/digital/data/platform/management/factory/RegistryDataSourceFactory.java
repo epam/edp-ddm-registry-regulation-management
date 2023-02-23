@@ -38,13 +38,15 @@ public class RegistryDataSourceFactory implements VersionComponentFactory<Regist
   @Override
   @NonNull
   public RegistryDataSource createComponent(@NonNull String versionId) {
-    return DataSourceBuilder.create()
+    var ds = DataSourceBuilder.create()
         .type(getComponentType())
         .driverClassName(dsProps.getDriverClassName())
         .url(String.format("%s/%s", dsProps.getBaseJdbcUrl(), getDataBaseName(versionId)))
         .username(dsProps.getUsername())
         .password(dsProps.getPassword())
         .build();
+    ds.setConnectionTimeout(dsProps.getConnectionTimeoutInMillis());
+    return ds;
   }
 
   @Override

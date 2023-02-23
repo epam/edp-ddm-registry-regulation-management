@@ -38,6 +38,7 @@ data:
         base-jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}
         registry-data-base: {{ .Values.registryRegulationManagement.dataSource.registryDataBase }}
         registry-dev-data-base-prefix: {{ .Values.registryRegulationManagement.dataSource.registryDevDataBasePrefix }}
+        connection-timeout-in-millis: {{ .Values.registryRegulationManagement.dataSource.connectionTimeoutInMillis }}
       subject-table-name: {{ .Values.registryRegulationManagement.subjectTableName }}
       scheduled:
         clean-obsolete-version-contexts-cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsCron }}

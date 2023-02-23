@@ -33,6 +33,6 @@ public class DataSourceConfigurationProperties {
   private String password;
   private String registryDataBase;
   private String registryDevDataBasePrefix;
-  private String connectionTimeout;
+  private long connectionTimeoutInMillis;
 
 }
