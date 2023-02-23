@@ -32,9 +32,10 @@ public class RepositoryRefreshScheduler {
   private final GerritService gerritService;
   private final JGitService jGitService;
 
-  @Scheduled(cron = "${scheduled.repositoryRefreshCron}", zone = "${scheduled.repositoryRefreshTimezone}")
-  public void refresh() {
-    log.debug("Refreshing repositories started");
+  @Scheduled(cron = "${registry-regulation-management.scheduled.version-candidate-repo-refresh.cron}",
+      zone = "${registry-regulation-management.scheduled.version-candidate-repo-refresh.timezone}")
+  public void refreshVersionCandidates() {
+    log.debug("Refreshing version-candidates' repositories started");
     var mrList = gerritService.getMRList().stream()
         .filter(mr -> !mr.getMergeable())
         .collect(Collectors.toList());
@@ -51,6 +52,12 @@ public class RepositoryRefreshScheduler {
       }
     }
 
+    log.debug("Refreshing version-candidates' repositories finished");
+  }
+
+  @Scheduled(cron = "${registry-regulation-management.scheduled.master-repo-refresh.cron}",
+      zone = "${registry-regulation-management.scheduled.master-repo-refresh.timezone}")
+  public void refreshMasterVersion() {
     log.debug("Refreshing head branch repository");
     try {
       jGitService.resetHeadBranchToRemote();
@@ -58,6 +65,6 @@ public class RepositoryRefreshScheduler {
       log.warn("Head branch repository refresh failed: {}", e.getMessage(), e);
     }
 
-    log.debug("Refreshing repositories finished");
+    log.debug("Refreshing head branch repository finished");
   }
 }

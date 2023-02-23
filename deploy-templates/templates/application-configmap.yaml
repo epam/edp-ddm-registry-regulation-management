@@ -29,10 +29,6 @@ data:
       headBranch: {{ .Values.gerrit.headBranch }}
       repositoryDirectory: {{ .Values.gerrit.repositoryDirectory }}
 
-    scheduled:
-      repositoryRefreshCron: {{ .Values.scheduled.repositoryRefreshCron }}
-      repositoryRefreshTimezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
-
     registry-regulation-management:
       retry:
         head-branch-cloning-delay: {{ .Values.registryRegulationManagement.retry.headBranchCloningDelay }}
@@ -46,6 +42,12 @@ data:
       scheduled:
         clean-obsolete-version-contexts-cron: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsCron }}
         clean-obsolete-version-contexts-timezone: {{ .Values.registryRegulationManagement.scheduled.cleanObsoleteVersionContextsTimezone }}
+        version-candidate-repo-refresh:
+          cron: {{ .Values.scheduled.repositoryRefreshCron }}
+          timezone: {{ .Values.scheduled.repositoryRefreshTimezone }}
+        master-repo-refresh:
+          cron: {{ .Values.registryRegulationManagement.scheduled.masterRepoRefresh.cron }}
+          timezone: {{ .Values.registryRegulationManagement.scheduled.masterRepoRefresh.timezone }}
 
     spring:
       registry-datasource:

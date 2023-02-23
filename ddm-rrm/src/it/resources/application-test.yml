@@ -15,9 +15,6 @@ spring:
     caffeine:
       spec: expireAfterAccess=5s
 
-scheduled:
-  repositoryRefreshCron: '-'
-
 registry-regulation-management:
   async:
     enabled: false
@@ -25,6 +22,10 @@ registry-regulation-management:
     enabled: false
   scheduled:
     clean-obsolete-version-contexts-cron: '-'
+    master-repo-refresh:
+      cron: '-'
+    version-candidate-repo-refresh:
+      cron: '-'
   schema-crawler:
     schema: public
     exclude-tables:

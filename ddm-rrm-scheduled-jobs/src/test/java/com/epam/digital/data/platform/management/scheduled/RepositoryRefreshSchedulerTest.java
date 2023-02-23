@@ -55,28 +55,35 @@ public class RepositoryRefreshSchedulerTest {
 
   @Test
   @SneakyThrows
-  void refreshTest() {
+  void refreshVersionCandidatesTest() {
     ChangeInfoDto changeInfoDto = getChangeInfo();
 
-    Mockito.when(gerritService.getChangeInfo(changeInfoDto.getChangeId())).thenReturn(changeInfoDto);
+    Mockito.when(gerritService.getChangeInfo(changeInfoDto.getChangeId()))
+        .thenReturn(changeInfoDto);
 
-    repositoryRefreshScheduler.refresh();
+    repositoryRefreshScheduler.refreshVersionCandidates();
     Mockito.verify(gerritService).rebase(changeInfoDto.getChangeId());
     Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
+  }
+
+  @Test
+  @SneakyThrows
+  void refreshMasterVersionTest() {
+    repositoryRefreshScheduler.refreshMasterVersion();
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
   @Test
   @SneakyThrows
-  void refreshRebaseErrorTest() {
+  void refreshVersionCandidatesRebaseErrorTest() {
     ChangeInfoDto changeInfoDto = getChangeInfo();
 
-    Mockito.doThrow(GerritCommunicationException.class).when(gerritService).rebase(changeInfoDto.getChangeId());
+    Mockito.doThrow(GerritCommunicationException.class).when(gerritService)
+        .rebase(changeInfoDto.getChangeId());
 
-    Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
+    Assertions.assertThatCode(() -> repositoryRefreshScheduler.refreshVersionCandidates())
         .doesNotThrowAnyException();
     Mockito.verify(jGitService, never()).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
-    Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 
   @Test
@@ -84,7 +91,7 @@ public class RepositoryRefreshSchedulerTest {
   void refreshHeadBranchRefreshErrorTest() {
     Mockito.doThrow(RuntimeException.class).when(jGitService).resetHeadBranchToRemote();
 
-    Assertions.assertThatCode(() -> repositoryRefreshScheduler.refresh())
+    Assertions.assertThatCode(() -> repositoryRefreshScheduler.refreshMasterVersion())
         .doesNotThrowAnyException();
 
     Mockito.verify(jGitService).resetHeadBranchToRemote();
