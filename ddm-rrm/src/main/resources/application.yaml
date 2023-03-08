@@ -134,3 +134,4 @@ logbook:
   obfuscate:
     headers:
       - x-access-token
+      - cookie
