@@ -13,3 +13,10 @@ spec:
         - name: X-Access-Token
       issuer: {{ template "issuer.admin" . }}
       jwksUri: {{ template "jwksUri.admin" . }}
+  {{- if .Values.keycloak.customHost }}
+    - forwardOriginalToken: true
+      fromHeaders:
+        - name: X-Access-Token
+      issuer: {{ template "custom-issuer.admin" . }}
+      jwksUri: {{ template "jwksUri.admin" . }}
+  {{- end }}

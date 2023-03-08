@@ -77,36 +77,12 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{- define "issuer.officer" -}}
-{{- if .Values.keycloak.customHost }}
-{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.officer -}}
-{{- else }}
-{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.officer -}}
-{{- end }}
-{{- end -}}
-
-{{- define "issuer.citizen" -}}
-{{- if .Values.keycloak.customHost }}
-{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.citizen -}}
-{{- else }}
-{{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.citizen -}}
-{{- end }}
-{{- end -}}
-
 {{- define "issuer.admin" -}}
-{{- if .Values.keycloak.customHost }}
-{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.admin -}}
-{{- else }}
 {{- printf "%s-%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.admin -}}
-{{- end }}
 {{- end -}}
 
-{{- define "jwksUri.officer" -}}
-{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.officer .Values.keycloak.certificatesEndpoint -}}
-{{- end -}}
-
-{{- define "jwksUri.citizen" -}}
-{{- printf "%s-%s%s" (include "keycloak.urlPrefix" .) .Values.keycloak.realms.citizen .Values.keycloak.certificatesEndpoint -}}
+{{- define "custom-issuer.admin" -}}
+{{- printf "%s-%s" (include "keycloak.customUrlPrefix" .) .Values.keycloak.realms.admin -}}
 {{- end -}}
 
 {{- define "jwksUri.admin" -}}
