@@ -378,9 +378,10 @@ public class JGitServiceImpl implements JGitService {
     var files = new ArrayList<String>();
     try {
       treeWalk.enterSubtree();
-      treeWalk.setRecursive(true);
       while (treeWalk.next()) {
-        files.add(FilenameUtils.getName(treeWalk.getPathString()));
+        if (!treeWalk.isSubtree()) {
+          files.add(FilenameUtils.getName(treeWalk.getPathString()));
+        }
       }
     } catch (IOException e) {
       throw new GitCommandException(

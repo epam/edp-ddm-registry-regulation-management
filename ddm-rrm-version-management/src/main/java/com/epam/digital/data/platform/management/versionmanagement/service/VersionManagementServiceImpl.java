@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.service.FormService;
@@ -24,8 +23,12 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.model.dto.DataModelFileStatus;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
 import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
+import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
@@ -42,11 +45,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class VersionManagementServiceImpl implements VersionManagementService {
 
-  private final FormService formService;
-  private final BusinessProcessService businessProcessService;
   private final GerritService gerritService;
   private final JGitService jGitService;
-  private final GerritPropertiesConfig config;
+
+  private final FormService formService;
+  private final BusinessProcessService businessProcessService;
+  private final DataModelFileManagementService dataModelFileManagementService;
 
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
@@ -64,11 +68,6 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   public VersionInfoDto getMasterInfo() {
     var changeInfo = gerritService.getLastMergedMR();
     return versionManagementMapper.toVersionInfoDto(changeInfo);
-  }
-
-  @Override
-  public List<String> getDetailsOfHeadMaster(String path) {
-    return jGitService.getFilesInPath(config.getHeadBranch(), path);
   }
 
   @Override
@@ -124,25 +123,44 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   @Override
   public VersionChangesDto getVersionChanges(String versionCandidateId) {
     log.debug("Selecting form changes for version candidate {}", versionCandidateId);
-    var forms = formService.getChangedFormsListByVersion(versionCandidateId)
-        .stream()
-        .filter(e -> !e.getStatus().equals(FileStatus.CURRENT))
-        .map(versionManagementMapper::formInfoDtoToChangeInfo)
-        .collect(Collectors.toList());
+    var forms = getFormsChanges(versionCandidateId);
 
     log.debug("Selecting business-process changes for version candidate {}", versionCandidateId);
-    var businessProcesses = businessProcessService.getChangedProcessesByVersion(versionCandidateId)
-        .stream()
-        .filter(businessProcessResponse -> !businessProcessResponse.getStatus()
-            .equals(FileStatus.CURRENT))
-        .map(versionManagementMapper::bpInfoDtoToChangeInfo)
-        .collect(Collectors.toList());
+    var businessProcesses = getBusinessProcessesChanges(versionCandidateId);
+
+    log.debug("Selecting data-model changes for version candidate {}", versionCandidateId);
+    var dataModelChanges = getDataModelChanges(versionCandidateId);
+
     log.debug("Changed: {} forms and {} business-processes", forms.size(),
         businessProcesses.size());
     return VersionChangesDto.builder()
         .changedBusinessProcesses(businessProcesses)
         .changedForms(forms)
+        .changedDataModelFiles(dataModelChanges)
         .build();
   }
 
+  private List<EntityChangesInfoDto> getFormsChanges(String versionCandidateId) {
+    return formService.getChangedFormsListByVersion(versionCandidateId)
+        .stream()
+        .filter(dto -> !FileStatus.UNCHANGED.equals(dto.getStatus()))
+        .map(versionManagementMapper::formInfoDtoToChangeInfo)
+        .collect(Collectors.toList());
+  }
+
+  private List<EntityChangesInfoDto> getBusinessProcessesChanges(String versionCandidateId) {
+    return businessProcessService.getChangedProcessesByVersion(versionCandidateId)
+        .stream()
+        .filter(dto -> !FileStatus.UNCHANGED.equals(dto.getStatus()))
+        .map(versionManagementMapper::bpInfoDtoToChangeInfo)
+        .collect(Collectors.toList());
+  }
+
+  private List<DataModelChangesInfoDto> getDataModelChanges(String versionCandidateId) {
+    return dataModelFileManagementService.listDataModelFiles(versionCandidateId)
+        .stream()
+        .filter(dto -> !DataModelFileStatus.UNCHANGED.equals(dto.getStatus()))
+        .map(versionManagementMapper::toDataModelChangesInfoDto)
+        .collect(Collectors.toList());
+  }
 }

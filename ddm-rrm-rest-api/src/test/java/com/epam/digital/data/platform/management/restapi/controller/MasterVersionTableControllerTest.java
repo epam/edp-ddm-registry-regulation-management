@@ -30,7 +30,7 @@ import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
-import com.epam.digital.data.platform.management.service.DataModelService;
+import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.util.List;
 import lombok.SneakyThrows;
@@ -53,7 +53,7 @@ class MasterVersionTableControllerTest {
   private static final String HEAD_BRANCH = "master";
 
   @MockBean
-  DataModelService tableService;
+  ReadDataBaseTablesService tableService;
   @MockBean
   MessageResolver messageResolver;
   @MockBean

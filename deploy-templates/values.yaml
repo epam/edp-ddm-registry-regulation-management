@@ -26,6 +26,8 @@ registryRegulationManagement:
     masterRepoRefresh:
       cron: '0 */5 * ? * *'
       timezone: UTC
+  dataModel:
+    tablesFilePath: data-model/createTables.xml
 
 port: 8080
 
@@ -82,7 +84,7 @@ RoleBinding:
 
 serviceAccount:
   create: true
-  annotations: {}
+  annotations: { }
   name: registry-regulation-management
 
 vault:

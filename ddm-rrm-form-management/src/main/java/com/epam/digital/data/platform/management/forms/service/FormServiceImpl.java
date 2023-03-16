@@ -59,7 +59,7 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public List<FormInfoDto> getChangedFormsListByVersion(String versionName) {
-    return getFormListByVersion(versionName, FileStatus.CURRENT);
+    return getFormListByVersion(versionName, FileStatus.UNCHANGED);
   }
 
   @Override

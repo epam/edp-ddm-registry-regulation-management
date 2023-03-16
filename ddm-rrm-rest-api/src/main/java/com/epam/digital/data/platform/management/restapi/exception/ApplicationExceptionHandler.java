@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.restapi.exception;
 
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
+import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
@@ -39,6 +40,7 @@ import com.epam.digital.data.platform.management.users.exception.FileEncodingExc
 import com.epam.digital.data.platform.management.users.exception.FileExtensionException;
 import com.epam.digital.data.platform.management.users.exception.FileLoadProcessingException;
 import com.epam.digital.data.platform.management.users.exception.JwtParsingException;
+import com.epam.digital.data.platform.management.validation.DDMExtensionChangelogFile;
 import com.epam.digital.data.platform.management.validation.TableName;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
@@ -86,6 +88,8 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
   private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
+  private static final String DATA_MODEL_FILE_NOT_FOUND = "DATA_MODEL_FILE_NOT_FOUND";
+  private static final String INVALID_CHANGELOG = "INVALID_CHANGELOG";
 
   private final MessageResolver messageResolver;
 
@@ -285,6 +289,10 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(newDetailedResponse(HttpStatus.BAD_REQUEST.getReasonPhrase(), exception));
     }
+    if (annotation instanceof DDMExtensionChangelogFile) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+          .body(newDetailedResponse(INVALID_CHANGELOG, exception));
+    }
     log.error("Constraint violation exception");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(CONSTRAINT_VIOLATION_EXCEPTION, exception));
@@ -297,6 +305,15 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         exception.getVersionCandidate());
     return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
         .body(newDetailedResponse(ETAG_FILTERING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleDataModelFileNotFoundInVersionException(
+      DataModelFileNotFoundInVersionException exception) {
+    log.warn("Data-model file '{}' wasn't found in version '{}'", exception.getFilePath(),
+        exception.getVersionId());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(DATA_MODEL_FILE_NOT_FOUND, exception));
   }
 
   private Annotation getAnnotationFromConstraintViolationException(

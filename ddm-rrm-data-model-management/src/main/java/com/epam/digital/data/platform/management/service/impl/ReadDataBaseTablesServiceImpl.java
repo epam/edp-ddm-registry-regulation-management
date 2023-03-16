@@ -24,7 +24,7 @@ import com.epam.digital.data.platform.management.exception.TableNotFoundExceptio
 import com.epam.digital.data.platform.management.mapper.SchemaCrawlerMapper;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
-import com.epam.digital.data.platform.management.service.DataModelService;
+import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
@@ -33,13 +33,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import schemacrawler.schema.Catalog;
 
-@Component
+@Service
 @RequiredArgsConstructor
 @Slf4j
-public class DataModelServiceImpl implements DataModelService {
+public class ReadDataBaseTablesServiceImpl implements ReadDataBaseTablesService {
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final VersionContextComponentManager versionContextComponentManager;

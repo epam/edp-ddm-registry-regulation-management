@@ -3639,7 +3639,7 @@ endif::internal-generation[]
 | 
 | String 
 | 
-|  _Enum:_ NEW, CHANGED, CURRENT, DELETED, 
+|  _Enum:_ NEW, CHANGED, DELETED,
 
 |===
 
@@ -4096,7 +4096,7 @@ endif::internal-generation[]
 | 
 | String 
 | 
-|  _Enum:_ NEW, CHANGED, CURRENT, DELETED, 
+|  _Enum:_ NEW, CHANGED, DELETED,
 
 |===
 

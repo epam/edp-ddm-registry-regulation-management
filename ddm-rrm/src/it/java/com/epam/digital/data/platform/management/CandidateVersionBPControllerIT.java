@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import java.io.File;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -90,7 +91,8 @@ class CandidateVersionBPControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
 
@@ -175,6 +177,32 @@ class CandidateVersionBPControllerIT extends BaseIT {
     }
 
     @Test
+    @DisplayName("should return 200 with empty array if there are business-processes in sub-directory")
+    @SneakyThrows
+    void getBusinessProcessesByVersionId_bpInSubDirectory() {
+      // add files to "remote" repo
+      var subDirectory = new File(context.getRemoteHeadRepo(), "bpmn/sub-bpmn");
+      Assertions.assertThat(subDirectory.mkdir()).isTrue();
+      Assertions.assertThat(subDirectory).exists();
+      final var johnDoesBpContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/business-processes/GET/john-does-bp.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/sub-bpmn/john-does-bp.bpmn", johnDoesBpContent);
+
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          get("/versions/candidates/{versionCandidateId}/business-processes", versionCandidateId)
+              .accept(MediaType.APPLICATION_JSON_VALUE)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("application/json"),
+          jsonPath("$", hasSize(0))
+      );
+    }
+
+    @Test
     @DisplayName("should return 404 if version-candidate doesn't exist")
     @SneakyThrows
     void getBusinessProcessesByVersionId_versionCandidateDoesNotExist() {
@@ -189,7 +217,8 @@ class CandidateVersionBPControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType("application/json"),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
   }
@@ -263,7 +292,8 @@ class CandidateVersionBPControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
 
@@ -444,7 +474,8 @@ class CandidateVersionBPControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
 
@@ -539,7 +570,8 @@ class CandidateVersionBPControllerIT extends BaseIT {
           status().isNotFound(),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.code", is("CHANGE_NOT_FOUND")),
-          jsonPath("$.details", is(String.format("Could not get change info for %s MR", versionCandidateId)))
+          jsonPath("$.details",
+              is(String.format("Could not get change info for %s MR", versionCandidateId)))
       );
     }
   }

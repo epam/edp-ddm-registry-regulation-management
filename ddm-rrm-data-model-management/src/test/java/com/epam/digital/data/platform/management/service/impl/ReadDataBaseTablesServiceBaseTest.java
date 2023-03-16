@@ -31,7 +31,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(SpringExtension.class)
-public abstract class DataModelServiceBaseTest {
+public abstract class ReadDataBaseTablesServiceBaseTest {
 
   static final String VERSION_ID = "162";
   static final String SUBJECT_TABLE = "subject";
@@ -44,7 +44,7 @@ public abstract class DataModelServiceBaseTest {
   @Spy
   private SchemaCrawlerMapper mapper = Mappers.getMapper(SchemaCrawlerMapper.class);
   @InjectMocks
-  DataModelServiceImpl tableService;
+  ReadDataBaseTablesServiceImpl tableService;
 
   @BeforeEach
   @SneakyThrows

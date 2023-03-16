@@ -32,7 +32,7 @@ public interface FileManagementMapper {
 
   @Mapping(target = "name", source = "filePath", qualifiedByName = "pathToName")
   @Mapping(target = "path", source = "filePath")
-  @Mapping(target = "status", constant = "CURRENT")
+  @Mapping(target = "status", constant = "UNCHANGED")
   @Mapping(target = "created", source = "fileDatesDto.create")
   @Mapping(target = "updated", source = "fileDatesDto.update")
   VersionedFileInfoDto toVersionedFileInfoDto(String filePath, FileDatesDto fileDatesDto);

@@ -71,7 +71,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public List<BusinessProcessInfoDto> getChangedProcessesByVersion(String versionName) {
-    return getProcessesByVersion(versionName, FileStatus.CURRENT);
+    return getProcessesByVersion(versionName, FileStatus.UNCHANGED);
   }
 
   @Override

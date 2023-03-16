@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.model;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -33,5 +32,6 @@ public class VersionChangesDto {
 
   private List<EntityChangesInfoDto> changedForms;
   private List<EntityChangesInfoDto> changedBusinessProcesses;
+  private List<DataModelChangesInfoDto> changedDataModelFiles;
 
 }

@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management.validator;
+package com.epam.digital.data.platform.management.validation;
 
-import com.epam.digital.data.platform.management.validation.TableNameValidator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -48,6 +48,8 @@ data:
         master-repo-refresh:
           cron: {{ .Values.registryRegulationManagement.scheduled.masterRepoRefresh.cron }}
           timezone: {{ .Values.registryRegulationManagement.scheduled.masterRepoRefresh.timezone }}
+      data-model:
+        tables-file-path: {{ .Values.registryRegulationManagement.dataModel.tablesFilePath }}
 
     spring:
       registry-datasource:

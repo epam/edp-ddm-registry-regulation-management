@@ -36,7 +36,7 @@ import schemacrawler.schema.ForeignKeyColumnReference;
 import schemacrawler.schema.Table;
 
 @DisplayName("DataModelServiceImpl#list(String)")
-class DataModelServiceListTest extends DataModelServiceBaseTest {
+class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTest {
 
   @ParameterizedTest
   @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})

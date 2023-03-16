@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package com.epam.digital.data.platform.management.versionmanagement.model;
 
-import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +30,11 @@ public class EntityChangesInfoDto {
 
   private String name;
   private String title;
-  private FileStatus status;
+  private ChangedFileStatus status;
 
+  public enum ChangedFileStatus {
+    NEW,
+    CHANGED,
+    DELETED
+  }
 }
