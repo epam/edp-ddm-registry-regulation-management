@@ -135,3 +135,11 @@ logbook:
     headers:
       - x-access-token
       - cookie
+
+# Setting unknown.jul.logger lvl to WARN. This logger is used by schemacrawler that writes a lot of
+# useless logs
+logging:
+  level:
+    unknown:
+      jul:
+        logger: WARN
