@@ -18,7 +18,6 @@ package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -36,17 +35,18 @@ public class RepositoryRefreshScheduler {
       zone = "${registry-regulation-management.scheduled.version-candidate-repo-refresh.timezone}")
   public void refreshVersionCandidates() {
     log.debug("Refreshing version-candidates' repositories started");
-    var mrList = gerritService.getMRList().stream()
-        .filter(mr -> !mr.getMergeable())
-        .collect(Collectors.toList());
+    var mrList = gerritService.getMRList();
 
     for (var changeInfo : mrList) {
       try {
-        var changeId = changeInfo.getChangeId();
-        log.debug("Refreshing repository {}", changeInfo.getNumber());
+        var change = gerritService.getMRByNumber(changeInfo.getNumber());
+        if (change.getMergeable()) {
+          continue;
+        }
+        var changeId = change.getChangeId();
+        log.debug("Refreshing repository {}", change.getNumber());
         gerritService.rebase(changeId);
-        var changeInfoDto = gerritService.getChangeInfo(changeId);
-        jGitService.fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
+        jGitService.fetch(change.getNumber(), change.getRefs());
       } catch (Exception e) {
         log.warn("Error during repository refresh: {}", e.getMessage(), e);
       }

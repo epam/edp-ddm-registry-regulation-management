@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.gerritintegration.mapper;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.FileInfo;
@@ -46,6 +47,9 @@ public interface GerritMapper {
   @Mapping(target = "submitted", qualifiedByName = "toLocalDateTime")
   @Mapping(target = "owner", source = "owner.username")
   ChangeInfoDto toChangeInfoDto(ChangeInfo changeInfo);
+
+  @Mapping(target = "number", source = "_number")
+  ChangeInfoShortDto toChangeInfoShortDto(ChangeInfo changeInfo);
 
   default Map<String, Integer> toLabelMap(Map<String, LabelInfo> labels) {
     if (labels == null) {

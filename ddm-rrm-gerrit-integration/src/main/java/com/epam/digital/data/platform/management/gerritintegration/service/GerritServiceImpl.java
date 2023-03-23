@@ -22,6 +22,7 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;
 import com.epam.digital.data.platform.management.gerritintegration.mapper.GerritMapper;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.RobotCommentInputDto;
@@ -41,7 +42,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +55,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class GerritServiceImpl implements GerritService  {
+public class GerritServiceImpl implements GerritService {
+
   public static final String CODE_REVIEW_LABEL = "Code-Review";
   public static final short CODE_REVIEW_VALUE = 2;
   public static final String VERIFIED_LABEL = "Verified";
@@ -71,20 +72,13 @@ public class GerritServiceImpl implements GerritService  {
   private GerritApiImpl gerritApi;
 
   @Override
-  public List<ChangeInfoDto> getMRList() {
-    String query = String.format("project:%s+status:open+owner:%s",
+  public List<ChangeInfoShortDto> getMRList() {
+    var query = String.format("project:%s+status:open+owner:%s",
         gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
-    Changes changes = gerritApi.changes();
-    List<ChangeInfoDto> changeInfos = new ArrayList<>();
     try {
-      for (var change : changes.query(query).get()) {
-        var changeApi = changes.id(change.changeId);
-        ChangeInfo changeInfo = changeApi.get();
-        ChangeInfoDto changeInfoDto = gerritMapper.toChangeInfoDto(changeInfo);
-        changeInfoDto.setMergeable(changeApi.current().mergeable().mergeable);
-        changeInfos.add(changeInfoDto);
-      }
-      return changeInfos;
+      return gerritApi.changes().query(query).get().stream()
+          .map(gerritMapper::toChangeInfoShortDto)
+          .collect(Collectors.toList());
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
         throw new GerritChangeNotFoundException("Could not found candidates", ex);
@@ -156,10 +150,14 @@ public class GerritServiceImpl implements GerritService  {
       ChangeInfo changeInfo = changeApi.get();
       ChangeInfoDto changeInfoDto = gerritMapper.toChangeInfoDto(changeInfo);
       changeInfoDto.setMergeable(changeApi.current().mergeable().mergeable);
+      String currentRevision = changeInfo.currentRevision;
+      RevisionInfo revisionInfo = changeInfo.revisions.get(currentRevision);
+      changeInfoDto.setRefs(revisionInfo.ref);
       return changeInfoDto;
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with number " + number, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with number " + number,
+            ex);
       } else {
         throw new GerritCommunicationException(
             "Something went wrong wile getting candidate with number " + number, ex);
@@ -181,7 +179,8 @@ public class GerritServiceImpl implements GerritService  {
       return changeInfoDto;
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
             "Something went wrong wile getting candidate with id " + changeId, ex);
@@ -219,10 +218,12 @@ public class GerritServiceImpl implements GerritService  {
       }
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
-            "Something went wrong wile getting file content from candidate with id " + changeId, ex);
+            "Something went wrong wile getting file content from candidate with id " + changeId,
+            ex);
       }
     } catch (RestApiException ex) {
       throw new GerritCommunicationException(
@@ -254,17 +255,20 @@ public class GerritServiceImpl implements GerritService  {
   }
 
   @Override
-  public void deleteChanges(String changeId)  {
+  public void deleteChanges(String changeId) {
     try {
       gerritApi.changes().id(changeId).delete();
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
-        throw new GerritCommunicationException("Something went wrong wile deleting candidate with id " + changeId, ex);
+        throw new GerritCommunicationException(
+            "Something went wrong wile deleting candidate with id " + changeId, ex);
       }
     } catch (RestApiException ex) {
-      throw new GerritCommunicationException("Something went wrong wile deleting candidate with id " + changeId, ex);
+      throw new GerritCommunicationException(
+          "Something went wrong wile deleting candidate with id " + changeId, ex);
     }
   }
 
@@ -288,11 +292,14 @@ public class GerritServiceImpl implements GerritService  {
       return String.valueOf(changeInfo._number);
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not create change with name " + createDto.getName(), ex);
+        throw new GerritChangeNotFoundException(
+            "Could not create change with name " + createDto.getName(), ex);
       }
-      throw new GerritCommunicationException("Something went wrong while creating change with name " + createDto.getName(), ex);
+      throw new GerritCommunicationException(
+          "Something went wrong while creating change with name " + createDto.getName(), ex);
     } catch (RestApiException ex) {
-      throw new GerritCommunicationException("Something went wrong while creating change with name " + createDto.getName(), ex);
+      throw new GerritCommunicationException(
+          "Something went wrong while creating change with name " + createDto.getName(), ex);
     }
 
   }
@@ -309,12 +316,15 @@ public class GerritServiceImpl implements GerritService  {
       return review.ready;
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
-        throw new GerritCommunicationException("Something went wrong wile reviewing candidate with id " + changeId, ex);
+        throw new GerritCommunicationException(
+            "Something went wrong wile reviewing candidate with id " + changeId, ex);
       }
     } catch (RestApiException ex) {
-      throw new GerritCommunicationException("Something went wrong wile reviewing candidate with id " + changeId, ex);
+      throw new GerritCommunicationException(
+          "Something went wrong wile reviewing candidate with id " + changeId, ex);
     }
   }
 
@@ -324,7 +334,8 @@ public class GerritServiceImpl implements GerritService  {
       gerritApi.changes().id(changeId).abandon();
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
             "Something went wrong wile declining candidate with id " + changeId, ex);
@@ -375,10 +386,12 @@ public class GerritServiceImpl implements GerritService  {
       gerritApi.changes().id(changeId).current().review(reviewInput);
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
-            "Something went wrong while creating robot comment on candidate with id " + changeId, ex);
+            "Something went wrong while creating robot comment on candidate with id " + changeId,
+            ex);
       }
     } catch (RestApiException ex) {
       throw new GerritCommunicationException(
@@ -392,7 +405,8 @@ public class GerritServiceImpl implements GerritService  {
       return gerritApi.changes().id(changeId).topic();
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
             "Something went wrong while getting topic from candidate with id " + changeId, ex);
@@ -409,7 +423,8 @@ public class GerritServiceImpl implements GerritService  {
       gerritApi.changes().id(changeId).topic(text);
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId, ex);
+        throw new GerritChangeNotFoundException("Could not found candidate with id " + changeId,
+            ex);
       } else {
         throw new GerritCommunicationException(
             "Something went wrong while setting topic to change with id " + changeId, ex);

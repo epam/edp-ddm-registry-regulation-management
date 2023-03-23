@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.versionmanagement.mapper;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.groups.model.GroupChangesDetails;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
@@ -27,6 +28,7 @@ import com.epam.digital.data.platform.management.versionmanagement.model.DataMod
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto.ChangedFileStatus;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -48,6 +50,9 @@ public interface VersionManagementMapper {
 
   @ValueMapping(source = "UNCHANGED", target = MappingConstants.NULL)
   ChangedFileStatus toChangedFileStatus(FileStatus status);
+
+  @Mapping(target = "description", source = "topic")
+  VersionInfoShortDto toVersionInfoDto(ChangeInfoShortDto changeInfoDto);
 
   @Mapping(target = "description", source = "topic")
   VersionInfoDto toVersionInfoDto(ChangeInfoDto changeInfoDto);

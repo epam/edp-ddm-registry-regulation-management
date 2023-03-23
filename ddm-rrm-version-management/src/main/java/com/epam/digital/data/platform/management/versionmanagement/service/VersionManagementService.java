@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.versionmanagement.service;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.validation.VersionCandidate;
 import java.util.List;
@@ -36,7 +37,7 @@ public interface VersionManagementService {
    *
    * @return {@link List} of {@link VersionInfoDto}
    */
-  List<VersionInfoDto> getVersionsList();
+  List<VersionInfoShortDto> getVersionsList();
 
 
   /**

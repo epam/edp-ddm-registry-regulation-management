@@ -18,9 +18,11 @@ package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,42 +39,19 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
   @Test
   @SneakyThrows
   void getVersionsListTest() {
-    var changeInfo = new ChangeInfoDto();
-    changeInfo.setId("changeInfoId");
+    var changeInfo = new ChangeInfoShortDto();
     changeInfo.setNumber("1");
-    changeInfo.setChangeId("changeInfoChangeId");
-    changeInfo.setBranch("changeInfoBranch");
-    changeInfo.setCreated(
-        LocalDateTime.of(2022, 8, 10, 14, 15));
     changeInfo.setSubject("changeInfoSubject");
     changeInfo.setTopic("changeInfoTopic");
-    changeInfo.setProject("changeInfoProject");
-    changeInfo.setSubmitted(
-        LocalDateTime.of(2022, 8, 10, 14, 25));
-    changeInfo.setUpdated(
-        LocalDateTime.of(2022, 8, 10, 14, 35));
-    changeInfo.setOwner("changeInfoOwnerUsername");
-    changeInfo.setMergeable(true);
-    changeInfo.setLabels(Map.of("label1", 1, "label2", -1));
 
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
 
     var actualVersionsList = managementService.getVersionsList();
 
-    var expectedChangeInfoDto = VersionInfoDto.builder()
-        .id("changeInfoId")
+    var expectedChangeInfoDto = VersionInfoShortDto.builder()
         .number(1)
-        .changeId("changeInfoChangeId")
-        .branch("changeInfoBranch")
-        .created(LocalDateTime.of(2022, 8, 10, 14, 15))
         .subject("changeInfoSubject")
         .description("changeInfoTopic")
-        .project("changeInfoProject")
-        .submitted(LocalDateTime.of(2022, 8, 10, 14, 25))
-        .updated(LocalDateTime.of(2022, 8, 10, 14, 35))
-        .owner("changeInfoOwnerUsername")
-        .mergeable(true)
-        .labels(Map.of("label1", 1, "label2", -1))
         .build();
     Assertions.assertThat(actualVersionsList)
         .hasSize(1)

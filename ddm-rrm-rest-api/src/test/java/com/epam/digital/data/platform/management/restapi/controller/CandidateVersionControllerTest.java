@@ -38,6 +38,7 @@ import com.epam.digital.data.platform.management.versionmanagement.model.EntityC
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto.ChangedFileStatus;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
@@ -76,7 +77,7 @@ class CandidateVersionControllerTest {
   @DisplayName("GET /versions/candidates should return 200 with all versions")
   @SneakyThrows
   void getVersionListTest() {
-    final var expectedChangeInfoResponse = VersionInfoDto.builder()
+    final var expectedChangeInfoResponse = VersionInfoShortDto.builder()
         .number(1)
         .subject("JohnDoe's version candidate")
         .description("Version candidate to change form")

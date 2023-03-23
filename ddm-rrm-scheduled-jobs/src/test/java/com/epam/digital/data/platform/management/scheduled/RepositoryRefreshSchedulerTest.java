@@ -20,6 +20,7 @@ import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
 import java.time.LocalDateTime;
@@ -49,7 +50,10 @@ public class RepositoryRefreshSchedulerTest {
   @BeforeEach
   @SneakyThrows
   void mockMethods() {
-    ChangeInfoDto changeInfo = getChangeInfo();
+    var changeInfo = new ChangeInfoShortDto();
+    changeInfo.setNumber("1");
+    changeInfo.setSubject("changeInfoSubject");
+    changeInfo.setTopic("changeInfoTopic");
     Mockito.when(gerritService.getMRList()).thenReturn(List.of(changeInfo));
   }
 
@@ -58,7 +62,7 @@ public class RepositoryRefreshSchedulerTest {
   void refreshVersionCandidatesTest() {
     ChangeInfoDto changeInfoDto = getChangeInfo();
 
-    Mockito.when(gerritService.getChangeInfo(changeInfoDto.getChangeId()))
+    Mockito.when(gerritService.getMRByNumber(changeInfoDto.getNumber()))
         .thenReturn(changeInfoDto);
 
     repositoryRefreshScheduler.refreshVersionCandidates();

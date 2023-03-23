@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.scheduled;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
-import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import java.nio.file.Files;
@@ -50,7 +50,7 @@ public class CleanObsoleteVersionContextScheduler {
         directories
             .filter(path -> !path.endsWith(gerritPropertiesConfig.getHeadBranch()))
             .filter(path -> openedMrs.stream()
-                .map(ChangeInfoDto::getNumber)
+                .map(ChangeInfoShortDto::getNumber)
                 .noneMatch(path::endsWith))
             .map(path -> path.getFileName().toString())
             .forEach(repo -> {

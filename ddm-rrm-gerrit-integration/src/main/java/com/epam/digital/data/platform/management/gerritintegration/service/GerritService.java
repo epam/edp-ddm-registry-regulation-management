@@ -19,6 +19,7 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.FileInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.RobotCommentInputDto;
@@ -40,7 +41,7 @@ public interface GerritService {
    * @throws GerritChangeNotFoundException in case when gerrit returns 404 http status
    * @throws GerritCommunicationException  in case of rest http errors or gerrit issues
    */
-  List<ChangeInfoDto> getMRList();
+  List<ChangeInfoShortDto> getMRList();
 
   /**
    * Returns last merged change

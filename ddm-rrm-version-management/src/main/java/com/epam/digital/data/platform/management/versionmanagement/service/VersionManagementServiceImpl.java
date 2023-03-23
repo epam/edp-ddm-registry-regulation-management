@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.service.FormService;
@@ -33,6 +32,7 @@ import com.epam.digital.data.platform.management.versionmanagement.model.DataMod
 import com.epam.digital.data.platform.management.versionmanagement.model.EntityChangesInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionChangesDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +61,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final VersionManagementMapper versionManagementMapper;
 
   @Override
-  public List<VersionInfoDto> getVersionsList() {
+  public List<VersionInfoShortDto> getVersionsList() {
     return gerritService.getMRList().stream()
         .map(versionManagementMapper::toVersionInfoDto)
         .collect(Collectors.toList());

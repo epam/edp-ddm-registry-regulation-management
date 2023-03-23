@@ -23,9 +23,11 @@ import com.epam.digital.data.platform.management.gerritintegration.model.ChangeI
 import com.google.gerrit.extensions.api.changes.ChangeApi;
 import com.google.gerrit.extensions.common.ChangeInfo;
 import com.google.gerrit.extensions.common.MergeableInfo;
+import com.google.gerrit.extensions.common.RevisionInfo;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
@@ -48,7 +50,7 @@ public class GerritServiceMrByNumberTest extends AbstractGerritServiceTest {
     Mockito.when(changes.query(eq(testVersion))).thenReturn(request);
     Mockito.when(request.get()).thenReturn(new ArrayList<>());
 
-    Assertions.assertThatCode(()-> gerritService.getMRByNumber(versionNumber))
+    Assertions.assertThatCode(() -> gerritService.getMRByNumber(versionNumber))
         .isInstanceOf(GerritChangeNotFoundException.class);
   }
 
@@ -58,10 +60,18 @@ public class GerritServiceMrByNumberTest extends AbstractGerritServiceTest {
     var changeId = RandomString.make();
     var versionNumber = "10";
     var testVersion = "project:+" + versionNumber;
+    var refs = RandomString.make();
     var info = new ChangeInfo();
     info._number = 10;
     info.mergeable = true;
     changeInfo.changeId = changeId;
+    var revisionInfo = new RevisionInfo();
+    revisionInfo.ref = refs;
+    HashMap<String, RevisionInfo> revisionsMap = new HashMap<>();
+    info.currentRevision = RandomString.make();
+    revisionsMap.put(info.currentRevision, revisionInfo);
+    info.revisions = revisionsMap;
+    info.changeId = changeId;
 
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("");
     Mockito.when(changes.query(eq(testVersion))).thenReturn(request);

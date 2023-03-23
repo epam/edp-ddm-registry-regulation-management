@@ -19,7 +19,7 @@ package com.epam.digital.data.platform.management.scheduled;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
-import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
+import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritServiceImpl;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitServiceImpl;
@@ -95,7 +95,7 @@ public class CleanObsoleteVersionContextSchedulerTest {
   void cleanObsoleteVersionContexts_noObsoleteRepos() {
     var repo = RandomString.make();
     Files.createDirectory(Path.of(tempDir.getAbsolutePath(), repo));
-    var changeInfo = new ChangeInfoDto();
+    var changeInfo = new ChangeInfoShortDto();
     changeInfo.setNumber(repo);
     var mrList = List.of(changeInfo);
     Mockito.when(gerritService.getMRList()).thenReturn(mrList);
