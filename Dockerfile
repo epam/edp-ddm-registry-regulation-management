@@ -1,10 +1,10 @@
-FROM openjdk:11.0.16-jre-slim AS builder
+FROM eclipse-temurin:11-jre AS builder
 WORKDIR /application
 ARG JAR_FILE=ddm-rrm/target/ddm-rrm-*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
-FROM openjdk:11.0.16-jre-slim
+FROM eclipse-temurin:11-jre
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     git \
