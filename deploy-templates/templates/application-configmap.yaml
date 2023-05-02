@@ -55,9 +55,9 @@ data:
 
     spring:
       registry-datasource:
-        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry
+        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/registry?ApplicationName={{ .Chart.Name }}
       public-datasource:
-        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public
+        jdbc-url: jdbc:postgresql://{{.Values.db.url}}:{{.Values.db.port}}/public?ApplicationName={{ .Chart.Name }}
       cache:
         cache-names: {{.Values.cache.names}}
         caffeine:
