@@ -11,7 +11,7 @@ RUN addgroup --gid ${USER_UID} ${USER_NAME} \
     && adduser --disabled-password --uid ${USER_UID} --ingroup ${USER_NAME} ${USER_NAME}
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    git=latest \
+    git \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /application
 COPY --from=builder application/dependencies/ ./
