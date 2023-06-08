@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.forms.service;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
@@ -98,6 +99,13 @@ public class FormServiceImpl implements FormService {
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     if (repo.isFileExists(formPath)) {
       String oldContent = repo.readFile(formPath);
+      //ignore update if difference only in modified date
+      if (StringsComparisonUtils.compareIgnoringSubstring(
+          oldContent, content,
+          "\"modified\":",
+          "Z\"")) {
+        return;
+      }
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {

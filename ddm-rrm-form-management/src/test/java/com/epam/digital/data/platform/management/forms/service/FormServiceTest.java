@@ -59,6 +59,7 @@ class FormServiceTest {
   @Captor
   private ArgumentCaptor<String> captor;
   private final String FORM_CONTENT = TestUtils.getContent("form-sample.json");
+  private final String FORM_CONTENT_UNICODE = TestUtils.getContent("form-sample-unicode.json");
 
   @Mock
   private VersionContextComponentManager versionContextComponentManager;
@@ -78,7 +79,8 @@ class FormServiceTest {
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
+    Mockito.when(
+            versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
         .thenReturn(repository);
     Mockito.when(versionContextComponentManager.getComponent(gerritPropertiesConfig.getHeadBranch(),
         VersionedFileRepository.class)).thenReturn(masterRepository);
@@ -194,10 +196,15 @@ class FormServiceTest {
   void updateFormTest() {
     Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(true);
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
-    formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
+
+    String newFormContent = FORM_CONTENT.replaceFirst(
+        "\"title\": \"Update physical factors\"",
+        "\"title\": \"Update physical factors updated\"");
+
+    formService.updateForm(newFormContent, "form", VERSION_ID);
     Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture());
     var response = captor.getValue();
-    JSONAssert.assertEquals(FORM_CONTENT, response, new CustomComparator(JSONCompareMode.LENIENT,
+    JSONAssert.assertEquals(newFormContent, response, new CustomComparator(JSONCompareMode.LENIENT,
         new Customization("modified", (o1, o2) -> true),
         new Customization("created", (o1, o2) -> true)));
   }
@@ -209,6 +216,16 @@ class FormServiceTest {
         .doesNotThrowAnyException();
 
     Mockito.verify(repository).deleteFile("forms/form.json");
+  }
+
+  @Test
+  @SneakyThrows
+  void updateFormWhenOnlyModifiedDateChangedTest() {
+    Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(true);
+    Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT_UNICODE);
+
+    formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
+    Mockito.verify(repository, never()).writeFile(eq("forms/form.json"), captor.capture());
   }
 
   @Test

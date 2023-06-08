@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:rrm="http://registry-regulation-management" exporter="Camunda Modeler" exporterVersion="4.6.0" id="Definitions_1ifek2y" rrm:created="2022-10-03T14:41:20.128Z" rrm:modified="2022-10-03T14:41:20.128Z" targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_00mzcs7" name="Really test name" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1" name="Поле ім'я початку"/>
+    <bpmn:startEvent id="StartEvent_1" name="Поле ім\u0027я початку"/>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_00mzcs7">

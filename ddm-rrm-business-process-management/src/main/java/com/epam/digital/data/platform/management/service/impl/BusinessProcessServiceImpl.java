@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
@@ -110,6 +111,13 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     if (repo.isFileExists(processPath)) {
       String oldContent = repo.readFile(processPath);
+      //ignore update if difference only in modified date
+      if (StringsComparisonUtils.compareIgnoringSubstring(
+          oldContent, content,
+          "rrm:modified=\"",
+          "Z\"")) {
+        return;
+      }
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
@@ -159,8 +167,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     }
   }
 
-  private List<BusinessProcessInfoDto> getProcessesByVersion(
-      String versionName, FileStatus skippedStatus) {
+  private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
+                                                             FileStatus skippedStatus) {
     List<VersionedFileInfoDto> fileList;
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
@@ -213,8 +221,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     return fileDatesDto;
   }
 
-  private String addDatesToContent(
-      String processContent, LocalDateTime created, LocalDateTime modified) {
+  private String addDatesToContent(String processContent, LocalDateTime created,
+                                   LocalDateTime modified) {
     Document doc;
     try {
       doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));

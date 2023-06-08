@@ -60,6 +60,7 @@ public class BusinessProcessServiceTest {
 
   private static final String VERSION_ID = "version";
   private static final String PROCESS_CONTENT = getContent("bp-sample.bpmn");
+  private static final String PROCESS_CONTENT_UNICODE = getContent("bp-sample-unicode.bpmn");
   private static final String BPMN_FILE_EXTENSION = "bpmn";
 
   @Captor private ArgumentCaptor<String> captor;
@@ -288,17 +289,23 @@ public class BusinessProcessServiceTest {
         .thenReturn(true);
     Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
         .thenReturn(PROCESS_CONTENT);
+
+    String contentForUpdate = PROCESS_CONTENT.replaceFirst(
+        "<dc:Bounds x=\"179\" y=\"79\" width=\"36\" height=\"36\" />",
+        "<dc:Bounds x=\"179\" y=\"791\" width=\"36\" height=\"36\" />");
+
     Assertions.assertThatCode(
             () ->
                 businessProcessService.updateProcess(
-                    PROCESS_CONTENT, "business-process", VERSION_ID))
+                    contentForUpdate, "business-process",
+                VERSION_ID))
         .doesNotThrowAnyException();
 
     Mockito.verify(repository)
         .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
     String response = captor.getValue();
     Diff documentDiff =
-        DiffBuilder.compare(PROCESS_CONTENT)
+        DiffBuilder.compare(contentForUpdate)
             .withTest(response)
             .withAttributeFilter(
                 attr ->
@@ -324,6 +331,23 @@ public class BusinessProcessServiceTest {
         StandardCharsets.UTF_8);
   }
 
+  @Test
+  @SneakyThrows
+  void updateBusinessProcessWhenOnlyModifiedDateWasChangedTest() {
+
+    Mockito.when(repository.isFileExists("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(true);
+    Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
+        .thenReturn(PROCESS_CONTENT_UNICODE);
+
+    Assertions.assertThat(PROCESS_CONTENT.indexOf(
+        "rrm:modified=\"2022-10-03T14:41:20.128Z\"") > 0).isTrue();
+
+    businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID);
+    Mockito.verify(repository, never())
+        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+
+  }
   @Test
   @SneakyThrows
   void rollbackProcessTest() {
