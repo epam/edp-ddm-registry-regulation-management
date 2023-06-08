@@ -22,7 +22,7 @@ spring:
     username: postgres
     password: password
   cache:
-    cache-names: dates
+    cache-names: dates,conflicts,latestRebase
     caffeine:
       spec: expireAfterAccess=1d
 

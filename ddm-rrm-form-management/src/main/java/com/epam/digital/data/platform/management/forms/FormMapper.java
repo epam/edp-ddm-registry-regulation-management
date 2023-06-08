@@ -18,7 +18,7 @@ public interface FormMapper {
   @Mapping(target = "created", source = "datesDto.create", defaultExpression ="java(fileInfoDto.getCreated())")
   @Mapping(target = "updated", source = "datesDto.update", defaultExpression ="java(fileInfoDto.getUpdated())")
   @Mapping(target = "title", source = "formContent", qualifiedByName = "getTitleFromFormContent")
-  FormInfoDto toForm(VersionedFileInfoDto fileInfoDto, FileDatesDto datesDto, String formContent);
+  FormInfoDto toForm(VersionedFileInfoDto fileInfoDto, FileDatesDto datesDto, String formContent, boolean conflicted);
 
   @Named("getTitleFromFormContent")
   default String getTitleFromFormContent(String formContent) {

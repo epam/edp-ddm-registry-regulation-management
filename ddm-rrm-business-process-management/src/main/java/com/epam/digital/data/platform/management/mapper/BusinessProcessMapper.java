@@ -23,15 +23,22 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-/**
- * Map from VersionedFileInfoDto and FileDatesDto to BusinessProcessInfoDto
- */
+/** Map from VersionedFileInfoDto and FileDatesDto to BusinessProcessInfoDto */
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
 public interface BusinessProcessMapper {
 
-  @Mapping(target = "created", source = "datesDto.create", defaultExpression ="java(fileInfoDto.getCreated())")
-  @Mapping(target = "updated", source = "datesDto.update", defaultExpression ="java(fileInfoDto.getUpdated())")
+  @Mapping(
+      target = "created",
+      source = "datesDto.create",
+      defaultExpression = "java(fileInfoDto.getCreated())")
+  @Mapping(
+      target = "updated",
+      source = "datesDto.update",
+      defaultExpression = "java(fileInfoDto.getUpdated())")
   @Mapping(target = "title", source = "processTitle")
-  BusinessProcessInfoDto toBusinessProcess(VersionedFileInfoDto fileInfoDto, FileDatesDto datesDto, String processTitle);
-
+  BusinessProcessInfoDto toBusinessProcess(
+      VersionedFileInfoDto fileInfoDto,
+      FileDatesDto datesDto,
+      String processTitle,
+      boolean conflicted);
 }

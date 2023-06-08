@@ -16,14 +16,6 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
-import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
-import com.epam.digital.data.platform.management.forms.service.FormService;
-import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import com.epam.digital.data.platform.management.groups.service.GroupService;
-import com.epam.digital.data.platform.management.service.BusinessProcessService;
-import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
-import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,6 +23,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
+import com.epam.digital.data.platform.management.core.service.CacheService;
+import com.epam.digital.data.platform.management.forms.service.FormService;
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import com.epam.digital.data.platform.management.groups.service.GroupService;
+import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
+import com.epam.digital.data.platform.management.versionmanagement.mapper.VersionManagementMapper;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
@@ -58,4 +60,6 @@ public abstract class VersionManagementServiceBaseTest {
 
   @MockBean
   GroupService groupService;
+  @MockBean
+  CacheService cacheService;
 }

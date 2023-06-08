@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
@@ -34,6 +35,7 @@ import com.epam.digital.data.platform.management.versionmanagement.model.Version
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -55,6 +57,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final BusinessProcessService businessProcessService;
   private final DataModelFileManagementService dataModelFileManagementService;
   private final GroupService groupService;
+  private final CacheService cacheService;
 
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
@@ -71,7 +74,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   @Nullable
   public VersionInfoDto getMasterInfo() {
     var changeInfo = gerritService.getLastMergedMR();
-    return versionManagementMapper.toVersionInfoDto(changeInfo);
+    return versionManagementMapper.toVersionInfoDto(changeInfo, null);
   }
 
   @Override
@@ -98,12 +101,19 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     log.debug("Fetching {} version candidate on remote ref", versionName);
     var changeInfoDto = gerritService.getChangeInfo(mr.getChangeId());
     jGitService.fetch(versionName, changeInfoDto.getRefs());
+
+    if (!changeInfoDto.getMergeable()) {
+      cacheService.updateConflictsCache(versionName, jGitService.getConflicts(versionName));
+    } else {
+      cacheService.updateConflictsCache(versionName, null);
+    }
+
+    cacheService.updateLatestRebaseCache(versionName, LocalDateTime.now());
   }
 
   @Override
   public List<VersionedFileInfoDto> getVersionFileList(String versionName) {
-    return gerritService.getListOfChangesInMR(versionName).entrySet()
-        .stream()
+    return gerritService.getListOfChangesInMR(versionName).entrySet().stream()
         .map(file -> versionManagementMapper.toVersionedFileInfoDto(file.getKey(), file.getValue()))
         .collect(Collectors.toList());
   }
@@ -121,7 +131,9 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     if (Objects.isNull(e)) {
       throw new GerritChangeNotFoundException("Could not find candidate with id " + versionName);
     }
-    return versionManagementMapper.toVersionInfoDto(e);
+
+    return versionManagementMapper.toVersionInfoDto(
+        e, cacheService.getLatestRebaseCache(versionName));
   }
 
   @Override
@@ -135,10 +147,11 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     log.debug("Selecting data-model changes for version candidate {}", versionCandidateId);
     var dataModelChanges = getDataModelChanges(versionCandidateId);
 
-    log.debug("Changed: {} forms and {} business-processes", forms.size(),
-        businessProcesses.size());
-    var groups = versionManagementMapper.groupingToChangeInfo(
-        groupService.getChangesByVersion(versionCandidateId));
+    log.debug(
+        "Changed: {} forms and {} business-processes", forms.size(), businessProcesses.size());
+    var groups =
+        versionManagementMapper.groupingToChangeInfo(
+            groupService.getChangesByVersion(versionCandidateId));
 
     return VersionChangesDto.builder()
         .changedBusinessProcesses(businessProcesses)
@@ -149,24 +162,21 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   }
 
   private List<EntityChangesInfoDto> getFormsChanges(String versionCandidateId) {
-    return formService.getChangedFormsListByVersion(versionCandidateId)
-        .stream()
+    return formService.getChangedFormsListByVersion(versionCandidateId).stream()
         .filter(dto -> !FileStatus.UNCHANGED.equals(dto.getStatus()))
         .map(versionManagementMapper::formInfoDtoToChangeInfo)
         .collect(Collectors.toList());
   }
 
   private List<EntityChangesInfoDto> getBusinessProcessesChanges(String versionCandidateId) {
-    return businessProcessService.getChangedProcessesByVersion(versionCandidateId)
-        .stream()
+    return businessProcessService.getChangedProcessesByVersion(versionCandidateId).stream()
         .filter(dto -> !FileStatus.UNCHANGED.equals(dto.getStatus()))
         .map(versionManagementMapper::bpInfoDtoToChangeInfo)
         .collect(Collectors.toList());
   }
 
   private List<DataModelChangesInfoDto> getDataModelChanges(String versionCandidateId) {
-    return dataModelFileManagementService.listDataModelFiles(versionCandidateId)
-        .stream()
+    return dataModelFileManagementService.listDataModelFiles(versionCandidateId).stream()
         .filter(dto -> !DataModelFileStatus.UNCHANGED.equals(dto.getStatus()))
         .map(versionManagementMapper::toDataModelChangesInfoDto)
         .collect(Collectors.toList());

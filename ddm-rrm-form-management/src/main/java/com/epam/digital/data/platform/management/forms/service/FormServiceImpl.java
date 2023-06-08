@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.forms.service;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -34,8 +35,12 @@ import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -49,6 +54,7 @@ public class FormServiceImpl implements FormService {
   private final VersionContextComponentManager versionContextComponentManager;
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  private final CacheService cacheService;
 
   private final FormMapper formMapper;
 
@@ -65,8 +71,8 @@ public class FormServiceImpl implements FormService {
   @Override
   public void createForm(String formName, String content, String versionName) {
     var time = LocalDateTime.now();
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formPath = getFormPath(formName);
     if (repo.isFileExists(formPath)) {
       throw new FormAlreadyExistsException(
@@ -78,8 +84,8 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public String getFormContent(String formName, String versionName) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formContent = repo.readFile(getFormPath(formName));
     if (formContent == null) {
       throw new FormNotFoundException("Form " + formName + " not found", formName);
@@ -91,17 +97,20 @@ public class FormServiceImpl implements FormService {
   public void updateForm(String content, String formName, String versionName) {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
     if (repo.isFileExists(formPath)) {
       String oldContent = repo.readFile(formPath);
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
-      fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
-          .filter(fileResponse -> fileResponse.getName().equals(formName))
-          .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
+      fileDatesDto.setCreate(
+          repo.getFileList(DIRECTORY_PATH).stream()
+              .filter(fileResponse -> fileResponse.getName().equals(formName))
+              .findFirst()
+              .map(VersionedFileInfoDto::getCreated)
+              .orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(formPath, content);
@@ -109,23 +118,25 @@ public class FormServiceImpl implements FormService {
 
   @Override
   public void deleteForm(String formName, String versionName) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     repo.deleteFile(getFormPath(formName));
   }
 
   private String getFormPath(String formName) {
-    return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(formName),
-        JSON_FILE_EXTENSION);
+    return String.format(
+        "%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(formName), JSON_FILE_EXTENSION);
   }
 
   private List<FormInfoDto> getFormListByVersion(String versionName, FileStatus skippedStatus) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
-    var masterRepo = versionContextComponentManager.getComponent(
-        gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
+    var masterRepo =
+        versionContextComponentManager.getComponent(
+            gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class);
     List<VersionedFileInfoDto> fileList = repo.getFileList(DIRECTORY_PATH);
     List<FormInfoDto> forms = new ArrayList<>();
+    List<String> conflicts = cacheService.getConflictsCache(versionName);
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
@@ -137,7 +148,12 @@ public class FormServiceImpl implements FormService {
         formContent = repo.readFile(getFormPath(versionedFileInfoDto.getName()));
       }
       FileDatesDto fileDatesDto = getDatesFromContent(formContent);
-      forms.add(formMapper.toForm(versionedFileInfoDto, fileDatesDto, formContent));
+      forms.add(
+          formMapper.toForm(
+              versionedFileInfoDto,
+              fileDatesDto,
+              formContent,
+              conflicts.contains(versionedFileInfoDto.getPath())));
     }
     return forms;
   }
@@ -152,10 +168,7 @@ public class FormServiceImpl implements FormService {
     if (form.has(FORM_MODIFIED_FIELD)) {
       update = parseDate(form.get(FORM_MODIFIED_FIELD));
     }
-    return FileDatesDto.builder()
-        .create(create)
-        .update(update)
-        .build();
+    return FileDatesDto.builder().create(create).update(update).build();
   }
 
   private String addDatesToContent(String content, LocalDateTime created, LocalDateTime modified) {
@@ -166,7 +179,8 @@ public class FormServiceImpl implements FormService {
   }
 
   private LocalDateTime parseDate(JsonElement dateElement) {
-    return dateElement.isJsonNull() ? null
+    return dateElement.isJsonNull()
+        ? null
         : LocalDateTime.parse(dateElement.getAsString(), JacksonConfig.DATE_TIME_FORMATTER);
   }
 }

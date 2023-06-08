@@ -26,4 +26,5 @@ import lombok.Setter;
 public class GroupChangesDetails {
   private String name;
   private FileStatus status;
+  private boolean conflicted;
 }

@@ -28,6 +28,7 @@ public class DataModelFileDto {
   private final String fileName;
   private final DataModelFileStatus status;
   private final DataModelFileType type;
+  private boolean conflicted;
 
 }
 

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -67,6 +68,8 @@ class FormServiceTest {
   private VersionedFileRepository masterRepository;
   @Mock
   private GerritPropertiesConfig gerritPropertiesConfig;
+  @Mock
+  private CacheService cacheService;
   @Spy
   private FormMapper formMapper = Mappers.getMapper(FormMapper.class);
   @InjectMocks
@@ -91,13 +94,14 @@ class FormServiceTest {
     var deletedForm = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm, deletedForm));
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
+    Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("forms/form.json"));
 
     var resultList = formService.getFormListByVersion(VERSION_ID);
 
     var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
-        .title("Update physical factors").build();
+        .title("Update physical factors").conflicted(true).build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 

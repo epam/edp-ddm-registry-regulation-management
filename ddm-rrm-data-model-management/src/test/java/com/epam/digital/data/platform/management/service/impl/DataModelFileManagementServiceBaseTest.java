@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import static com.epam.digital.data.platform.management.constant.DataModelManagementConstants.DATA_MODEL_FOLDER;
 
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.mapper.DataModelFileManagementMapper;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileType;
@@ -53,6 +54,8 @@ abstract class DataModelFileManagementServiceBaseTest {
   VersionContextComponentManager versionContextComponentManager;
   @Mock
   VersionedFileRepository versionedFileRepository;
+  @MockBean
+  CacheService cacheService;
 
   @BeforeEach
   void setUp() {

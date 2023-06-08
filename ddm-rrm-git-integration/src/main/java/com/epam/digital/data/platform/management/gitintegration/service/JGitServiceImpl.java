@@ -16,10 +16,6 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
-import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
-import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -28,6 +24,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -35,10 +32,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.AbortedByHookException;
@@ -68,6 +65,14 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -87,7 +92,7 @@ public class JGitServiceImpl implements JGitService {
     log.debug("Trying to clone repository {}", repositoryName);
     var directory = getRepositoryDir(repositoryName);
     if (directory.exists()) {
-//    this condition was written in order to avoid cloning repo several times
+      //    this condition was written in order to avoid cloning repo several times
       return;
     }
     log.trace("Synchronizing repo {}", repositoryName);
@@ -113,8 +118,8 @@ public class JGitServiceImpl implements JGitService {
       log.trace("Fetching repo {}", repositoryName);
       fetchAll(git);
 
-      log.trace("Hard reset {} on {}/{}", repositoryName, Constants.DEFAULT_REMOTE_NAME,
-          repositoryName);
+      log.trace(
+          "Hard reset {} on {}/{}", repositoryName, Constants.DEFAULT_REMOTE_NAME, repositoryName);
       hardResetOnOriginHeadBranch(git);
     } finally {
       lock.unlock();
@@ -140,8 +145,8 @@ public class JGitServiceImpl implements JGitService {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
     }
-    log.debug("Repository {} was successfully fetched and checkout to ref {}", repositoryName,
-        refs);
+    log.debug(
+        "Repository {} was successfully fetched and checkout to ref {}", repositoryName, refs);
   }
 
   @Override
@@ -153,15 +158,62 @@ public class JGitServiceImpl implements JGitService {
     var lock = getLock(repositoryName);
     lock.lock();
     log.trace("Opening repo {}", repositoryName);
-    try (
-        var git = openRepo(repositoryDirectory);
+    try (var git = openRepo(repositoryDirectory);
         var repository = git.getRepository();
-        var treeWalk = jGitWrapper.getTreeWalk(repository, path)
-    ) {
+        var treeWalk = jGitWrapper.getTreeWalk(repository, path)) {
       log.trace("Retrieving files from {} at path {}", repositoryName, path);
       List<String> result = Objects.nonNull(treeWalk) ? getFiles(treeWalk) : List.of();
       log.debug("Found {} files in repository {} at path {}", result.size(), result, path);
       return result;
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  @Override
+  @NonNull
+  public List<String> getConflicts(@NonNull String repositoryName) {
+    log.debug("Retrieving conflicts in repository {}", repositoryName);
+    var repositoryDirectory = getExistedRepository(repositoryName);
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
+    log.trace("Opening repo {}", repositoryName);
+    try (var git = openRepo(repositoryDirectory)) {
+      fetch(
+          git,
+          Constants.R_HEADS
+              + gerritPropertiesConfig.getHeadBranch()
+              + ":"
+              + Constants.R_REMOTES
+              + Constants.DEFAULT_REMOTE_NAME
+              + "/"
+              + gerritPropertiesConfig.getHeadBranch());
+      var originMasterId =
+          git.getRepository()
+              .resolve(
+                  Constants.DEFAULT_REMOTE_NAME + "/" + gerritPropertiesConfig.getHeadBranch());
+      var mergeResult =
+          git.merge()
+              .include(originMasterId)
+              .setCommit(false)
+              .setFastForward(MergeCommand.FastForwardMode.NO_FF)
+              .call();
+      Map<String, int[][]> conflicts = mergeResult.getConflicts();
+      log.info("Conflicts: {}", conflicts);
+      git.reset().setMode(ResetType.HARD).call();
+      if (conflicts != null && conflicts.size() > 0) {
+        return conflicts.keySet().stream().collect(Collectors.toList());
+      } else {
+        return Collections.emptyList();
+      }
+    } catch (IOException | GitAPIException e) {
+      throw new GitCommandException(
+          String.format(
+              "Exception occurred during getting conflicts for repository %s: %s",
+              repositoryDirectory.getName(), e.getMessage()),
+          e);
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
@@ -183,8 +235,8 @@ public class JGitServiceImpl implements JGitService {
       var revCommitList = getRevCommitList(filePath, git);
 
       if (revCommitList.isEmpty()) {
-        log.debug("Git commit dates in repository {} for path {} wasn't found", repositoryName,
-            filePath);
+        log.debug(
+            "Git commit dates in repository {} for path {} wasn't found", repositoryName, filePath);
         return null;
       }
 
@@ -192,12 +244,9 @@ public class JGitServiceImpl implements JGitService {
       var updatedTime = getCommitDateTime(revCommitList.get(0));
       var createdTime = getCommitDateTime(revCommitList.get(revCommitList.size() - 1));
 
-      log.debug("Git commit dates in repository {} for path {} retrieved", repositoryName,
-          filePath);
-      return FileDatesDto.builder()
-          .create(createdTime)
-          .update(updatedTime)
-          .build();
+      log.debug(
+          "Git commit dates in repository {} for path {} retrieved", repositoryName, filePath);
+      return FileDatesDto.builder().create(createdTime).update(updatedTime).build();
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
@@ -223,10 +272,10 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
-  public void amend(@NonNull String repositoryName, @NonNull String filePath,
-      @NonNull String fileContent) {
-    log.debug("Trying to update file content in repository {} at path {}", repositoryName,
-        filePath);
+  public void amend(
+      @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent) {
+    log.debug(
+        "Trying to update file content in repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
 
     log.trace("Synchronizing repo {}", repositoryName);
@@ -274,8 +323,9 @@ public class JGitServiceImpl implements JGitService {
       FileUtils.delete(repositoryFile, FileUtils.RECURSIVE | FileUtils.SKIP_MISSING);
     } catch (IOException e) {
       throw new GitCommandException(
-          String.format("Exception occurred during deleting repository %s: %s", repoName,
-              e.getMessage()), e);
+          String.format(
+              "Exception occurred during deleting repository %s: %s", repoName, e.getMessage()),
+          e);
     }
   }
 
@@ -286,22 +336,27 @@ public class JGitServiceImpl implements JGitService {
 
   @NonNull
   private Git cloneRepo(@NonNull File repositoryDirectory) {
-    var cloneCommand = jGitWrapper.cloneRepository()
-        .setURI(getRepositoryUrl())
-        .setCredentialsProvider(getCredentialsProvider())
-        .setCloneAllBranches(true)
-        .setDirectory(repositoryDirectory);
+    var cloneCommand =
+        jGitWrapper
+            .cloneRepository()
+            .setURI(getRepositoryUrl())
+            .setCredentialsProvider(getCredentialsProvider())
+            .setCloneAllBranches(true)
+            .setDirectory(repositoryDirectory);
     try {
-      return Objects.requireNonNull(retryable.call(cloneCommand),
-          "CloneCommand#call cannot be null");
+      return Objects.requireNonNull(
+          retryable.call(cloneCommand), "CloneCommand#call cannot be null");
     } catch (InvalidRemoteException e) {
       throw new IllegalStateException(
-          String.format("Remote that is configured under \"gerrit\" prefix is invalid: %s",
-              e.getMessage()), e);
+          String.format(
+              "Remote that is configured under \"gerrit\" prefix is invalid: %s", e.getMessage()),
+          e);
     } catch (GitAPIException e) {
       throw new GitCommandException(
-          String.format("Exception occurred during cloning repository %s: %s",
-              repositoryDirectory.getName(), e.getMessage()), e);
+          String.format(
+              "Exception occurred during cloning repository %s: %s",
+              repositoryDirectory.getName(), e.getMessage()),
+          e);
     }
   }
 
@@ -314,19 +369,14 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  /**
-   * Fetch method that needs opened {@link Git}
-   */
+  /** Fetch method that needs opened {@link Git} */
   private void fetchAll(Git git) {
     fetch(git, null);
   }
 
-  /**
-   * Fetch specific refs with opened {@link Git}
-   */
+  /** Fetch specific refs with opened {@link Git} */
   private void fetch(@NonNull Git git, @Nullable String refs) {
-    var fetchCommand = git.fetch()
-        .setCredentialsProvider(getCredentialsProvider());
+    var fetchCommand = git.fetch().setCredentialsProvider(getCredentialsProvider());
     if (Objects.nonNull(refs)) {
       fetchCommand.setRefSpecs(refs);
     }
@@ -341,14 +391,16 @@ public class JGitServiceImpl implements JGitService {
   }
 
   private void checkoutFetchHead(@NonNull Git git) {
-    var checkoutCommand = git.checkout()
-        .setName(Constants.FETCH_HEAD);
+    var checkoutCommand = git.checkout().setName(Constants.FETCH_HEAD);
     try {
       checkoutCommand.call();
-    } catch (RefAlreadyExistsException | RefNotFoundException | InvalidRefNameException |
-             CheckoutConflictException e) {
+    } catch (RefAlreadyExistsException
+        | RefNotFoundException
+        | InvalidRefNameException
+        | CheckoutConflictException e) {
       // Checkout on FETCH_HEAD must not create any new refs, ref FETCH_HEAD must always exist
-      // ref FETCH_HEAD must be always valid and there must not be any conflicts during such checkout
+      // ref FETCH_HEAD must be always valid and there must not be any conflicts during such
+      // checkout
       throw new IllegalStateException(
           String.format("Checkout on FETCH_HEAD must not throw such exception: %s", e.getMessage()),
           e);
@@ -359,9 +411,10 @@ public class JGitServiceImpl implements JGitService {
   }
 
   private void hardResetOnOriginHeadBranch(@NonNull Git git) {
-    var resetCommand = git.reset()
-        .setMode(ResetType.HARD)
-        .setRef(Constants.DEFAULT_REMOTE_NAME + "/" + gerritPropertiesConfig.getHeadBranch());
+    var resetCommand =
+        git.reset()
+            .setMode(ResetType.HARD)
+            .setRef(Constants.DEFAULT_REMOTE_NAME + "/" + gerritPropertiesConfig.getHeadBranch());
     try {
       resetCommand.call();
     } catch (CheckoutConflictException e) {
@@ -369,8 +422,10 @@ public class JGitServiceImpl implements JGitService {
           String.format("Hard reset must not face any conflicts: %s", e.getMessage()), e);
     } catch (GitAPIException e) {
       throw new GitCommandException(
-          String.format("Exception occurred during hard reset on origin %s: %s",
-              gerritPropertiesConfig.getHeadBranch(), e.getMessage()), e);
+          String.format(
+              "Exception occurred during hard reset on origin %s: %s",
+              gerritPropertiesConfig.getHeadBranch(), e.getMessage()),
+          e);
     }
   }
 
@@ -385,8 +440,7 @@ public class JGitServiceImpl implements JGitService {
       }
     } catch (IOException e) {
       throw new GitCommandException(
-          String.format("Exception occurred during reading files by path: %s", e.getMessage()),
-          e);
+          String.format("Exception occurred during reading files by path: %s", e.getMessage()), e);
     }
     Collections.sort(files);
     return files;
@@ -411,8 +465,9 @@ public class JGitServiceImpl implements JGitService {
       return jGitWrapper.readFileContent(file.toPath());
     } catch (IOException e) {
       throw new GitCommandException(
-          String.format("Exception occurred during reading file content by path: %s",
-              e.getMessage()), e);
+          String.format(
+              "Exception occurred during reading file content by path: %s", e.getMessage()),
+          e);
     }
   }
 
@@ -428,16 +483,18 @@ public class JGitServiceImpl implements JGitService {
   private void commitAmend(Git git) {
     try {
       var lastCommit = git.log().call().iterator().next();
-      git.commit()
-          .setMessage(lastCommit.getFullMessage())
-          .setAmend(true)
-          .call();
-    } catch (AbortedByHookException | ConcurrentRefUpdateException | NoHeadException |
-             NoMessageException | ServiceUnavailableException | UnmergedPathsException |
-             WrongRepositoryStateException e) {
+      git.commit().setMessage(lastCommit.getFullMessage()).setAmend(true).call();
+    } catch (AbortedByHookException
+        | ConcurrentRefUpdateException
+        | NoHeadException
+        | NoMessageException
+        | ServiceUnavailableException
+        | UnmergedPathsException
+        | WrongRepositoryStateException e) {
       throw new IllegalStateException(
-          String.format("Log/commit command doesn't expected to throw such exception: %s",
-              e.getMessage()), e);
+          String.format(
+              "Log/commit command doesn't expected to throw such exception: %s", e.getMessage()),
+          e);
     } catch (GitAPIException e) {
       throw new GitCommandException(
           String.format("Exception occurred during amending commit: %s", e.getMessage()), e);
@@ -481,13 +538,13 @@ public class JGitServiceImpl implements JGitService {
   }
 
   private UsernamePasswordCredentialsProvider getCredentialsProvider() {
-    return new UsernamePasswordCredentialsProvider(gerritPropertiesConfig.getUser(),
-        gerritPropertiesConfig.getPassword());
+    return new UsernamePasswordCredentialsProvider(
+        gerritPropertiesConfig.getUser(), gerritPropertiesConfig.getPassword());
   }
 
   private void addFileToGit(File repoDirectory, File file, Git git) {
-    var filePattern = FilenameUtils.normalize(repoDirectory.toPath()
-        .relativize(file.toPath()).toString(), true);
+    var filePattern =
+        FilenameUtils.normalize(repoDirectory.toPath().relativize(file.toPath()).toString(), true);
     try {
       if (file.exists()) {
         git.add().addFilepattern(filePattern).call();
@@ -513,21 +570,22 @@ public class JGitServiceImpl implements JGitService {
   }
 
   private void pushChanges(Git git) {
-    var addCommand = git.remoteAdd()
-        .setUri(getRepositoryURIish())
-        .setName(Constants.DEFAULT_REMOTE_NAME);
-    var push = git.push()
-        .setCredentialsProvider(getCredentialsProvider())
-        .setRemote(Constants.DEFAULT_REMOTE_NAME)
-        .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+    var addCommand =
+        git.remoteAdd().setUri(getRepositoryURIish()).setName(Constants.DEFAULT_REMOTE_NAME);
+    var push =
+        git.push()
+            .setCredentialsProvider(getCredentialsProvider())
+            .setRemote(Constants.DEFAULT_REMOTE_NAME)
+            .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
 
     try {
       addCommand.call();
       retryable.call(push);
     } catch (InvalidRemoteException e) {
       throw new IllegalStateException(
-          String.format("Remote that is configured under \"gerrit\" prefix is invalid: %s",
-              e.getMessage()), e);
+          String.format(
+              "Remote that is configured under \"gerrit\" prefix is invalid: %s", e.getMessage()),
+          e);
     } catch (GitAPIException e) {
       throw new GitCommandException(
           String.format("Could not execute add-remote/push command: %s", e.getMessage()), e);

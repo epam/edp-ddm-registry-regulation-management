@@ -51,8 +51,9 @@ class BusinessProcessMapperTest {
         .name("business-process")
         .path("bpmn/business-process.bpmn")
         .status(FileStatus.NEW)
+        .conflicted(true)
         .build();
-    var actual = mapper.toBusinessProcess(fileInfo, fileDates, "Really test name");
+    var actual = mapper.toBusinessProcess(fileInfo, fileDates, "Really test name", true);
     Assertions.assertThat(actual).isEqualTo(expected);
   }
 }

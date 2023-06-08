@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,29 @@
 
 package com.epam.digital.data.platform.management.scheduled;
 
-import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
-import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
+import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class RepositoryRefreshScheduler {
 
+  private static final String CONFLICTS_CACHE_NAME = "conflicts";
+  private static final String LATEST_REBASE_CACHE_NAME = "latestRebase";
   private final GerritService gerritService;
   private final JGitService jGitService;
+  private final CacheManager cacheManager;
 
   @Scheduled(cron = "${registry-regulation-management.scheduled.version-candidate-repo-refresh.cron}",
       zone = "${registry-regulation-management.scheduled.version-candidate-repo-refresh.timezone}")
@@ -44,9 +53,19 @@ public class RepositoryRefreshScheduler {
           continue;
         }
         var changeId = change.getChangeId();
+        var versionId = change.getNumber();
         log.debug("Refreshing repository {}", change.getNumber());
         gerritService.rebase(changeId);
-        jGitService.fetch(change.getNumber(), change.getRefs());
+        jGitService.cloneRepoIfNotExist(versionId);
+        jGitService.fetch(versionId, change.getRefs());
+
+        Cache conflictCache = cacheManager.getCache(CONFLICTS_CACHE_NAME);
+        conflictCache.evictIfPresent(versionId);
+        conflictCache.put(versionId, jGitService.getConflicts(versionId));
+
+        Cache rebaseCache = cacheManager.getCache(LATEST_REBASE_CACHE_NAME);
+        rebaseCache.evictIfPresent(versionId);
+        rebaseCache.put(versionId, LocalDateTime.now());
       } catch (Exception e) {
         log.warn("Error during repository refresh: {}", e.getMessage(), e);
       }

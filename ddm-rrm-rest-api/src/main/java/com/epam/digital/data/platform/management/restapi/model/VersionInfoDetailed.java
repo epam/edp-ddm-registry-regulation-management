@@ -40,6 +40,8 @@ public class VersionInfoDetailed {
     private LocalDateTime creationDate;
     @Schema(description = "Version candidate update time")
     private LocalDateTime latestUpdate;
+    @Schema(description = "Version candidate last rebase time")
+    private LocalDateTime latestRebase;
     @Schema(required = true, description = "Version candidate conflicts flag")
     private Boolean hasConflicts;
     @Schema(description = "Version candidate inspections")

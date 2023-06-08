@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.service.impl;
 
-
 import static com.epam.digital.data.platform.management.constant.DataModelManagementConstants.DATA_MODEL_FOLDER;
 
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -38,41 +37,47 @@ class DataModelFileManagementServiceListFileTest extends DataModelFileManagement
   void listDataModelFiles_happyPath() {
     final var versionId = "42";
 
-    Mockito.doReturn(List.of(
-        VersionedFileInfoDto.builder()
-            .name("unchanged_file_name")
-            .path("data-model/unchanged_file_name.xml")
-            .status(FileStatus.UNCHANGED)
-            .build(),
-        VersionedFileInfoDto.builder()
-            .name("new_file_name")
-            .path("data-model/new_file_name.xml")
-            .status(FileStatus.NEW)
-            .build(),
-        VersionedFileInfoDto.builder()
-            .name(DataModelFileType.TABLES_FILE.getFileName())
-            .path(TABLES_FILE_PATH)
-            .status(FileStatus.CHANGED)
-            .build()
-    )).when(versionedFileRepository).getFileList(DATA_MODEL_FOLDER);
+    Mockito.doReturn(
+            List.of(
+                VersionedFileInfoDto.builder()
+                    .name("unchanged_file_name")
+                    .path("data-model/unchanged_file_name.xml")
+                    .status(FileStatus.UNCHANGED)
+                    .build(),
+                VersionedFileInfoDto.builder()
+                    .name("new_file_name")
+                    .path("data-model/new_file_name.xml")
+                    .status(FileStatus.NEW)
+                    .build(),
+                VersionedFileInfoDto.builder()
+                    .name(DataModelFileType.TABLES_FILE.getFileName())
+                    .path(TABLES_FILE_PATH)
+                    .status(FileStatus.CHANGED)
+                    .build()))
+        .when(versionedFileRepository)
+        .getFileList(DATA_MODEL_FOLDER);
+    Mockito.when(cacheService.getConflictsCache(versionId))
+        .thenReturn(List.of("data-model/new_file_name.xml"));
 
-    var expectedDataModelFiles = List.of(
-        DataModelFileDto.builder()
-            .fileName(DataModelFileType.TABLES_FILE.getFileName())
-            .status(DataModelFileStatus.CHANGED)
-            .type(DataModelFileType.TABLES_FILE)
-            .build(),
-        DataModelFileDto.builder()
-            .fileName("new_file_name")
-            .status(DataModelFileStatus.NEW)
-            .type(null)
-            .build(),
-        DataModelFileDto.builder()
-            .fileName("unchanged_file_name")
-            .status(DataModelFileStatus.UNCHANGED)
-            .type(null)
-            .build()
-    );
+    var expectedDataModelFiles =
+        List.of(
+            DataModelFileDto.builder()
+                .fileName(DataModelFileType.TABLES_FILE.getFileName())
+                .status(DataModelFileStatus.CHANGED)
+                .type(DataModelFileType.TABLES_FILE)
+                .build(),
+            DataModelFileDto.builder()
+                .fileName("new_file_name")
+                .status(DataModelFileStatus.NEW)
+                .type(null)
+                .conflicted(true)
+                .build(),
+            DataModelFileDto.builder()
+                .fileName("unchanged_file_name")
+                .status(DataModelFileStatus.UNCHANGED)
+                .type(null)
+                .conflicted(false)
+                .build());
 
     var actualDataModelFiles = dataModelFileManagementService.listDataModelFiles(versionId);
     Assertions.assertThat(actualDataModelFiles).containsAll(expectedDataModelFiles);

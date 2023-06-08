@@ -11,7 +11,7 @@ spring:
     vault:
       enabled: false
   cache:
-    cache-names: dates
+    cache-names: dates,conflicts,latestRebase
     caffeine:
       spec: expireAfterAccess=5s
 

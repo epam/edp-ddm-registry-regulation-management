@@ -34,6 +34,7 @@ public class VersionInfoDto {
   private String description;
   private LocalDateTime created;
   private LocalDateTime updated;
+  private LocalDateTime rebased;
   private LocalDateTime submitted;
   private String changeId;
   private String id;

@@ -34,11 +34,9 @@ import org.mapstruct.ValueMapping;
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
 public interface DataModelFileManagementMapper {
 
-  List<DataModelFileDto> toChangedDataModelFileDtoList(List<VersionedFileInfoDto> fileDtos);
-
-  @Mapping(source = "name", target = "fileName")
-  @Mapping(source = "name", target = "type")
-  DataModelFileDto toChangedDataModelFileDto(VersionedFileInfoDto fileDto);
+  @Mapping(source = "fileDto.name", target = "fileName")
+  @Mapping(source = "fileDto.name", target = "type")
+  DataModelFileDto toChangedDataModelFileDto(VersionedFileInfoDto fileDto, boolean conflicted);
 
   @ValueMapping(source = "DELETED", target = MappingConstants.NULL)
   DataModelFileStatus toDataModelFileStatus(FileStatus status);

@@ -56,8 +56,9 @@ class FormMapperTest {
         .status(FileStatus.NEW)
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .conflicted(true)
         .build();
-    var actual = mapper.toForm(fileInfo, fileDates, FORM_CONTENT);
+    var actual = mapper.toForm(fileInfo, fileDates, FORM_CONTENT, true);
     Assertions.assertThat(actual).isEqualTo(expected);
   }
 }

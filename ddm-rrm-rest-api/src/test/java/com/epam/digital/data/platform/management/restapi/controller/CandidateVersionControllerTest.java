@@ -24,6 +24,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.post;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -211,16 +212,16 @@ class CandidateVersionControllerTest {
   }
 
   @Test
-  @DisplayName("GET /versions/candidates/{versionCandidateId}/rebase should return 200")
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/rebase should return 200")
   @SneakyThrows
   void rebaseTest() {
     Mockito.doNothing().when(versionManagementService).rebase("1");
 
     mockMvc.perform(
-        get("/versions/candidates/{versionCandidateId}/rebase", "1")
+        put("/versions/candidates/{versionCandidateId}/rebase", "1")
     ).andExpect(
         status().isOk()
-    ).andDo(document("versions/candidates/{versionCandidateId}/rebase/GET"));
+    ).andDo(document("versions/candidates/{versionCandidateId}/rebase/PUT"));
 
     Mockito.verify(versionManagementService).rebase("1");
   }

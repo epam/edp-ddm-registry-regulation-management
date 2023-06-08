@@ -16,6 +16,18 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
+import static org.mockito.ArgumentMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.Condition;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoShortDto;
@@ -24,15 +36,8 @@ import com.epam.digital.data.platform.management.gerritintegration.model.FileInf
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoShortDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionedFileInfoDto;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+
 import lombok.SneakyThrows;
-import org.assertj.core.api.Assertions;
-import org.assertj.core.api.Condition;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
 
@@ -289,6 +294,7 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
         .mergeable(true)
         .labels(Map.of("label1", -1, "label2", -1))
         .build();
+
     var actual = managementService.getVersionDetails(version);
     Assertions.assertThat(actual).isEqualTo(expected);
   }
@@ -310,6 +316,7 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
     changeInfoDto.setChangeId(changeId);
     changeInfoDto.setRefs(refs);
     changeInfoDto.setNumber(version);
+    changeInfoDto.setMergeable(false);
     Mockito.when(gerritService.getChangeInfo(changeId)).thenReturn(changeInfoDto);
 
     Mockito.doNothing().when(jGitService).fetch(version, refs);
@@ -320,5 +327,8 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
     Mockito.verify(gerritService).rebase(changeId);
     Mockito.verify(gerritService).getChangeInfo(changeId);
     Mockito.verify(jGitService).fetch(version, refs);
+    Mockito.verify(jGitService).getConflicts(version);
+    Mockito.verify(cacheService).updateConflictsCache(eq(version), anyList());
+    Mockito.verify(cacheService).updateLatestRebaseCache(eq(version), any());
   }
 }

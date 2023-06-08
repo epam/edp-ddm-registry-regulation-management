@@ -13,32 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.epam.digital.data.platform.management.versionmanagement.model;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+package com.epam.digital.data.platform.management.core.service;
 
-@Getter
-@Setter
-@Builder
-@ToString
-@EqualsAndHashCode
-public class DataModelChangesInfoDto {
+import java.time.LocalDateTime;
+import java.util.List;
 
-  private String name;
-  private DataModelFileType fileType;
-  private DataModelFileStatus status;
-  private boolean conflicted;
+/** Provide methods to work with cache */
+public interface CacheService {
 
-  public enum DataModelFileType {
-    TABLES_FILE
-  }
+  List<String> getConflictsCache(String cacheKey);
 
-  public enum DataModelFileStatus {
-    NEW,
-    CHANGED
-  }
+  void updateConflictsCache(String cacheKey, List<String> conflicts);
+
+  LocalDateTime getLatestRebaseCache(String cacheKey);
+
+  void updateLatestRebaseCache(String cacheKey, LocalDateTime latestRebase);
 }

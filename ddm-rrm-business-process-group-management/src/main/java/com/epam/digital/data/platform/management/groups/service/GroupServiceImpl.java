@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.groups.service;
 
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.groups.exception.GroupsParseException;
 import com.epam.digital.data.platform.management.groups.model.BusinessProcessDefinition;
@@ -49,6 +50,7 @@ public class GroupServiceImpl implements GroupService {
   private static final String GROUPS_PATH = "bp-grouping/bp-grouping.yml";
   private final VersionContextComponentManager versionContextComponentManager;
   private final BusinessProcessService businessProcessService;
+  private final CacheService cacheService;
 
   @Override
   public BusinessProcessGroupsResponse getGroupsByVersion(String versionId) {
@@ -102,12 +104,14 @@ public class GroupServiceImpl implements GroupService {
   public GroupChangesDetails getChangesByVersion(String versionId) {
     var repo = versionContextComponentManager.getComponent(versionId,
         VersionedFileRepository.class);
+    List<String> conflicts = cacheService.getConflictsCache(versionId);
 
     return repo.getFileList(GROUPS_PATH).stream()
         .filter(grouping -> "bp-grouping".equals(grouping.getName()))
         .map(grouping -> GroupChangesDetails.builder()
             .name(grouping.getName() + ".yml")
             .status(grouping.getStatus())
+            .conflicted(conflicts.contains(grouping.getPath()))
             .build())
         .findFirst()
         .orElse(null);

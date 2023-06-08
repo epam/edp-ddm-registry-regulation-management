@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.groups.service;
 
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -60,6 +61,8 @@ public class GroupServiceTest {
   private VersionedFileRepository repository;
   @Mock
   private BusinessProcessService businessProcessService;
+  @Mock
+  CacheService cacheService;
 
   @InjectMocks
   private GroupServiceImpl groupService;
@@ -150,12 +153,14 @@ public class GroupServiceTest {
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
     Mockito.when(repository.getFileList(GROUPS_PATH)).thenReturn(List.of(fileInfo));
+    Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("bp-grouping/bp-grouping.yml"));
 
     final var changesByVersion = groupService.getChangesByVersion(VERSION_ID);
 
     Assertions.assertThat(changesByVersion).isNotNull();
     Assertions.assertThat(changesByVersion.getName()).isEqualTo("bp-grouping.yml");
     Assertions.assertThat(changesByVersion.getStatus()).isEqualTo(FileStatus.NEW);
+    Assertions.assertThat(changesByVersion.isConflicted()).isTrue();
   }
 
   @Test

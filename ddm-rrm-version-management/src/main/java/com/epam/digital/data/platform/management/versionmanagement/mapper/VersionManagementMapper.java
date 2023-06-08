@@ -15,6 +15,8 @@
  */
 package com.epam.digital.data.platform.management.versionmanagement.mapper;
 
+import java.time.LocalDateTime;
+
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.ChangeInfoDto;
@@ -54,8 +56,8 @@ public interface VersionManagementMapper {
   @Mapping(target = "description", source = "topic")
   VersionInfoShortDto toVersionInfoDto(ChangeInfoShortDto changeInfoDto);
 
-  @Mapping(target = "description", source = "topic")
-  VersionInfoDto toVersionInfoDto(ChangeInfoDto changeInfoDto);
+  @Mapping(target = "description", source = "changeInfoDto.topic")
+  VersionInfoDto toVersionInfoDto(ChangeInfoDto changeInfoDto, LocalDateTime rebased);
 
   @Mapping(target = "name", source = "fileName")
   @Mapping(target = "status", source = "fileInfoDto.status")

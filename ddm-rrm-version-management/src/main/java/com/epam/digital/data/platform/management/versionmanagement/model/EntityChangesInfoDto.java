@@ -31,6 +31,7 @@ public class EntityChangesInfoDto {
   private String name;
   private String title;
   private ChangedFileStatus status;
+  private boolean conflicted;
 
   public enum ChangedFileStatus {
     NEW,

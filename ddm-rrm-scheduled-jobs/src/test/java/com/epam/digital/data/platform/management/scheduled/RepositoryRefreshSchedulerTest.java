@@ -16,6 +16,8 @@
 
 package com.epam.digital.data.platform.management.scheduled;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
@@ -34,6 +36,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -43,6 +47,8 @@ public class RepositoryRefreshSchedulerTest {
   private JGitServiceImpl jGitService;
   @Mock
   private GerritServiceImpl gerritService;
+  @Mock
+  private CacheManager cacheManager;
 
   @InjectMocks
   private RepositoryRefreshScheduler repositoryRefreshScheduler;
@@ -64,10 +70,22 @@ public class RepositoryRefreshSchedulerTest {
 
     Mockito.when(gerritService.getMRByNumber(changeInfoDto.getNumber()))
         .thenReturn(changeInfoDto);
+    Cache cache = Mockito.mock(Cache.class);
+    Mockito.when(cacheManager.getCache("latestRebase"))
+            .thenReturn(cache);
+    Cache conflictCache = Mockito.mock(Cache.class);
+    Mockito.when(cacheManager.getCache("conflicts"))
+            .thenReturn(conflictCache);
 
     repositoryRefreshScheduler.refreshVersionCandidates();
     Mockito.verify(gerritService).rebase(changeInfoDto.getChangeId());
+    Mockito.verify(jGitService).cloneRepoIfNotExist(changeInfoDto.getNumber());
     Mockito.verify(jGitService).fetch(changeInfoDto.getNumber(), changeInfoDto.getRefs());
+    Mockito.verify(jGitService).getConflicts(changeInfoDto.getNumber());
+    Mockito.verify(cache).evictIfPresent(changeInfoDto.getNumber());
+    Mockito.verify(cache).put(eq(changeInfoDto.getNumber()), any());
+    Mockito.verify(conflictCache).evictIfPresent(changeInfoDto.getNumber());
+    Mockito.verify(conflictCache).put(eq(changeInfoDto.getNumber()), any());
   }
 
   @Test

@@ -18,12 +18,16 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.constant.DataModelManagementConstants;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.exception.DataModelFileNotFoundInVersionException;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.mapper.DataModelFileManagementMapper;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileType;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +43,7 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
 
   private final VersionContextComponentManager versionContextComponentManager;
   private final DataModelFileManagementMapper mapper;
+  private final CacheService cacheService;
 
   @Override
   @NonNull
@@ -53,13 +58,18 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
       throw new DataModelFileNotFoundInVersionException(tablesFilePath, versionId);
     }
 
-    log.trace("File '{}' exists in version '{}' repository. Reading content...", tablesFilePath,
+    log.trace(
+        "File '{}' exists in version '{}' repository. Reading content...",
+        tablesFilePath,
         versionId);
-    var tableFileContent = Objects.requireNonNull(repo.readFile(tablesFilePath),
-        "File content cannot be null");
+    var tableFileContent =
+        Objects.requireNonNull(repo.readFile(tablesFilePath), "File content cannot be null");
 
-    log.debug("File '{}' content was read for version '{}', content length - '{}'", tablesFilePath,
-        versionId, tableFileContent.length());
+    log.debug(
+        "File '{}' content was read for version '{}', content length - '{}'",
+        tablesFilePath,
+        versionId,
+        tableFileContent.length());
     return tableFileContent;
   }
 
@@ -71,8 +81,11 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
     var repo = getVersionedFileRepo(versionId);
 
     repo.writeFile(tablesFilePath, fileContent);
-    log.debug("File '{}' content was updated in version '{}', new content length - '{}'",
-        tablesFilePath, versionId, fileContent.length());
+    log.debug(
+        "File '{}' content was updated in version '{}', new content length - '{}'",
+        tablesFilePath,
+        versionId,
+        fileContent.length());
   }
 
   @Override
@@ -84,7 +97,16 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
     var foundFiles = repo.getFileList(DataModelManagementConstants.DATA_MODEL_FOLDER);
 
     log.debug("Found '{}' files in version '{}'", foundFiles.size(), versionId);
-    return mapper.toChangedDataModelFileDtoList(foundFiles);
+
+    List<DataModelFileDto> dataModels = new ArrayList<>();
+    
+    List<String> conflicts = cacheService.getConflictsCache(versionId);
+    for (VersionedFileInfoDto versionedFileInfoDto : foundFiles) {
+      dataModels.add(
+          mapper.toChangedDataModelFileDto(
+              versionedFileInfoDto, conflicts.contains(versionedFileInfoDto.getPath())));
+    }
+    return dataModels;
   }
 
   private String getTablesFilePath() {

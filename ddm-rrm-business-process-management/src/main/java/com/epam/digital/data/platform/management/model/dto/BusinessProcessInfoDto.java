@@ -36,4 +36,5 @@ public class BusinessProcessInfoDto {
   private FileStatus status;
   private LocalDateTime created;
   private LocalDateTime updated;
+  private boolean conflicted;
 }

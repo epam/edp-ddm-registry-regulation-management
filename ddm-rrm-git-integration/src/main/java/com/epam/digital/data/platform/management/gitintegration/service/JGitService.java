@@ -16,12 +16,14 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import java.util.List;
+
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import java.util.List;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 /**
  * Provides methods for working with git service.
@@ -69,6 +71,15 @@ public interface JGitService {
    */
   @NonNull
   List<String> getFilesInPath(@NonNull String repositoryName, @NonNull String path);
+
+  /**
+   * Returns list of conflict file names by repository name
+   *
+   * @param repositoryName name of the specified repository
+   * @return {@link List} of {@link String} with files' names
+   */
+  @NonNull
+  List<String> getConflicts(@NonNull String repositoryName);
 
   /**
    * Get creation and update date of file from git log

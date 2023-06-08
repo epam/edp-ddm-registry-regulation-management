@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -56,13 +57,14 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   private static final String DIRECTORY_PATH = "bpmn";
   private static final String BPMN_FILE_EXTENSION = "bpmn";
-  private final VersionContextComponentManager versionContextComponentManager;
-  private final BusinessProcessMapper mapper;
-
-  private final GerritPropertiesConfig gerritPropertiesConfig;
-  private final DocumentBuilder documentBuilder;
   public static final String PROCESS_CREATED_PATH = "rrm:created";
   public static final String PROCESS_MODIFIED_PATH = "rrm:modified";
+
+  private final VersionContextComponentManager versionContextComponentManager;
+  private final BusinessProcessMapper mapper;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final DocumentBuilder documentBuilder;
+  private final CacheService cacheService;
 
   @Override
   public List<BusinessProcessInfoDto> getProcessesByVersion(String versionName) {
@@ -77,8 +79,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   @Override
   public void createProcess(String processName, String content, String versionName) {
     var processPath = getProcessPath(processName);
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     if (repo.isFileExists(processPath)) {
       throw new BusinessProcessAlreadyExistsException(
           String.format("Process with path '%s' already exists", processPath));
@@ -89,8 +91,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public String getProcessContent(String processName, String versionName) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String processContent;
     processContent = repo.readFile(getProcessPath(processName));
     if (processContent == null) {
@@ -101,8 +103,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void updateProcess(String content, String processName, String versionName) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String processPath = getProcessPath(processName);
     var time = LocalDateTime.now();
     FileDatesDto fileDatesDto = FileDatesDto.builder().build();
@@ -111,9 +113,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
-      fileDatesDto.setCreate(repo.getFileList(DIRECTORY_PATH).stream()
-          .filter(fileResponse -> fileResponse.getName().equals(processName))
-          .findFirst().map(VersionedFileInfoDto::getCreated).orElse(time));
+      fileDatesDto.setCreate(
+          repo.getFileList(DIRECTORY_PATH).stream()
+              .filter(fileResponse -> fileResponse.getName().equals(processName))
+              .findFirst()
+              .map(VersionedFileInfoDto::getCreated)
+              .orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(processPath, content);
@@ -121,8 +126,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
 
   @Override
   public void deleteProcess(String processName, String versionName) {
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     repo.deleteFile(getProcessPath(processName));
   }
 
@@ -135,8 +140,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private String getProcessPath(String processName) {
-    return String.format("%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName),
-        BPMN_FILE_EXTENSION);
+    return String.format(
+        "%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(processName), BPMN_FILE_EXTENSION);
   }
 
   private Document parseBusinessProcess(String processContent) {
@@ -147,16 +152,17 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     }
   }
 
-  private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
-      FileStatus skippedStatus) {
+  private List<BusinessProcessInfoDto> getProcessesByVersion(
+      String versionName, FileStatus skippedStatus) {
     List<VersionedFileInfoDto> fileList;
-    var repo = versionContextComponentManager.getComponent(versionName,
-        VersionedFileRepository.class);
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     fileList = repo.getFileList(DIRECTORY_PATH);
-    var masterRepo = versionContextComponentManager.getComponent(
-        gerritPropertiesConfig.getHeadBranch(),
-        VersionedFileRepository.class);
+    var masterRepo =
+        versionContextComponentManager.getComponent(
+            gerritPropertiesConfig.getHeadBranch(), VersionedFileRepository.class);
     List<BusinessProcessInfoDto> processes = new ArrayList<>();
+    List<String> conflicts = cacheService.getConflictsCache(versionName);
     for (VersionedFileInfoDto versionedFileInfoDto : fileList) {
       if (versionedFileInfoDto.getStatus().equals(skippedStatus)) {
         continue;
@@ -167,8 +173,12 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       } else {
         processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
       }
-      processes.add(mapper.toBusinessProcess(versionedFileInfoDto,
-          getDatesFromContent(processContent), getAttributeFromContent(processContent, "name")));
+      processes.add(
+          mapper.toBusinessProcess(
+              versionedFileInfoDto,
+              getDatesFromContent(processContent),
+              getAttributeFromContent(processContent, "name"),
+              conflicts.contains(versionedFileInfoDto.getPath())));
     }
     return processes;
   }
@@ -184,18 +194,20 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     doc.getDocumentElement().normalize();
     Element element = doc.getDocumentElement();
     if (element.hasAttribute(PROCESS_MODIFIED_PATH)) {
-      fileDatesDto.setUpdate(LocalDateTime.parse(element.getAttribute(PROCESS_MODIFIED_PATH),
-          JacksonConfig.DATE_TIME_FORMATTER));
+      fileDatesDto.setUpdate(
+          LocalDateTime.parse(
+              element.getAttribute(PROCESS_MODIFIED_PATH), JacksonConfig.DATE_TIME_FORMATTER));
     }
     if (element.hasAttribute(PROCESS_CREATED_PATH)) {
-      fileDatesDto.setCreate(LocalDateTime.parse(element.getAttribute(PROCESS_CREATED_PATH),
-          JacksonConfig.DATE_TIME_FORMATTER));
+      fileDatesDto.setCreate(
+          LocalDateTime.parse(
+              element.getAttribute(PROCESS_CREATED_PATH), JacksonConfig.DATE_TIME_FORMATTER));
     }
     return fileDatesDto;
   }
 
-  private String addDatesToContent(String processContent, LocalDateTime created,
-      LocalDateTime modified) {
+  private String addDatesToContent(
+      String processContent, LocalDateTime created, LocalDateTime modified) {
     Document doc;
     try {
       doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
@@ -203,15 +215,18 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       throw new RuntimeException("Could not parse xml document", exception);
     }
     Element element = doc.getDocumentElement();
-    element.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rrm",
-        "http://registry-regulation-management");
-    element.setAttributeNS("http://registry-regulation-management", PROCESS_MODIFIED_PATH,
+    element.setAttributeNS(
+        "http://www.w3.org/2000/xmlns/", "xmlns:rrm", "http://registry-regulation-management");
+    element.setAttributeNS(
+        "http://registry-regulation-management",
+        PROCESS_MODIFIED_PATH,
         modified.format(JacksonConfig.DATE_TIME_FORMATTER));
-    element.setAttributeNS("http://registry-regulation-management", PROCESS_CREATED_PATH,
+    element.setAttributeNS(
+        "http://registry-regulation-management",
+        PROCESS_CREATED_PATH,
         created.format(JacksonConfig.DATE_TIME_FORMATTER));
     doc.setXmlStandalone(true);
     return getStringFromDocument(doc);
-
   }
 
   private String getStringFromDocument(Document doc) {

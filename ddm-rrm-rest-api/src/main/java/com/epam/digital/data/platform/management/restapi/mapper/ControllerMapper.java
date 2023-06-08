@@ -57,6 +57,7 @@ public interface ControllerMapper {
   @Mapping(target = "creationDate", source = "created")
   @Mapping(target = "hasConflicts", source = "mergeable", qualifiedByName = "toConflicts")
   @Mapping(target = "latestUpdate", source = "updated")
+  @Mapping(target = "latestRebase", source = "rebased")
   @Mapping(target = "name", source = "subject")
   @Mapping(target = "validations", source = "labels", qualifiedByName = "toValidations")
   VersionInfoDetailed toVersionInfoDetailed(VersionInfoDto versionInfoDto);
