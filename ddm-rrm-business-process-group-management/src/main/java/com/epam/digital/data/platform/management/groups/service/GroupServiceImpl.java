@@ -80,8 +80,10 @@ public class GroupServiceImpl implements GroupService {
 
   @Override
   public void save(String versionId, GroupListDetails groupDetails) {
-    var mapper = new YAMLMapper(new YAMLFactory()).disable(
-        YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
+    var mapper =
+        new YAMLMapper(new YAMLFactory())
+            .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+            .configure(YAMLGenerator.Feature.SPLIT_LINES, false);
     log.debug("YAMLMapper was initialized. Trying to get repo");
     var repo = versionContextComponentManager.getComponent(versionId,
         VersionedFileRepository.class);
@@ -109,7 +111,6 @@ public class GroupServiceImpl implements GroupService {
             .build())
         .findFirst()
         .orElse(null);
-
   }
 
   @Override
@@ -148,7 +149,6 @@ public class GroupServiceImpl implements GroupService {
     });
     return definitions;
   }
-
 
   private GroupListDetails getGroupListDetails(String versionId) {
     log.debug("Trying to get repo");

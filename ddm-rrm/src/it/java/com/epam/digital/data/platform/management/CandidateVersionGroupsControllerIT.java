@@ -72,7 +72,9 @@ class CandidateVersionGroupsControllerIT extends BaseIT {
                 .build(),
             GroupDetails.builder().name("222")
                 .processDefinitions(List.of("bp-3-process_definition_id")).build(),
-            GroupDetails.builder().name("333").processDefinitions(new ArrayList<>()).build()))
+            //Very long group name to test yaml mapper split line configuration
+            GroupDetails.builder().name("1111111111 2222222222 3333333333 4444444444 5555555555 6666666666 7777777777 8888888888")
+                    .processDefinitions(new ArrayList<>()).build()))
         .ungrouped(List.of("bp-4-process_definition_id", "bp-5-process_definition_id")).build();
 
 
@@ -88,7 +90,8 @@ class CandidateVersionGroupsControllerIT extends BaseIT {
         jsonPath("$.groups[0].processDefinitions", hasSize(0)),
         jsonPath("$.groups[1].name", is("222")),
         jsonPath("$.groups[1].processDefinitions", hasSize(0)),
-        jsonPath("$.groups[2].name", is("333")),
+        //Very long group name to test yaml mapper split line configuration
+        jsonPath("$.groups[2].name", is("1111111111 2222222222 3333333333 4444444444 5555555555 6666666666 7777777777 8888888888")),
         jsonPath("$.groups[2].processDefinitions", hasSize(0)),
         jsonPath("$.ungrouped", hasSize(0))
     );
