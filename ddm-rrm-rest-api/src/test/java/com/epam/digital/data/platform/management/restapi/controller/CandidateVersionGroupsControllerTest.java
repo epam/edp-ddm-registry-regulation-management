@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,5 +212,23 @@ class CandidateVersionGroupsControllerTest {
 
     Mockito.verify(groupService).save(versionId, expected);
     Mockito.verify(groupService).getGroupsByVersion(versionId);
+  }
+
+  @Test
+  @DisplayName("POST /versions/candidates/{versionCandidateId}/business-process-groups/rollback should return 200")
+  @SneakyThrows
+  void rollbackBusinessProcessGroupsTest() {
+    var versionId = RandomString.make();
+    Mockito.doNothing().when(groupService).rollbackBusinessProcessGroups(versionId);
+
+    mockMvc.perform(
+        post("/versions/candidates/{versionCandidateId}/business-process-groups/rollback",
+            versionId)
+    ).andExpect(
+        status().isOk()
+    ).andDo(
+        document("versions/candidates/{versionCandidateId}/business-process-groups/rollback/POST"));
+
+    Mockito.verify(groupService).rollbackBusinessProcessGroups(versionId);
   }
 }

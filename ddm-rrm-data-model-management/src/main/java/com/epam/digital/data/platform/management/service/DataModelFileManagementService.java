@@ -57,4 +57,11 @@ public interface DataModelFileManagementService {
    */
   @NonNull
   List<DataModelFileDto> listDataModelFiles(@NonNull String versionId);
+
+  /**
+   * Rolls back a file that contains tables changes declaration
+   *
+   * @param versionId id of a version to rollback file content in
+   */
+  void rollbackTables(@NonNull String versionId);
 }

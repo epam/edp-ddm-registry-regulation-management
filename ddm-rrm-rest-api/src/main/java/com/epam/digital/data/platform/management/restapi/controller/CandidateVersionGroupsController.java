@@ -124,4 +124,38 @@ public class CandidateVersionGroupsController {
         .body(groupService.getGroupsByVersion(versionCandidateId));
   }
 
+  @Operation(description = "Rollback business process groups for version-candidate",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/rollback")
+  public ResponseEntity<String> rollbackBusinessProcessGroups(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
+    log.info("Started rollback bp-grouping file from {} version candidate", versionCandidateId);
+    groupService.rollbackBusinessProcessGroups(versionCandidateId);
+    log.info("Finished rolling back bp-grouping file from the {} version candidate",
+        versionCandidateId);
+    return ResponseEntity.ok().build();
+  }
+
 }

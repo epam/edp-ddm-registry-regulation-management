@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -332,6 +333,69 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public boolean repoExists(String repositoryName) {
     return getRepositoryDir(repositoryName).exists();
+  }
+
+  @Override
+  @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
+  public void rollbackFile(@NonNull String repositoryName, @NonNull String filePath) {
+    log.debug("Trying to rollback file from repository {} at path {}", repositoryName, filePath);
+    var repositoryDirectory = getExistedRepository(repositoryName);
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
+    try (var git = openRepo(repositoryDirectory)) {
+      log.trace("Rolling back file at path {}", filePath);
+      doRollback(git, filePath, repositoryDirectory);
+      log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
+      var file = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
+      doAmend(repositoryDirectory, file, git);
+      log.debug("File {} rolled back in repo {}", filePath, repositoryName);
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
+  private void doRollback(Git git, String filePath, File repositoryDirectory) {
+    try {
+      var lastCommit = git.log().call().iterator().next();
+      var parentCommit = lastCommit.getParent(0);
+      var isFileExistsInLastCommit = checkFileExistsInCommit(git, filePath, lastCommit);
+      var isFileExistsInParentCommit = checkFileExistsInCommit(git, filePath, parentCommit);
+      if (!isFileExistsInLastCommit && !isFileExistsInParentCommit) {
+        throw new GitFileNotFoundException(
+            String.format("Rollback failed, file %s doesn't exist", filePath), filePath);
+      }
+      if (isFileExistsInParentCommit) {
+        log.debug("Revert changed file to state as parent commit");
+        rollbackFileToParentCommit(git, filePath, parentCommit);
+      } else {
+        log.debug("Delete file because the parent commit does not contain it");
+        var file = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
+        var isDeleted = file.delete();
+        log.debug("The file {} been deleted", isDeleted ? "has" : "has not");
+      }
+    } catch (GitAPIException e) {
+      throw new IllegalStateException(
+          String.format("Log command doesn't expected to throw such exception: %s", e.getMessage()),
+          e);
+    }
+  }
+
+  private void rollbackFileToParentCommit(Git git, String filePath, RevCommit parentCommit) {
+    try {
+      git.checkout().setStartPoint(parentCommit).addPath(filePath).call();
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during checking out file : %s", e.getMessage()), e);
+    }
+  }
+
+  private boolean checkFileExistsInCommit(Git git, String path, RevCommit commit) {
+    try (var treeWalk = jGitWrapper.getTreeWalk(git.getRepository(), path, commit.getTree())) {
+      return Objects.nonNull(treeWalk);
+    }
   }
 
   @NonNull

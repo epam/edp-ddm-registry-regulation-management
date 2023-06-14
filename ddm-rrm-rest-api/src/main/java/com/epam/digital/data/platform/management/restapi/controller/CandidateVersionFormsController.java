@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -260,5 +260,40 @@ public class CandidateVersionFormsController {
     formService.deleteForm(formName, versionCandidateId);
     log.info("Form {} was deleted from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(description = "Rollback existing form within version-candidate",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/{formName}/rollback")
+  public ResponseEntity<String> rollbackForm(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Name of the form to be rolled back", required = true) String formName) {
+    log.info("Started rollback {} form from {} version candidate", formName, versionCandidateId);
+    formService.rollbackForm(formName, versionCandidateId);
+    log.info("Finished rolling back form {} from the {} version candidate", formName,
+        versionCandidateId);
+    return ResponseEntity.ok().build();
   }
 }

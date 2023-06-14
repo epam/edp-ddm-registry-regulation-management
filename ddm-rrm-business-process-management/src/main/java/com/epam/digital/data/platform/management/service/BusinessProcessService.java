@@ -33,4 +33,11 @@ public interface BusinessProcessService {
 
   void deleteProcess(String processName, String versionName);
 
+  /**
+   * Rolls back a business process to a specific version.
+   *
+   * @param processName name of the business process to be rolled back
+   * @param versionName name of version candidate
+   */
+  void rollbackProcess(String processName, String versionName);
 }

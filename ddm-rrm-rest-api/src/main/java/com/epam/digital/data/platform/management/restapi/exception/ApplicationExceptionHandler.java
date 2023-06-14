@@ -27,6 +27,7 @@ import com.epam.digital.data.platform.management.gerritintegration.exception.Ger
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.groups.exception.GroupDuplicateProcessDefinitionException;
 import com.epam.digital.data.platform.management.groups.exception.GroupEmptyProcessDefinitionException;
@@ -101,6 +102,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String REPOSITORY_NOT_FOUND_EXCEPTION = "REPOSITORY_NOT_FOUND_EXCEPTION";
   private static final String FORM_NOT_FOUND_EXCEPTION = "FORM_NOT_FOUND_EXCEPTION";
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
+  private static final String GIT_FILE_NOT_FOUND_EXCEPTION = "GIT_FILE_NOT_FOUND_EXCEPTION";
   private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
   private static final String DATA_MODEL_FILE_NOT_FOUND = "DATA_MODEL_FILE_NOT_FOUND";
   private static final String INVALID_CHANGELOG = "INVALID_CHANGELOG";
@@ -279,6 +281,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     log.error("Repository {} not found", exception.getVersionId());
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(newDetailedResponse(REPOSITORY_NOT_FOUND_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleGitFileNotFoundException(
+      GitFileNotFoundException exception) {
+    log.error("File {} not found", exception.getFileName());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(newDetailedResponse(GIT_FILE_NOT_FOUND_EXCEPTION, exception));
   }
 
   @ExceptionHandler

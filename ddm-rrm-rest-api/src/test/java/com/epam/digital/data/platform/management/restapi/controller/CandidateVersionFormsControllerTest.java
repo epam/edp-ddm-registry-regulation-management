@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.SneakyThrows;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -178,5 +179,23 @@ class CandidateVersionFormsControllerTest {
     ).andDo(document("versions/candidates/{versionCandidateId}/forms/{formName}/DELETE"));
 
     Mockito.verify(formService).deleteForm("john-does-form", "1");
+  }
+
+  @Test
+  @DisplayName("POST /versions/candidates/{versionCandidateId}/forms/{formName}/rollback should return 200")
+  @SneakyThrows
+  void rollbackFormTest() {
+    var versionId = RandomString.make();
+    var formName = RandomString.make();
+    Mockito.doNothing().when(formService).rollbackForm(formName, versionId);
+
+    mockMvc.perform(
+        post("/versions/candidates/{versionCandidateId}/forms/{formName}/rollback", versionId,
+            formName)
+    ).andExpect(
+        status().isOk()
+    ).andDo(document("versions/candidates/{versionCandidateId}/forms/{formName}/rollback/POST"));
+
+    Mockito.verify(formService).rollbackForm(formName, versionId);
   }
 }

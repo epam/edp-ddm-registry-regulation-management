@@ -323,4 +323,13 @@ public class BusinessProcessServiceTest {
         BusinessProcessServiceTest.class.getClassLoader().getResourceAsStream(filePath),
         StandardCharsets.UTF_8);
   }
+
+  @Test
+  @SneakyThrows
+  void rollbackProcessTest() {
+    businessProcessService.rollbackProcess("business-process", VERSION_ID);
+
+    Mockito.verify(repository)
+        .rollbackFile("bpmn/business-process." + BPMN_FILE_EXTENSION);
+  }
 }

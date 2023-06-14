@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.epam.digital.data.platform.management;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.scheduling.annotation.EnableScheduling;
+package com.epam.digital.data.platform.management.gitintegration.exception;
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
-@EnableScheduling
-public class RegistryRegulationManagementApplication {
-  public static void main(String[] args) {
-    SpringApplication.run(RegistryRegulationManagementApplication.class, args);
+import lombok.Getter;
+
+/**
+ * Exception thrown when a file is not found in a Git repository.
+ */
+@Getter
+public class GitFileNotFoundException extends RuntimeException {
+
+  private final String fileName;
+
+  public GitFileNotFoundException(String message, String fileName) {
+    super(message);
+    this.fileName = fileName;
   }
 }

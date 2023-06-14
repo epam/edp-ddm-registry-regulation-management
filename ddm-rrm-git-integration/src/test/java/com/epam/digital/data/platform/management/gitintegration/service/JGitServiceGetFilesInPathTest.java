@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
@@ -122,9 +123,8 @@ class JGitServiceGetFilesInPathTest extends AbstractJGitServiceTest {
   @DisplayName("Should throw IllegalArgumentException if path is empty")
   @SneakyThrows
   void getFilesInEmptyPathTest() {
-    Mockito.doReturn(null).when(jGitWrapper).getTreeWalk(repository, FILE_PATH);
-
     Mockito.doCallRealMethod().when(jGitWrapper).getTreeWalk(repository, "");
+    Mockito.doCallRealMethod().when(jGitWrapper).getTreeWalk(eq(repository), eq(""), any());
 
     Assertions.assertThatThrownBy(() -> jGitService.getFilesInPath(REPO_NAME, ""))
         .isInstanceOf(IllegalArgumentException.class)

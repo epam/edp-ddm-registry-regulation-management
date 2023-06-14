@@ -41,6 +41,7 @@ import com.epam.digital.data.platform.management.exception.BusinessProcessAlread
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import com.epam.digital.data.platform.management.groups.exception.GroupDuplicateProcessDefinitionException;
 import com.epam.digital.data.platform.management.groups.exception.GroupEmptyProcessDefinitionException;
 import com.epam.digital.data.platform.management.groups.exception.GroupNameRegexException;
@@ -557,6 +558,25 @@ class ApplicationExceptionHandlerTest {
         .andExpectAll(
             jsonPath("$.code").value(GROUPS_NAME_UNIQUE_EXCEPTION),
             jsonPath("$.details").value("Groups name has to be unique")
+        );
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowGitFileNotFoundException() {
+    var formName = RandomString.make();
+    var versionName = RandomString.make();
+    doThrow(GitFileNotFoundException.class).when(formService)
+        .rollbackForm(formName, versionName);
+
+    mockMvc.perform(
+            post("/versions/candidates/{versionCandidateId}/forms/{formName}/rollback", versionName,
+                formName))
+        .andExpectAll(
+            status().isNotFound(),
+            response -> Assertions.assertThat(response.getResolvedException())
+                .isInstanceOf(GitFileNotFoundException.class),
+            jsonPath("$.code").value(is("GIT_FILE_NOT_FOUND_EXCEPTION"))
         );
   }
 }

@@ -46,13 +46,11 @@ import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class GroupServiceTest {
+class GroupServiceTest {
 
   private static final String VERSION_ID = "version";
   private static final String GROUPS_PATH = "bp-grouping/bp-grouping.yml";
   private static final String BP_GROUPING_CONTENT = TestUtils.getContent("bp-grouping-test.yml");
-  private static final String BP_CANDIDATE_GROUPING_CONTENT = TestUtils.getContent(
-      "groupsVersionCandidate.yml");
   private static final String INCORRECT_BP_GROUPING_CONTENT = TestUtils.getContent(
       "bp-grouping-test-incorrect.yml");
   @Mock
@@ -193,5 +191,15 @@ public class GroupServiceTest {
                     .processDefinitions(List.of("bp-3-process_definition_id")).build(),
                 GroupDetails.builder().name("Третя група").processDefinitions(new ArrayList<>()).build()))
             .ungrouped(List.of("bp-4-process_definition_id")).build()));
+  }
+
+  @Test
+  @SneakyThrows
+  void rollbackBusinessProcessGroupsTest() {
+    groupService.rollbackBusinessProcessGroups(VERSION_ID);
+
+    Mockito.verify(versionContextComponentManager)
+        .getComponent(VERSION_ID, VersionedFileRepository.class);
+    Mockito.verify(repository).rollbackFile(GROUPS_PATH);
   }
 }

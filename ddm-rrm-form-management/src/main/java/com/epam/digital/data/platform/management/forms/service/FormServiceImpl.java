@@ -35,12 +35,8 @@ import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -121,6 +117,13 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     repo.deleteFile(getFormPath(formName));
+  }
+
+  @Override
+  public void rollbackForm(String formName, String versionName) {
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
+    repo.rollbackFile(getFormPath(formName));
   }
 
   private String getFormPath(String formName) {

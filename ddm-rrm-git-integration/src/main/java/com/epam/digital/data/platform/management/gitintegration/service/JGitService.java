@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import java.util.List;
 
 import org.springframework.lang.NonNull;
@@ -148,4 +149,18 @@ public interface JGitService {
    * @return true if repo exists and false otherwise
    */
   boolean repoExists(String repositoryName);
+
+  /**
+   * Revert the modified file to the state of the commit from which the branch was created. It
+   * requires that repository already is checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitFileNotFoundException    in case when attempting to access a file in a Git
+   *                                     repository that does not exist
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     checkout, remote add or push git command failures
+   */
+  void rollbackFile(@NonNull String repositoryName, @NonNull String filePath);
 }

@@ -32,6 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -121,5 +122,40 @@ public class CandidateVersionDataModelTablesController {
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_XML)
         .body(updatedFileContent);
+  }
+
+  @Operation(description = "Rollback data-model tables file content to specified version-candidate", parameters = {
+      @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string"))},
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Version-candidate doesn't exist",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/rollback")
+  public ResponseEntity<String> rollbackTables(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
+    log.info("Started rollback data-model tables file content from {} version candidate",
+        versionCandidateId);
+    dataModelFileManagementService.rollbackTables(versionCandidateId);
+    log.info("Finished rolling back data-model tables file content from the {} version candidate",
+        versionCandidateId);
+    return ResponseEntity.ok().build();
   }
 }

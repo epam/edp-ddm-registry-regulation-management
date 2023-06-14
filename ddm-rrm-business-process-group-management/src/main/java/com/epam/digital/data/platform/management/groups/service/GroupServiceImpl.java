@@ -140,6 +140,13 @@ public class GroupServiceImpl implements GroupService {
     }
   }
 
+  @Override
+  public void rollbackBusinessProcessGroups(String versionId) {
+    var repo = versionContextComponentManager.getComponent(versionId,
+        VersionedFileRepository.class);
+    repo.rollbackFile(GROUPS_PATH);
+  }
+
   private List<BusinessProcessDefinition> processBpDefinitions(List<String> definitionsFromFile,
       List<BusinessProcessDefinition> processes) {
     var definitions = new ArrayList<BusinessProcessDefinition>();

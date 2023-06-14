@@ -26,7 +26,6 @@ import com.epam.digital.data.platform.management.mapper.DataModelFileManagementM
 import com.epam.digital.data.platform.management.model.dto.DataModelFileDto;
 import com.epam.digital.data.platform.management.model.dto.DataModelFileType;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -107,6 +106,12 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
               versionedFileInfoDto, conflicts.contains(versionedFileInfoDto.getPath())));
     }
     return dataModels;
+  }
+
+  @Override
+  public void rollbackTables(@NonNull String versionId) {
+    var repo = getVersionedFileRepo(versionId);
+    repo.rollbackFile(getTablesFilePath());
   }
 
   private String getTablesFilePath() {

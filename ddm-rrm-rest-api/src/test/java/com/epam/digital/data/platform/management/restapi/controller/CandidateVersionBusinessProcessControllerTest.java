@@ -198,4 +198,24 @@ class CandidateVersionBusinessProcessControllerTest {
     Mockito.verify(businessProcessService).deleteProcess(processId, versionCandidateId);
     Mockito.verify(groupService).deleteProcessDefinition(processId, versionCandidateId);
   }
+
+  @Test
+  @DisplayName("POST /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/rollback should return 200")
+  @SneakyThrows
+  void rollbackFormTest() {
+    final var versionCandidateId = "id1";
+    final var processId = "John_Does_process";
+    Mockito.doNothing().when(businessProcessService).rollbackProcess(processId, versionCandidateId);
+
+    mockMvc.perform(
+        post(
+            "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/rollback",
+            versionCandidateId, processId)
+    ).andExpect(
+        status().isOk()
+    ).andDo(document(
+        "versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/rollback/POST"));
+
+    Mockito.verify(businessProcessService).rollbackProcess(processId, versionCandidateId);
+  }
 }

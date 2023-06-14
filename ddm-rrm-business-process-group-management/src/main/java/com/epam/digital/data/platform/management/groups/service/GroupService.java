@@ -58,4 +58,11 @@ public interface GroupService {
    * @param versionCandidateId version candidate identifier
    */
   void deleteProcessDefinition(String processDefinitionId, String versionCandidateId);
+
+  /**
+   * Rolls back bp-grouping file to a specific version.
+   *
+   * @param versionId version candidate identifier
+   */
+  void rollbackBusinessProcessGroups(String versionId);
 }

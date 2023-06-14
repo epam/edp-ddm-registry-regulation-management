@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -273,6 +273,42 @@ public class CandidateVersionBusinessProcessesController {
     log.info("Finished deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(description = "Rollback business process",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/{businessProcessName}/rollback")
+  public ResponseEntity<String> rollbackProcess(
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
+    log.info("Started rollback business process {} from {} version candidate",
+        businessProcessName, versionCandidateId);
+    businessProcessService.rollbackProcess(businessProcessName, versionCandidateId);
+    log.info("Finished rolling back business process {} from the {} version candidate",
+        businessProcessName, versionCandidateId);
+    return ResponseEntity.ok().build();
   }
 
 }

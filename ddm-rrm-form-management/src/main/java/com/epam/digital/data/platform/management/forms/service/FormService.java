@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,4 +73,12 @@ public interface FormService {
    * @param versionName name of version candidate
    */
   void deleteForm(String formName, String versionName);
+
+  /**
+   * Rolls back a form to a specific version.
+   *
+   * @param formName    name of the form to be rolled back
+   * @param versionName name of version candidate
+   */
+  void rollbackForm(String formName, String versionName);
 }

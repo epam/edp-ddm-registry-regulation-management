@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,19 @@ public class JGitWrapper {
   @Nullable
   public TreeWalk getTreeWalk(@NonNull Repository repository, @NonNull String path) {
     try {
-      return TreeWalk.forPath(repository, path, getRevTree(repository));
+      return getTreeWalk(repository, path, getRevTree(repository));
+    } catch (IOException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during getting reference to commit tree: %s",
+              e.getMessage()), e);
+    }
+  }
+
+  @Nullable
+  public TreeWalk getTreeWalk(@NonNull Repository repository, @NonNull String path,
+      @NonNull RevTree revTree) {
+    try {
+      return TreeWalk.forPath(repository, path, revTree);
     } catch (IOException e) {
       throw new GitCommandException(
           String.format("Exception occurred during getting repository tree walk: %s",

@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -328,5 +329,20 @@ class CandidateVersionDataModelTablesControllerTest {
       Mockito.verify(fileService, Mockito.never())
           .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
     }
+  }
+
+  @Test
+  @DisplayName("POST /versions/candidates/{versionCandidateId}/data-model/tables/rollback should return 200")
+  @SneakyThrows
+  void rollbackFormTest() {
+    Mockito.doNothing().when(fileService).rollbackTables(VERSION_CANDIDATE_ID_STRING);
+
+    mockMvc.perform(post("/versions/candidates/{versionCandidateId}/data-model/tables/rollback",
+        VERSION_CANDIDATE_ID_STRING)
+    ).andExpect(
+        status().isOk()
+    ).andDo(document("versions/candidates/{versionCandidateId}/data-model/tables/rollback/POST"));
+
+    Mockito.verify(fileService).rollbackTables(VERSION_CANDIDATE_ID_STRING);
   }
 }

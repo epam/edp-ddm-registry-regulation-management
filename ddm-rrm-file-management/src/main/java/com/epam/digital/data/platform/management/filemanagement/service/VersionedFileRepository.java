@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,4 +86,11 @@ public interface VersionedFileRepository {
    * Updates a version with remote version changes
    */
   void updateRepository();
+
+  /**
+   * Rolls back a file to a specific version.
+   *
+   * @param path relative path of file to be rolled back
+   */
+  void rollbackFile(@NonNull String path);
 }

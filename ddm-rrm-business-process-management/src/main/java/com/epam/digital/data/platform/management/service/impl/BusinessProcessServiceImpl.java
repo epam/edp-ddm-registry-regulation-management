@@ -131,6 +131,13 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     repo.deleteFile(getProcessPath(processName));
   }
 
+  @Override
+  public void rollbackProcess(String processName, String versionName) {
+    var repo = versionContextComponentManager.getComponent(versionName,
+        VersionedFileRepository.class);
+    repo.rollbackFile(getProcessPath(processName));
+  }
+
   private String getAttributeFromContent(String processContent, String attribute) {
     Document doc = parseBusinessProcess(processContent);
     doc.getDocumentElement().normalize();

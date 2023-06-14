@@ -210,4 +210,12 @@ class FormServiceTest {
 
     Mockito.verify(repository).deleteFile("forms/form.json");
   }
+
+  @Test
+  @SneakyThrows
+  void rollbackFormTest() {
+    formService.rollbackForm("form", VERSION_ID);
+
+    Mockito.verify(repository).rollbackFile("forms/form.json");
+  }
 }
