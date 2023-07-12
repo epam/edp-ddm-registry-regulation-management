@@ -16,6 +16,11 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.gitintegration.exception.FileAlreadyExistsException;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +41,7 @@ import java.util.stream.StreamSupport;
 
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
@@ -295,6 +301,33 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
+  public void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath,
+      @NonNull String fileContent) {
+    log.debug("Trying to create file in repository {} at path {}", repositoryName,
+        filePath);
+    var repositoryDirectory = getExistedRepository(repositoryName);
+
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
+    try (var git = openRepo(repositoryDirectory)) {
+      if (!getFilesInPath(repositoryName, filePath).isEmpty()) {
+        throw new FileAlreadyExistsException(
+            String.format("File with path '%s' already exists", filePath));
+      }
+
+      log.trace("Updating file at path {}", filePath);
+      var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
+      log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
+      doCommit(repositoryDirectory, file, git, filePath);
+      log.debug("File {} updated in repo {}", filePath, repositoryName);
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  @Override
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
   public void delete(@NonNull String repositoryName, @NonNull String filePath) {
     log.debug("Trying to delete file from repository {} at path {}", repositoryName, filePath);
@@ -540,7 +573,38 @@ public class JGitServiceImpl implements JGitService {
     var gitStatus = status(git);
     if (!gitStatus.isClean()) {
       commitAmend(git);
-      pushChanges(git);
+
+      var push = git.push()
+          .setCredentialsProvider(getCredentialsProvider())
+          .setRemote(Constants.DEFAULT_REMOTE_NAME)
+          .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+      pushChanges(git, push);
+    }
+  }
+
+  private void doCommit(File repoDirectory, File file, Git git, String filePath) {
+    addFileToGit(repoDirectory, file, git);
+    var gitStatus = status(git);
+    if (!gitStatus.isClean()) {
+      commit(git, filePath);
+
+      var push = git.push()
+          .setCredentialsProvider(getCredentialsProvider())
+          .setRemote(Constants.DEFAULT_REMOTE_NAME)
+          .setRefSpecs(new RefSpec(
+              "HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch() + "%private,submit"));
+      pushChanges(git, push);
+    }
+  }
+
+  private void commit(Git git, String message) {
+    try {
+      git.commit()
+          .setMessage("created file " + message)
+          .call();
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during commit: %s", e.getMessage()), e);
     }
   }
 
@@ -633,18 +697,14 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  private void pushChanges(Git git) {
-    var addCommand =
-        git.remoteAdd().setUri(getRepositoryURIish()).setName(Constants.DEFAULT_REMOTE_NAME);
-    var push =
-        git.push()
-            .setCredentialsProvider(getCredentialsProvider())
-            .setRemote(Constants.DEFAULT_REMOTE_NAME)
-            .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+  private void pushChanges(Git git, PushCommand pushCommand) {
+    var addCommand = git.remoteAdd()
+        .setUri(getRepositoryURIish())
+        .setName(Constants.DEFAULT_REMOTE_NAME);
 
     try {
       addCommand.call();
-      retryable.call(push);
+      retryable.call(pushCommand);
     } catch (InvalidRemoteException e) {
       throw new IllegalStateException(
           String.format(

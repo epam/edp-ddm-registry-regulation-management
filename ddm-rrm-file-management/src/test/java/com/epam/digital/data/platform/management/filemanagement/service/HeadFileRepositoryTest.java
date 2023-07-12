@@ -101,12 +101,6 @@ public class HeadFileRepositoryTest {
   }
 
   @Test
-  void writeNotSupportTest() {
-    Assertions.assertThatCode(() -> repository.writeFile("/", "content"))
-        .isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
   void deleteNotSupportTest() {
     Assertions.assertThatCode(() -> repository.deleteFile("/"))
         .isInstanceOf(UnsupportedOperationException.class);

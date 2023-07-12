@@ -16,13 +16,19 @@
 
 package com.epam.digital.data.platform.management;
 
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.google.gson.JsonParser;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -168,6 +174,57 @@ class MasterVersionFormsControllerIT extends BaseIT {
           content().contentType("application/json"),
           jsonPath("$", hasSize(0))
       );
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /versions/master/forms/{formName}")
+  class MasterVersionFormsCreateFormControllerIT {
+
+    @Test
+    @DisplayName("should return 200 and create form if there's no such form")
+    @SneakyThrows
+    void createForm() {
+
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/POST/valid-form-master.json");
+
+      // perform query
+      mockMvc.perform(
+          post("/versions/master/forms/{formName}",
+              "valid-form-master")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isCreated(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form"))
+      );
+
+      // get created form
+      var result = mockMvc.perform(
+              get("/versions/master/forms/{formName}", "valid-form-master")
+                  .accept(MediaType.APPLICATION_JSON)
+          ).andExpectAll(
+              status().isOk(),
+              jsonPath("$.name", is("valid-form")),
+              jsonPath("$.title", is("Valid form")))
+          .andReturn()
+          .getResponse();
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(result.getContentAsString()).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
     }
   }
 }

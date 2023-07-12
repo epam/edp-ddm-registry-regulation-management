@@ -20,7 +20,9 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.test.web.servlet.MockMvc;
@@ -112,5 +115,29 @@ class MasterVersionFormsControllerTest {
     ).andDo(document("versions/master/forms/{formName}/GET"));
 
     Mockito.verify(formService).getFormContent(formName, HEAD_BRANCH);
+  }
+
+  @Test
+  @DisplayName("POST /versions/master/forms/{formName} should return 201 with form content")
+  @SneakyThrows
+  void formCreateTest() {
+    final var formName = "john-does-form";
+    final var expectedFormContent = TestUtils.getContent("controller/john-does-form.json");
+
+    Mockito.doReturn(expectedFormContent)
+        .when(formService).getFormContent(formName, HEAD_BRANCH);
+
+    mockMvc.perform(
+        post("/versions/master/forms/{formName}", formName)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(expectedFormContent)
+    ).andExpectAll(
+        status().isCreated(),
+        header().string(HttpHeaders.LOCATION, "/versions/master/forms/john-does-form"),
+        content().contentType(MediaType.APPLICATION_JSON),
+        content().json(expectedFormContent)
+    ).andDo(document("versions/master/forms/{formName}/POST"));
+
+    Mockito.verify(formService).createForm(formName, expectedFormContent, HEAD_BRANCH);
   }
 }

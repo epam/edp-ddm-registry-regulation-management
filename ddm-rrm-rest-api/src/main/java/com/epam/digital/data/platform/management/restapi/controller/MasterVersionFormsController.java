@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +37,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -119,6 +122,54 @@ public class MasterVersionFormsController {
     var response = formService.getFormContent(formName, masterVersionId);
     log.info("Finished getting {} form form master", formName);
     return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(response);
+  }
+
+  @Operation(description = "Create new form within master",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "201",
+              description = "Created",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "409",
+              description = "Conflict",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/{formName}")
+  public ResponseEntity<String> formCreate(@RequestBody String form,
+      @PathVariable @Parameter(description = "Name of the new form to be created", required = true) String formName) {
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+
+    log.info("Started creating {} form for master", formName);
+    formService.createForm(formName, form, masterVersionId);
+    log.info("Form {} was created for master. Retrieving this form", formName);
+    var response = formService.getFormContent(formName, masterVersionId);
+    log.info("Finished getting {} form from master", formName);
+    return ResponseEntity.created(URI.create(
+            String.format("/versions/master/forms/%s", formName)))
         .contentType(MediaType.APPLICATION_JSON)
         .body(response);
   }

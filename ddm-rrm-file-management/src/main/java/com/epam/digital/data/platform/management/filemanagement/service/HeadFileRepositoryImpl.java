@@ -67,4 +67,9 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
   public void updateRepository() {
     gitService.cloneRepoIfNotExist(versionId);
   }
+
+  @Override
+  public void writeFile(@NonNull String path, @NonNull String content) {
+    gitService.commitAndSubmit(versionId, path, content);
+  }
 }

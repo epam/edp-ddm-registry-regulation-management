@@ -28,6 +28,7 @@ import com.epam.digital.data.platform.management.forms.FormMapper;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.gitintegration.exception.FileAlreadyExistsException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -71,12 +72,18 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formPath = getFormPath(formName);
+    var formAlreadyExistsException = new  FormAlreadyExistsException(
+        String.format("Form with path '%s' already exists", formPath));
     if (repo.isFileExists(formPath)) {
-      throw new FormAlreadyExistsException(
-          String.format("Form with path '%s' already exists", formPath));
+      throw formAlreadyExistsException;
     }
+
     content = addDatesToContent(content, time, time);
-    repo.writeFile(formPath, content);
+    try {
+      repo.writeFile(formPath, content);
+    } catch (FileAlreadyExistsException e) {
+      throw formAlreadyExistsException;
+    }
   }
 
   @Override

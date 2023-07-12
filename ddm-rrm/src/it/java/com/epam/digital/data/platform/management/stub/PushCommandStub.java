@@ -19,6 +19,8 @@ package com.epam.digital.data.platform.management.stub;
 import com.epam.digital.data.platform.management.context.TestExecutionContext;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.lib.Repository;
@@ -57,11 +59,18 @@ public class PushCommandStub extends PushCommand {
         .hasSize(1)
         .element(0)
         .hasFieldOrPropertyWithValue("source", "HEAD")
-        .hasFieldOrPropertyWithValue("destination",
-            "refs/for/" + context.getGerritProps().getHeadBranch());
-
+        .satisfiesAnyOf(
+            spec -> Assertions.assertThat(spec)
+                .hasFieldOrPropertyWithValue("destination",
+                    "refs/for/" + context.getGerritProps().getHeadBranch() + "%private,submit"),
+            spec -> Assertions.assertThat(spec)
+                .hasFieldOrPropertyWithValue("destination",
+                    "refs/for/" + context.getGerritProps().getHeadBranch()));
+    var refNumber =
+        Objects.nonNull(context.getVersionCandidate()) ? context.getVersionCandidate().getNumber()
+            : RandomUtils.nextInt();
     super.setRefSpecs(List.of(new RefSpec(
-        String.format("HEAD:refs/heads/%s_ref", context.getVersionCandidate().getNumber()))));
+        String.format("HEAD:refs/heads/%s_ref", refNumber))));
     super.setForce(true);
     return this;
   }

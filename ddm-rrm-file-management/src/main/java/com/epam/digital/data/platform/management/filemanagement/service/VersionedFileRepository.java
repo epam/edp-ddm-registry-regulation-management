@@ -25,7 +25,7 @@ import org.springframework.lang.Nullable;
  * Used for working with files in specific version. It's needed to create an instance of
  * {@link VersionedFileRepository} for every single version.
  *
- * @see HeadFileRepositoryImpl implementation for head (readable only) version
+ * @see HeadFileRepositoryImpl implementation for head version
  * @see VersionedFileRepositoryImpl implementation for writable version
  * @see VersionedFileRepositoryFactory factory of the VersionedFileRepository
  */

@@ -151,6 +151,19 @@ public interface JGitService {
   boolean repoExists(String repositoryName);
 
   /**
+   * Commit file and push to refs for head-branch. It requires that repository already is
+   * checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @param fileContent    content of file
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     remote add or push git command failures
+   */
+  void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent);
+
+  /**
    * Revert the modified file to the state of the commit from which the branch was created. It
    * requires that repository already is checkout on FETCH_HEAD for successful push to repo
    *
