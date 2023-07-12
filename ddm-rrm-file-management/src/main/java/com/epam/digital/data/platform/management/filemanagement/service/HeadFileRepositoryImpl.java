@@ -72,4 +72,10 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
   public void writeFile(@NonNull String path, @NonNull String content) {
     gitService.commitAndSubmit(versionId, path, content);
   }
+
+  @Override
+  public String readFile(@NonNull String path) {
+    gitService.resetHeadBranchToRemote();
+    return super.readFile(path);
+  }
 }

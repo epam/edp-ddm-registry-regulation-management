@@ -72,9 +72,9 @@ class MasterVersionFormsControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 404 if form hasn't been pulled")
+    @DisplayName("should return 200 if form added to remote")
     @SneakyThrows
-    void getForm_formHasNotBeenPulled() {
+    void getForm_formHasBeenPulledWhenReadFile() {
       // add file to "remote" repo and DO NOT pull the head repo
       final var expectedFormContent = context.getResourceContent(
           "/versions/master/forms/{formName}/GET/john-does-form.json");
@@ -84,10 +84,9 @@ class MasterVersionFormsControllerIT extends BaseIT {
           get("/versions/master/forms/{formName}", "john-does-form")
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isNotFound(),
+          status().isOk(),
           content().contentType(MediaType.APPLICATION_JSON),
-          jsonPath("$.code", is("FORM_NOT_FOUND_EXCEPTION")),
-          jsonPath("$.details", is("Form john-does-form not found"))
+          content().json(expectedFormContent)
       );
     }
 
@@ -182,7 +181,7 @@ class MasterVersionFormsControllerIT extends BaseIT {
   class MasterVersionFormsCreateFormControllerIT {
 
     @Test
-    @DisplayName("should return 200 and create form if there's no such form")
+    @DisplayName("should return 201 and create form if there's no such form")
     @SneakyThrows
     void createForm() {
 

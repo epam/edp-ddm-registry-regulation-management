@@ -66,11 +66,11 @@ public class PushCommandStub extends PushCommand {
             spec -> Assertions.assertThat(spec)
                 .hasFieldOrPropertyWithValue("destination",
                     "refs/for/" + context.getGerritProps().getHeadBranch()));
-    var refNumber =
-        Objects.nonNull(context.getVersionCandidate()) ? context.getVersionCandidate().getNumber()
-            : RandomUtils.nextInt();
-    super.setRefSpecs(List.of(new RefSpec(
-        String.format("HEAD:refs/heads/%s_ref", refNumber))));
+
+    if (Objects.nonNull(context.getVersionCandidate())) {
+      super.setRefSpecs(List.of(new RefSpec(
+          String.format("HEAD:refs/heads/%s_ref", context.getVersionCandidate().getNumber()))));
+    }
     super.setForce(true);
     return this;
   }

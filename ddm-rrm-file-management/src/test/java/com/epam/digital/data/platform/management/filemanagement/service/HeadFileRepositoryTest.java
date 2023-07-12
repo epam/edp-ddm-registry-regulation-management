@@ -39,7 +39,7 @@ import org.mockito.Spy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class HeadFileRepositoryTest {
+class HeadFileRepositoryTest {
 
   @Mock
   private JGitService jGitService;
@@ -137,5 +137,17 @@ public class HeadFileRepositoryTest {
 
     Assertions.assertThat(fileExists).isTrue();
     Mockito.verify(jGitService).getFilesInPath("version", normalize);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRefreshRepositoryWhenFileRead() {
+    var path = RandomString.make();
+    var content = RandomString.make();
+    Mockito.when(jGitService.getFileContent("version", path)).thenReturn(content);
+    var fileContent = repository.readFile(path);
+    Assertions.assertThat(fileContent).isNotNull()
+        .isEqualTo(content);
+    Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 }

@@ -58,9 +58,9 @@ class MasterVersionBPControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 404 if business-process hasn't been pulled from remote")
+    @DisplayName("should return 200 if business-process added to remote")
     @SneakyThrows
-    void getBusinessProcess_businessProcessHasNotBeenPulled() {
+    void getBusinessProcess_businessProcessHasBeenPulledWhenReadFile() {
       // add file to "remote" repo and DO NOT pull the head repo
       final var expectedBpContent = context.getResourceContent(
           "/versions/master/business-processes/{businessProcessName}/GET/john-does-bp.bpmn");
@@ -70,10 +70,9 @@ class MasterVersionBPControllerIT extends BaseIT {
           get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
               .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isNotFound(),
-          content().contentType(MediaType.APPLICATION_JSON),
-          jsonPath("$.code", is("PROCESS_NOT_FOUND_EXCEPTION")),
-          jsonPath("$.details", is("Process john-does-bp not found"))
+          status().isOk(),
+          content().contentType(MediaType.TEXT_XML),
+          content().xml(expectedBpContent)
       );
     }
 
