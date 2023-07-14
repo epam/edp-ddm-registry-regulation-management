@@ -20,6 +20,7 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
+import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,6 +39,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/versions/master/business-processes")
 @RequiredArgsConstructor
 public class MasterVersionBusinessProcessesController {
+
   private final BusinessProcessService businessProcessService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
@@ -119,5 +124,57 @@ public class MasterVersionBusinessProcessesController {
     var response = businessProcessService.getProcessContent(businessProcessName, masterVersionId);
     log.info("Finished getting {} business process from master", businessProcessName);
     return ResponseEntity.ok().contentType(MediaType.TEXT_XML).body(response);
+  }
+
+  @Operation(description = "Create new business process",
+      parameters = @Parameter(in = ParameterIn.HEADER,
+          name = "X-Access-Token",
+          description = "Token used for endpoint security",
+          required = true,
+          schema = @Schema(type = "string")),
+      responses = {
+          @ApiResponse(responseCode = "201",
+              description = "Created",
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "409",
+              description = "Conflict",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PostMapping("/{businessProcessName}")
+  public ResponseEntity<String> createBusinessProcess(
+      @RequestBody @BusinessProcess String businessProcess,
+      @PathVariable @Parameter(description = "Name of the new process to be created", required = true) String businessProcessName) {
+    log.info("Started creating business process {} for master version", businessProcessName);
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+
+    businessProcessService.createProcess(businessProcessName, businessProcess, masterVersionId);
+    log.info("Finished creating business process {} for master version. Retrieving process",
+        businessProcessName);
+    var response = businessProcessService.getProcessContent(businessProcessName,
+        masterVersionId);
+    log.info("Finished getting business process {} from master version", businessProcessName);
+    return ResponseEntity.created(URI.create(
+            String.format("/versions/master/business-processes/%s",
+                businessProcessName)))
+        .contentType(MediaType.TEXT_XML)
+        .body(response);
   }
 }

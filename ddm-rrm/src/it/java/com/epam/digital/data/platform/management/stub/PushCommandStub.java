@@ -67,7 +67,7 @@ public class PushCommandStub extends PushCommand {
                 .hasFieldOrPropertyWithValue("destination",
                     "refs/for/" + context.getGerritProps().getHeadBranch()));
 
-    if (Objects.nonNull(context.getVersionCandidate())) {
+    if (!specs.get(0).getDestination().contains("private,submit")) {
       super.setRefSpecs(List.of(new RefSpec(
           String.format("HEAD:refs/heads/%s_ref", context.getVersionCandidate().getNumber()))));
     }

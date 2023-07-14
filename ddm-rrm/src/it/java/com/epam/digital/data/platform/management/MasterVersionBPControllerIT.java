@@ -16,18 +16,30 @@
 
 package com.epam.digital.data.platform.management;
 
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
+import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPathFactory;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.xml.sax.InputSource;
+import org.xmlunit.builder.DiffBuilder;
 
 @DisplayName("Business-process in master version controller tests")
 class MasterVersionBPControllerIT extends BaseIT {
@@ -148,4 +160,69 @@ class MasterVersionBPControllerIT extends BaseIT {
       );
     }
   }
+
+  @Nested
+  @DisplayName("POST /versions/master/business-processes/{businessProcessName}")
+  class CandidateVersionBPCreateBpByNameControllerIT {
+
+    @Test
+    @DisplayName("should return 201 and create business-process if there's no such process")
+    @SneakyThrows
+    void createBusinessProcess() {
+
+      // define expected bp content to create
+      final var expectedBpContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/POST/valid-bp.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          post("/versions/master/business-processes/{businessProcessName}",
+              "valid-bp")
+              .contentType(MediaType.TEXT_XML)
+              .content(expectedBpContent)
+              .accept(MediaType.TEXT_XML)
+      ).andExpectAll(
+          status().isCreated(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("Valid BP")
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      var actualBpContent = mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("Valid BP")
+      ).andReturn().getResponse().getContentAsString();
+
+      assertNoDifferences(expectedBpContent, actualBpContent);
+
+      // assert that business process dates are close to current date
+      final var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+          .parse(new InputSource(new StringReader(actualBpContent)));
+      final var createdXpath = XPathFactory.newInstance().newXPath();
+      final var created = createdXpath.compile("/definitions/@created").evaluate(document);
+      final var updated = createdXpath.compile("/definitions/@modified").evaluate(document);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    private void assertNoDifferences(String bpFileContent, String actualContent) {
+      final var documentDiff = DiffBuilder
+          .compare(actualContent)
+          .withTest(bpFileContent)
+          .withAttributeFilter(
+              attr -> !attr.getName().equals("rrm:modified") && !attr.getName()
+                  .equals("rrm:created"))
+          .build();
+      Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
+    }
+  }
+
 }
