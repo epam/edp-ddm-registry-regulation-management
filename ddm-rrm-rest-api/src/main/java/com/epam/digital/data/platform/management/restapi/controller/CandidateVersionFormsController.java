@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.FormDetailsShort;
@@ -136,6 +137,7 @@ public class CandidateVersionFormsController {
     return ResponseEntity.created(URI.create(
             String.format("/versions/candidates/%s/forms/%s", versionCandidateId, formName)))
         .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -170,6 +172,7 @@ public class CandidateVersionFormsController {
     log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -219,6 +222,7 @@ public class CandidateVersionFormsController {
     log.info("Finished getting {} form from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 

@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
@@ -149,6 +150,7 @@ public class CandidateVersionBusinessProcessesController {
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId,
                 businessProcessName)))
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -187,6 +189,7 @@ public class CandidateVersionBusinessProcessesController {
         versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -235,6 +238,7 @@ public class CandidateVersionBusinessProcessesController {
         versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 

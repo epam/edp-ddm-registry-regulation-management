@@ -1,11 +1,11 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.forms.service.FormService;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.FormDetailsShort;
@@ -123,6 +124,7 @@ public class MasterVersionFormsController {
     log.info("Finished getting {} form form master", formName);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -171,6 +173,7 @@ public class MasterVersionFormsController {
     return ResponseEntity.created(URI.create(
             String.format("/versions/master/forms/%s", formName)))
         .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 }

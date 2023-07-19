@@ -1,11 +1,11 @@
 /*
- * Copyright 2022 EPAM Systems.
+ * Copyright 2023 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,21 +16,21 @@
 
 package com.epam.digital.data.platform.management.interceptor;
 
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.ModelAndView;
 
 @Slf4j
 public abstract class AbstractETagHeaderInterceptor implements HandlerInterceptor {
 
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-      Object handler) {
+  public boolean preHandle(@NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response, @NonNull Object handler) {
     var method = request.getMethod();
     var eTag = request.getHeader("If-Match");
     if (!method.equals("PUT") && !method.equals("DELETE")) {
@@ -44,18 +44,7 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
     return validateETag(request, response, eTag);
   }
 
-  @Override
-  public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
-      ModelAndView modelAndView) {
-    if (!request.getMethod().equals("DELETE")) {
-      response.setHeader(HttpHeaders.ETAG, getETagFromContent(getContent(request)));
-    }
-  }
-
-  protected String getETagFromContent(String content) {
-    return String.format("\"%s\"", content.hashCode());
-  }
-
+  @SuppressWarnings("unchecked")
   protected Map<String, String> getVariables(HttpServletRequest request) {
     return (Map<String, String>) request.getAttribute(
         HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
@@ -65,7 +54,7 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
       String eTag) {
     var content = getContent(request);
     var url = request.getRequestURL();
-    if (!getETagFromContent(content).equals(eTag)) {
+    if (!ETagUtils.getETagFromContent(content).equals(eTag)) {
       log.info("Invalid ETag for path {} version candidate, action will not be performed", url);
       response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
       return false;
