@@ -601,6 +601,7 @@ public class JGitServiceImpl implements JGitService {
     try {
       git.commit()
           .setMessage("created file " + message)
+          .setInsertChangeId(true)
           .call();
     } catch (GitAPIException e) {
       throw new GitCommandException(

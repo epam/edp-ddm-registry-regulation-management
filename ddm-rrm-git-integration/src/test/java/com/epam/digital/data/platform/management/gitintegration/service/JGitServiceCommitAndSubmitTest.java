@@ -95,6 +95,7 @@ class JGitServiceCommitAndSubmitTest extends AbstractJGitServiceTest {
 
     Mockito.doReturn(commitCommand).when(git).commit();
     Mockito.doReturn(commitCommand).when(commitCommand).setMessage(COMMIT_MESSAGE + FILE_PATH);
+    Mockito.doReturn(commitCommand).when(commitCommand).setInsertChangeId(true);
 
     Mockito.doReturn(remoteAddCommand).when(git).remoteAdd();
     Mockito.doReturn(remoteAddCommand).when(remoteAddCommand)
