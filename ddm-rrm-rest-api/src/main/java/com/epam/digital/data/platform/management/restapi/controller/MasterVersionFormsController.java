@@ -34,12 +34,15 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -170,5 +173,48 @@ public class MasterVersionFormsController {
         .contentType(MediaType.APPLICATION_JSON)
         .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
+  }
+
+  @Operation(description = "Delete existing form within master",
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
+      responses = {
+          @ApiResponse(responseCode = "204",
+              description = "No Content",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @DeleteMapping("/{formName}")
+  public ResponseEntity<String> deleteForm(
+      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName,
+      @RequestHeader HttpHeaders headers) {
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+    var eTag = headers.getFirst("If-Match");
+    log.info("Started deleting {} form for master", formName);
+    formService.deleteForm(formName, masterVersionId, eTag);
+    log.info("Form {} was deleted from master", formName);
+    return ResponseEntity.noContent().build();
   }
 }

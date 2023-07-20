@@ -1,0 +1,9 @@
+{
+  "type": "form",
+  "components": [],
+  "title": "John Doe's form",
+  "path": "john-does-form",
+  "name": "john-does-form",
+  "display": "form",
+  "submissionAccess": []
+}

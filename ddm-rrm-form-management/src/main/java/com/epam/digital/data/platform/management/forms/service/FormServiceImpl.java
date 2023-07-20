@@ -148,6 +148,13 @@ public class FormServiceImpl implements FormService {
     cacheService.getEtag(versionName, formName, content);
   }
 
+  @Override
+  public void deleteForm(String formName, String versionName, String eTag) {
+    var repo =
+        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
+    repo.deleteFile(getFormPath(formName), eTag);
+  }
+
   private String getFormPath(String formName) {
     return String.format(
         "%s/%s.%s", DIRECTORY_PATH, FilenameUtils.getName(formName), JSON_FILE_EXTENSION);

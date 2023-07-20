@@ -16,7 +16,9 @@
 
 package com.epam.digital.data.platform.management.interceptor;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.forms.service.FormService;
+import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +30,16 @@ import org.springframework.stereotype.Component;
 public class FormETagHeaderInterceptor extends AbstractETagHeaderInterceptor {
 
   private final FormService formService;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
 
   @Override
   protected String getContent(HttpServletRequest request) {
     var paramsMap = getVariables(request);
     var formName = paramsMap.get("formName");
     var versionCandidateId = paramsMap.get("versionCandidateId");
+    if (Objects.isNull(versionCandidateId)) {
+      versionCandidateId = gerritPropertiesConfig.getHeadBranch();
+    }
     return formService.getFormContent(formName, versionCandidateId);
   }
 }

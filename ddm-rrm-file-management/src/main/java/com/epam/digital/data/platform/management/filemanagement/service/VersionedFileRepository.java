@@ -75,6 +75,15 @@ public interface VersionedFileRepository {
   void deleteFile(@NonNull String path);
 
   /**
+   * Deletes file at specific path in the version and comparing eTags
+   *
+   * @param path version relative path of file to delete
+   * @param eTag entity tag
+   * @throws UnsupportedOperationException if updating isn't allowed in version
+   */
+  void deleteFile(@NonNull String path, String eTag);
+
+  /**
    * Gets an id of the version of this repository
    *
    * @return id of the version

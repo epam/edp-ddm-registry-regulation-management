@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 @DisplayName("Forms in master version controller tests")
 class MasterVersionFormsControllerIT extends BaseIT {
@@ -234,6 +237,115 @@ class MasterVersionFormsControllerIT extends BaseIT {
           .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
       Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
           .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+  }
+
+  @Nested
+  @DisplayName("DELETE /versions/master/forms/{formName}")
+  class MasterVersionFormsDeleteFormByNameControllerIT {
+
+    @Test
+    @DisplayName("should return 204 and delete form if there's already exists such form")
+    @SneakyThrows
+    void deleteForm_noETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/forms/{formName}",
+          "john-does-form")
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+          .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("should return 204 and delete form if there's already exists such form")
+    @SneakyThrows
+    void deleteForm_validETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/master/forms/{formName}",
+          "john-does-form")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/forms/{formName}",
+          "john-does-form")
+          .header("If-Match", eTag)
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("should return 412 with invalid ETag")
+    @SneakyThrows
+    void deleteForm_invalidETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/DELETE/john-does-form.json");
+      context.addFileToRemoteHeadRepo("/forms/john-does-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/forms/{formName}",
+          "john-does-form")
+          .header("If-Match", RandomString.make())
+      ).andExpect(
+          status().isConflict()
+      );
+
+      // assert that file was not deleted
+      mockMvc.perform(
+          get("/versions/master/forms/{formName}", "john-does-form")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk());
+    }
+
+    @Test
+    @DisplayName("should return 204 if there's no such form")
+    @SneakyThrows
+    void deleteForm_noFormToDelete() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // perform query
+      mockMvc.perform(
+          delete(
+              "/versions/master/forms/{formName}",
+              versionCandidateId, "john-does-form")
+      ).andExpect(
+          status().isNoContent()
+      );
     }
   }
 }

@@ -41,6 +41,8 @@ public class WebConfig implements WebMvcConfigurer {
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(livenessProbeStateInterceptor);
     registry.addInterceptor(formETagHeaderInterceptor)
-        .addPathPatterns("/versions/candidates/{versionCandidateId}/forms/{formName}");
+        .addPathPatterns(List.of("/versions/candidates/{versionCandidateId}/forms/{formName}",
+            "/versions/master/forms/{formName}"));
+
   }
 }
