@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,13 +19,16 @@ package com.epam.digital.data.platform.management;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -37,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
 @DisplayName("Forms in master version controller tests")
@@ -66,6 +70,7 @@ class MasterVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
+          header().string(HttpHeaders.ETAG, ETagUtils.getETagFromContent(expectedFormContent)),
           content().contentType(MediaType.APPLICATION_JSON),
           content().json(expectedFormContent)
       );
@@ -85,6 +90,7 @@ class MasterVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
+          header().string(HttpHeaders.ETAG, ETagUtils.getETagFromContent(expectedFormContent)),
           content().contentType(MediaType.APPLICATION_JSON),
           content().json(expectedFormContent)
       );
@@ -140,10 +146,12 @@ class MasterVersionFormsControllerIT extends BaseIT {
           jsonPath("$[0].title", is("John Doe's form")),
           jsonPath("$[0].created", is(expectedJohnDoesFormDates.getCreated())),
           jsonPath("$[0].updated", is(expectedJohnDoesFormDates.getUpdated())),
+          jsonPath("$[0].etag", is(ETagUtils.getETagFromContent(johnDoesFormContent))),
           jsonPath("$[1].name", is("mr-smiths-form")),
           jsonPath("$[1].title", is("Mr Smith's form")),
           jsonPath("$[1].created", is("2022-10-28T20:21:48.845Z")),
-          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z"))
+          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z")),
+          jsonPath("$[1].etag", is(ETagUtils.getETagFromContent(mrSmithsFormContent)))
       );
 
       final var datesCache = cacheManager.getCache(DATE_CACHE_NAME);
@@ -198,6 +206,7 @@ class MasterVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isCreated(),
+          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form"))
@@ -209,6 +218,7 @@ class MasterVersionFormsControllerIT extends BaseIT {
                   .accept(MediaType.APPLICATION_JSON)
           ).andExpectAll(
               status().isOk(),
+              header().string(HttpHeaders.ETAG, is(notNullValue())),
               jsonPath("$.name", is("valid-form")),
               jsonPath("$.title", is("Valid form")))
           .andReturn()

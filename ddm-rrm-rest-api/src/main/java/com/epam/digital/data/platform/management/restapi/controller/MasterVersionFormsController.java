@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.forms.service.FormService;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.FormDetailsShort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +32,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -52,6 +52,7 @@ public class MasterVersionFormsController {
 
   private final FormService formService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final ControllerMapper mapper;
 
   @Operation(description = "Get lest of forms for master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -78,14 +79,8 @@ public class MasterVersionFormsController {
   public ResponseEntity<List<FormDetailsShort>> getFormsFromMaster() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Started getting forms from master");
-    var response = formService.getFormListByVersion(masterVersionId).stream()
-        .map(e -> FormDetailsShort.builder()
-            .name(e.getName())
-            .title(e.getTitle())
-            .created(e.getCreated())
-            .updated(e.getUpdated())
-            .build())
-        .collect(Collectors.toList());
+    var dtos = formService.getFormListByVersion(masterVersionId);
+    var response = mapper.toFormDetailsShorts(dtos);
     log.info("Found {} forms in master", response.size());
     return ResponseEntity.ok().body(response);
   }

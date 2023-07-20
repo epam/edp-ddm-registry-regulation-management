@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 
 import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.forms.service.FormService;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.FormDetailsShort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -51,6 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class CandidateVersionFormsController {
 
   private final FormService formService;
+  private final ControllerMapper mapper;
 
   @Operation(description = "Acquire list of forms for specific version-candidate",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -81,14 +82,8 @@ public class CandidateVersionFormsController {
   public ResponseEntity<List<FormDetailsShort>> getFormsByVersionId(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting forms for {} version candidate", versionCandidateId);
-    var response = formService.getFormListByVersion(versionCandidateId).stream()
-        .map(e -> FormDetailsShort.builder()
-            .name(e.getName())
-            .title(e.getTitle())
-            .created(e.getCreated())
-            .updated(e.getUpdated())
-            .build())
-        .collect(Collectors.toList());
+    var dtos = formService.getFormListByVersion(versionCandidateId);
+    var response = mapper.toFormDetailsShorts(dtos);
     log.info("Found {} forms from {} version candidate", response.size(), versionCandidateId);
     return ResponseEntity.ok().body(response);
   }

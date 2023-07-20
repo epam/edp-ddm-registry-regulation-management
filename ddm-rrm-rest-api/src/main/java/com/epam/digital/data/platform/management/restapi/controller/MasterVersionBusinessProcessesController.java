@@ -19,6 +19,7 @@ package com.epam.digital.data.platform.management.restapi.controller;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
+import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
@@ -33,7 +34,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -54,6 +54,7 @@ public class MasterVersionBusinessProcessesController {
 
   private final BusinessProcessService businessProcessService;
   private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final ControllerMapper mapper;
 
   @Operation(description = "Get business processes list for master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -80,14 +81,8 @@ public class MasterVersionBusinessProcessesController {
   public ResponseEntity<List<BusinessProcessDetailsShort>> getBusinessProcessesFromMaster() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();
     log.info("Started getting business processes from master");
-    var response = businessProcessService.getProcessesByVersion(masterVersionId).stream()
-        .map(e -> BusinessProcessDetailsShort.builder()
-            .name(e.getName())
-            .title(e.getTitle())
-            .created(e.getCreated())
-            .updated(e.getUpdated())
-            .build())
-        .collect(Collectors.toList());
+    var dtos = businessProcessService.getProcessesByVersion(masterVersionId);
+    var response = mapper.toBusinessProcessDetailsShorts(dtos);
     log.info("Found {} business processes in master", response.size());
     return ResponseEntity.ok().body(response);
   }

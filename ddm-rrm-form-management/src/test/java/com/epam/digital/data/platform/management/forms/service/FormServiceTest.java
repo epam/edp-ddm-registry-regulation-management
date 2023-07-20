@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import static org.mockito.Mockito.never;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.service.CacheService;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -103,7 +104,8 @@ class FormServiceTest {
     var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
-        .title("Update physical factors").conflicted(true).build();
+        .title("Update physical factors").conflicted(true)
+        .etag(ETagUtils.getETagFromContent(FORM_CONTENT)).build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 
@@ -122,7 +124,8 @@ class FormServiceTest {
     var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.DELETED).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
-        .title("Update physical factors").build();
+        .title("Update physical factors")
+        .etag(ETagUtils.getETagFromContent(FORM_CONTENT)).build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 
