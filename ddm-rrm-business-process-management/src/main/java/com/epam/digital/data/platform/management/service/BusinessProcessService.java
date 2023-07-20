@@ -40,4 +40,13 @@ public interface BusinessProcessService {
    * @param versionName name of version candidate
    */
   void rollbackProcess(String processName, String versionName);
+
+  /**
+   * Delete business process with eTag validation
+   *
+   * @param processName    name of business process
+   * @param versionName name of version candidate
+   * @param eTag entity tag
+   */
+  void deleteProcess(String processName, String versionName, String eTag);
 }

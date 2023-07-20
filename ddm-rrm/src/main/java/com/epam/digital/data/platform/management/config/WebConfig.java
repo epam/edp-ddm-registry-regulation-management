@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.config;
 
+import com.epam.digital.data.platform.management.interceptor.BusinessProcessETagInterceptor;
 import com.epam.digital.data.platform.management.interceptor.FormETagHeaderInterceptor;
 import com.epam.digital.data.platform.management.security.config.SecurityContextResolver;
 import java.util.List;
@@ -32,6 +33,8 @@ public class WebConfig implements WebMvcConfigurer {
 
   private final HandlerInterceptor livenessProbeStateInterceptor;
   private final FormETagHeaderInterceptor formETagHeaderInterceptor;
+  private final BusinessProcessETagInterceptor businessProcessETagInterceptor;
+
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
     resolvers.add(new SecurityContextResolver());
@@ -41,8 +44,12 @@ public class WebConfig implements WebMvcConfigurer {
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(livenessProbeStateInterceptor);
     registry.addInterceptor(formETagHeaderInterceptor)
-        .addPathPatterns(List.of("/versions/candidates/{versionCandidateId}/forms/{formName}",
+        .addPathPatterns(List.of(
+            "/versions/candidates/{versionCandidateId}/forms/{formName}",
             "/versions/master/forms/{formName}"));
-
+    registry.addInterceptor(businessProcessETagInterceptor)
+        .addPathPatterns(List.of(
+            "/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
+            "/versions/master/business-processes/{businessProcessName}"));
   }
 }

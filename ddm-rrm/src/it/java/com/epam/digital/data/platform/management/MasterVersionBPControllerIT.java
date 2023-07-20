@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -37,11 +38,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathFactory;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.xml.sax.InputSource;
 import org.xmlunit.builder.DiffBuilder;
 
@@ -222,17 +225,124 @@ class MasterVersionBPControllerIT extends BaseIT {
       Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
           .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
     }
+  }
 
-    private void assertNoDifferences(String bpFileContent, String actualContent) {
-      final var documentDiff = DiffBuilder
-          .compare(actualContent)
-          .withTest(bpFileContent)
-          .withAttributeFilter(
-              attr -> !attr.getName().equals("rrm:modified") && !attr.getName()
-                  .equals("rrm:created"))
-          .build();
-      Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
+  @Nested
+  @DisplayName("DELETE /versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}")
+  class CandidateVersionBPDeleteBpByNameControllerIT {
+
+    @Test
+    @DisplayName("should return 204 and delete business-process if there's already exists such process")
+    @SneakyThrows
+    void deleteBusinessProcess() {
+      // add file to "remote" repo
+      final var headBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/DELETE/john-does-bp.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", headBpContent);
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/business-processes/{businessProcessName}",
+          "john-does-bp")
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      mockMvc.perform(get(
+          "/versions/master/business-processes/{businessProcessName}",
+          "john-does-bp")
+      ).andExpect(
+          status().isNotFound()
+      );
+    }
+
+    @Test
+    @DisplayName("should return 204 if there's no such process")
+    @SneakyThrows
+    void deleteBusinessProcess_noBusinessProcessToDelete() {
+      // perform query
+      mockMvc.perform(
+          delete(
+              "/versions/master/business-processes/{businessProcessName}",
+              "john-does-bp")
+      ).andExpect(
+          status().isNoContent()
+      );
+    }
+
+    @Test
+    @DisplayName("should return 204 and delete bp if there's already exists such bp")
+    @SneakyThrows
+    void deleteBP_validETag() {
+      // add file to "remote" repo
+      final var headBusinessContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/DELETE/john-does-bp.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", headBusinessContent);
+      context.pullHeadRepo();
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}",
+              "john-does-bp")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/business-processes/{businessProcessName}",
+          "john-does-bp")
+          .header("If-Match", eTag)
+      ).andExpect(
+          status().isNoContent()
+      );
+
+      // assert that file is deleted
+      mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("should return 409 with invalid ETag")
+    @SneakyThrows
+    void deleteBP_invalidETag() {
+      // add file to "remote" repo
+      final var headBusinessProcessContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/DELETE/john-does-bp.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/john-does-bp.bpmn", headBusinessProcessContent);
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(delete(
+          "/versions/master/business-processes/{businessProcessName}",
+          "john-does-bp")
+          .header("If-Match", RandomString.make())
+      ).andExpect(
+          status().isConflict()
+      );
+
+      // assert that file was not deleted
+      mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "john-does-bp")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk());
     }
   }
 
+  private void assertNoDifferences(String bpFileContent, String actualContent) {
+    final var documentDiff = DiffBuilder
+        .compare(actualContent)
+        .withTest(bpFileContent)
+        .withAttributeFilter(
+            attr -> !attr.getName().equals("rrm:modified") && !attr.getName()
+                .equals("rrm:created"))
+        .build();
+    Assertions.assertThat(documentDiff.hasDifferences()).isFalse();
+  }
 }
