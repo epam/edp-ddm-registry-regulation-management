@@ -99,11 +99,11 @@ public class MasterVersionController {
 
     if (messageInfo.isPresent()) {
       String mes = messageInfo.get();
-      if (mes.startsWith("Build Started")){
+      if (mes.contains("Build Started")){
         status = ResultValues.PENDING.name();
-      } else if (mes.startsWith("Build Successful")) {
+      } else if (mes.contains("Build Successful")) {
         status = ResultValues.SUCCESS.name();
-      } else if (mes.startsWith("Build Failed")) {
+      } else if (mes.contains("Build Failed")) {
         status = ResultValues.FAILED.name();
       }
     }
