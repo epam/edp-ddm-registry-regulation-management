@@ -1,11 +1,11 @@
 /*
- * Copyright 2023 EPAM Systems.
+ * Copyright 2022 EPAM Systems.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@
 package com.epam.digital.data.platform.management.forms;
 
 
-import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
@@ -33,7 +32,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 class FormMapperTest {
-
   private final String FORM_CONTENT = TestUtils.getContent("form-sample.json");
   private final FormMapper mapper = Mappers.getMapper(FormMapper.class);
 
@@ -59,7 +57,6 @@ class FormMapperTest {
         .created(LocalDateTime.of(2022, 8, 10, 13, 18))
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .conflicted(true)
-        .etag(ETagUtils.getETagFromContent(FORM_CONTENT))
         .build();
     var actual = mapper.toForm(fileInfo, fileDates, FORM_CONTENT, true);
     Assertions.assertThat(actual).isEqualTo(expected);

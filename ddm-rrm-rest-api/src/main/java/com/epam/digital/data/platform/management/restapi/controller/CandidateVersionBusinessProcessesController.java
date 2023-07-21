@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,6 @@ package com.epam.digital.data.platform.management.restapi.controller;
 import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
 import com.epam.digital.data.platform.management.validation.businessProcess.BusinessProcess;
@@ -33,6 +32,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -57,7 +57,6 @@ public class CandidateVersionBusinessProcessesController {
 
   private final BusinessProcessService businessProcessService;
   private final GroupService groupService;
-  private final ControllerMapper mapper;
 
   @Operation(description = "Get business processes list",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -88,8 +87,14 @@ public class CandidateVersionBusinessProcessesController {
   public ResponseEntity<List<BusinessProcessDetailsShort>> getBusinessProcessesBuVersionId(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting business processes from {} version candidate", versionCandidateId);
-    var dtos = businessProcessService.getProcessesByVersion(versionCandidateId);
-    var response = mapper.toBusinessProcessDetailsShorts(dtos);
+    var response = businessProcessService.getProcessesByVersion(versionCandidateId).stream()
+        .map(e -> BusinessProcessDetailsShort.builder()
+            .name(e.getName())
+            .title(e.getTitle())
+            .created(e.getCreated())
+            .updated(e.getUpdated())
+            .build())
+        .collect(Collectors.toList());
     log.info("Found {} business processes from {} version candidate", response.size(),
         versionCandidateId);
     return ResponseEntity.ok().body(response);

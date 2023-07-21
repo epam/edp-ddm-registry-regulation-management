@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import com.epam.digital.data.platform.management.config.XmlParserConfig;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.service.CacheService;
-import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -127,7 +126,6 @@ public class BusinessProcessServiceTest {
             .status(FileStatus.NEW)
             .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
-            .etag(ETagUtils.getETagFromContent(PROCESS_CONTENT))
             .build();
 
     Assertions.assertThat(expectedBusinessProcessesList)
@@ -189,7 +187,6 @@ public class BusinessProcessServiceTest {
             .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .conflicted(true)
-            .etag(ETagUtils.getETagFromContent(PROCESS_CONTENT))
             .build();
 
     Assertions.assertThat(expectedBusinessProcessesList)

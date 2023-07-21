@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,14 +20,10 @@ import static com.epam.digital.data.platform.management.restapi.model.ResultValu
 import static com.epam.digital.data.platform.management.restapi.model.ResultValues.SUCCESS;
 import static com.epam.digital.data.platform.management.restapi.model.ResultValues.UNKNOWN;
 
-import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
-import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
-import com.epam.digital.data.platform.management.restapi.model.FormDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.ResultValues;
 import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
@@ -85,13 +81,4 @@ public interface ControllerMapper {
   List<TableInfoShort> toTableInfosShort(List<TableShortInfoDto> tableShortInfoDto);
 
   VersionChangesInfo toVersionChangesInfo(VersionChangesDto dto);
-
-  BusinessProcessDetailsShort toBusinessProcessDetailsShort(BusinessProcessInfoDto dto);
-
-  List<BusinessProcessDetailsShort> toBusinessProcessDetailsShorts(
-      List<BusinessProcessInfoDto> dtos);
-
-  FormDetailsShort toFormDetailsShort(FormInfoDto dto);
-
-  List<FormDetailsShort> toFormDetailsShorts(List<FormInfoDto> dtos);
 }

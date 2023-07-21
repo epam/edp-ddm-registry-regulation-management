@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,6 @@ package com.epam.digital.data.platform.management;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -74,7 +72,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, ETagUtils.getETagFromContent(expectedFormContent)),
           content().contentType(MediaType.APPLICATION_JSON),
           content().json(expectedFormContent),
           header().string(HttpHeaders.ETAG, String.format("\"%s\"", expectedFormContent.hashCode()))
@@ -156,12 +153,10 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           jsonPath("$[0].title", is("John Doe's form")),
           jsonPath("$[0].created", is(expectedJohnDoesFormDates.getCreated())),
           jsonPath("$[0].updated", is(expectedJohnDoesFormDates.getUpdated())),
-          jsonPath("$[0].etag", is(ETagUtils.getETagFromContent(johnDoesFormContent))),
           jsonPath("$[1].name", is("mr-smiths-form")),
           jsonPath("$[1].title", is("Mr Smith's form")),
           jsonPath("$[1].created", is("2022-10-28T20:21:48.845Z")),
-          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z")),
-          jsonPath("$[1].etag", is(ETagUtils.getETagFromContent(mrSmithsFormContent)))
+          jsonPath("$[1].updated", is("2022-10-28T20:56:32.309Z"))
       );
     }
 
@@ -227,7 +222,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isCreated(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form"))
@@ -337,7 +331,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form Version Candidate"))
@@ -403,7 +396,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form Version Candidate"))
@@ -462,7 +454,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form Version Candidate"))
@@ -514,7 +505,6 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType(MediaType.APPLICATION_JSON),
           jsonPath("$.name", is("valid-form")),
           jsonPath("$.title", is("Valid form Version Candidate"))
@@ -568,7 +558,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 409 if wrong ETag")
+    @DisplayName("should return 412 if wrong ETag")
     @SneakyThrows
     void updateForm_invalidETag() {
       // add file to "remote" repo
@@ -592,7 +582,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .header("If-Match", RandomString.make())
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isConflict()
+          status().isPreconditionFailed()
     );
 
       // assert that actual content was not updated
@@ -607,7 +597,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 409 if modified concurrently")
+    @DisplayName("should return 412 if modified concurrently")
     @SneakyThrows
     void updateForm_modifiedConcurrently() {
       // add file to "remote" repo
@@ -650,7 +640,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .header("If-Match", eTag)
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isConflict()
+          status().isPreconditionFailed()
       );
 
       // assert that actual content was not updated after second request
@@ -729,7 +719,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
     }
 
     @Test
-    @DisplayName("should return 409 with invalid ETag")
+    @DisplayName("should return 412 with invalid ETag")
     @SneakyThrows
     void deleteForm_invalidETag() {
       // add file to "remote" repo
@@ -746,7 +736,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           versionCandidateId, "john-does-form")
           .header("If-Match", RandomString.make())
       ).andExpect(
-          status().isConflict()
+          status().isPreconditionFailed()
       );
 
       // assert that file was not deleted

@@ -56,7 +56,7 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
     var url = request.getRequestURL();
     if (!ETagUtils.getETagFromContent(content).equals(eTag)) {
       log.info("Invalid ETag for path {} version candidate, action will not be performed", url);
-      response.setStatus(HttpServletResponse.SC_CONFLICT);
+      response.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
       return false;
     }
     log.debug("Valid ETag for path {}, action will be performed", url);

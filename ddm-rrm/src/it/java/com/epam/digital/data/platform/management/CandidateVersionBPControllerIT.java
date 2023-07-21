@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *    https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,19 +19,16 @@ package com.epam.digital.data.platform.management;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
-import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import java.io.File;
 import java.io.StringReader;
 import java.time.LocalDateTime;
@@ -43,7 +40,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.xml.sax.InputSource;
 import org.xmlunit.builder.DiffBuilder;
@@ -74,7 +70,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
               .accept(MediaType.TEXT_XML)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, ETagUtils.getETagFromContent(expectedBpContent)),
           content().contentType(MediaType.TEXT_XML),
           content().xml(expectedBpContent)
       );
@@ -156,12 +151,10 @@ class CandidateVersionBPControllerIT extends BaseIT {
           jsonPath("$[0].title", is("John Doe's BP")),
           jsonPath("$[0].created", is(expectedJohnDoesBpDates.getCreated())),
           jsonPath("$[0].updated", is(expectedJohnDoesBpDates.getUpdated())),
-          jsonPath("$[0].etag", is(ETagUtils.getETagFromContent(johnDoesBpContent))),
           jsonPath("$[1].name", is("mr-smiths-bp")),
           jsonPath("$[1].title", is("Mr Smith's BP")),
           jsonPath("$[1].created", is("2022-10-28T06:16:26.123Z")),
-          jsonPath("$[1].updated", is("2022-10-28T20:26:26.123Z")),
-          jsonPath("$[1].etag", is(ETagUtils.getETagFromContent(mrSmithsBpContent)))
+          jsonPath("$[1].updated", is("2022-10-28T20:26:26.123Z"))
       );
     }
 
@@ -254,7 +247,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
               .accept(MediaType.TEXT_XML)
       ).andExpectAll(
           status().isCreated(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType("text/xml"),
           xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
           xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("Valid BP")
@@ -388,7 +380,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
               .accept(MediaType.TEXT_XML)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType("text/xml"),
           xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
           xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
@@ -437,7 +428,6 @@ class CandidateVersionBPControllerIT extends BaseIT {
               .accept(MediaType.TEXT_XML)
       ).andExpectAll(
           status().isOk(),
-          header().string(HttpHeaders.ETAG, is(notNullValue())),
           content().contentType("text/xml"),
           xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
           xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
