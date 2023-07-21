@@ -76,7 +76,8 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           status().isOk(),
           header().string(HttpHeaders.ETAG, ETagUtils.getETagFromContent(expectedFormContent)),
           content().contentType(MediaType.APPLICATION_JSON),
-          content().json(expectedFormContent)
+          content().json(expectedFormContent),
+          header().string(HttpHeaders.ETAG, String.format("\"%s\"", expectedFormContent.hashCode()))
       );
     }
 
