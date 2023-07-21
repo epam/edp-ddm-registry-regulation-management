@@ -161,7 +161,7 @@
       <id>local</id>
       <properties>
         <artifactory.baseUrl>
-          https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com
+          https://nexus-public-mdtu-ddm-edp-cicd.apps.cicd2.mdtu-ddm.projects.epam.com/nexus
         </artifactory.baseUrl>
       </properties>
     </profile>

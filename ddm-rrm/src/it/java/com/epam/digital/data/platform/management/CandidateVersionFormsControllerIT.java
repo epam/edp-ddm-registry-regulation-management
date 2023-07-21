@@ -582,7 +582,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .header("If-Match", RandomString.make())
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isPreconditionFailed()
+          status().isConflict()
     );
 
       // assert that actual content was not updated
@@ -640,7 +640,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
               .header("If-Match", eTag)
               .accept(MediaType.APPLICATION_JSON)
       ).andExpectAll(
-          status().isPreconditionFailed()
+          status().isConflict()
       );
 
       // assert that actual content was not updated after second request
@@ -736,7 +736,7 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           versionCandidateId, "john-does-form")
           .header("If-Match", RandomString.make())
       ).andExpect(
-          status().isPreconditionFailed()
+          status().isConflict()
       );
 
       // assert that file was not deleted
