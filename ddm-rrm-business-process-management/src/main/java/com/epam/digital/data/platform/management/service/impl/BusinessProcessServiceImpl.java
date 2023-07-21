@@ -19,8 +19,9 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
-import com.epam.digital.data.platform.management.core.service.CacheService;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -36,6 +37,7 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -88,7 +90,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     }
     content = addDatesToContent(content, LocalDateTime.now(), LocalDateTime.now());
     repo.writeFile(processPath, content);
-    cacheService.getEtag(versionName, processName, content);
   }
 
   @Override
@@ -131,8 +132,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(processPath, content);
-    cacheService.evictEtag(versionName, processName);
-    cacheService.getEtag(versionName, processName, content);
   }
 
   @Override
@@ -140,7 +139,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     repo.deleteFile(getProcessPath(processName));
-    cacheService.evictEtag(versionName, processName);
   }
 
   @Override
@@ -148,9 +146,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     var repo = versionContextComponentManager.getComponent(versionName,
         VersionedFileRepository.class);
     repo.rollbackFile(getProcessPath(processName));
-    cacheService.evictEtag(versionName, processName);
-    var content = repo.readFile(getProcessPath(processName));
-    cacheService.getEtag(versionName, processName, content);
   }
 
   @Override
@@ -182,7 +177,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
-      FileStatus skippedStatus) {
+                                                             FileStatus skippedStatus) {
     List<VersionedFileInfoDto> fileList;
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
@@ -208,7 +203,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
               getDatesFromContent(processContent),
               getAttributeFromContent(processContent, "name"),
               conflicts.contains(versionedFileInfoDto.getPath()),
-              cacheService.getEtag(versionName, versionedFileInfoDto.getName(), processContent)));
+              ETagUtils.getETagFromContent(Objects.requireNonNull(processContent))));
     }
     return processes;
   }
@@ -237,7 +232,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private String addDatesToContent(String processContent, LocalDateTime created,
-      LocalDateTime modified) {
+                                   LocalDateTime modified) {
     Document doc;
     try {
       doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));

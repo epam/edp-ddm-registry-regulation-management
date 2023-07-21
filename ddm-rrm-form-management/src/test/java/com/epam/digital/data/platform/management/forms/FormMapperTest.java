@@ -61,8 +61,7 @@ class FormMapperTest {
         .conflicted(true)
         .etag(ETagUtils.getETagFromContent(FORM_CONTENT))
         .build();
-    var actual = mapper.toForm(fileInfo, fileDates, FORM_CONTENT, true,
-        ETagUtils.getETagFromContent(FORM_CONTENT));
+    var actual = mapper.toForm(fileInfo, fileDates, FORM_CONTENT, true);
     Assertions.assertThat(actual).isEqualTo(expected);
   }
 }

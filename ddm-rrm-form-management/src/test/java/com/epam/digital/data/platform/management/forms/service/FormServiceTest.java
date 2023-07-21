@@ -98,7 +98,6 @@ class FormServiceTest {
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm, deletedForm));
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
     Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("forms/form.json"));
-    Mockito.when(cacheService.getEtag(VERSION_ID, "form", FORM_CONTENT)).thenReturn("etag");
 
     var resultList = formService.getFormListByVersion(VERSION_ID);
 
@@ -106,7 +105,7 @@ class FormServiceTest {
         .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
         .title("Update physical factors").conflicted(true)
-        .etag("etag").build();
+        .etag(ETagUtils.getETagFromContent(FORM_CONTENT)).build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 
@@ -119,7 +118,6 @@ class FormServiceTest {
         .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));
     Mockito.when(masterRepository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
-    Mockito.when(cacheService.getEtag(VERSION_ID, "form", FORM_CONTENT)).thenReturn("etag");
 
     var resultList = formService.getChangedFormsListByVersion(VERSION_ID);
 
@@ -127,7 +125,7 @@ class FormServiceTest {
         .status(FileStatus.DELETED).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
         .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
         .title("Update physical factors")
-        .etag("etag").build();
+        .etag(ETagUtils.getETagFromContent(FORM_CONTENT)).build();
     Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
   }
 

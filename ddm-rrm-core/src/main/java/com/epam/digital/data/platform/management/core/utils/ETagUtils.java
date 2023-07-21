@@ -16,12 +16,15 @@
 
 package com.epam.digital.data.platform.management.core.utils;
 
+import java.nio.charset.StandardCharsets;
+import org.apache.commons.codec.digest.MurmurHash3;
+
 public final class ETagUtils {
 
   private ETagUtils() {
   }
 
   public static String getETagFromContent(String content) {
-    return String.format("\"%s\"", content.hashCode());
+    return "\"" + MurmurHash3.hash32x86(content.getBytes(StandardCharsets.UTF_8)) + "\"";
   }
 }

@@ -16,7 +16,6 @@
 
 package com.epam.digital.data.platform.management.core.service;
 
-import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -24,8 +23,6 @@ import java.util.Objects;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -36,7 +33,6 @@ public class CacheServiceImpl implements CacheService {
 
   private static final String CONFLICTS_CACHE_NAME = "conflicts";
   private static final String LATEST_REBASE_CACHE_NAME = "latestRebase";
-  private static final String ETAG_CACHE_NAME = "etagCache";
 
   private final CacheManager cacheManager;
 
@@ -74,16 +70,5 @@ public class CacheServiceImpl implements CacheService {
     Cache conflictCache = cacheManager.getCache(LATEST_REBASE_CACHE_NAME);
     conflictCache.evictIfPresent(cacheKey);
     conflictCache.put(cacheKey, latestRebase);
-  }
-
-  @Override
-  @Cacheable(cacheNames = ETAG_CACHE_NAME, key = "#versionId + #fileName")
-  public String getEtag(String versionId, String fileName, String fileContent) {
-    return ETagUtils.getETagFromContent(fileContent);
-  }
-
-  @Override
-  @CacheEvict(cacheNames = ETAG_CACHE_NAME, key = "#versionId + #fileName")
-  public void evictEtag(String versionId, String fileName) {
   }
 }

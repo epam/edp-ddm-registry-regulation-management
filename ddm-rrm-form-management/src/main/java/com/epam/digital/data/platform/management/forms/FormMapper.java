@@ -35,12 +35,17 @@ public interface FormMapper {
   @Mapping(target = "created", source = "datesDto.create", defaultExpression = "java(fileInfoDto.getCreated())")
   @Mapping(target = "updated", source = "datesDto.update", defaultExpression = "java(fileInfoDto.getUpdated())")
   @Mapping(target = "title", source = "formContent", qualifiedByName = "getTitleFromFormContent")
-  @Mapping(target = "etag", source = "etag")
+  @Mapping(target = "etag", source = "formContent", qualifiedByName = "getEtagFromFormContent")
   FormInfoDto toForm(VersionedFileInfoDto fileInfoDto, FileDatesDto datesDto, String formContent,
-      boolean conflicted, String etag);
+      boolean conflicted);
 
   @Named("getTitleFromFormContent")
   default String getTitleFromFormContent(String formContent) {
     return JsonPath.read(formContent, "$.title");
+  }
+
+  @Named("getEtagFromFormContent")
+  default String getEtagFromFormContent(String formContent) {
+    return ETagUtils.getETagFromContent(formContent);
   }
 }
