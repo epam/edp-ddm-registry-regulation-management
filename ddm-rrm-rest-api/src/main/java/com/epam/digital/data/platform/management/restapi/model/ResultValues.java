@@ -16,7 +16,7 @@
 package com.epam.digital.data.platform.management.restapi.model;
 
 public enum ResultValues {
-  UNKNOWN,
+  PENDING,
   SUCCESS,
   FAILED
 }

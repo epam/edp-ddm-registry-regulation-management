@@ -15,10 +15,13 @@
  */
 package com.epam.digital.data.platform.management.gerritintegration.model;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import com.google.gerrit.extensions.common.ChangeMessageInfo;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -41,4 +44,5 @@ public class ChangeInfoDto {
   private String topic;
   private Boolean mergeable;
   private Map<String, Integer> labels;
+  private List<ChangeMessageInfo> messages;
 }

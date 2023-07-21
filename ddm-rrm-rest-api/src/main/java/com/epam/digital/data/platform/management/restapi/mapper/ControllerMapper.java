@@ -18,7 +18,7 @@ package com.epam.digital.data.platform.management.restapi.mapper;
 
 import static com.epam.digital.data.platform.management.restapi.model.ResultValues.FAILED;
 import static com.epam.digital.data.platform.management.restapi.model.ResultValues.SUCCESS;
-import static com.epam.digital.data.platform.management.restapi.model.ResultValues.UNKNOWN;
+import static com.epam.digital.data.platform.management.restapi.model.ResultValues.PENDING;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
@@ -46,7 +46,7 @@ public interface ControllerMapper {
   String VERIFIED_LABEL = "Verified";
   Map<Integer, ResultValues> STATUSES = Map.of(
       -1, FAILED,
-      0, UNKNOWN,
+      0, PENDING,
       1, SUCCESS
   );
 
