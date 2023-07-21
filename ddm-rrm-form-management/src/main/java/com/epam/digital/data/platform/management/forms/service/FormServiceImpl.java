@@ -19,8 +19,8 @@ package com.epam.digital.data.platform.management.forms.service;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
-import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.core.service.CacheService;
+import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
@@ -72,7 +72,7 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formPath = getFormPath(formName);
-    var formAlreadyExistsException = new  FormAlreadyExistsException(
+    var formAlreadyExistsException = new FormAlreadyExistsException(
         String.format("Form with path '%s' already exists", formPath));
     if (repo.isFileExists(formPath)) {
       throw formAlreadyExistsException;
@@ -84,6 +84,7 @@ public class FormServiceImpl implements FormService {
     } catch (FileAlreadyExistsException e) {
       throw formAlreadyExistsException;
     }
+    cacheService.getEtag(versionName, formName, content);
   }
 
   @Override
@@ -125,6 +126,8 @@ public class FormServiceImpl implements FormService {
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(formPath, content);
+    cacheService.evictEtag(versionName, formName);
+    cacheService.getEtag(versionName, formName, content);
   }
 
   @Override
@@ -132,6 +135,7 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     repo.deleteFile(getFormPath(formName));
+    cacheService.evictEtag(versionName, formName);
   }
 
   @Override
@@ -139,6 +143,9 @@ public class FormServiceImpl implements FormService {
     var repo = versionContextComponentManager.getComponent(versionName,
         VersionedFileRepository.class);
     repo.rollbackFile(getFormPath(formName));
+    cacheService.evictEtag(versionName, formName);
+    var content = repo.readFile(getFormPath(formName));
+    cacheService.getEtag(versionName, formName, content);
   }
 
   private String getFormPath(String formName) {
@@ -171,7 +178,8 @@ public class FormServiceImpl implements FormService {
               versionedFileInfoDto,
               fileDatesDto,
               formContent,
-              conflicts.contains(versionedFileInfoDto.getPath())));
+              conflicts.contains(versionedFileInfoDto.getPath()),
+              cacheService.getEtag(versionName, versionedFileInfoDto.getName(), formContent)));
     }
     return forms;
   }

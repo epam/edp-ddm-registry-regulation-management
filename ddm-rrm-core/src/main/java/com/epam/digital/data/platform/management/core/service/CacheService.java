@@ -29,4 +29,8 @@ public interface CacheService {
   LocalDateTime getLatestRebaseCache(String cacheKey);
 
   void updateLatestRebaseCache(String cacheKey, LocalDateTime latestRebase);
+
+  String getEtag(String versionId, String fileName, String fileContent);
+
+  void evictEtag(String versionId, String fileName);
 }

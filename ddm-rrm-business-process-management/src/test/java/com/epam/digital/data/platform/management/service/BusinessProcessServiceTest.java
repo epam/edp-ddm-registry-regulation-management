@@ -64,14 +64,21 @@ public class BusinessProcessServiceTest {
   private static final String PROCESS_CONTENT_UNICODE = getContent("bp-sample-unicode.bpmn");
   private static final String BPMN_FILE_EXTENSION = "bpmn";
 
-  @Captor private ArgumentCaptor<String> captor;
+  @Captor
+  private ArgumentCaptor<String> captor;
 
-  @Mock private VersionContextComponentManager versionContextComponentManager;
-  @Mock private VersionedFileRepository repository;
-  @Mock private VersionedFileRepository masterRepository;
-  @Mock private GerritPropertiesConfig gerritPropertiesConfig;
-  @Mock private CacheService cacheService;
-  @Autowired private DocumentBuilder documentBuilder;
+  @Mock
+  private VersionContextComponentManager versionContextComponentManager;
+  @Mock
+  private VersionedFileRepository repository;
+  @Mock
+  private VersionedFileRepository masterRepository;
+  @Mock
+  private GerritPropertiesConfig gerritPropertiesConfig;
+  @Mock
+  private CacheService cacheService;
+  @Autowired
+  private DocumentBuilder documentBuilder;
 
   @Spy
   private BusinessProcessMapper businessProcessMapper =
@@ -116,6 +123,8 @@ public class BusinessProcessServiceTest {
         .thenReturn(List.of(newBusinessProcess, deletedProcess));
     Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
         .thenReturn(PROCESS_CONTENT);
+    Mockito.when(cacheService.getEtag(VERSION_ID, "business-process", PROCESS_CONTENT))
+        .thenReturn("etag");
 
     List<BusinessProcessInfoDto> expectedBusinessProcessesList =
         businessProcessService.getProcessesByVersion(VERSION_ID);
@@ -127,7 +136,7 @@ public class BusinessProcessServiceTest {
             .status(FileStatus.NEW)
             .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
-            .etag(ETagUtils.getETagFromContent(PROCESS_CONTENT))
+            .etag("etag")
             .build();
 
     Assertions.assertThat(expectedBusinessProcessesList)
@@ -177,6 +186,8 @@ public class BusinessProcessServiceTest {
         .thenReturn(PROCESS_CONTENT);
     Mockito.when(cacheService.getConflictsCache(VERSION_ID))
         .thenReturn(List.of("bpmn/business-process." + BPMN_FILE_EXTENSION));
+    Mockito.when(cacheService.getEtag(VERSION_ID, "business-process", PROCESS_CONTENT))
+        .thenReturn("etag");
 
     List<BusinessProcessInfoDto> expectedBusinessProcessesList =
         businessProcessService.getChangedProcessesByVersion(VERSION_ID);
@@ -189,7 +200,7 @@ public class BusinessProcessServiceTest {
             .created(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .updated(LocalDateTime.of(2022, 10, 3, 14, 41, 20, 128000000))
             .conflicted(true)
-            .etag(ETagUtils.getETagFromContent(PROCESS_CONTENT))
+            .etag("etag")
             .build();
 
     Assertions.assertThat(expectedBusinessProcessesList)
@@ -301,7 +312,7 @@ public class BusinessProcessServiceTest {
             () ->
                 businessProcessService.updateProcess(
                     contentForUpdate, "business-process",
-                VERSION_ID))
+                    VERSION_ID))
         .doesNotThrowAnyException();
 
     Mockito.verify(repository)
@@ -351,6 +362,7 @@ public class BusinessProcessServiceTest {
         .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
 
   }
+
   @Test
   @SneakyThrows
   void rollbackProcessTest() {

@@ -110,5 +110,5 @@ db:
   port: 5432
 
 cache:
-  names: dates,conflicts,latestRebase
+  names: dates,conflicts,latestRebase,etagCache
   spec: expireAfterAccess=1d
