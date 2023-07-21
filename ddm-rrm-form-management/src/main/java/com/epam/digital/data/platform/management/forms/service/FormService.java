@@ -64,7 +64,7 @@ public interface FormService {
    * @param formName    name of form
    * @param versionName name of version candidate
    */
-  void updateForm(String content, String formName, String versionName);
+  void updateForm(String content, String formName, String versionName, String eTag);
 
   /**
    * Delete form

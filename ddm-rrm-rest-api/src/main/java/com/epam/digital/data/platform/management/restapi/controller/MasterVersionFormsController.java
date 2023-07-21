@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -221,5 +222,64 @@ public class MasterVersionFormsController {
     formService.deleteForm(formName, masterVersionId, eTag);
     log.info("Form {} was deleted from master", formName);
     return ResponseEntity.noContent().build();
+  }
+
+  @Operation(description = "Update existing form within master",
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "409",
+              description = "Conflict",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PutMapping(value = "/{formName}")
+  public ResponseEntity<String> updateForm(@RequestBody String form,
+                                           @PathVariable
+                                           @Parameter(description = "Name of the form to be updated", required = true)
+                                           String formName,
+                                           @RequestHeader HttpHeaders headers) {
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+    var eTag = headers.getFirst("If-Match");
+
+    log.info("Started updating {} form for master", formName);
+    formService.updateForm(String.valueOf(form), formName, masterVersionId, eTag);
+    log.info("Finished updating {} form for master. Retrieving this form", formName);
+    var response = formService.getFormContent(formName, masterVersionId);
+    log.info("Finished getting {} form from master", formName);
+    return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .eTag(ETagUtils.getETagFromContent(response))
+        .body(response);
   }
 }

@@ -98,7 +98,7 @@ public class FormServiceImpl implements FormService {
   }
 
   @Override
-  public void updateForm(String content, String formName, String versionName) {
+  public void updateForm(String content, String formName, String versionName, String eTag) {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
     var repo =
@@ -124,7 +124,7 @@ public class FormServiceImpl implements FormService {
               .orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-    repo.writeFile(formPath, content);
+    repo.writeFile(formPath, content, eTag);
   }
 
   @Override

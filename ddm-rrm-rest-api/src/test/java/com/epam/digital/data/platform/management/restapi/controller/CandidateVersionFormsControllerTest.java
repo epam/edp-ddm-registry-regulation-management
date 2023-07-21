@@ -163,7 +163,7 @@ class CandidateVersionFormsControllerTest {
         content().json(expectedFormContent)
     ).andDo(document("versions/candidates/{versionCandidateId}/forms/{formName}/PUT"));
 
-    Mockito.verify(formService).updateForm(expectedFormContent, formName, versionCandidateId);
+    Mockito.verify(formService).updateForm(expectedFormContent, formName, versionCandidateId, null);
   }
 
   @Test

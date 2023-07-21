@@ -115,7 +115,7 @@ class JGitServiceCommitAndSubmitTest extends AbstractJGitServiceTest {
   @DisplayName("should 'git add' file, find last commit, commit, add remote and push with submit parameter")
   @SneakyThrows
   void testAmend() {
-    jGitService.commitAndSubmit(REPO_NAME, FILE_PATH, FILE_CONTENT);
+    jGitService.commitAndSubmit(REPO_NAME, FILE_PATH, FILE_CONTENT, null);
 
     Assertions.assertThat(Path.of(repoDir.getPath(), FILE_PATH))
         .exists()

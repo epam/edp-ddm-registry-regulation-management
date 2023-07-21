@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.epam.digital.data.platform.management.gitintegration.exception;
-
 public class ETagValidationException extends RuntimeException {
-
   private String path;
-
   public ETagValidationException(String message, String path) {
     super(message);
     this.path = path;
   }
-
   public String getPath() {
     return path;
   }

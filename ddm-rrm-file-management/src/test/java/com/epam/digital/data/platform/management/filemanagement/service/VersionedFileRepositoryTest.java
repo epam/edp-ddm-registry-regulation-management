@@ -179,7 +179,7 @@ public class VersionedFileRepositoryTest {
 
     repository.writeFile(filepath, fileContent);
 
-    Mockito.verify(jGitService).amend("version", filepath, fileContent);
+    Mockito.verify(jGitService).amend("version", filepath, fileContent, null);
   }
 
   @Test

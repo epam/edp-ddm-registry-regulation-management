@@ -49,6 +49,11 @@ public abstract class AbstractVersionFileRepository implements VersionedFileRepo
   }
 
   @Override
+  public void writeFile(@NonNull String path, @NonNull String content, String eTag) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void writeFile(@NonNull String path, @NonNull String content) {
     throw new UnsupportedOperationException();
   }

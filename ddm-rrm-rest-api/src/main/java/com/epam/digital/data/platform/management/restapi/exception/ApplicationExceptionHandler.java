@@ -106,6 +106,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
   private static final String GIT_FILE_NOT_FOUND_EXCEPTION = "GIT_FILE_NOT_FOUND_EXCEPTION";
   private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
+  private static final String ETAG_VALIDATION_EXCEPTION = "ETAG_VALIDATION_EXCEPTION";
   private static final String DATA_MODEL_FILE_NOT_FOUND = "DATA_MODEL_FILE_NOT_FOUND";
   private static final String INVALID_CHANGELOG = "INVALID_CHANGELOG";
 

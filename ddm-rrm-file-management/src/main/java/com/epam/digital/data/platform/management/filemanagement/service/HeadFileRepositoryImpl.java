@@ -69,8 +69,13 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
   }
 
   @Override
+  public void writeFile(@NonNull String path, @NonNull String content, String eTag) {
+    gitService.commitAndSubmit(versionId, path, content, eTag);
+  }
+
+  @Override
   public void writeFile(@NonNull String path, @NonNull String content) {
-    gitService.commitAndSubmit(versionId, path, content);
+    gitService.commitAndSubmit(versionId, path, content, null);
   }
 
   @Override

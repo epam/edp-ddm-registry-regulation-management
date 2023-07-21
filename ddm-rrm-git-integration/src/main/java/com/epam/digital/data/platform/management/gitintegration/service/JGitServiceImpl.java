@@ -281,6 +281,11 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void amend(
       @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent) {
+      amend(repositoryName, filePath, fileContent, null);
+  }
+  @Override
+  public void amend(
+      @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag) {
     log.debug(
         "Trying to update file content in repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
@@ -289,6 +294,12 @@ public class JGitServiceImpl implements JGitService {
     var lock = getLock(repositoryName);
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
+
+      if (!validateETag(getFileContent(repositoryDirectory, filePath), eTag)) {
+        throw new ETagValidationException(
+            String.format("Invalid ETag for path %s, action will not be performed", filePath),
+            filePath);
+      }
       log.trace("Updating file at path {}", filePath);
       var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
       log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
@@ -302,7 +313,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath,
-      @NonNull String fileContent) {
+                              @NonNull String fileContent, String eTag) {
     log.debug("Trying to create file in repository {} at path {}", repositoryName,
         filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
@@ -314,6 +325,12 @@ public class JGitServiceImpl implements JGitService {
       if (!getFilesInPath(repositoryName, filePath).isEmpty()) {
         throw new FileAlreadyExistsException(
             String.format("File with path '%s' already exists", filePath));
+      }
+
+      if (!validateETag(getFileContent(repositoryDirectory, filePath), eTag)) {
+        throw new ETagValidationException(
+            String.format("Invalid ETag for path %s, action will not be performed", filePath),
+            filePath);
       }
 
       log.trace("Updating file at path {}", filePath);

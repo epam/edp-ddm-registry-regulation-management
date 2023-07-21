@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,6 +37,10 @@ import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.Customization;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.skyscreamer.jsonassert.comparator.CustomComparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.SimpleKey;
@@ -338,4 +343,354 @@ class MasterVersionFormsControllerIT extends BaseIT {
       );
     }
   }
+
+  @Nested
+  @DisplayName("PUT /versions/candidates/{versionCandidateId}/forms/{formName}")
+  class CandidateVersionFormsUpdateFormByNameControllerIT {
+
+    @Test
+    @DisplayName("should return 200 and update form if there's already exists such form")
+    @SneakyThrows
+    void updateForm_noETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}",
+               "valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form.json").getCreated();
+
+      //actualFormContent.andReturn().getResponse().getContentAsString()
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      ).andReturn().getResponse().getContentAsString();
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+
+    @Test
+    @DisplayName("should return 200 and update form if there's already exists such form")
+    @SneakyThrows
+    void updateForm_validETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToRemoteHeadRepo("/forms/valid-form1.json", headFormContent);
+      context.pullHeadRepo();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/master/forms/{formName}",
+           "valid-form1")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}",
+              "valid-form1")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", eTag)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form1.json").getCreated();
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form1")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      ).andReturn().getResponse().getContentAsString();
+
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+
+    @Test
+    @DisplayName("should return 200 and update form with asterisk ETag")
+    @SneakyThrows
+    void updateForm_asteriskETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToRemoteHeadRepo("/forms/valid-form2.json", headFormContent);
+      context.pullHeadRepo();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form2")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", "*")
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // define expected created date for form
+      final var expectedCreated = context.getHeadRepoDatesByPath(
+          "forms/valid-form2.json").getCreated();
+
+      // get actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form2")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      ).andReturn().getResponse().getContentAsString();
+
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(created)
+          .isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 200 and create form if there's no such form")
+    @SneakyThrows
+    void updateForm_noFormsToUpdate() {
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate"))
+      ).andReturn().getResponse().getContentAsString();
+
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+
+      // assert that form dates are close to current date
+      var form = JsonParser.parseString(actualFormContent).getAsJsonObject();
+      final var created = LocalDateTime.parse(form.get("created").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      final var updated = LocalDateTime.parse(form.get("modified").getAsString(),
+          JacksonConfig.DATE_TIME_FORMATTER).format(JacksonConfig.DATE_TIME_FORMATTER);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 409 if wrong ETag")
+    @SneakyThrows
+    void updateForm_invalidETag() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", RandomString.make())
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isConflict()// isPreconditionFailed()
+      );
+
+      // assert that actual content was not updated
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form HEAD"))
+      ).andReturn().getResponse().getContentAsString();
+
+      JSONAssert.assertNotEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+    }
+
+    @Test
+    @DisplayName("should return 409 if modified concurrently")
+    @SneakyThrows
+    void updateForm_modifiedConcurrently() {
+      // add file to "remote" repo
+      final var headFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-head.json");
+      context.addFileToRemoteHeadRepo("/forms/valid-form.json", headFormContent);
+      context.pullHeadRepo();
+
+      // define expected form content to update
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+
+      // define modified form content to update
+      final var modifiedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate-modified.json");
+
+      //perform get
+      MockHttpServletResponse response = mockMvc.perform(get("/versions/master/forms/{formName}",
+           "valid-form")).andReturn().getResponse();
+
+      //get eTag value from response
+      String eTag = response.getHeader("ETag");
+
+      //perform update with missing eTag
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(modifiedFormContent)
+              .accept(MediaType.APPLICATION_JSON));
+
+      // perform query with outdated ETag
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .header("If-Match", eTag)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isConflict()
+      );
+
+      // assert that actual content was not updated after second request
+      final var actualFormContent = mockMvc.perform(
+          get("/versions/master/forms/{formName}","valid-form")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form")),
+          jsonPath("$.title", is("Valid form Version Candidate Modified"))
+      ).andReturn().getResponse().getContentAsString();
+
+      JSONAssert.assertEquals(modifiedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+    }
+  }
+
+
 }

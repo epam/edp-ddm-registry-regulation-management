@@ -123,6 +123,20 @@ public interface JGitService {
   void amend(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent);
 
   /**
+   * Amend commit with file and push to refs for head-branch. It requires that repository already is
+   * checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @param fileContent    content of file
+   * @param eTag hash of entity content
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     remote add or push git command failures
+   */
+  void amend(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag);
+
+  /**
    * Delete file and push to refs for head-branch. It requires that repository already is checkout
    * on FETCH_HEAD for successful push to repo
    *
@@ -157,11 +171,12 @@ public interface JGitService {
    * @param repositoryName name of the specified repository
    * @param filePath       file location on FileSystem
    * @param fileContent    content of file
+   * @param eTag    hash of entity content
    * @throws RepositoryNotFoundException if repository not exists
    * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
    *                                     remote add or push git command failures
    */
-  void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent);
+  void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag);
 
   /**
    * Revert the modified file to the state of the commit from which the branch was created. It

@@ -50,6 +50,16 @@ public interface VersionedFileRepository {
   void writeFile(@NonNull String path, @NonNull String content);
 
   /**
+   * Creates or updates file at specific path with specific content
+   *
+   * @param path    version relative path of file to write new content
+   * @param content new content to write
+   * @param eTag hash of new content to write
+   * @throws UnsupportedOperationException if updating isn't allowed in version
+   */
+  void writeFile(@NonNull String path, @NonNull String content, String eTag);
+
+  /**
    * Reads file content at specific path in the version
    *
    * @param path version relative path of file to read the content

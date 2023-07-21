@@ -21,6 +21,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -139,5 +140,29 @@ class MasterVersionFormsControllerTest {
     ).andDo(document("versions/master/forms/{formName}/POST"));
 
     Mockito.verify(formService).createForm(formName, expectedFormContent, HEAD_BRANCH);
+  }
+
+  @Test
+  @DisplayName("PUT /versions/master/forms/{formName} should return 200 with form content")
+  @SneakyThrows
+  void updateFormTest() {
+    final var versionCandidateId = "master";
+    final var formName = "john-does-form";
+    final var expectedFormContent = TestUtils.getContent("controller/john-does-form.json");
+
+    Mockito.doReturn(expectedFormContent)
+        .when(formService).getFormContent(formName, versionCandidateId);
+
+    mockMvc.perform(
+        put("/versions/master/forms/{formName}",
+            formName)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(expectedFormContent)
+    ).andExpectAll(
+        status().isOk(),
+        content().json(expectedFormContent)
+    ).andDo(document("versions/master/forms/{formName}/PUT"));
+
+    Mockito.verify(formService).updateForm(expectedFormContent, formName, versionCandidateId, null);
   }
 }
