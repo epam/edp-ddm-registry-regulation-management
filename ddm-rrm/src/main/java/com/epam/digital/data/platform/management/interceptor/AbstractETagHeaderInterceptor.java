@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.interceptor;
 
 import com.epam.digital.data.platform.management.core.utils.ETagUtils;
+import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,10 +53,17 @@ public abstract class AbstractETagHeaderInterceptor implements HandlerIntercepto
 
   protected boolean validateETag(HttpServletRequest request, HttpServletResponse response,
       String eTag) {
-    var content = getContent(request);
+    String content;
     var url = request.getRequestURL();
+    try {
+      content = getContent(request);
+    } catch (FormNotFoundException exception) {
+      log.warn("ETag validation for path {} failed, content not found", url);
+      response.setStatus(HttpServletResponse.SC_CONFLICT);
+      return false;
+    }
     if (!ETagUtils.getETagFromContent(content).equals(eTag)) {
-      log.info("Invalid ETag for path {} version candidate, action will not be performed", url);
+      log.warn("Invalid ETag for path {} version candidate, action will not be performed", url);
       response.setStatus(HttpServletResponse.SC_CONFLICT);
       return false;
     }

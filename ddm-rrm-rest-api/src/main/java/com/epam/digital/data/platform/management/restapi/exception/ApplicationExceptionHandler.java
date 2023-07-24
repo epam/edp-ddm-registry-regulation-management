@@ -402,7 +402,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   @ExceptionHandler(ETagValidationException.class)
   public ResponseEntity<DetailedErrorResponse> handleETagValidationException(
       ETagValidationException exception) {
-    log.error("Invalid ETag for form with path {} from master", exception.getPath());
+    log.error("Invalid ETag for file with path {} from master", exception.getPath());
     return ResponseEntity.status(HttpStatus.CONFLICT)
         .body(newDetailedResponse(ETAG_FILTERING_EXCEPTION, exception));
   }

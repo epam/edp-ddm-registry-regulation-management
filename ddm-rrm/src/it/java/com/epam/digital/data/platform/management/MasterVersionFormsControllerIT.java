@@ -28,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -345,8 +346,8 @@ class MasterVersionFormsControllerIT extends BaseIT {
   }
 
   @Nested
-  @DisplayName("PUT /versions/candidates/{versionCandidateId}/forms/{formName}")
-  class CandidateVersionFormsUpdateFormByNameControllerIT {
+  @DisplayName("PUT /versions/master/forms/{formName}")
+  class MasterVersionFormsUpdateFormByNameControllerIT {
 
     @Test
     @DisplayName("should return 200 and update form if there's already exists such form")
@@ -690,7 +691,26 @@ class MasterVersionFormsControllerIT extends BaseIT {
               new Customization("modified", (o1, o2) -> true)
           ));
     }
+
+    @Test
+    @DisplayName("should return 409 if there's no such form and IF-Match header present")
+    @SneakyThrows
+    void updateForm_noFormsToUpdateWithETag() {
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
+      context.pullHeadRepo();
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/forms/{formName}","valid-form")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedFormContent)
+              .accept(MediaType.APPLICATION_JSON)
+              .header("IF-Match", ETagUtils.getETagFromContent(expectedFormContent))
+      ).andExpectAll(
+          status().isConflict()
+      );
+    }
   }
-
-
 }
