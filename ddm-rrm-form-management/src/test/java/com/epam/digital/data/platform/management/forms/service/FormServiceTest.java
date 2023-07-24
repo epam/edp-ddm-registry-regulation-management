@@ -170,6 +170,7 @@ class FormServiceTest {
     var actualFormContent = formService.getFormContent("form", VERSION_ID);
 
     Assertions.assertThat(actualFormContent).isEqualTo(FORM_CONTENT);
+    Mockito.verify(repository).updateRepository();
   }
 
   @Test

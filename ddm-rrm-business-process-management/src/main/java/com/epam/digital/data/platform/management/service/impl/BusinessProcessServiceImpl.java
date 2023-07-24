@@ -36,6 +36,7 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -94,9 +95,9 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   public String getProcessContent(String processName, String versionName) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    String processContent;
-    processContent = repo.readFile(getProcessPath(processName));
-    if (processContent == null) {
+    repo.updateRepository();
+    var processContent = repo.readFile(getProcessPath(processName));
+    if (Objects.isNull(processContent)) {
       throw new ProcessNotFoundException("Process " + processName + " not found", processName);
     }
     return processContent;
@@ -168,7 +169,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private List<BusinessProcessInfoDto> getProcessesByVersion(String versionName,
-                                                             FileStatus skippedStatus) {
+      FileStatus skippedStatus) {
     List<VersionedFileInfoDto> fileList;
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
@@ -186,7 +187,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       if (versionedFileInfoDto.getStatus() == FileStatus.DELETED) {
         processContent = masterRepo.readFile(getProcessPath(versionedFileInfoDto.getName()));
       } else {
-        processContent = getProcessContent(versionedFileInfoDto.getName(), versionName);
+        processContent = repo.readFile(getProcessPath(versionedFileInfoDto.getName()));
       }
       processes.add(
           mapper.toBusinessProcess(
@@ -222,7 +223,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   private String addDatesToContent(String processContent, LocalDateTime created,
-                                   LocalDateTime modified) {
+      LocalDateTime modified) {
     Document doc;
     try {
       doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));

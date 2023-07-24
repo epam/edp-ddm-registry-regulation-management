@@ -66,6 +66,7 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
   @Override
   public void updateRepository() {
     gitService.cloneRepoIfNotExist(versionId);
+    gitService.resetHeadBranchToRemote();
   }
 
   @Override
@@ -80,7 +81,6 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
 
   @Override
   public String readFile(@NonNull String path) {
-    gitService.resetHeadBranchToRemote();
     return super.readFile(path);
   }
 

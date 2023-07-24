@@ -37,6 +37,7 @@ import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
@@ -72,7 +73,7 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formPath = getFormPath(formName);
-    var formAlreadyExistsException = new  FormAlreadyExistsException(
+    var formAlreadyExistsException = new FormAlreadyExistsException(
         String.format("Form with path '%s' already exists", formPath));
     if (repo.isFileExists(formPath)) {
       throw formAlreadyExistsException;
@@ -90,8 +91,9 @@ public class FormServiceImpl implements FormService {
   public String getFormContent(String formName, String versionName) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    String formContent = repo.readFile(getFormPath(formName));
-    if (formContent == null) {
+    repo.updateRepository();
+    var formContent = repo.readFile(getFormPath(formName));
+    if (Objects.isNull(formContent)) {
       throw new FormNotFoundException("Form " + formName + " not found", formName);
     }
     return formContent;

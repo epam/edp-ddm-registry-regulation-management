@@ -254,6 +254,7 @@ public class BusinessProcessServiceTest {
         businessProcessService.getProcessContent("business-process", VERSION_ID);
 
     Assertions.assertThat(actualBusinessProcessContent).isEqualTo(PROCESS_CONTENT);
+    Mockito.verify(repository).updateRepository();
   }
 
   @Test

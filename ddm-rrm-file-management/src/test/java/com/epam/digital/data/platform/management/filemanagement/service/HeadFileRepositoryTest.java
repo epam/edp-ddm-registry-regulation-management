@@ -135,13 +135,10 @@ class HeadFileRepositoryTest {
 
   @Test
   @SneakyThrows
-  void shouldRefreshRepositoryWhenFileRead() {
-    var path = RandomString.make();
-    var content = RandomString.make();
-    Mockito.when(jGitService.getFileContent("version", path)).thenReturn(content);
-    var fileContent = repository.readFile(path);
-    Assertions.assertThat(fileContent).isNotNull()
-        .isEqualTo(content);
+  void shouldRefreshRepository() {
+    repository.updateRepository();
+
+    Mockito.verify(jGitService).cloneRepoIfNotExist("version");
     Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 }
