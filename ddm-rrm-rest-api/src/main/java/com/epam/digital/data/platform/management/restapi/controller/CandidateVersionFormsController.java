@@ -267,9 +267,11 @@ public class CandidateVersionFormsController {
                   schema = @Schema(implementation = DetailedErrorResponse.class)))})
   @DeleteMapping("/{formName}")
   public ResponseEntity<String> deleteForm(@PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName) {
+      @PathVariable @Parameter(description = "Name of the form to be deleted", required = true) String formName,
+      @RequestHeader HttpHeaders headers) {
     log.info("Started deleting {} form for {} version candidate", formName, versionCandidateId);
-    formService.deleteForm(formName, versionCandidateId);
+    var eTag = headers.getFirst("If-Match");
+    formService.deleteForm(formName, versionCandidateId, eTag);
     log.info("Form {} was deleted from {} version candidate", formName, versionCandidateId);
     return ResponseEntity.noContent().build();
   }

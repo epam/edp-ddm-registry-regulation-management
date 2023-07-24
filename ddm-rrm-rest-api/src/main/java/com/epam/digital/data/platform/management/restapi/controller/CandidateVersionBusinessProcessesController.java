@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -44,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -269,10 +271,12 @@ public class CandidateVersionBusinessProcessesController {
   @DeleteMapping("/{businessProcessName}")
   public ResponseEntity<String> deleteBusinessProcess(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName,
+      @RequestHeader HttpHeaders headers) {
     log.info("Started deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);
-    businessProcessService.deleteProcess(businessProcessName, versionCandidateId);
+    var eTag = headers.getFirst("If-Match");
+    businessProcessService.deleteProcess(businessProcessName, versionCandidateId, eTag);
     groupService.deleteProcessDefinition(businessProcessName, versionCandidateId);
     log.info("Finished deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);

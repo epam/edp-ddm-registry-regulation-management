@@ -146,7 +146,7 @@ public interface JGitService {
    * @throws GitCommandException         in case if it couldn't open repo or rm, log, commit, remote
    *                                     add or push git command failures
    */
-  void delete(@NonNull String repositoryName, @NonNull String filePath);
+  void delete(@NonNull String repositoryName, @NonNull String filePath, String eTag);
 
   /**
    * Delete repository from FileSystem

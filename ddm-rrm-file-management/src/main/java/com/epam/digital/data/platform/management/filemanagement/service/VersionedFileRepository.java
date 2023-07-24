@@ -77,14 +77,6 @@ public interface VersionedFileRepository {
   boolean isFileExists(@NonNull String path);
 
   /**
-   * Deletes file at specific path in the version
-   *
-   * @param path version relative path of file to delete
-   * @throws UnsupportedOperationException if updating isn't allowed in version
-   */
-  void deleteFile(@NonNull String path);
-
-  /**
    * Deletes file at specific path in the version and comparing eTags
    *
    * @param path version relative path of file to delete

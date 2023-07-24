@@ -150,7 +150,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   @DisplayName("should 'git rm' file, find last commit, commit with amend, add remote and push")
   @SneakyThrows
   void testDelete() {
-    jGitService.delete(REPO_NAME, FILE_PATH);
+    jGitService.delete(REPO_NAME, FILE_PATH, null);
 
     Assertions.assertThat(Path.of(repoDir.getPath(), FILE_PATH))
         .doesNotExist();
@@ -190,7 +190,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   @DisplayName("should do nothing if file doesn't exist")
   @SneakyThrows
   void testDeleteNoFile() {
-    jGitService.delete(REPO_NAME, RandomString.make());
+    jGitService.delete(REPO_NAME, RandomString.make(), null);
 
     Mockito.verify(git, Mockito.never()).rm();
     Mockito.verify(rmCommand, Mockito.never()).addFilepattern(FILE_PATH);
@@ -219,7 +219,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     final var repositoryName = RandomString.make();
     final var filepath = RandomString.make();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(repositoryName, filepath))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(repositoryName, filepath, null))
         .isInstanceOf(RepositoryNotFoundException.class)
         .hasMessage("Repository %s doesn't exists", repositoryName)
         .hasNoCause();
@@ -233,7 +233,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(rmCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Could not execute add/rm command: unknown exception")
         .hasCause(ex);
@@ -264,7 +264,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   void testDelete_statusCommandNoWorkTreeException() {
     Mockito.doThrow(NoWorkTreeException.class).when(statusCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Work tree mustn't disappear: ")
         .hasCauseInstanceOf(NoWorkTreeException.class);
@@ -297,7 +297,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(statusCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Could not execute status command: unknown exception")
         .hasCause(ex);
@@ -328,7 +328,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   void testDelete_logCommandNoHeadException() {
     Mockito.doThrow(NoHeadException.class).when(logCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Log/commit command doesn't expected to throw such exception: ")
         .hasCauseInstanceOf(NoHeadException.class);
@@ -361,7 +361,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(logCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Exception occurred during amending commit: unknown exception")
         .hasCause(ex);
@@ -401,7 +401,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   void testDelete_commitCommandIllegalStateException(Class<? extends GitAPIException> exType) {
     Mockito.doThrow(exType).when(commitCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Log/commit command doesn't expected to throw such exception: ")
         .hasCauseInstanceOf(exType);
@@ -434,7 +434,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(commitCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Exception occurred during amending commit: unknown exception")
         .hasCause(ex);
@@ -467,7 +467,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(remoteAddCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Could not execute add-remote/push command: unknown exception")
         .hasCause(ex);
@@ -499,7 +499,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     Mockito.doReturn("").when(gerritPropertiesConfig).getUrl();
     Mockito.doReturn("").when(gerritPropertiesConfig).getRepository();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Repository url that is configured under \"gerrit\" prefix is invalid")
         .hasNoCause();
@@ -529,7 +529,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   void testDelete_pushCommandInvalidRemoteException() {
     Mockito.doThrow(InvalidRemoteException.class).when(pushCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Remote that is configured under \"gerrit\" prefix is invalid: ")
         .hasCauseInstanceOf(InvalidRemoteException.class);
@@ -560,7 +560,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
   void testDelete_pushCommandTransportException() {
     Mockito.doThrow(TransportException.class).when(pushCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessageContaining("Could not execute add-remote/push command: ")
         .hasCauseInstanceOf(TransportException.class);
@@ -593,7 +593,7 @@ class JGitServiceDeleteTest extends AbstractJGitServiceTest {
     };
     Mockito.doThrow(ex).when(pushCommand).call();
 
-    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH))
+    Assertions.assertThatThrownBy(() -> jGitService.delete(REPO_NAME, FILE_PATH, null))
         .isInstanceOf(GitCommandException.class)
         .hasMessage("Could not execute add-remote/push command: unknown exception")
         .hasCause(ex);

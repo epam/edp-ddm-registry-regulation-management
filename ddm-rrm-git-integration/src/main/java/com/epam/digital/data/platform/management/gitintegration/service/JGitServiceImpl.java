@@ -295,11 +295,8 @@ public class JGitServiceImpl implements JGitService {
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
 
-      if (!validateETag(getFileContent(repositoryDirectory, filePath), eTag)) {
-        throw new ETagValidationException(
-            String.format("Invalid ETag for path %s, action will not be performed", filePath),
-            filePath);
-      }
+      validateETag(repositoryDirectory, filePath, eTag);
+
       log.trace("Updating file at path {}", filePath);
       var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
       log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
@@ -327,11 +324,7 @@ public class JGitServiceImpl implements JGitService {
             String.format("File with path '%s' already exists", filePath));
       }
 
-      if (!validateETag(getFileContent(repositoryDirectory, filePath), eTag)) {
-        throw new ETagValidationException(
-            String.format("Invalid ETag for path %s, action will not be performed", filePath),
-            filePath);
-      }
+      validateETag(repositoryDirectory, filePath, eTag);
 
       log.trace("Updating file at path {}", filePath);
       var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
@@ -347,7 +340,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public void delete(@NonNull String repositoryName, @NonNull String filePath) {
+  public void delete(@NonNull String repositoryName, @NonNull String filePath, String eTag) {
     log.debug("Trying to delete file from repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
 
@@ -356,6 +349,7 @@ public class JGitServiceImpl implements JGitService {
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
       log.trace("Deleting file at path {}", filePath);
+      validateETag(repositoryDirectory, filePath, eTag);
       var fileToDelete = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
       if (fileToDelete.delete()) {
         log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
@@ -419,11 +413,7 @@ public class JGitServiceImpl implements JGitService {
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
       log.trace("Deleting file at path {}", filePath);
-      if (!validateETag(getFileContent(repositoryDirectory, filePath), eTag)) {
-        throw new ETagValidationException(
-            String.format("Invalid ETag for path %s, action will not be performed", filePath),
-            filePath);
-      }
+      validateETag(repositoryDirectory, filePath, eTag);
       var fileToDelete = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
       if (fileToDelete.delete()) {
         log.trace("Commit file {} in repo {}", filePath, repositoryName);
@@ -437,12 +427,20 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  private boolean validateETag(String content, String eTag) {
+  private void validateETag(File repositoryDirectory, String filePath, String eTag) {
+    boolean isValidETag;
+    var content = getFileContent(repositoryDirectory, filePath);
     if (eTag == null || ("*").equals(eTag) || content == null) {
-      return true;
+      isValidETag = true;
+    } else {
+      var contentETag = ETagUtils.getETagFromContent(content);
+      isValidETag = contentETag.equals(eTag);
     }
-    var contentETag = ETagUtils.getETagFromContent(content);
-    return contentETag.equals(eTag);
+    if (!isValidETag) {
+      throw new ETagValidationException(
+          String.format("Invalid ETag for path %s, action will not be performed", filePath),
+          filePath);
+    }
   }
 
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")

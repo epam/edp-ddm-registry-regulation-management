@@ -83,4 +83,9 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
     gitService.resetHeadBranchToRemote();
     return super.readFile(path);
   }
+
+  @Override
+  public void deleteFile(@NonNull String path, String eTag) {
+    gitService.deleteAndSubmit(versionId, path, eTag);
+  }
 }

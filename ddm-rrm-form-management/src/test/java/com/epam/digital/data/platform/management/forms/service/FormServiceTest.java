@@ -213,10 +213,10 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void deleteFormTest() {
-    Assertions.assertThatCode(() -> formService.deleteForm("form", VERSION_ID))
+    Assertions.assertThatCode(() -> formService.deleteForm("form", VERSION_ID, "eTag"))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).deleteFile("forms/form.json");
+    Mockito.verify(repository).deleteFile("forms/form.json", "eTag");
   }
 
   @Test

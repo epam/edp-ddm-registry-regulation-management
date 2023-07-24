@@ -105,8 +105,8 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
   }
 
   @Override
-  public void deleteFile(@NonNull String path) {
-    gitService.delete(versionId, path);
+  public void deleteFile(@NonNull String path, String eTag) {
+    gitService.delete(versionId, path, eTag);
   }
 
   @Override

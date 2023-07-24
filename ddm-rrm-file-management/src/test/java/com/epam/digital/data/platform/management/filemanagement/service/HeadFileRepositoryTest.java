@@ -101,12 +101,6 @@ class HeadFileRepositoryTest {
   }
 
   @Test
-  void deleteNotSupportTest() {
-    Assertions.assertThatCode(() -> repository.deleteFile("/"))
-        .isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
   @SneakyThrows
   void readFileTest() {
     var path = RandomString.make();

@@ -31,8 +31,6 @@ public interface BusinessProcessService {
 
   void updateProcess(String content, String processName, String versionName);
 
-  void deleteProcess(String processName, String versionName);
-
   /**
    * Rolls back a business process to a specific version.
    *

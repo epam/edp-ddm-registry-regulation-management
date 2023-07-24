@@ -133,10 +133,10 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   @Override
-  public void deleteProcess(String processName, String versionName) {
+  public void deleteProcess(String processName, String versionName, String eTag) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    repo.deleteFile(getProcessPath(processName));
+    repo.deleteFile(getProcessPath(processName), eTag);
   }
 
   @Override
@@ -144,13 +144,6 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     var repo = versionContextComponentManager.getComponent(versionName,
         VersionedFileRepository.class);
     repo.rollbackFile(getProcessPath(processName));
-  }
-
-  @Override
-  public void deleteProcess(String processName, String versionName, String eTag) {
-    var repo =
-        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    repo.deleteFile(getProcessPath(processName), eTag);
   }
 
   private String getAttributeFromContent(String processContent, String attribute) {

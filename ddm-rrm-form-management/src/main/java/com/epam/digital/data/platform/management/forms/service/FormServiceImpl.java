@@ -128,10 +128,10 @@ public class FormServiceImpl implements FormService {
   }
 
   @Override
-  public void deleteForm(String formName, String versionName) {
+  public void deleteForm(String formName, String versionName, String eTag) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    repo.deleteFile(getFormPath(formName));
+    repo.deleteFile(getFormPath(formName), eTag);
   }
 
   @Override
@@ -139,13 +139,6 @@ public class FormServiceImpl implements FormService {
     var repo = versionContextComponentManager.getComponent(versionName,
         VersionedFileRepository.class);
     repo.rollbackFile(getFormPath(formName));
-  }
-
-  @Override
-  public void deleteForm(String formName, String versionName, String eTag) {
-    var repo =
-        versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    repo.deleteFile(getFormPath(formName), eTag);
   }
 
   private String getFormPath(String formName) {

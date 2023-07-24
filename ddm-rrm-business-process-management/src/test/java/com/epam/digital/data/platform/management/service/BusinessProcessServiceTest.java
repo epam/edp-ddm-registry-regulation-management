@@ -318,10 +318,10 @@ public class BusinessProcessServiceTest {
   @SneakyThrows
   void deleteProcessTest() {
     Assertions.assertThatCode(
-            () -> businessProcessService.deleteProcess("business-process", VERSION_ID))
+            () -> businessProcessService.deleteProcess("business-process", VERSION_ID, "eTag"))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).deleteFile("bpmn/business-process." + BPMN_FILE_EXTENSION);
+    Mockito.verify(repository).deleteFile("bpmn/business-process." + BPMN_FILE_EXTENSION, "eTag");
   }
 
   @SneakyThrows

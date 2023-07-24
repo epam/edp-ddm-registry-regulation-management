@@ -59,17 +59,7 @@ public abstract class AbstractVersionFileRepository implements VersionedFileRepo
   }
 
   @Override
-  public void deleteFile(@NonNull String path) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public void rollbackFile(@NonNull String path) {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void deleteFile(@NonNull String path, String eTag) {
-    gitService.deleteAndSubmit(versionId, path, eTag);
   }
 }
