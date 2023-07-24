@@ -196,11 +196,18 @@ public class CandidateVersionBusinessProcessesController {
   }
 
   @Operation(description = "Update business process",
-      parameters = @Parameter(in = ParameterIn.HEADER,
-          name = "X-Access-Token",
-          description = "Token used for endpoint security",
-          required = true,
-          schema = @Schema(type = "string")),
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
@@ -226,11 +233,16 @@ public class CandidateVersionBusinessProcessesController {
   @PutMapping("/{businessProcessName}")
   public ResponseEntity<String> updateBusinessProcess(
       @RequestBody @BusinessProcess String businessProcess,
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
+      String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true)
+      String businessProcessName,
+      @RequestHeader HttpHeaders headers) {
     log.info("Started updating business process {} for {} version candidate", businessProcessName,
         versionCandidateId);
-    businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
+    var eTag = headers.getFirst("If-Match");
+    businessProcessService.updateProcess(businessProcess, businessProcessName,
+        versionCandidateId, eTag);
     log.info(
         "Finished updating business process {} for {} version candidate. Retrieving this process",
         businessProcessName, versionCandidateId);

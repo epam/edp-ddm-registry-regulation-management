@@ -22,6 +22,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -134,4 +135,33 @@ class MasterVersionBusinessProcessControllerTest {
     Mockito.verify(businessProcessService).deleteProcess(processId, HEAD_BRANCH, "tag");
     Mockito.verify(groupService).deleteProcessDefinition(processId, HEAD_BRANCH);
   }
+
+  @Test
+  @DisplayName("PUT /versions/master/business-processes/{businessProcessName} should return 200 with business process content")
+  @SneakyThrows
+  void updateBusinessProcess() {
+    final var versionCandidateId = "master";
+    final var processId = "John_Does_process";
+    final var expectedProcessContent = TestUtils.getContent("controller/John_Does_process.bpmn");
+
+    Mockito.doReturn(expectedProcessContent)
+        .when(businessProcessService).getProcessContent(processId, versionCandidateId);
+
+    mockMvc.perform(
+        put("/versions/master/business-processes/{businessProcessName}", processId)
+            .accept(MediaType.TEXT_XML)
+            .contentType(MediaType.TEXT_XML)
+            .content(expectedProcessContent)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.TEXT_XML),
+        content().xml(expectedProcessContent)
+    ).andDo(document(
+        "versions/master/business-processes/{businessProcessName}/PUT")
+    );
+
+    Mockito.verify(businessProcessService)
+        .updateProcess(expectedProcessContent, processId, versionCandidateId, null);
+  }
+
 }

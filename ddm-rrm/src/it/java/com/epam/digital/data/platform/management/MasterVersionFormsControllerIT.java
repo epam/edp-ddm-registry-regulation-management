@@ -547,7 +547,6 @@ class MasterVersionFormsControllerIT extends BaseIT {
       // define expected form content to create
       final var expectedFormContent = context.getResourceContent(
           "/versions/master/forms/{formName}/PUT/valid-form-version-candidate.json");
-      context.pullHeadRepo();
 
       // perform query
       mockMvc.perform(

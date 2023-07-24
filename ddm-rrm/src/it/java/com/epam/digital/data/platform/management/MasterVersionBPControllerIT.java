@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -214,6 +215,136 @@ class MasterVersionBPControllerIT extends BaseIT {
           .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
       Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
           .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+  }
+
+  @Nested
+  @DisplayName("PUT /versions/master/business-processes/{businessProcessName}")
+  class CandidateVersionBPUpdateBpByNameControllerIT {
+
+
+    @Test
+    @DisplayName("should return 200 and update business-process if there's already exists such process")
+    @SneakyThrows
+    void updateBusinessProcess() {
+      // add file to "remote" repo
+      final var headBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/PUT/valid-bp-head.bpmn");
+      context.addFileToRemoteHeadRepo("/bpmn/valid-bp.bpmn", headBpContent);
+      context.pullHeadRepo();
+
+      // define expected bp content to update
+      final var expectedBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/PUT/valid-bp-master.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+              .contentType(MediaType.TEXT_XML)
+              .content(expectedBpContent)
+              .accept(MediaType.TEXT_XML)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
+              "Valid BP Master")
+      );
+
+      // define expected created date for process
+      final var expectedCreated = context.getHeadRepoDatesByPath("bpmn/valid-bp.bpmn")
+          .getCreated();
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualBpContent = mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("Valid BP Master")
+      ).andReturn().getResponse().getContentAsString();
+
+      assertNoDifferences(expectedBpContent, actualBpContent);
+
+      // assert that business process dates are close to current date
+      final var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+          .parse(new InputSource(new StringReader(actualBpContent)));
+      final var createdXpath = XPathFactory.newInstance().newXPath();
+      final var created = createdXpath.compile("/definitions/@created").evaluate(document);
+      final var updated = createdXpath.compile("/definitions/@modified").evaluate(document);
+      Assertions.assertThat(created).isEqualTo(expectedCreated);
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 200 and create business-process if there's no such process")
+    @SneakyThrows
+    void updateBusinessProcess_noBusinessProcessToUpdate() {
+      // define expected bp content to create
+      final var expectedBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/PUT/valid-bp-master.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+              .contentType(MediaType.TEXT_XML)
+              .content(expectedBpContent)
+              .accept(MediaType.TEXT_XML)
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string(
+              "Valid BP Master")
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualBpContent = mockMvc.perform(
+          get("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+      ).andExpectAll(
+          status().isOk(),
+          content().contentType("text/xml"),
+          xpath("/bpmn:definitions/bpmn:process/@id", BPMN_NAMESPACES).string("valid-bp"),
+          xpath("/bpmn:definitions/bpmn:process/@name", BPMN_NAMESPACES).string("Valid BP Master")
+      ).andReturn().getResponse().getContentAsString();
+
+      assertNoDifferences(expectedBpContent, actualBpContent);
+
+      // assert that business process dates are close to current date
+      final var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+          .parse(new InputSource(new StringReader(actualBpContent)));
+      final var createdXpath = XPathFactory.newInstance().newXPath();
+      final var created = createdXpath.compile("/definitions/@created").evaluate(document);
+      final var updated = createdXpath.compile("/definitions/@modified").evaluate(document);
+      Assertions.assertThat(LocalDateTime.parse(created, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+      Assertions.assertThat(LocalDateTime.parse(updated, JacksonConfig.DATE_TIME_FORMATTER))
+          .isCloseTo(LocalDateTime.now(), within(1, ChronoUnit.MINUTES));
+    }
+
+    @Test
+    @DisplayName("should return 422 if trying update business-process with not valid data")
+    @SneakyThrows
+    void updateBusinessProcess_notValidBusinessProcess() {
+      // define expected bp content to update
+      final var notValidBpContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/PUT/not-valid-bp.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/business-processes/{businessProcessName}", "valid-bp")
+              .contentType(MediaType.TEXT_XML)
+              .content(notValidBpContent)
+              .accept(MediaType.TEXT_XML, MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isUnprocessableEntity(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.code", is("BUSINESS_PROCESS_CONTENT_EXCEPTION")),
+          jsonPath("$.details",
+              is("updateBusinessProcess.businessProcess: cvc-datatype-valid.1.2.1: '' is not a valid value for 'dateTime'."))
+      );
     }
   }
 

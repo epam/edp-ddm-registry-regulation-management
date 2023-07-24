@@ -176,7 +176,7 @@ class CandidateVersionBusinessProcessControllerTest {
     );
 
     Mockito.verify(businessProcessService)
-        .updateProcess(expectedProcessContent, processId, versionCandidateId);
+        .updateProcess(expectedProcessContent, processId, versionCandidateId, null);
   }
 
   @Test

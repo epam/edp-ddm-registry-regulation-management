@@ -104,7 +104,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
   }
 
   @Override
-  public void updateProcess(String content, String processName, String versionName) {
+  public void updateProcess(String content, String processName, String versionName, String eTag) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String processPath = getProcessPath(processName);
@@ -130,7 +130,7 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
               .orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-    repo.writeFile(processPath, content);
+    repo.writeFile(processPath, content, eTag);
   }
 
   @Override

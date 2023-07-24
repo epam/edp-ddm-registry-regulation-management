@@ -29,7 +29,7 @@ public interface BusinessProcessService {
 
   String getProcessContent(String processName, String versionName);
 
-  void updateProcess(String content, String processName, String versionName);
+  void updateProcess(String content, String processName, String versionName, String eTag);
 
   /**
    * Rolls back a business process to a specific version.

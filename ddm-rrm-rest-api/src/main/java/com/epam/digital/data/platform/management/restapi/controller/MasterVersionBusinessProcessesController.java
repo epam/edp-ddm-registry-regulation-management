@@ -40,10 +40,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,6 +54,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Tag(name = "Registry regulations master Business processes management Rest API")
 @RestController
+@Validated
 @RequestMapping("/versions/master/business-processes")
 @RequiredArgsConstructor
 public class MasterVersionBusinessProcessesController {
@@ -129,6 +132,72 @@ public class MasterVersionBusinessProcessesController {
     log.info("Started getting {} business process from master", businessProcessName);
     var response = businessProcessService.getProcessContent(businessProcessName, masterVersionId);
     log.info("Finished getting {} business process from master", businessProcessName);
+    return ResponseEntity.ok()
+        .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
+        .body(response);
+  }
+
+  @Operation(description = "Update business process",
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
+
+      responses = {
+          @ApiResponse(responseCode = "200",
+              description = "OK",
+              content = @Content(mediaType = MediaType.TEXT_XML_VALUE)),
+          @ApiResponse(responseCode = "401",
+              description = "Unauthorized",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "403",
+              description = "Forbidden",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+          @ApiResponse(responseCode = "404",
+              description = "Not Found",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "409",
+              description = "Conflict",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "422",
+              description = "Unprocessable Entity",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))),
+          @ApiResponse(responseCode = "500",
+              description = "Internal server error",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+  @PutMapping("/{businessProcessName}")
+  public ResponseEntity<String> updateBusinessProcess(
+      @RequestBody @BusinessProcess String businessProcess,
+      @PathVariable @Parameter(description = "Process name", required = true)
+      String businessProcessName,
+      @RequestHeader HttpHeaders headers) {
+
+    log.info("Started updating business process {} for master", businessProcessName);
+
+    var masterVersionId = gerritPropertiesConfig.getHeadBranch();
+    var eTag = headers.getFirst("If-Match");
+
+    businessProcessService.updateProcess(businessProcess, businessProcessName, masterVersionId,
+        eTag);
+    log.info(
+        "Finished updating business process {} for master. Retrieving this process",
+        businessProcessName);
+    var response = businessProcessService.getProcessContent(businessProcessName, masterVersionId);
+    log.info("Finished getting business process {} from {} version candidate", businessProcessName,
+        masterVersionId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
         .eTag(ETagUtils.getETagFromContent(response))
