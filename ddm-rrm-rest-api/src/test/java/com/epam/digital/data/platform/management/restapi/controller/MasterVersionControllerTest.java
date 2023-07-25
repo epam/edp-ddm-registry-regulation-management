@@ -136,7 +136,8 @@ class MasterVersionControllerTest {
         arguments("Build Started ... MASTER-Build ...", ResultValues.PENDING.name()),
         arguments("Build Successful ... MASTER-Build ...", ResultValues.SUCCESS.name()),
         arguments("Build Failed ... MASTER-Build ...", ResultValues.FAILED.name()),
-        arguments("Build Successful ... MASTER-Code-review ...", null)
+        arguments("Build Aborted ... MASTER-Build ...", ResultValues.FAILED.name()),
+        arguments("Build Successful ... MASTER-Code-review ...", ResultValues.PENDING.name())
     );
   }
 }

@@ -91,7 +91,7 @@ public class MasterVersionController {
   }
 
   private String getStatus(VersionInfoDto masterInfo) {
-    String status = null;
+    String status = ResultValues.PENDING.name();
     var messageInfo = masterInfo.getMessages().stream()
             .filter(message -> message.message.contains("MASTER-Build"))
             .max(Comparator.comparing(m -> m.date))
@@ -103,7 +103,7 @@ public class MasterVersionController {
         status = ResultValues.PENDING.name();
       } else if (mes.contains("Build Successful")) {
         status = ResultValues.SUCCESS.name();
-      } else if (mes.contains("Build Failed")) {
+      } else if (mes.contains("Build Failed") || mes.contains("Build Aborted")) {
         status = ResultValues.FAILED.name();
       }
     }

@@ -66,7 +66,7 @@ class MasterVersionControllerIT extends BaseIT {
 
     final var om = new ObjectMapper();
     context.getGerritMockServer().addStubMapping(stubFor(
-        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=1",
+        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=10",
                 context.getGerritProps().getRepository(), context.getGerritProps().getUser())))
             .willReturn(aResponse().withStatus(200)
                 .withBody(om.writeValueAsString(List.of(lastMergedChangeInfo))))
@@ -100,7 +100,7 @@ class MasterVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void getMasterVersionInfo_noLastMergedMR() {
     context.getGerritMockServer().addStubMapping(stubFor(
-        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=1",
+        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=10",
                 context.getGerritProps().getRepository(), context.getGerritProps().getUser())))
             .willReturn(aResponse().withStatus(200).withBody("[]"))
     ));
@@ -127,7 +127,7 @@ class MasterVersionControllerIT extends BaseIT {
         arguments("Build Started ... MASTER-Build ...", ResultValues.PENDING.name()),
         arguments("Build Successful ... MASTER-Build ...", ResultValues.SUCCESS.name()),
         arguments("Build Failed ... MASTER-Build ...", ResultValues.FAILED.name()),
-        arguments("Build Successful ... MASTER-Code-review ...", null)
+        arguments("Build Successful ... MASTER-Code-review ...", ResultValues.PENDING.name())
     );
   }
 }
