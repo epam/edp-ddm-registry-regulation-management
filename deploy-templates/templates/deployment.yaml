@@ -25,6 +25,15 @@ spec:
         collect.logs: "json"
     spec:
       serviceAccountName: {{ .Values.name }}
+      initContainers:
+        - name: setup-permissions
+          image: "{{ .Values.image.name }}:{{ .Values.image.version }}"
+          command: ["sh", "-c", "chown -R 1001:1001 {{ .Values.gerrit.repositoryDirectory }}"]
+          volumeMounts:
+            - name: repositories-data
+              mountPath: {{ .Values.gerrit.repositoryDirectory }}
+          securityContext:
+            runAsUser: 0
       containers:
         - name: {{ .Values.name }}
           image: "{{ .Values.image.name }}:{{ .Values.image.version }}"
