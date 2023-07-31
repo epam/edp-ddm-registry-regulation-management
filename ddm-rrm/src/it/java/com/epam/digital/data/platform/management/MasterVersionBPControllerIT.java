@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -344,6 +345,26 @@ class MasterVersionBPControllerIT extends BaseIT {
           jsonPath("$.code", is("BUSINESS_PROCESS_CONTENT_EXCEPTION")),
           jsonPath("$.details",
               is("updateBusinessProcess.businessProcess: cvc-datatype-valid.1.2.1: '' is not a valid value for 'dateTime'."))
+      );
+    }
+
+    @Test
+    @DisplayName("should return 409 if there's no such bp and IF-Match header present")
+    @SneakyThrows
+    void updateBP_noBPToUpdateWithETag() {
+      // define expected bp content to create
+      final var expectedBPContent = context.getResourceContent(
+          "/versions/master/business-processes/{businessProcessName}/PUT/valid-bp-master.bpmn");
+
+      // perform query
+      mockMvc.perform(
+          put("/versions/master/business-processes/{businessProcessName}","valid-bp-master")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(expectedBPContent)
+              .accept(MediaType.APPLICATION_JSON)
+              .header("IF-Match", ETagUtils.getETagFromContent(expectedBPContent))
+      ).andExpectAll(
+          status().isConflict()
       );
     }
   }
