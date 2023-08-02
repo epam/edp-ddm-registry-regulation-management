@@ -63,6 +63,8 @@ class JGitServiceCloneTest extends AbstractJGitServiceTest {
     Mockito.doReturn(cloneCommand).when(cloneCommand).setCredentialsProvider(
         Mockito.refEq(new UsernamePasswordCredentialsProvider(USER, PASSWORD)));
     Mockito.doReturn(cloneCommand).when(cloneCommand).setCloneAllBranches(true);
+
+    Mockito.doReturn("master").when(gerritPropertiesConfig).getHeadBranch();
   }
 
   @Test

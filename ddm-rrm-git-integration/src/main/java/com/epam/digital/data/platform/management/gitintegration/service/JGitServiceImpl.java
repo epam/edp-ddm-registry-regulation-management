@@ -21,10 +21,10 @@ import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.gitintegration.exception.ETagValidationException;
 import com.epam.digital.data.platform.management.gitintegration.exception.FileAlreadyExistsException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import com.epam.digital.data.platform.management.gitintegration.exception.MergeConflictException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -41,11 +41,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.AbortedByHookException;
@@ -76,9 +77,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.FileCopyUtils;
 
 @Slf4j
 @Service
@@ -99,12 +98,18 @@ public class JGitServiceImpl implements JGitService {
     log.debug("Trying to clone repository {}", repositoryName);
     var directory = getRepositoryDir(repositoryName);
     if (directory.exists()) {
-      //    this condition was written in order to avoid cloning repo several times
+      // this condition was written in order to avoid cloning repo several times
       return;
     }
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
+    copyFolderFromHeadBranch(directory);
+    if (directory.exists()) {
+      // copying from headBranch repo went successful
+      return;
+    }
+
     try (var ignored = cloneRepo(directory)) {
       log.debug("Repository {} was successfully cloned.", repositoryName);
     } finally {
@@ -365,12 +370,17 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void deleteRepo(String repoName) {
     var repositoryFile = getRepositoryDir(repoName);
+    deleteFolder(repositoryFile);
+  }
+
+  private static void deleteFolder(File repositoryFile) {
     try {
       FileUtils.delete(repositoryFile, FileUtils.RECURSIVE | FileUtils.SKIP_MISSING);
     } catch (IOException e) {
       throw new GitCommandException(
           String.format(
-              "Exception occurred during deleting repository %s: %s", repoName, e.getMessage()),
+              "Exception occurred during deleting repository %s: %s", repositoryFile.getName(),
+              e.getMessage()),
           e);
     }
   }
@@ -485,6 +495,25 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
+  private void copyFolderFromHeadBranch(@NonNull File repositoryDirectory) {
+    var headBranchRepoName = gerritPropertiesConfig.getHeadBranch();
+
+    if (repoExists(headBranchRepoName)) {
+      var lock = getLock(headBranchRepoName);
+      lock.lock();
+      try {
+        FileCopyUtils.copy(getRepositoryDir(headBranchRepoName), repositoryDirectory);
+        log.debug("Repository {} was successfully cloned.", repositoryDirectory);
+      } catch (IOException e) {
+        log.warn("Exception occurred during copying head-branch folder: {}", e.getMessage());
+        deleteFolder(repositoryDirectory);
+      } finally {
+        lock.unlock();
+        log.trace("Repo {} lock released", headBranchRepoName);
+      }
+    }
+  }
+
   @NonNull
   private Git cloneRepo(@NonNull File repositoryDirectory) {
     var cloneCommand =
@@ -520,12 +549,16 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  /** Fetch method that needs opened {@link Git} */
+  /**
+   * Fetch method that needs opened {@link Git}
+   */
   private void fetchAll(Git git) {
     fetch(git, null);
   }
 
-  /** Fetch specific refs with opened {@link Git} */
+  /**
+   * Fetch specific refs with opened {@link Git}
+   */
   private void fetch(@NonNull Git git, @Nullable String refs) {
     var fetchCommand = git.fetch().setCredentialsProvider(getCredentialsProvider());
     if (Objects.nonNull(refs)) {
@@ -546,9 +579,9 @@ public class JGitServiceImpl implements JGitService {
     try {
       checkoutCommand.call();
     } catch (RefAlreadyExistsException
-        | RefNotFoundException
-        | InvalidRefNameException
-        | CheckoutConflictException e) {
+             | RefNotFoundException
+             | InvalidRefNameException
+             | CheckoutConflictException e) {
       // Checkout on FETCH_HEAD must not create any new refs, ref FETCH_HEAD must always exist
       // ref FETCH_HEAD must be always valid and there must not be any conflicts during such
       // checkout
@@ -682,12 +715,12 @@ public class JGitServiceImpl implements JGitService {
       var lastCommit = git.log().call().iterator().next();
       git.commit().setMessage(lastCommit.getFullMessage()).setAmend(true).call();
     } catch (AbortedByHookException
-        | ConcurrentRefUpdateException
-        | NoHeadException
-        | NoMessageException
-        | ServiceUnavailableException
-        | UnmergedPathsException
-        | WrongRepositoryStateException e) {
+             | ConcurrentRefUpdateException
+             | NoHeadException
+             | NoMessageException
+             | ServiceUnavailableException
+             | UnmergedPathsException
+             | WrongRepositoryStateException e) {
       throw new IllegalStateException(
           String.format(
               "Log/commit command doesn't expected to throw such exception: %s", e.getMessage()),
