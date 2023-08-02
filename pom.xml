@@ -7,7 +7,7 @@
   <parent>
     <groupId>com.epam.digital.data.platform</groupId>
     <artifactId>low-code-platform-parent</artifactId>
-    <version>1.6.0.6</version>
+    <version>1.6.0.7</version>
     <relativePath/>
   </parent>
 
@@ -53,7 +53,6 @@
     <apache-encoding-detector.version>2.7</apache-encoding-detector.version>
     <jgit.version>6.1.0.202203080745-r</jgit.version>
     <gerrit.client.version>0.9.4</gerrit.client.version>
-    <spring-security-core.version>5.7.5</spring-security-core.version>
     <spring-boot-starter-web.version>2.6.13</spring-boot-starter-web.version>
     <liquibase-ddm-ext.version>1.6.0.2</liquibase-ddm-ext.version>
     <zonky-embedded-postgres.version>2.0.2</zonky-embedded-postgres.version>
@@ -82,11 +81,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.springframework.security</groupId>
-        <artifactId>spring-security-core</artifactId>
-        <version>${spring-security-core.version}</version>
-      </dependency>
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
