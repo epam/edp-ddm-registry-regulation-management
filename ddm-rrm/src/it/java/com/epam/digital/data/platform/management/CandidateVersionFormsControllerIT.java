@@ -300,6 +300,44 @@ class CandidateVersionFormsControllerIT extends BaseIT {
           jsonPath("$.details", is("Form with path 'forms/valid-form.json' already exists"))
       );
     }
+
+    @Test
+    @DisplayName("should get form added to remote after creating form")
+    @SneakyThrows
+    void shouldUpdateLocalRepoWhenCreateForm() {
+      // mock gerrit change info for version candidate
+      final var versionCandidateId = context.createVersionCandidate();
+
+      // define expected form content to create
+      final var expectedFormContent = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form.json");
+      final var formToCreate = context.getResourceContent(
+          "/versions/candidates/{versionCandidateId}/forms/{formName}/POST/valid-form-2.json");
+      context.addFileToVersionCandidateRemote("/forms/valid-form.json", expectedFormContent);
+
+      // perform query
+      mockMvc.perform(
+          post("/versions/candidates/{versionCandidateId}/forms/{formName}",
+              versionCandidateId, "valid-form-2")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(formToCreate)
+              .accept(MediaType.APPLICATION_JSON)
+      ).andExpectAll(
+          status().isCreated(),
+          content().contentType(MediaType.APPLICATION_JSON),
+          jsonPath("$.name", is("valid-form-2")),
+          jsonPath("$.title", is("Valid form"))
+      );
+
+      // assert that actual content and expected have no differences except for created and updated dates
+      final var actualFormContent = context.getFileFromRemoteVersionCandidateRepo(
+          "/forms/valid-form.json");
+      JSONAssert.assertEquals(expectedFormContent, actualFormContent,
+          new CustomComparator(JSONCompareMode.LENIENT,
+              new Customization("created", (o1, o2) -> true),
+              new Customization("modified", (o1, o2) -> true)
+          ));
+    }
   }
 
   @Nested

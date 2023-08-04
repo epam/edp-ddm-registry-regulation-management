@@ -86,11 +86,13 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
 
   @Override
   public void writeFile(@NonNull String path, @NonNull String content) {
+    updateRepository();
     gitService.amend(versionId, path, content, null);
   }
 
   @Override
   public void writeFile(@NonNull String path, @NonNull String content, String eTag) {
+    updateRepository();
     gitService.amend(versionId, path, content, eTag);
   }
 
@@ -106,6 +108,7 @@ public class VersionedFileRepositoryImpl extends AbstractVersionFileRepository {
 
   @Override
   public void deleteFile(@NonNull String path, String eTag) {
+    updateRepository();
     gitService.delete(versionId, path, eTag);
   }
 

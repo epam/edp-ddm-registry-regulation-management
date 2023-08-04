@@ -62,6 +62,11 @@ public class VersionedFileRepositoryTest {
   @BeforeEach
   void setUp() {
     repository = new VersionedFileRepositoryImpl("version", jGitService, gerritService, mapper);
+    var changeInfo = new ChangeInfoDto();
+    changeInfo.setChangeId("changeId");
+    changeInfo.setRefs(RandomString.make());
+    Mockito.when(gerritService.getChangeInfo(changeInfo.getChangeId())).thenReturn(changeInfo);
+    Mockito.when(gerritService.getMRByNumber("version")).thenReturn(changeInfo);
   }
 
   @Test
