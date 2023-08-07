@@ -29,12 +29,10 @@ public interface BusinessProcessMapper {
 
   @Mapping(
       target = "created",
-      source = "datesDto.create",
-      defaultExpression = "java(fileInfoDto.getCreated())")
+      source = "datesDto.create")
   @Mapping(
       target = "updated",
-      source = "datesDto.update",
-      defaultExpression = "java(fileInfoDto.getUpdated())")
+      source = "datesDto.update")
   @Mapping(target = "title", source = "processTitle")
   BusinessProcessInfoDto toBusinessProcess(
       VersionedFileInfoDto fileInfoDto,

@@ -16,21 +16,25 @@
 
 package com.epam.digital.data.platform.management.core.service;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import schemacrawler.schema.Catalog;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {CacheServiceImpl.class})
@@ -38,6 +42,7 @@ class CacheServiceImplTest {
 
   private static final String CONFLICTS_CACHE_NAME = "conflicts";
   private static final String LATEST_REBASE_CACHE_NAME = "latestRebase";
+  private static final String CATALOG_CACHE_NAME = "catalog";
   private static final String CACHE_KEY = "key";
 
   @Autowired CacheServiceImpl cacheService;
@@ -47,67 +52,109 @@ class CacheServiceImplTest {
 
   @Test
   void getConflictsCacheTest() {
-    Mockito.when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
-    Mockito.when(cache.get(CACHE_KEY)).thenReturn(valueWrapper);
+    when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(valueWrapper);
     List<String> fileNames = List.of("fileName1", "fileName2");
-    Mockito.when(valueWrapper.get()).thenReturn(fileNames);
+    when(valueWrapper.get()).thenReturn(fileNames);
 
     var result = cacheService.getConflictsCache(CACHE_KEY);
 
-    Assertions.assertThat(result).isEqualTo(fileNames);
+    assertThat(result).isEqualTo(fileNames);
   }
 
   @Test
   void getConflictsCacheTest_cacheNull() {
-    Mockito.when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
-    Mockito.when(cache.get(CACHE_KEY)).thenReturn(null);
+    when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(null);
 
     var result = cacheService.getConflictsCache(CACHE_KEY);
 
-    Assertions.assertThat(result).isEqualTo(Collections.emptyList());
+    assertThat(result).isEqualTo(Collections.emptyList());
   }
 
   @Test
   void updateConflictsCache() {
-    Mockito.when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
+    when(cacheManager.getCache(CONFLICTS_CACHE_NAME)).thenReturn(cache);
     List<String> conflicts = Collections.emptyList();
 
     cacheService.updateConflictsCache(CACHE_KEY, conflicts);
 
-    Mockito.verify(cache).evictIfPresent(CACHE_KEY);
-    Mockito.verify(cache).put(CACHE_KEY, conflicts);
+    verify(cache).evictIfPresent(CACHE_KEY);
+    verify(cache).put(CACHE_KEY, conflicts);
   }
 
   @Test
   void getLatestRebaseCacheTest() {
-    Mockito.when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
-    Mockito.when(cache.get(CACHE_KEY)).thenReturn(valueWrapper);
+    when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(valueWrapper);
     LocalDateTime latestRebase = LocalDateTime.now();
-    Mockito.when(valueWrapper.get()).thenReturn(latestRebase);
+    when(valueWrapper.get()).thenReturn(latestRebase);
 
     var result = cacheService.getLatestRebaseCache(CACHE_KEY);
 
-    Assertions.assertThat(result).isEqualTo(latestRebase);
+    assertThat(result).isEqualTo(latestRebase);
   }
 
   @Test
   void getLatestRebaseCacheTest_cacheNull() {
-    Mockito.when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
-    Mockito.when(cache.get(CACHE_KEY)).thenReturn(null);
+    when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(null);
 
     var result = cacheService.getLatestRebaseCache(CACHE_KEY);
 
-    Assertions.assertThat(result).isNull();
+    assertThat(result).isNull();
   }
 
   @Test
   void updateLatestRebaseCache() {
-    Mockito.when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
+    when(cacheManager.getCache(LATEST_REBASE_CACHE_NAME)).thenReturn(cache);
     LocalDateTime latestRebase = LocalDateTime.now();
 
     cacheService.updateLatestRebaseCache(CACHE_KEY, latestRebase);
 
-    Mockito.verify(cache).evictIfPresent(CACHE_KEY);
-    Mockito.verify(cache).put(CACHE_KEY, latestRebase);
+    verify(cache).evictIfPresent(CACHE_KEY);
+    verify(cache).put(CACHE_KEY, latestRebase);
+  }
+
+  @Test
+  void getCatalogCache() {
+    when(cacheManager.getCache(CATALOG_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(valueWrapper);
+    Catalog expected = mock(Catalog.class);
+    when(valueWrapper.get()).thenReturn(expected);
+
+    Catalog result = cacheService.getCatalogCache(CACHE_KEY);
+
+    assertThat(result).isEqualTo(expected);
+  }
+
+  @Test
+  void getCatalogCache_cacheNull() {
+    when(cacheManager.getCache(CATALOG_CACHE_NAME)).thenReturn(cache);
+    when(cache.get(CACHE_KEY)).thenReturn(null);
+
+    Catalog result = cacheService.getCatalogCache(CACHE_KEY);
+
+    assertThat(result).isNull();
+  }
+
+  @Test
+  void updateCatalogCache() {
+    when(cacheManager.getCache(CATALOG_CACHE_NAME)).thenReturn(cache);
+    Catalog catalog = mock(Catalog.class);
+
+    cacheService.updateCatalogCache(CACHE_KEY, catalog);
+
+    verify(cache).evictIfPresent(CACHE_KEY);
+    verify(cache).put(CACHE_KEY, catalog);
+  }
+
+  @Test
+  void clearCatalogCache() {
+    when(cacheManager.getCache(CATALOG_CACHE_NAME)).thenReturn(cache);
+
+    cacheService.clearCatalogCache(CACHE_KEY);
+
+    verify(cache).evictIfPresent(CACHE_KEY);
   }
 }

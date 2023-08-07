@@ -30,6 +30,7 @@ import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import java.util.List;
@@ -58,6 +59,8 @@ class MasterVersionTableControllerTest {
   MessageResolver messageResolver;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
+  @MockBean
+  BuildStatusService buildStatusService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -84,7 +87,8 @@ class MasterVersionTableControllerTest {
           .objectReference(true)
           .build();
       Mockito.doReturn(List.of(expectedTablesResponse))
-          .when(tableService).listTables(HEAD_BRANCH);
+          .when(tableService).listTables(HEAD_BRANCH, true);
+      Mockito.doReturn(true).when(buildStatusService).isSuccessMasterVersionBuild();
 
       mockMvc.perform(
           get("/versions/master/tables")
@@ -96,15 +100,16 @@ class MasterVersionTableControllerTest {
           jsonPath("$.[0].objectReference", is(true))
       ).andDo(document("versions/master/tables/GET"));
 
-      Mockito.verify(tableService).listTables(HEAD_BRANCH);
+      Mockito.verify(tableService).listTables(HEAD_BRANCH, true);
     }
 
     @Test
     @DisplayName("should return 500 it couldn't connect to data base")
     @SneakyThrows
     void listTablesTest_registryDataBaseConnectionException() {
+      Mockito.doReturn(false).when(buildStatusService).isSuccessMasterVersionBuild();
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).listTables(HEAD_BRANCH);
+          .when(tableService).listTables(HEAD_BRANCH, false);
 
       mockMvc.perform(
           get("/versions/master/tables")
@@ -117,7 +122,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).listTables(HEAD_BRANCH);
+      Mockito.verify(tableService).listTables(HEAD_BRANCH, false);
     }
   }
 
@@ -136,8 +141,10 @@ class MasterVersionTableControllerTest {
       expectedTablesResponse.setName(tableName);
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
+
+      Mockito.doReturn(false).when(buildStatusService).isSuccessMasterVersionBuild();
       Mockito.doReturn(expectedTablesResponse)
-          .when(tableService).getTable(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName, false);
 
       mockMvc.perform(
           get("/versions/master/tables/{tableName}", tableName)
@@ -149,7 +156,7 @@ class MasterVersionTableControllerTest {
           jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/master/tables/{tableName}/GET"));
 
-      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName, false);
     }
 
     @Test
@@ -157,8 +164,9 @@ class MasterVersionTableControllerTest {
     @SneakyThrows
     void getTableNotFoundException() {
       final var tableName = "tableName";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessMasterVersionBuild();
       Mockito.doThrow(new TableNotFoundException("Table tableName wasn't found"))
-          .when(tableService).getTable(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName, false);
       Mockito.doReturn("localized message").when(messageResolver)
           .getMessage(FileValidatorErrorMessageTitle.TABLE_NOT_FOUND_EXCEPTION);
 
@@ -173,7 +181,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName, false);
     }
 
     @Test
@@ -181,8 +189,9 @@ class MasterVersionTableControllerTest {
     @SneakyThrows
     void getTableTest_RegistryDataBaseConnectionException() {
       final var tableName = "tableName";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessMasterVersionBuild();
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).getTable(HEAD_BRANCH, tableName);
+          .when(tableService).getTable(HEAD_BRANCH, tableName, false);
 
       mockMvc.perform(
           get("/versions/master/tables/{tableName}", tableName)
@@ -195,7 +204,7 @@ class MasterVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName);
+      Mockito.verify(tableService).getTable(HEAD_BRANCH, tableName, false);
     }
   }
 }

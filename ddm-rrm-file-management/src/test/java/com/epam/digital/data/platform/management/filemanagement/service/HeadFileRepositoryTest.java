@@ -60,13 +60,10 @@ class HeadFileRepositoryTest {
   void getFileListTest() {
     var path = RandomString.make();
     var normalizePath = FilenameUtils.normalize(Path.of(path, path).toString(), true);
-    var fileDatesDto = FileDatesDto.builder().create(LocalDateTime.now())
-        .update(LocalDateTime.now()).build();
     List<String> list = new ArrayList<>();
     list.add(path);
 
     Mockito.when(jGitService.getFilesInPath("version", path)).thenReturn(list);
-    Mockito.when(jGitService.getDates("version", normalizePath)).thenReturn(fileDatesDto);
 
     List<VersionedFileInfoDto> fileList = repository.getFileList(path);
     Assertions.assertThat(fileList).isNotNull();
@@ -77,27 +74,7 @@ class HeadFileRepositoryTest {
     Assertions.assertThat(versionedFileInfoDto.getName()).isEqualTo(path);
 
     Mockito.verify(jGitService).getFilesInPath("version", path);
-    Mockito.verify(jGitService).getDates("version", normalizePath);
-    Mockito.verify(mapper).toVersionedFileInfoDto(normalizePath, fileDatesDto);
-  }
-
-  @Test
-  @SneakyThrows
-  void getFileListDatesNullTest() {
-    var path = RandomString.make();
-    var normalizePath = FilenameUtils.normalize(Path.of(path, path).toString(), true);
-    List<String> list = new ArrayList<>();
-    list.add(path);
-
-    Mockito.when(jGitService.getFilesInPath("version", path)).thenReturn(list);
-    Mockito.when(jGitService.getDates("version", normalizePath)).thenReturn(null);
-    Assertions.assertThatCode(() -> repository.getFileList(path))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Got null dates on existing file in the git repo");
-
-    Mockito.verify(jGitService).getFilesInPath("version", path);
-    Mockito.verify(jGitService).getDates("version", normalizePath);
-    Mockito.verify(mapper, Mockito.never()).toVersionedFileInfoDto(normalizePath, null);
+    Mockito.verify(mapper).toVersionedFileInfoDto(normalizePath);
   }
 
   @Test
@@ -140,5 +117,39 @@ class HeadFileRepositoryTest {
 
     Mockito.verify(jGitService).cloneRepoIfNotExist("version");
     Mockito.verify(jGitService).resetHeadBranchToRemote();
+  }
+
+  @Test
+  @SneakyThrows
+  void getVersionedFileDates() {
+    var filePath = "folder/fileName.ext";
+    var returnedFileDatesDto = FileDatesDto.builder()
+        .create(LocalDateTime.of(2023, 9, 25, 13, 40))
+        .update(LocalDateTime.of(2023, 9, 25, 13, 40))
+        .build();
+
+    Mockito.doReturn(returnedFileDatesDto).when(jGitService).getDates("version", filePath);
+
+    var actualDto = repository.getVersionedFileDates(filePath);
+
+    Assertions.assertThat(actualDto)
+        .hasFieldOrPropertyWithValue("created", returnedFileDatesDto.getCreate())
+        .hasFieldOrPropertyWithValue("updated", returnedFileDatesDto.getUpdate());
+
+    Mockito.verify(jGitService).getDates("version", filePath);
+    Mockito.verify(mapper).toVersionedFileDatesDto(returnedFileDatesDto);
+  }
+
+  @Test
+  @SneakyThrows
+  void getVersionedFileDates_fileNotExist() {
+    var filePath = "folder/fileName.ext";
+
+    var actualDto = repository.getVersionedFileDates(filePath);
+
+    Assertions.assertThat(actualDto).isNull();
+
+    Mockito.verify(jGitService).getDates("version", filePath);
+    Mockito.verify(mapper).toVersionedFileDatesDto(null);
   }
 }

@@ -19,6 +19,10 @@ import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.epam.digital.data.platform.management.restapi.model.BuildType;
+import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
+import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,6 +62,7 @@ public class CandidateVersionController {
 
   private final VersionManagementService versionManagementService;
   private final ControllerMapper controllerMapper;
+  private final BuildStatusService buildStatusService;
 
   @Operation(description = "Get list of existing opened version-candidates",
       parameters = @Parameter(in = ParameterIn.HEADER,
@@ -240,8 +245,11 @@ public class CandidateVersionController {
   public ResponseEntity<VersionInfoDetailed> getVersionDetails(
       @PathVariable @Parameter(description = "Version-candidate identifier", required = true) String versionCandidateId) {
     log.info("Started getting detailed info about {} version candidate", versionCandidateId);
+    VersionInfoDto versionDetails = versionManagementService.getVersionDetails(versionCandidateId);
+    String statusVersionBuild = buildStatusService.getStatusVersionBuild(versionDetails, BuildType.CANDIDATE);
     var response = controllerMapper.toVersionInfoDetailed(
-        versionManagementService.getVersionDetails(versionCandidateId));
+        versionDetails);
+    response.getValidations().get(0).setResult(ResultValues.valueOf(statusVersionBuild));
     log.info("Finished getting detailed info about {} version candidate", versionCandidateId);
     return ResponseEntity.ok().body(response);
   }

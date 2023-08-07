@@ -31,7 +31,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.gerritintegration.model.CreateChangeInputDto;
+import com.epam.digital.data.platform.management.restapi.model.BuildType;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
+import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto.DataModelFileStatus;
 import com.epam.digital.data.platform.management.versionmanagement.model.DataModelChangesInfoDto.DataModelFileType;
@@ -64,6 +67,8 @@ class CandidateVersionControllerTest {
 
   @MockBean
   VersionManagementServiceImpl versionManagementService;
+  @MockBean
+  BuildStatusService buildStatusService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -161,6 +166,7 @@ class CandidateVersionControllerTest {
         .build();
     Mockito.doReturn(expectedVersionDetails)
         .when(versionManagementService).getVersionDetails("1");
+    Mockito.doReturn(ResultValues.SUCCESS.name()).when(buildStatusService).getStatusVersionBuild(expectedVersionDetails, BuildType.CANDIDATE);
 
     mockMvc.perform(
         get("/versions/candidates/{versionCandidateId}", "1")

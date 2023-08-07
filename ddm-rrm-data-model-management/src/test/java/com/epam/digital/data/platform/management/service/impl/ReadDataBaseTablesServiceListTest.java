@@ -22,6 +22,8 @@ import com.epam.digital.data.platform.management.exception.RegistryDataBaseConne
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
+import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -35,14 +37,79 @@ import schemacrawler.schema.ForeignKey;
 import schemacrawler.schema.ForeignKeyColumnReference;
 import schemacrawler.schema.Table;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @DisplayName("DataModelServiceImpl#list(String)")
 class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTest {
 
   @ParameterizedTest
   @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})
-  @DisplayName("should return list of tables if catalog is created for both version-candidate or master version")
+  @DisplayName("should return list of tables from db if catalog is created for both version-candidate or master version. Cache is not updated when isSuccessfulBuild flag false")
   @SneakyThrows
-  void listTest(String versionId) {
+  void listTest_fromDbWithoutUpdateCache(String versionId) {
+    initMocks(versionId);
+
+    final var resultList = tableService.listTables(versionId, false);
+    assertions(resultList);
+    verify(cacheService).getCatalogCache(versionId);
+    verify(versionContextComponentManager).getComponent(versionId, Catalog.class);
+    verify(cacheService, never()).updateCatalogCache(eq(versionId), any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})
+  @DisplayName("should return list of tables from db if catalog is created for both version-candidate or master version. Cache is updated when isSuccessfulBuild flag true")
+  @SneakyThrows
+  void listTest_fromDbWithUpdateCache(String versionId) {
+    initMocks(versionId);
+
+    final var resultList = tableService.listTables(versionId, true);
+    assertions(resultList);
+    verify(cacheService).getCatalogCache(versionId);
+    verify(versionContextComponentManager).getComponent(versionId, Catalog.class);
+    verify(cacheService).updateCatalogCache(eq(versionId), any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {VERSION_ID, HEAD_BRANCH})
+  @DisplayName("should return list of tables from cache if catalog is created for both version-candidate or master version. Cache is not updated")
+  @SneakyThrows
+  void listTest_fromCacheWithoutUpdate(String versionId) {
+    Catalog catalog = initMocks(versionId);
+    when(cacheService.getCatalogCache(versionId)).thenReturn(catalog);
+
+    final var resultList = tableService.listTables(versionId, true);
+    assertions(resultList);
+    verify(cacheService).getCatalogCache(versionId);
+    verify(versionContextComponentManager, never()).getComponent(versionId, Catalog.class);
+    verify(cacheService, never()).updateCatalogCache(eq(versionId), any());
+  }
+
+  private static void assertions(List<TableShortInfoDto> resultList) {
+    Assertions.assertThat(resultList).hasSize(3);
+    Assertions.assertThat(resultList)
+        .element(0)
+        .hasFieldOrPropertyWithValue("name", SUBJECT_TABLE)
+        .hasFieldOrPropertyWithValue("description", null)
+        .hasFieldOrPropertyWithValue("objectReference", false);
+    Assertions.assertThat(resultList)
+        .element(1)
+        .hasFieldOrPropertyWithValue("name", "table_with_object_reference")
+        .hasFieldOrPropertyWithValue("description", "Table that has foreign key to subject table")
+        .hasFieldOrPropertyWithValue("objectReference", true);
+    Assertions.assertThat(resultList)
+        .element(2)
+        .hasFieldOrPropertyWithValue("name", "table_without_object_reference")
+        .hasFieldOrPropertyWithValue("description",
+            "Table that doesn't have foreign key to subject table")
+        .hasFieldOrPropertyWithValue("objectReference", false);
+  }
+
+  private Catalog initMocks(String versionId) {
     var catalog = Mockito.mock(Catalog.class);
     Mockito.doReturn(catalog)
         .when(versionContextComponentManager).getComponent(versionId, Catalog.class);
@@ -82,25 +149,7 @@ class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTes
 
     Mockito.doReturn(List.of(tableWithoutObjectReference, tableWithObjectReference, subjectTable))
         .when(catalog).getTables();
-
-    final var resultList = tableService.listTables(versionId);
-    Assertions.assertThat(resultList).hasSize(3);
-    Assertions.assertThat(resultList)
-        .element(0)
-        .hasFieldOrPropertyWithValue("name", SUBJECT_TABLE)
-        .hasFieldOrPropertyWithValue("description", null)
-        .hasFieldOrPropertyWithValue("objectReference", false);
-    Assertions.assertThat(resultList)
-        .element(1)
-        .hasFieldOrPropertyWithValue("name", "table_with_object_reference")
-        .hasFieldOrPropertyWithValue("description", "Table that has foreign key to subject table")
-        .hasFieldOrPropertyWithValue("objectReference", true);
-    Assertions.assertThat(resultList)
-        .element(2)
-        .hasFieldOrPropertyWithValue("name", "table_without_object_reference")
-        .hasFieldOrPropertyWithValue("description",
-            "Table that doesn't have foreign key to subject table")
-        .hasFieldOrPropertyWithValue("objectReference", false);
+    return catalog;
   }
 
   @Test
@@ -109,7 +158,7 @@ class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTes
     Mockito.doThrow(VersionComponentCreationException.class)
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, Catalog.class);
 
-    Assertions.assertThatThrownBy(() -> tableService.listTables(HEAD_BRANCH))
+    Assertions.assertThatThrownBy(() -> tableService.listTables(HEAD_BRANCH, false))
         .isInstanceOf(RegistryDataBaseConnectionException.class)
         .hasMessageContaining("Couldn't connect to registry data-base: ");
   }
@@ -126,7 +175,7 @@ class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTes
     var view = Mockito.mock(Table.class);
     Mockito.doReturn("view_v").when(view).getName();
 
-    Assertions.assertThat(tableService.listTables(versionId)).isEmpty();
+    Assertions.assertThat(tableService.listTables(versionId, false)).isEmpty();
   }
 
   @Test
@@ -142,7 +191,7 @@ class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTes
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doReturn(connection).when(registryDataSource).getConnection();
 
-    final var resultList = tableService.listTables(VERSION_ID);
+    final var resultList = tableService.listTables(VERSION_ID, false);
     Assertions.assertThat(resultList).isEmpty();
     Mockito.verify(connection).close();
   }
@@ -159,7 +208,7 @@ class ReadDataBaseTablesServiceListTest extends ReadDataBaseTablesServiceBaseTes
         .when(versionContextComponentManager).getComponent(HEAD_BRANCH, RegistryDataSource.class);
     Mockito.doThrow(SQLException.class).when(registryDataSource).getConnection();
 
-    Assertions.assertThatThrownBy(() -> tableService.listTables(VERSION_ID))
+    Assertions.assertThatThrownBy(() -> tableService.listTables(VERSION_ID, false))
         .isInstanceOf(RegistryDataBaseConnectionException.class)
         .hasMessageContaining("Couldn't connect to registry data-base: ");
   }

@@ -30,6 +30,7 @@ import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.restapi.exception.ApplicationExceptionHandler;
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
@@ -57,6 +58,8 @@ class CandidateVersionTableControllerTest {
   VersionManagementService versionManagementService;
   @MockBean
   MessageResolver messageResolver;
+  @MockBean
+  BuildStatusService buildStatusService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -82,8 +85,9 @@ class CandidateVersionTableControllerTest {
           .description("John Doe get table")
           .objectReference(true)
           .build();
+      Mockito.doReturn(true).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doReturn(List.of(expectedTablesResponse))
-          .when(tableService).listTables(versionCandidate);
+          .when(tableService).listTables(versionCandidate, true);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables", versionCandidate)
@@ -95,7 +99,7 @@ class CandidateVersionTableControllerTest {
           jsonPath("$.[0].objectReference", is(true))
       ).andDo(document("versions/candidates/{versionCandidateId}/tables/GET"));
 
-      Mockito.verify(tableService).listTables(versionCandidate);
+      Mockito.verify(tableService).listTables(versionCandidate, true);
     }
 
     @Test
@@ -140,8 +144,9 @@ class CandidateVersionTableControllerTest {
     @SneakyThrows
     void getTable_registryDataBaseConnectionException() {
       var versionCandidate = "142";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).listTables(versionCandidate);
+          .when(tableService).listTables(versionCandidate, false);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables", versionCandidate)
@@ -154,7 +159,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).listTables(versionCandidate);
+      Mockito.verify(tableService).listTables(versionCandidate, false);
     }
   }
 
@@ -174,8 +179,9 @@ class CandidateVersionTableControllerTest {
       expectedTablesResponse.setName(tableName);
       expectedTablesResponse.setDescription("John Doe get table");
       expectedTablesResponse.setObjectReference(true);
+      Mockito.doReturn(false).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doReturn(expectedTablesResponse)
-          .when(tableService).getTable(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName, false);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables/{tableName}", versionCandidate,
@@ -188,7 +194,7 @@ class CandidateVersionTableControllerTest {
           jsonPath("$.objectReference", is(true))
       ).andDo(document("versions/candidates/{versionCandidateId}/{tableName}/GET"));
 
-      Mockito.verify(tableService).getTable(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName, false);
     }
 
     @Test
@@ -211,6 +217,7 @@ class CandidateVersionTableControllerTest {
     @SneakyThrows
     void getTable_versionCandidateNotFound() {
       var versionCandidate = "42";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doThrow(GerritChangeNotFoundException.class).when(versionManagementService)
           .getVersionDetails(versionCandidate);
       final var tableName = "tableName";
@@ -237,8 +244,9 @@ class CandidateVersionTableControllerTest {
     void getTableNotFoundException() {
       var versionCandidate = "42";
       final var tableName = "tableName";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doThrow(new TableNotFoundException("Table tableName wasn't found"))
-          .when(tableService).getTable(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName, false);
       Mockito.doReturn("localized message").when(messageResolver)
           .getMessage(FileValidatorErrorMessageTitle.TABLE_NOT_FOUND_EXCEPTION);
 
@@ -254,7 +262,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).getTable(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName, false);
     }
 
     @Test
@@ -263,8 +271,9 @@ class CandidateVersionTableControllerTest {
     void getTable_registryDataBaseConnectionException() {
       var versionCandidate = "142";
       final var tableName = "tableName";
+      Mockito.doReturn(false).when(buildStatusService).isSuccessCandidateVersionBuild(versionCandidate);
       Mockito.doThrow(RegistryDataBaseConnectionException.class)
-          .when(tableService).getTable(versionCandidate, tableName);
+          .when(tableService).getTable(versionCandidate, tableName, false);
 
       mockMvc.perform(
           get("/versions/candidates/{versionCandidateId}/tables/{tableName}", versionCandidate,
@@ -278,7 +287,7 @@ class CandidateVersionTableControllerTest {
           content().contentType(MediaType.APPLICATION_JSON)
       );
 
-      Mockito.verify(tableService).getTable(versionCandidate, tableName);
+      Mockito.verify(tableService).getTable(versionCandidate, tableName, false);
     }
   }
 }

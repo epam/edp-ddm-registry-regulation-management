@@ -147,8 +147,6 @@ class GroupServiceTest {
         .name("bp-grouping")
         .path("bp-grouping/bp-grouping.yml")
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
     Mockito.when(repository.getFileList(GROUPS_PATH)).thenReturn(List.of(fileInfo));
     Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("bp-grouping/bp-grouping.yml"));

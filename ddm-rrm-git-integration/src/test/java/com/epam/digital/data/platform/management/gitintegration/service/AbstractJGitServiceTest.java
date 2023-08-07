@@ -36,7 +36,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
     CacheAutoConfiguration.class,
     GitRetryable.class,
     JGitServiceImpl.class,
-    GitFileService.class})
+    GitFileService.class,
+    DatesCacheService.class})
 abstract class AbstractJGitServiceTest {
 
   @TempDir

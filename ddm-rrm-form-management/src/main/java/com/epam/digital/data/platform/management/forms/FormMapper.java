@@ -15,8 +15,8 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = "spring")
 public interface FormMapper {
 
-  @Mapping(target = "created", source = "datesDto.create", defaultExpression ="java(fileInfoDto.getCreated())")
-  @Mapping(target = "updated", source = "datesDto.update", defaultExpression ="java(fileInfoDto.getUpdated())")
+  @Mapping(target = "created", source = "datesDto.create")
+  @Mapping(target = "updated", source = "datesDto.update")
   @Mapping(target = "title", source = "formContent", qualifiedByName = "getTitleFromFormContent")
   FormInfoDto toForm(VersionedFileInfoDto fileInfoDto, FileDatesDto datesDto, String formContent, boolean conflicted);
 

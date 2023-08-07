@@ -83,6 +83,7 @@ management:
 springdoc:
   swagger-ui:
     path: /openapi
+    disable-swagger-default-url: true
 
 openapi:
   request:

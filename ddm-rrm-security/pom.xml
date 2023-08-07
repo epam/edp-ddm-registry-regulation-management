@@ -4,7 +4,7 @@
   <parent>
     <artifactId>registry-regulation-management-parent</artifactId>
     <groupId>com.epam.digital.data.platform</groupId>
-    <version>1.9.2</version>
+    <version>1.9.7</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 

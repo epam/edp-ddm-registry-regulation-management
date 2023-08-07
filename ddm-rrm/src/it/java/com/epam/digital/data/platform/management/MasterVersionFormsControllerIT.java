@@ -158,15 +158,14 @@ class MasterVersionFormsControllerIT extends BaseIT {
       final var datesCache = cacheManager.getCache(DATE_CACHE_NAME);
       Assertions.assertThat(datesCache).isNotNull();
 
-      final var johnDoesCacheKey = new SimpleKey("head-branch", "forms/john-does-form.json");
-      final var valueWrapper = datesCache.get(johnDoesCacheKey);
+      final var valueWrapper = datesCache.get("head-branch");
       Assertions.assertThat(valueWrapper).isNotNull();
 
       Thread.sleep(10000);
       final var emptyDatesCache = cacheManager.getCache(DATE_CACHE_NAME);
       Assertions.assertThat(emptyDatesCache)
           .isNotNull()
-          .extracting(cache -> cache.get(johnDoesCacheKey))
+          .extracting(cache -> cache.get("head-branch"))
           .isNull();
     }
 

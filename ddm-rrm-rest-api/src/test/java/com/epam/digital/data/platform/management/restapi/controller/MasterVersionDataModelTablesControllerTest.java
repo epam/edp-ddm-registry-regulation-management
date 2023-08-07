@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.test.context.TestPropertySource;
@@ -61,6 +62,9 @@ class MasterVersionDataModelTablesControllerTest {
 
   @MockBean
   DataModelFileManagementService fileService;
+
+  @MockBean
+  MessageSource messageSource;
   @MockBean
   MessageResolver messageResolver;
   MockMvc mockMvc;

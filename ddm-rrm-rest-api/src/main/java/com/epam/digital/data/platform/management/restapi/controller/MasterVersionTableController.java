@@ -20,6 +20,7 @@ import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,6 +53,8 @@ public class MasterVersionTableController {
 
   private final GerritPropertiesConfig gerritPropertiesConfig;
 
+  private final BuildStatusService buildStatusService;
+
   @Operation(description = "Get tables list from master version", parameters = {
       @Parameter(in = ParameterIn.HEADER,
           name = "X-Access-Token",
@@ -76,8 +79,9 @@ public class MasterVersionTableController {
   @GetMapping
   public ResponseEntity<List<TableInfoShort>> getTables() {
     var versionId = gerritPropertiesConfig.getHeadBranch();
+    var isSuccessCandidateVersionBuild = buildStatusService.isSuccessMasterVersionBuild();
     log.info("Getting list of tables for master version '{}' started", versionId);
-    final var tables = tableService.listTables(versionId);
+    final var tables = tableService.listTables(versionId, isSuccessCandidateVersionBuild);
     log.info("There were found {} tables for master version '{}'", tables.size(), versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)
@@ -113,8 +117,9 @@ public class MasterVersionTableController {
   public ResponseEntity<TableInfo> getTable(
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     var versionId = gerritPropertiesConfig.getHeadBranch();
+    var isSuccessCandidateVersionBuild = buildStatusService.isSuccessMasterVersionBuild();
     log.info("Getting table by name '{}' for master version '{}' started", tableName, versionId);
-    final var tableInfoDto = tableService.getTable(versionId, tableName);
+    final var tableInfoDto = tableService.getTable(versionId, tableName, isSuccessCandidateVersionBuild);
     log.info("Table '{}' was found in master version '{}'", tableName, versionId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)

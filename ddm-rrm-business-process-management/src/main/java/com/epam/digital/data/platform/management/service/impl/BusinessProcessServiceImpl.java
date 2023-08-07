@@ -19,8 +19,8 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.config.JacksonConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
-import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.core.service.CacheService;
+import com.epam.digital.data.platform.management.core.utils.StringsComparisonUtils;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -122,12 +122,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
-      fileDatesDto.setCreate(
-          repo.getFileList(DIRECTORY_PATH).stream()
-              .filter(fileResponse -> fileResponse.getName().equals(processName))
-              .findFirst()
-              .map(VersionedFileInfoDto::getCreated)
-              .orElse(time));
+      var repoDates = repo.getVersionedFileDates(processPath);
+      fileDatesDto.setCreate(Objects.isNull(repoDates) ? time : repoDates.getCreated());
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(processPath, content, eTag);
@@ -189,10 +185,24 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
       } else {
         processContent = repo.readFile(getProcessPath(versionedFileInfoDto.getName()));
       }
+      var dates = getDatesFromContent(processContent);
+      if (Objects.isNull(dates.getCreate()) || Objects.isNull(dates.getUpdate())) {
+        var path = getProcessPath(versionedFileInfoDto.getName());
+        var datesFromRepo = versionedFileInfoDto.getStatus() == FileStatus.DELETED
+            ? masterRepo.getVersionedFileDates(path) : repo.getVersionedFileDates(path);
+        if (Objects.nonNull(datesFromRepo)) {
+          if (Objects.isNull(dates.getCreate())) {
+            dates.setCreate(datesFromRepo.getCreated());
+          }
+          if (Objects.isNull(dates.getUpdate())) {
+            dates.setUpdate(datesFromRepo.getUpdated());
+          }
+        }
+      }
       processes.add(
           mapper.toBusinessProcess(
               versionedFileInfoDto,
-              getDatesFromContent(processContent),
+              dates,
               getAttributeFromContent(processContent, "name"),
               conflicts.contains(versionedFileInfoDto.getPath())));
     }

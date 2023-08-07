@@ -31,11 +31,13 @@ class DataModelFileManagementServicePutTablesFileContentTest extends
   void getTableFileContent_happyPath() {
     final var versionId = RandomString.make();
     final var expectedFileContent = RandomString.make();
+    final var eTag = RandomString.make();
 
-    dataModelFileManagementService.putTablesFileContent(versionId, expectedFileContent);
+    dataModelFileManagementService.putTablesFileContent(versionId, expectedFileContent, eTag);
 
     Mockito.verify(versionContextComponentManager)
         .getComponent(versionId, VersionedFileRepository.class);
-    Mockito.verify(versionedFileRepository).writeFile(TABLES_FILE_PATH, expectedFileContent);
+    Mockito.verify(versionedFileRepository).writeFile(TABLES_FILE_PATH, expectedFileContent, eTag);
+    Mockito.verify(cacheService).clearCatalogCache(versionId);
   }
 }

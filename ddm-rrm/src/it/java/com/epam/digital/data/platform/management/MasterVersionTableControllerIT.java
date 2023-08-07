@@ -15,6 +15,25 @@
  */
 package com.epam.digital.data.platform.management;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -24,15 +43,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Map;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
-
 @DisplayName("Tables in master version controller tests")
 public class MasterVersionTableControllerIT extends BaseIT {
+
+  @BeforeEach
+  void initStubs() throws JsonProcessingException {
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2022, 8, 10, 13, 18));
+    final var lastMergedChangeInfo = Map.of(
+        "_number", 1,
+        "owner", Map.of("username", context.getGerritProps().getUser()),
+        "topic", "this is description for master",
+        "subject", "commit message",
+        "submitted", "2022-08-02 16:15:12.786589626",
+        "labels", Map.of(),
+        "messages", List.of(Map.of("message", "Build Started ... MASTER-Build ...", "date", timestamp.toString())),
+        "change_id", "change_id"
+    );
+
+    final var om = new ObjectMapper();
+    context.getGerritMockServer().addStubMapping(stubFor(
+        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=10",
+                context.getGerritProps().getRepository(), context.getGerritProps().getUser())))
+            .willReturn(aResponse().withStatus(200)
+                .withBody(om.writeValueAsString(List.of(lastMergedChangeInfo))))
+    ));
+    context.getGerritMockServer().addStubMapping(stubFor(
+        WireMock.get(urlPathEqualTo("/a/changes/change_id"))
+            .willReturn(aResponse().withStatus(200)
+                .withBody(om.writeValueAsString(lastMergedChangeInfo)))
+    ));
+  }
 
   @Nested
   @DisplayName("GET /versions/master/tables")

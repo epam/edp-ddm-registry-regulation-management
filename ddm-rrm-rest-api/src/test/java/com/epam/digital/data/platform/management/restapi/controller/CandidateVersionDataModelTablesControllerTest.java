@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.test.web.servlet.MockMvc;
@@ -68,12 +69,14 @@ class CandidateVersionDataModelTablesControllerTest {
   @MockBean
   VersionManagementService versionManagementService;
   @MockBean
+  MessageSource messageSource;
+  @MockBean
   MessageResolver messageResolver;
   MockMvc mockMvc;
 
   @BeforeEach
   public void setUp(WebApplicationContext webApplicationContext,
-      RestDocumentationContextProvider restDocumentation) {
+                    RestDocumentationContextProvider restDocumentation) {
     this.mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
         .apply(documentationConfiguration(restDocumentation))
         .build();
@@ -203,12 +206,14 @@ class CandidateVersionDataModelTablesControllerTest {
     @SneakyThrows
     void putFileContent_happyPath() {
       final var expectedTableContent = TestUtils.getContent("controller/createTables.xml");
+      final var eTag = RandomString.make();
 
       Mockito.doReturn(expectedTableContent).when(fileService)
           .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
 
       mockMvc.perform(
           put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .header("IF-Match", eTag)
               .contentType(MediaType.APPLICATION_XML)
               .content(expectedTableContent)
       ).andExpectAll(
@@ -218,7 +223,7 @@ class CandidateVersionDataModelTablesControllerTest {
       ).andDo(document("versions/candidates/{versionCandidateId}/data-model/tables/GET"));
 
       Mockito.verify(fileService)
-          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent, eTag);
       Mockito.verify(fileService).getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
     }
 
@@ -266,6 +271,7 @@ class CandidateVersionDataModelTablesControllerTest {
     @DisplayName("should return 422 if faced ConstraintViolationException")
     @SneakyThrows
     void putFileContent_constraintViolationException() {
+      final var eTag = RandomString.make();
       // mock exception
       var exception = Mockito.mock(ConstraintViolationException.class);
       var constraintViolation = Mockito.mock(ConstraintViolation.class);
@@ -280,10 +286,11 @@ class CandidateVersionDataModelTablesControllerTest {
 
       Mockito.doThrow(exception)
           .when(fileService)
-          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent, eTag);
 
       mockMvc.perform(
           put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .header("IF-Match", eTag)
               .contentType(MediaType.APPLICATION_XML)
               .content(expectedTableContent)
       ).andExpectAll(
@@ -296,7 +303,7 @@ class CandidateVersionDataModelTablesControllerTest {
       );
 
       Mockito.verify(fileService)
-          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent, eTag);
       Mockito.verify(fileService, Mockito.never())
           .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
     }
@@ -306,13 +313,14 @@ class CandidateVersionDataModelTablesControllerTest {
     @SneakyThrows
     void putFileContent_unexpectedError() {
       final var expectedTableContent = TestUtils.getContent("controller/createTables.xml");
-
+      final var eTag = RandomString.make();
       Mockito.doThrow(RuntimeException.class)
           .when(fileService)
-          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent, eTag);
 
       mockMvc.perform(
           put("/versions/candidates/{versionCandidateId}/data-model/tables", VERSION_CANDIDATE_ID)
+              .header("IF-Match", eTag)
               .contentType(MediaType.APPLICATION_XML)
               .content(expectedTableContent)
       ).andExpectAll(
@@ -325,7 +333,7 @@ class CandidateVersionDataModelTablesControllerTest {
       );
 
       Mockito.verify(fileService)
-          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent);
+          .putTablesFileContent(VERSION_CANDIDATE_ID_STRING, expectedTableContent, eTag);
       Mockito.verify(fileService, Mockito.never())
           .getTablesFileContent(VERSION_CANDIDATE_ID_STRING);
     }

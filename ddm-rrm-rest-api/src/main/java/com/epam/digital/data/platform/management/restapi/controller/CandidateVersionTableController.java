@@ -19,6 +19,7 @@ import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.model.TableInfo;
 import com.epam.digital.data.platform.management.restapi.model.TableInfoShort;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
 import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,6 +52,7 @@ public class CandidateVersionTableController {
   private final ControllerMapper controllerMapper;
 
   private final ReadDataBaseTablesService tableService;
+  private final BuildStatusService buildStatusService;
 
   @Operation(description = "Get tables list from version-candidate", parameters = {
       @Parameter(in = ParameterIn.HEADER,
@@ -81,7 +83,10 @@ public class CandidateVersionTableController {
   public ResponseEntity<List<TableInfoShort>> getTables(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId) {
     log.info("Getting list of tables for version-candidate '{}' started", versionCandidateId);
-    final var tables = tableService.listTables(String.valueOf(versionCandidateId));
+    String versionId = String.valueOf(versionCandidateId);
+    boolean isSuccessCandidateVersionBuild = buildStatusService.isSuccessCandidateVersionBuild(versionId);
+
+    final var tables = tableService.listTables(versionId, isSuccessCandidateVersionBuild);
     log.info("There were found {} tables for master version-candidate '{}'", tables.size(),
         versionCandidateId);
     return ResponseEntity.ok()
@@ -120,7 +125,10 @@ public class CandidateVersionTableController {
       @PathVariable @Parameter(description = "Table name", required = true) String tableName) {
     log.info("Getting table by name '{}' for version-candidate '{}' started", tableName,
         versionCandidateId);
-    final var tableInfoDto = tableService.getTable(String.valueOf(versionCandidateId), tableName);
+    String versionId = String.valueOf(versionCandidateId);
+    boolean isSuccessCandidateVersionBuild = buildStatusService.isSuccessCandidateVersionBuild(versionId);
+
+    final var tableInfoDto = tableService.getTable(versionId, tableName, isSuccessCandidateVersionBuild);
     log.info("Table '{}' was found in version-candidate '{}'", tableName, versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_JSON)

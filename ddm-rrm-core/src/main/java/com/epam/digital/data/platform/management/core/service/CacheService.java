@@ -16,6 +16,8 @@
 
 package com.epam.digital.data.platform.management.core.service;
 
+import schemacrawler.schema.Catalog;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,4 +31,8 @@ public interface CacheService {
   LocalDateTime getLatestRebaseCache(String cacheKey);
 
   void updateLatestRebaseCache(String cacheKey, LocalDateTime latestRebase);
+
+  Catalog getCatalogCache(String cacheKey);
+  void updateCatalogCache(String cacheKey, Catalog catalog);
+  void clearCatalogCache(String cacheKey);
 }

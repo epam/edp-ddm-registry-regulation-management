@@ -1,0 +1,13 @@
+{
+  "type": "form",
+  "components": [
+    {
+      "label": "Найменування юридичної особи або прізвище, ім'я та по батькові фізичної особи-підприємця"
+    }
+  ],
+  "title": "Update physical factors",
+  "path": "add-fizfactors1",
+  "name": "add-fizfactors1",
+  "display": "form",
+  "submissionAccess": []
+}

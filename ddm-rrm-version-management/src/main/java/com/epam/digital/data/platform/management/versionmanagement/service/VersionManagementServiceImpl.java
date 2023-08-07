@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.publisher.RegistryRegulationManagementEventPublisher;
 import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
@@ -58,6 +59,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   private final DataModelFileManagementService dataModelFileManagementService;
   private final GroupService groupService;
   private final CacheService cacheService;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
 
   private final RegistryRegulationManagementEventPublisher eventPublisher;
 
@@ -90,6 +92,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
   @Override
   public void submit(String versionName) {
     gerritService.submitChanges(versionName);
+    cacheService.clearCatalogCache(gerritPropertiesConfig.getHeadBranch());
   }
 
   @Override
@@ -97,6 +100,7 @@ public class VersionManagementServiceImpl implements VersionManagementService {
     log.debug("Rebasing {} version candidate", versionName);
     var mr = gerritService.getMRByNumber(versionName);
     gerritService.rebase(mr.getChangeId());
+    cacheService.clearCatalogCache(versionName);
 
     log.debug("Fetching {} version candidate on remote ref", versionName);
     var changeInfoDto = gerritService.getChangeInfo(mr.getChangeId());

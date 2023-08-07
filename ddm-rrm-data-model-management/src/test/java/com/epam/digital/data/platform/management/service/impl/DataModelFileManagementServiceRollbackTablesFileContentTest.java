@@ -37,5 +37,6 @@ class DataModelFileManagementServiceRollbackTablesFileContentTest extends
     Mockito.verify(versionContextComponentManager)
         .getComponent(versionId, VersionedFileRepository.class);
     Mockito.verify(versionedFileRepository).rollbackFile(TABLES_FILE_PATH);
+    Mockito.verify(cacheService).clearCatalogCache(versionId);
   }
 }

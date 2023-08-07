@@ -25,6 +25,7 @@ import com.epam.digital.data.platform.management.core.config.GerritPropertiesCon
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileDatesDto;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.forms.FormMapper;
@@ -61,6 +62,8 @@ class FormServiceTest {
   private ArgumentCaptor<String> captor;
   private final String FORM_CONTENT = TestUtils.getContent("form-sample.json");
   private final String FORM_CONTENT_UNICODE = TestUtils.getContent("form-sample-unicode.json");
+  private final String FORM_CONTENT_WITHOUT_DATES = TestUtils.getContent(
+      "form-sample-without-dates.json");
 
   @Mock
   private VersionContextComponentManager versionContextComponentManager;
@@ -92,8 +95,7 @@ class FormServiceTest {
   void getFormListByVersionTest() {
     var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
+        .build();
     var deletedForm = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm, deletedForm));
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
@@ -110,11 +112,37 @@ class FormServiceTest {
 
   @Test
   @SneakyThrows
+  void getFormListByVersionTest_noDatesInFormContent() {
+    var newForm = VersionedFileInfoDto.builder()
+        .name("form")
+        .path("forms/form.json")
+        .status(FileStatus.NEW)
+        .build();
+    var newFormDates = VersionedFileDatesDto.builder()
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .build();
+    var deletedForm = VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
+    Mockito.doReturn(List.of(newForm, deletedForm)).when(repository).getFileList("forms");
+    Mockito.doReturn(FORM_CONTENT_WITHOUT_DATES).when(repository).readFile("forms/form.json");
+    Mockito.doReturn(List.of("forms/form.json")).when(cacheService).getConflictsCache(VERSION_ID);
+    Mockito.doReturn(newFormDates).when(repository).getVersionedFileDates("forms/form.json");
+
+    var resultList = formService.getFormListByVersion(VERSION_ID);
+
+    var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW).created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
+        .title("Update physical factors").conflicted(true).build();
+    Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
+  }
+
+  @Test
+  @SneakyThrows
   void getChangedFormsListByVersionTest() {
     var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
         .status(FileStatus.DELETED)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28)).build();
+        .build();
     Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));
     Mockito.when(masterRepository.readFile("forms/form.json")).thenReturn(FORM_CONTENT);
 
@@ -209,6 +237,29 @@ class FormServiceTest {
     JSONAssert.assertEquals(newFormContent, response, new CustomComparator(JSONCompareMode.LENIENT,
         new Customization("modified", (o1, o2) -> true),
         new Customization("created", (o1, o2) -> true)));
+  }
+
+  @Test
+  @SneakyThrows
+  void updateFormTest_noDatesInFileContent() {
+    var formName = "form";
+    var formPath = "forms/" + formName + ".json";
+
+    Mockito.doReturn(true).when(repository).isFileExists(formPath);
+    Mockito.doReturn(FORM_CONTENT_WITHOUT_DATES).when(repository).readFile(formPath);
+
+    var newFormContent = FORM_CONTENT_WITHOUT_DATES.replaceFirst(
+        "\"title\": \"Update physical factors\"",
+        "\"title\": \"Update physical factors updated\"");
+
+    formService.updateForm(newFormContent, formName, VERSION_ID, null);
+    Mockito.verify(repository).writeFile(eq(formPath), captor.capture(), isNull());
+    var response = captor.getValue();
+    JSONAssert.assertEquals(newFormContent, response, new CustomComparator(JSONCompareMode.LENIENT,
+        new Customization("modified", (o1, o2) -> true),
+        new Customization("created", (o1, o2) -> true)));
+
+    Mockito.verify(repository).getVersionedFileDates(formPath);
   }
 
   @Test

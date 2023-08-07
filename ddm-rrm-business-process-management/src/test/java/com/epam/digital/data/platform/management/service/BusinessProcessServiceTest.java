@@ -29,6 +29,7 @@ import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.exception.BusinessProcessAlreadyExistsException;
 import com.epam.digital.data.platform.management.exception.ProcessNotFoundException;
 import com.epam.digital.data.platform.management.filemanagement.model.FileStatus;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileDatesDto;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.filemanagement.service.VersionedFileRepository;
 import com.epam.digital.data.platform.management.mapper.BusinessProcessMapper;
@@ -62,16 +63,25 @@ public class BusinessProcessServiceTest {
   private static final String VERSION_ID = "version";
   private static final String PROCESS_CONTENT = getContent("bp-sample.bpmn");
   private static final String PROCESS_CONTENT_UNICODE = getContent("bp-sample-unicode.bpmn");
+  private static final String PROCESS_CONTENT_WITHOUT_DATES = getContent(
+      "bp-sample-without-dates.bpmn");
   private static final String BPMN_FILE_EXTENSION = "bpmn";
 
-  @Captor private ArgumentCaptor<String> captor;
+  @Captor
+  private ArgumentCaptor<String> captor;
 
-  @Mock private VersionContextComponentManager versionContextComponentManager;
-  @Mock private VersionedFileRepository repository;
-  @Mock private VersionedFileRepository masterRepository;
-  @Mock private GerritPropertiesConfig gerritPropertiesConfig;
-  @Mock private CacheService cacheService;
-  @Autowired private DocumentBuilder documentBuilder;
+  @Mock
+  private VersionContextComponentManager versionContextComponentManager;
+  @Mock
+  private VersionedFileRepository repository;
+  @Mock
+  private VersionedFileRepository masterRepository;
+  @Mock
+  private GerritPropertiesConfig gerritPropertiesConfig;
+  @Mock
+  private CacheService cacheService;
+  @Autowired
+  private DocumentBuilder documentBuilder;
 
   @Spy
   private BusinessProcessMapper businessProcessMapper =
@@ -106,8 +116,6 @@ public class BusinessProcessServiceTest {
             .name("business-process")
             .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
             .status(FileStatus.NEW)
-            .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-            .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
             .build();
     VersionedFileInfoDto deletedProcess =
         VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
@@ -137,14 +145,51 @@ public class BusinessProcessServiceTest {
 
   @Test
   @SneakyThrows
+  void getBusinessProcessesListByVersionTest_noDatesInContent() {
+    var newBusinessProcess =
+        VersionedFileInfoDto.builder()
+            .name("business-process")
+            .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
+            .status(FileStatus.NEW)
+            .build();
+    var newProcessDates = VersionedFileDatesDto.builder()
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 19))
+        .build();
+    var deletedProcess =
+        VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
+
+    Mockito.doReturn(List.of(newBusinessProcess, deletedProcess)).when(repository)
+        .getFileList("bpmn");
+    Mockito.doReturn(PROCESS_CONTENT_WITHOUT_DATES).when(repository)
+        .readFile("bpmn/business-process." + BPMN_FILE_EXTENSION);
+    Mockito.doReturn(newProcessDates).when(repository)
+        .getVersionedFileDates("bpmn/business-process." + BPMN_FILE_EXTENSION);
+
+    var expectedBusinessProcessesList = businessProcessService.getProcessesByVersion(VERSION_ID);
+    var expectedBusinessProcess = BusinessProcessInfoDto.builder()
+        .name("business-process")
+        .title("Really test name")
+        .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
+        .status(FileStatus.NEW)
+        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
+        .updated(LocalDateTime.of(2022, 8, 10, 13, 19))
+        .build();
+
+    Assertions.assertThat(expectedBusinessProcessesList)
+        .hasSize(1)
+        .element(0)
+        .isEqualTo(expectedBusinessProcess);
+  }
+
+  @Test
+  @SneakyThrows
   void getBusinessProcessesByVersionWithInvalidContentTest() {
     VersionedFileInfoDto newBusinessProcess =
         VersionedFileInfoDto.builder()
             .name("business-process")
             .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
             .status(FileStatus.NEW)
-            .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-            .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
             .build();
     VersionedFileInfoDto deletedProcess =
         VersionedFileInfoDto.builder().status(FileStatus.DELETED).build();
@@ -167,8 +212,6 @@ public class BusinessProcessServiceTest {
             .name("business-process")
             .path("bpmn/business-process." + BPMN_FILE_EXTENSION)
             .status(FileStatus.DELETED)
-            .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-            .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
             .build();
 
     Mockito.when(repository.getFileList("bpmn")).thenReturn(List.of(newBusinessProcess));
@@ -300,7 +343,7 @@ public class BusinessProcessServiceTest {
             () ->
                 businessProcessService.updateProcess(
                     contentForUpdate, "business-process",
-                VERSION_ID, null))
+                    VERSION_ID, null))
         .doesNotThrowAnyException();
 
     Mockito.verify(repository)
@@ -348,8 +391,42 @@ public class BusinessProcessServiceTest {
     businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID, null);
     Mockito.verify(repository, never())
         .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
-
   }
+
+  @Test
+  @SneakyThrows
+  void updateBusinessProcess_noDatesInFileContent() {
+    var bpName = "business-process";
+    var bpPath = "bpmn/" + bpName + "." + BPMN_FILE_EXTENSION;
+
+    Mockito.doReturn(true).when(repository).isFileExists(bpPath);
+    Mockito.doReturn(PROCESS_CONTENT_WITHOUT_DATES).when(repository).readFile(bpPath);
+
+    String contentForUpdate = PROCESS_CONTENT_WITHOUT_DATES.replaceFirst(
+        "<dc:Bounds x=\"179\" y=\"79\" width=\"36\" height=\"36\" />",
+        "<dc:Bounds x=\"179\" y=\"791\" width=\"36\" height=\"36\" />");
+
+    Assertions.assertThatCode(
+            () -> businessProcessService.updateProcess(contentForUpdate, bpName, VERSION_ID, null))
+        .doesNotThrowAnyException();
+
+    Mockito.verify(repository).writeFile(eq(bpPath), captor.capture(), isNull());
+    var response = captor.getValue();
+    var documentDiff = DiffBuilder.compare(contentForUpdate)
+        .withTest(response)
+        .build();
+    Assertions.assertThat(documentDiff.hasDifferences()).isTrue();
+    Assertions.assertThat(documentDiff.getDifferences()).hasSize(3)
+        .anySatisfy(difference -> Assertions.assertThat(
+                difference.getComparison().getTestDetails().getXPath())
+            .isEqualTo("/definitions[1]/@created"))
+        .anySatisfy(difference -> Assertions.assertThat(
+                difference.getComparison().getTestDetails().getXPath())
+            .isEqualTo("/definitions[1]/@modified"));
+
+    Mockito.verify(repository).getVersionedFileDates(bpPath);
+  }
+
   @Test
   @SneakyThrows
   void rollbackProcessTest() {

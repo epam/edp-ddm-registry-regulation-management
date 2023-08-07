@@ -65,6 +65,7 @@ import com.epam.digital.data.platform.management.restapi.controller.UserImportCo
 import com.epam.digital.data.platform.management.restapi.i18n.FileValidatorErrorMessageTitle;
 import com.epam.digital.data.platform.management.restapi.mapper.ControllerMapper;
 import com.epam.digital.data.platform.management.restapi.model.CreateVersionRequest;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
 import com.epam.digital.data.platform.management.service.BusinessProcessService;
@@ -76,7 +77,6 @@ import com.epam.digital.data.platform.management.users.exception.JwtParsingExcep
 import com.epam.digital.data.platform.management.users.exception.VaultInvocationException;
 import com.epam.digital.data.platform.management.users.model.CephFileInfoDto;
 import com.epam.digital.data.platform.management.users.service.UserImportServiceImpl;
-import com.epam.digital.data.platform.management.users.validator.Validator;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
 import com.epam.digital.data.platform.starter.localization.MessageResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,7 +98,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
+@WebMvcTest(properties = {"spring.cloud.vault.enabled=false", "spring.cloud.kubernetes.enabled=false"})
 @ContextConfiguration(
     classes = {MasterVersionFormsController.class, UserImportController.class,
         ApplicationExceptionHandler.class, CandidateVersionBusinessProcessesController.class,
@@ -119,6 +119,9 @@ class ApplicationExceptionHandlerTest {
   UserImportServiceImpl userImportService;
 
   @MockBean
+  BuildStatusService buildStatusService;
+
+  @MockBean
   FormService formService;
   @MockBean
   BusinessProcessService businessProcessService;
@@ -135,9 +138,7 @@ class ApplicationExceptionHandlerTest {
   @MockBean
   ControllerMapper mapper;
   @MockBean
-  Validator validator;
-  @MockBean
-  private MessageResolver messageResolver;
+  MessageResolver messageResolver;
 
   @Test
   @SneakyThrows

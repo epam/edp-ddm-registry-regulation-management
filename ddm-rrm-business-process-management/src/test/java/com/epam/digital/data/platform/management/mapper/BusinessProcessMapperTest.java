@@ -37,8 +37,6 @@ class BusinessProcessMapperTest {
         .name("business-process")
         .path("bpmn/business-process.bpmn")
         .status(FileStatus.NEW)
-        .created(LocalDateTime.of(2022, 8, 10, 13, 18))
-        .updated(LocalDateTime.of(2022, 8, 10, 13, 28))
         .build();
     var fileDates = FileDatesDto.builder()
         .create(LocalDateTime.of(2022, 8, 10, 13, 18))

@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service.impl;
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
 import com.epam.digital.data.platform.management.core.exception.VersionComponentCreationException;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.datasource.RegistryDataSource;
 import com.epam.digital.data.platform.management.exception.RegistryDataBaseConnectionException;
 import com.epam.digital.data.platform.management.exception.TableNotFoundException;
@@ -25,16 +26,17 @@ import com.epam.digital.data.platform.management.mapper.SchemaCrawlerMapper;
 import com.epam.digital.data.platform.management.model.dto.TableInfoDto;
 import com.epam.digital.data.platform.management.model.dto.TableShortInfoDto;
 import com.epam.digital.data.platform.management.service.ReadDataBaseTablesService;
-import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import schemacrawler.schema.Catalog;
+
+import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -44,13 +46,14 @@ public class ReadDataBaseTablesServiceImpl implements ReadDataBaseTablesService 
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final VersionContextComponentManager versionContextComponentManager;
   private final SchemaCrawlerMapper mapper;
+  private final CacheService cacheService;
 
   @Override
   @NonNull
-  public List<TableShortInfoDto> listTables(@NonNull String versionId) {
+  public List<TableShortInfoDto> listTables(@NonNull String versionId, boolean isSuccessBuild) {
     log.debug("Trying to get list of tables in version '{}'", versionId);
 
-    var catalog = getCatalog(versionId);
+    var catalog = getCatalog(versionId, isSuccessBuild);
     if (Objects.isNull(catalog)) {
       return List.of();
     }
@@ -64,9 +67,9 @@ public class ReadDataBaseTablesServiceImpl implements ReadDataBaseTablesService 
 
   @Override
   @NonNull
-  public TableInfoDto getTable(@NonNull String versionId, @NonNull String tableName) {
+  public TableInfoDto getTable(@NonNull String versionId, @NonNull String tableName, boolean isSuccessBuild) {
     log.debug("Trying to get table with name '{}' in version '{}'", tableName, versionId);
-    var catalog = getCatalog(versionId);
+    var catalog = getCatalog(versionId, isSuccessBuild);
     if (Objects.isNull(catalog)) {
       throw tableNotFoundException(versionId, tableName);
     }
@@ -82,10 +85,20 @@ public class ReadDataBaseTablesServiceImpl implements ReadDataBaseTablesService 
   }
 
   @Nullable
-  private Catalog getCatalog(String versionId) {
+  private Catalog getCatalog(String versionId, boolean isSuccessBuild) {
+    Catalog catalog = cacheService.getCatalogCache(versionId);
+    if (Objects.nonNull(catalog)){
+      log.trace("getting schema catalog for version '{}' from cache", versionId);
+      return catalog;
+    }
     try {
-      log.trace("trying getting schema catalog for version '{}'", versionId);
-      return versionContextComponentManager.getComponent(versionId, Catalog.class);
+      log.trace("trying getting schema catalog for version '{}' from db", versionId);
+      catalog = versionContextComponentManager.getComponent(versionId, Catalog.class);
+      if (isSuccessBuild) {
+        log.trace("updating schema catalog in cache");
+        cacheService.updateCatalogCache(versionId, catalog);
+      }
+      return catalog;
     } catch (VersionComponentCreationException e) {
       if (gerritPropertiesConfig.getHeadBranch().equals(versionId)) {
         log.error("Couldn't connect to master version data-base: {}", e.getMessage());

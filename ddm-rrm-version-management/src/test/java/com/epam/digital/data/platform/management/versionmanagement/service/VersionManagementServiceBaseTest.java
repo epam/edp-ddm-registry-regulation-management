@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.versionmanagement.service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -62,4 +63,6 @@ public abstract class VersionManagementServiceBaseTest {
   GroupService groupService;
   @MockBean
   CacheService cacheService;
+  @MockBean
+  GerritPropertiesConfig gerritPropertiesConfig;
 }

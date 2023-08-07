@@ -73,7 +73,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.StringUtils;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -84,12 +83,11 @@ import org.springframework.util.FileCopyUtils;
 @RequiredArgsConstructor
 public class JGitServiceImpl implements JGitService {
 
-  public static final String DATE_CACHE_NAME = "dates";
-
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final GitFileService gitFileService;
   private final JGitWrapper jGitWrapper;
   private final GitRetryable retryable;
+  private final DatesCacheService datesCacheService;
 
   private final ConcurrentMap<String, Lock> lockMap = new ConcurrentHashMap<>();
 
@@ -232,23 +230,30 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  @Cacheable(DATE_CACHE_NAME)
   @Override
   @Nullable
   public FileDatesDto getDates(@NonNull String repositoryName, @NonNull String filePath) {
-    log.debug("Retrieving git commit dates in repository {} for path {}", repositoryName, filePath);
+    var normalizedFilePath = FilenameUtils.normalize(filePath);
+    var cachedDates = datesCacheService.getDates(repositoryName, normalizedFilePath);
+    if (Objects.nonNull(cachedDates)) {
+      return cachedDates;
+    }
+
+    log.debug("Retrieving git commit dates in repository {} for path {}", repositoryName,
+        normalizedFilePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
 
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
-      log.trace("Retrieving commit stack for file {}", filePath);
-      var revCommitList = getRevCommitList(filePath, git);
+      log.trace("Retrieving commit stack for file {}", normalizedFilePath);
+      var revCommitList = getRevCommitList(normalizedFilePath, git);
 
       if (revCommitList.isEmpty()) {
         log.debug(
-            "Git commit dates in repository {} for path {} wasn't found", repositoryName, filePath);
+            "Git commit dates in repository {} for path {} wasn't found", repositoryName,
+            normalizedFilePath);
         return null;
       }
 
@@ -257,8 +262,11 @@ public class JGitServiceImpl implements JGitService {
       var createdTime = getCommitDateTime(revCommitList.get(revCommitList.size() - 1));
 
       log.debug(
-          "Git commit dates in repository {} for path {} retrieved", repositoryName, filePath);
-      return FileDatesDto.builder().create(createdTime).update(updatedTime).build();
+          "Git commit dates in repository {} for path {} retrieved", repositoryName,
+          normalizedFilePath);
+      var dates = FileDatesDto.builder().create(createdTime).update(updatedTime).build();
+      datesCacheService.setDatesToCache(repositoryName, normalizedFilePath, dates);
+      return dates;
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
@@ -286,11 +294,13 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void amend(
       @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent) {
-      amend(repositoryName, filePath, fileContent, null);
+    amend(repositoryName, filePath, fileContent, null);
   }
+
   @Override
   public void amend(
-      @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag) {
+      @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent,
+      String eTag) {
     log.debug(
         "Trying to update file content in repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
@@ -315,7 +325,7 @@ public class JGitServiceImpl implements JGitService {
 
   @Override
   public void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath,
-                              @NonNull String fileContent, String eTag) {
+      @NonNull String fileContent, String eTag) {
     log.debug("Trying to create file in repository {} at path {}", repositoryName,
         filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
@@ -701,7 +711,8 @@ public class JGitServiceImpl implements JGitService {
     for (PushResult result : pushResults) {
       for (RemoteRefUpdate update : result.getRemoteUpdates()) {
         if (update.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
-          log.warn("Merge conflict occurred while pushing to master, hard reset on origin head branch");
+          log.warn(
+              "Merge conflict occurred while pushing to master, hard reset on origin head branch");
           fetchAll(git);
           hardResetOnOriginHeadBranch(git);
           throw new MergeConflictException("Merge conflict occurred while pushing to master");

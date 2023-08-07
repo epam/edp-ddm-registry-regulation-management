@@ -34,7 +34,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
+@WebMvcTest(properties = {"spring.cloud.vault.enabled=false", "spring.cloud.kubernetes.enabled=false"})
 @TestPropertySource(properties = {"platform.security.enabled=false"})
 @Import({PermitAllWebSecurityConfig.class, JacksonConfig.class})
 @ExtendWith(RestDocumentationExtension.class)

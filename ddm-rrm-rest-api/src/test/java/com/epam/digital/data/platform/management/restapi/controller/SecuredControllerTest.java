@@ -31,7 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@WebMvcTest(properties = "spring.cloud.vault.enabled=false")
+@WebMvcTest(properties = {"spring.cloud.vault.enabled=false", "spring.cloud.kubernetes.enabled=false"})
 @Import({PlatformSecurityAutoConfiguration.class, JacksonConfig.class})
 @ContextConfiguration
 @ExtendWith(RestDocumentationExtension.class)

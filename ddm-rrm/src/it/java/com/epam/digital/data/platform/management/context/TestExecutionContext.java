@@ -37,10 +37,12 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -458,6 +460,8 @@ public class TestExecutionContext {
   @SneakyThrows
   private void stubGerritGetChangeById(String id) {
     final var gerritDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSSSS");
+    String message = "Build Started ... MASTER-Code-review ...";
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2022, 8, 10, 13, 18));
     final var response = Map.ofEntries(
         Map.entry("id", versionCandidate.getId()),
         Map.entry("change_id", versionCandidate.getChangeId()),
@@ -470,8 +474,9 @@ public class TestExecutionContext {
         Map.entry("current_revision", versionCandidate.getCurrentRevision()),
         Map.entry("revisions", Map.of(versionCandidate.getCurrentRevision(),
             Map.of("ref", versionCandidate.getRef()))),
-        Map.entry("labels", Map.of("Verified", new LabelInfo()))
-    );
+        Map.entry("labels", Map.of("Verified", new LabelInfo())),
+        Map.entry("messages", List.of(Map.of("message", message, "date", timestamp.toString())))
+        );
     gerritMockServer.addStubMapping(stubFor(get(urlPathEqualTo(String.format("/a/changes/%s", id))
         ).willReturn(aResponse()
             .withStatus(200)

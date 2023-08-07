@@ -17,8 +17,10 @@
 package com.epam.digital.data.platform.management.gitintegration.event.listener;
 
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEvent;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEventListener;
+import com.epam.digital.data.platform.management.gitintegration.service.DatesCacheService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,8 @@ public class VersionCandidateCreatedEventGitListener implements
     VersionCandidateCreatedEventListener {
 
   private final JGitService gitService;
+  private final GerritPropertiesConfig gerritPropertiesConfig;
+  private final DatesCacheService datesCacheService;
 
   @Override
   public void handleVersionCandidateCreatedEvent(VersionCandidateCreatedEvent event) {
@@ -47,5 +51,9 @@ public class VersionCandidateCreatedEventGitListener implements
       log.error("Version candidate {} creation handling have been failed...",
           versionCandidateNumber, e);
     }
+
+    var headRepo = gerritPropertiesConfig.getHeadBranch();
+    var headDatesCache = datesCacheService.getDatesCache(headRepo);
+    datesCacheService.setDatesCache(versionCandidateNumber, headDatesCache);
   }
 }

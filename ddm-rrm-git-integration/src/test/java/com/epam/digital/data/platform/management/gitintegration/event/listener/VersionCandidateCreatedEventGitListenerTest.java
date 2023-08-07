@@ -16,8 +16,12 @@
 
 package com.epam.digital.data.platform.management.gitintegration.event.listener;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.event.VersionCandidateCreatedEvent;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
+import com.epam.digital.data.platform.management.gitintegration.service.DatesCacheService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
+import java.util.Map;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
@@ -36,6 +40,10 @@ class VersionCandidateCreatedEventGitListenerTest {
 
   @Mock
   JGitService gitService;
+  @Mock
+  GerritPropertiesConfig gerritPropertiesConfig;
+  @Mock
+  DatesCacheService datesCacheService;
 
   @Test
   @SneakyThrows
@@ -45,10 +53,16 @@ class VersionCandidateCreatedEventGitListenerTest {
     final var event = new VersionCandidateCreatedEvent(source, versionNumber);
 
     Mockito.doNothing().when(gitService).cloneRepoIfNotExist(versionNumber);
+    Mockito.doReturn("master").when(gerritPropertiesConfig).getHeadBranch();
+    Mockito.doReturn(Map.of("filePath", FileDatesDto.builder().build())).when(datesCacheService)
+        .getDatesCache("master");
 
     listener.handleVersionCandidateCreatedEvent(event);
 
     Mockito.verify(gitService).cloneRepoIfNotExist(versionNumber);
+    Mockito.verify(datesCacheService).getDatesCache("master");
+    Mockito.verify(datesCacheService)
+        .setDatesCache(versionNumber, Map.of("filePath", FileDatesDto.builder().build()));
   }
 
   @Test

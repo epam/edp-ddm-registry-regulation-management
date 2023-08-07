@@ -44,12 +44,7 @@ public class HeadFileRepositoryImpl extends AbstractVersionFileRepository {
         .filter(Predicate.not(DOT_GIT_KEEP::equals))
         .map(el -> {
           var filePath = FilenameUtils.normalize(Path.of(path, el).toString(), true);
-          var dates = gitService.getDates(versionId, filePath);
-          if (Objects.isNull(dates)) {
-            // It should be impossible to get null dates of the file that exists in git repo
-            throw new IllegalStateException("Got null dates on existing file in the git repo");
-          }
-          return mapper.toVersionedFileInfoDto(filePath, dates);
+          return mapper.toVersionedFileInfoDto(filePath);
         })
         .sorted(Comparator.comparing(VersionedFileInfoDto::getName))
         .collect(Collectors.toList());

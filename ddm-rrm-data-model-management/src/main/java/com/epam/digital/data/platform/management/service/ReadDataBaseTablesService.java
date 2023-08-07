@@ -34,23 +34,25 @@ public interface ReadDataBaseTablesService {
    * Get {@link List} of {@link TableShortInfoDto} in given version
    *
    * @param versionId id of version to search tables in
+   * @param isSuccessfulBuild candidate/master version build status flag to control cache update
    * @return {@link List} of {@link TableShortInfoDto}
    *
    * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
   @NonNull
-  List<TableShortInfoDto> listTables(@NonNull String versionId);
+  List<TableShortInfoDto> listTables(@NonNull String versionId, boolean isSuccessfulBuild);
 
   /**
    * Get {@link TableInfoDto} by table name in given version
    *
    * @param tableName table name
    * @param versionId id of version to search table in
+   * @param isSuccessfulBuild candidate/master version build status flag to control cache update
    * @return {@link TableInfoDto}
    *
    * @throws TableNotFoundException              if table doesn't exist
    * @throws RegistryDataBaseConnectionException if it couldn't connect to master version database
    */
   @NonNull
-  TableInfoDto getTable(@NonNull String versionId, @TableName @NonNull String tableName);
+  TableInfoDto getTable(@NonNull String versionId, @TableName @NonNull String tableName, boolean isSuccessfulBuild);
 }

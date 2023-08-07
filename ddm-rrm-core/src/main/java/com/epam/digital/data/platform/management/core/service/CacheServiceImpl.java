@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import schemacrawler.schema.Catalog;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,7 @@ public class CacheServiceImpl implements CacheService {
 
   private static final String CONFLICTS_CACHE_NAME = "conflicts";
   private static final String LATEST_REBASE_CACHE_NAME = "latestRebase";
+  private static final String CATALOG_CACHE_NAME = "catalog";
 
   private final CacheManager cacheManager;
 
@@ -70,5 +72,27 @@ public class CacheServiceImpl implements CacheService {
     Cache conflictCache = cacheManager.getCache(LATEST_REBASE_CACHE_NAME);
     conflictCache.evictIfPresent(cacheKey);
     conflictCache.put(cacheKey, latestRebase);
+  }
+
+  @Override
+  public Catalog getCatalogCache(String versionId) {
+    Cache.ValueWrapper valueWrapper = cacheManager.getCache(CATALOG_CACHE_NAME).get(versionId);
+    if (Objects.nonNull(valueWrapper)) {
+      return (Catalog) valueWrapper.get();
+    } else {
+      return null;
+    }
+  }
+
+  @Override
+  public void updateCatalogCache(String versionId, Catalog catalog) {
+    Cache cache = cacheManager.getCache(CATALOG_CACHE_NAME);
+    cache.evictIfPresent(versionId);
+    cache.put(versionId, catalog);
+  }
+
+  @Override
+  public void clearCatalogCache(String versionId) {
+    cacheManager.getCache(CATALOG_CACHE_NAME).evictIfPresent(versionId);
   }
 }

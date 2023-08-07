@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.filemanagement.service;
 
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileDatesDto;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import java.util.List;
 import org.springframework.lang.NonNull;
@@ -54,7 +55,7 @@ public interface VersionedFileRepository {
    *
    * @param path    version relative path of file to write new content
    * @param content new content to write
-   * @param eTag hash of new content to write
+   * @param eTag    hash of new content to write
    * @throws UnsupportedOperationException if updating isn't allowed in version
    */
   void writeFile(@NonNull String path, @NonNull String content, String eTag);
@@ -104,4 +105,13 @@ public interface VersionedFileRepository {
    * @param path relative path of file to be rolled back
    */
   void rollbackFile(@NonNull String path);
+
+  /**
+   * Returns file created and last updated dates from repository
+   *
+   * @param filePath relative path of file to get dates
+   * @return null if file doesn't exist in version, else dates representation otherwise.
+   */
+  @Nullable
+  VersionedFileDatesDto getVersionedFileDates(@NonNull String filePath);
 }

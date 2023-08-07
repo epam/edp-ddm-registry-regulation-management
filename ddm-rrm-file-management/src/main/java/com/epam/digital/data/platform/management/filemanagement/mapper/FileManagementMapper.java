@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.filemanagement.mapper;
 
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileDatesDto;
 import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileInfoDto;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import org.apache.commons.io.FilenameUtils;
@@ -33,13 +34,16 @@ public interface FileManagementMapper {
   @Mapping(target = "name", source = "filePath", qualifiedByName = "pathToName")
   @Mapping(target = "path", source = "filePath")
   @Mapping(target = "status", constant = "UNCHANGED")
-  @Mapping(target = "created", source = "fileDatesDto.create")
-  @Mapping(target = "updated", source = "fileDatesDto.update")
-  VersionedFileInfoDto toVersionedFileInfoDto(String filePath, FileDatesDto fileDatesDto);
+  VersionedFileInfoDto toVersionedFileInfoDto(String filePath);
 
   @Named("pathToName")
   default String pathToName(String filePath) {
     return FilenameUtils.getBaseName(filePath);
   }
+
+
+  @Mapping(target = "created", source = "create")
+  @Mapping(target = "updated", source = "update")
+  VersionedFileDatesDto toVersionedFileDatesDto(FileDatesDto fileDatesDto);
 
 }

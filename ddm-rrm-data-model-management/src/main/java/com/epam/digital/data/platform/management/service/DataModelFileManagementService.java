@@ -47,7 +47,7 @@ public interface DataModelFileManagementService {
    * @param fileContent the new file content of the file
    */
   void putTablesFileContent(@NonNull String versionId,
-      @NonNull @DDMExtensionChangelogFile String fileContent);
+      @NonNull @DDMExtensionChangelogFile String fileContent, String eTag);
 
   /**
    * Get list of data model files in specified version

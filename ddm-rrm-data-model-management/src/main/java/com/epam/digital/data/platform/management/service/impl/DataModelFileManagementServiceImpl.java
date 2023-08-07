@@ -73,13 +73,14 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
   }
 
   @Override
-  public void putTablesFileContent(@NonNull String versionId, @NonNull String fileContent) {
+  public void putTablesFileContent(@NonNull String versionId, @NonNull String fileContent, String eTag) {
     var tablesFilePath = getTablesFilePath();
     log.debug("Putting content to file '{}' for version '{}'", tablesFilePath, versionId);
 
     var repo = getVersionedFileRepo(versionId);
 
-    repo.writeFile(tablesFilePath, fileContent);
+    repo.writeFile(tablesFilePath, fileContent, eTag);
+    cacheService.clearCatalogCache(versionId);
     log.debug(
         "File '{}' content was updated in version '{}', new content length - '{}'",
         tablesFilePath,
@@ -98,7 +99,7 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
     log.debug("Found '{}' files in version '{}'", foundFiles.size(), versionId);
 
     List<DataModelFileDto> dataModels = new ArrayList<>();
-    
+
     List<String> conflicts = cacheService.getConflictsCache(versionId);
     for (VersionedFileInfoDto versionedFileInfoDto : foundFiles) {
       dataModels.add(
@@ -112,6 +113,7 @@ public class DataModelFileManagementServiceImpl implements DataModelFileManageme
   public void rollbackTables(@NonNull String versionId) {
     var repo = getVersionedFileRepo(versionId);
     repo.rollbackFile(getTablesFilePath());
+    cacheService.clearCatalogCache(versionId);
   }
 
   private String getTablesFilePath() {

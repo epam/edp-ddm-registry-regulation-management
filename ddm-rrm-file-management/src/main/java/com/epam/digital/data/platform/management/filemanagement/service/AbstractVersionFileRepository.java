@@ -17,6 +17,7 @@
 package com.epam.digital.data.platform.management.filemanagement.service;
 
 import com.epam.digital.data.platform.management.filemanagement.mapper.FileManagementMapper;
+import com.epam.digital.data.platform.management.filemanagement.model.VersionedFileDatesDto;
 import com.epam.digital.data.platform.management.gerritintegration.service.GerritService;
 import com.epam.digital.data.platform.management.gitintegration.service.JGitService;
 import java.net.URLDecoder;
@@ -61,5 +62,11 @@ public abstract class AbstractVersionFileRepository implements VersionedFileRepo
   @Override
   public void rollbackFile(@NonNull String path) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public VersionedFileDatesDto getVersionedFileDates(@NonNull String filePath) {
+    var datesDto = gitService.getDates(versionId, filePath);
+    return mapper.toVersionedFileDatesDto(datesDto);
   }
 }

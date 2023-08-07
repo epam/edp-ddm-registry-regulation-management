@@ -118,12 +118,8 @@ public class FormServiceImpl implements FormService {
       fileDatesDto = getDatesFromContent(oldContent);
     }
     if (fileDatesDto.getCreate() == null) {
-      fileDatesDto.setCreate(
-          repo.getFileList(DIRECTORY_PATH).stream()
-              .filter(fileResponse -> fileResponse.getName().equals(formName))
-              .findFirst()
-              .map(VersionedFileInfoDto::getCreated)
-              .orElse(time));
+      var repoDates = repo.getVersionedFileDates(formPath);
+      fileDatesDto.setCreate(Objects.isNull(repoDates) ? time : repoDates.getCreated());
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
     repo.writeFile(formPath, content, eTag);
@@ -167,11 +163,24 @@ public class FormServiceImpl implements FormService {
       } else {
         formContent = repo.readFile(getFormPath(versionedFileInfoDto.getName()));
       }
-      FileDatesDto fileDatesDto = getDatesFromContent(formContent);
+      var dates = getDatesFromContent(formContent);
+      if (Objects.isNull(dates.getCreate()) || Objects.isNull(dates.getUpdate())) {
+        var path = getFormPath(versionedFileInfoDto.getName());
+        var datesFromRepo = versionedFileInfoDto.getStatus() == FileStatus.DELETED
+            ? masterRepo.getVersionedFileDates(path) : repo.getVersionedFileDates(path);
+        if (Objects.nonNull(datesFromRepo)) {
+          if (Objects.isNull(dates.getCreate())) {
+            dates.setCreate(datesFromRepo.getCreated());
+          }
+          if (Objects.isNull(dates.getUpdate())) {
+            dates.setUpdate(datesFromRepo.getUpdated());
+          }
+        }
+      }
       forms.add(
           formMapper.toForm(
               versionedFileInfoDto,
-              fileDatesDto,
+              dates,
               formContent,
               conflicts.contains(versionedFileInfoDto.getPath())));
     }

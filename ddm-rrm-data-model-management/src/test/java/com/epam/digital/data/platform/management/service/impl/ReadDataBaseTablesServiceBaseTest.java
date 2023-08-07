@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service.impl;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
 import com.epam.digital.data.platform.management.core.context.VersionContextComponentManager;
+import com.epam.digital.data.platform.management.core.service.CacheService;
 import com.epam.digital.data.platform.management.mapper.SchemaCrawlerMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,8 @@ public abstract class ReadDataBaseTablesServiceBaseTest {
   VersionContextComponentManager versionContextComponentManager;
   @Mock
   GerritPropertiesConfig gerritPropertiesConfig;
+  @Spy
+  CacheService cacheService;
   @Spy
   private SchemaCrawlerMapper mapper = Mappers.getMapper(SchemaCrawlerMapper.class);
   @InjectMocks

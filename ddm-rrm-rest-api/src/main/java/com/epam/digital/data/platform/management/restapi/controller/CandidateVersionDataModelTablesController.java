@@ -15,6 +15,7 @@
  */
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
 import com.epam.digital.data.platform.management.restapi.validation.ExistingVersionCandidate;
 import com.epam.digital.data.platform.management.service.DataModelFileManagementService;
@@ -27,6 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,6 +84,7 @@ public class CandidateVersionDataModelTablesController {
     log.info("There were found tables file content for version '{}'", versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_XML)
+        .eTag(ETagUtils.getETagFromContent(fileContent))
         .body(fileContent);
   }
 
@@ -89,7 +93,13 @@ public class CandidateVersionDataModelTablesController {
           name = "X-Access-Token",
           description = "Token used for endpoint security",
           required = true,
-          schema = @Schema(type = "string"))},
+          schema = @Schema(type = "string")),
+      @Parameter(in = ParameterIn.HEADER,
+          name = "If-Match",
+          description = "ETag to verify whether user has latest data",
+          schema = @Schema(type = "string")
+      )
+  },
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
@@ -111,16 +121,19 @@ public class CandidateVersionDataModelTablesController {
   @PutMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.TEXT_XML_VALUE})
   public ResponseEntity<String> putTablesFileContent(
       @ExistingVersionCandidate @PathVariable @Parameter(description = "Version candidate identifier", required = true) Integer versionCandidateId,
-      @RequestBody String tablesFileContent) {
+      @RequestBody String tablesFileContent,
+      @RequestHeader HttpHeaders headers) {
     var versionId = String.valueOf(versionCandidateId);
     log.info("Putting tables file content to version '{}' started", versionId);
-    dataModelFileManagementService.putTablesFileContent(versionId, tablesFileContent);
+    var eTag = headers.getFirst("If-Match");
+    dataModelFileManagementService.putTablesFileContent(versionId, tablesFileContent, eTag);
     log.debug("Tables file content in version '{}' updated, reading it again for response.",
         versionId);
     final var updatedFileContent = dataModelFileManagementService.getTablesFileContent(versionId);
     log.info("There were updated tables file content for version '{}'", versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_XML)
+        .eTag(ETagUtils.getETagFromContent(updatedFileContent))
         .body(updatedFileContent);
   }
 

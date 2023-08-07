@@ -91,10 +91,12 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
   void submitTest() {
     var changeId = RandomString.make();
     Mockito.doNothing().when(gerritService).submitChanges(changeId);
+    Mockito.doReturn("master").when(gerritPropertiesConfig).getHeadBranch();
     Assertions.assertThatCode(() -> managementService.submit(changeId))
         .doesNotThrowAnyException();
 
     Mockito.verify(gerritService).submitChanges(changeId);
+    Mockito.verify(cacheService).clearCatalogCache("master");
   }
 
   @Test
@@ -328,6 +330,7 @@ class VersionManagementServiceTest extends VersionManagementServiceBaseTest {
     Mockito.verify(gerritService).getChangeInfo(changeId);
     Mockito.verify(jGitService).fetch(version, refs);
     Mockito.verify(jGitService).getConflicts(version);
+    Mockito.verify(cacheService).clearCatalogCache(version);
     Mockito.verify(cacheService).updateConflictsCache(eq(version), anyList());
     Mockito.verify(cacheService).updateLatestRebaseCache(eq(version), any());
   }

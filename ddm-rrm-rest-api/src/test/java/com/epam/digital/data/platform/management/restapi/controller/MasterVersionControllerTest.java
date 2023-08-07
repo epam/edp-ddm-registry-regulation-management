@@ -16,25 +16,11 @@
 
 package com.epam.digital.data.platform.management.restapi.controller;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.epam.digital.data.platform.management.restapi.model.BuildType;
 import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.epam.digital.data.platform.management.restapi.service.BuildStatusService;
 import com.epam.digital.data.platform.management.versionmanagement.model.VersionInfoDto;
 import com.epam.digital.data.platform.management.versionmanagement.service.VersionManagementService;
-
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Stream;
-
 import com.google.gerrit.extensions.common.ChangeMessageInfo;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +37,21 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @ControllerTest(MasterVersionController.class)
 @DisplayName("Master version controller tests")
 class MasterVersionControllerTest {
@@ -58,6 +59,8 @@ class MasterVersionControllerTest {
   MockMvc mockMvc;
   @MockBean
   VersionManagementService versionManagementService;
+  @MockBean
+  BuildStatusService buildStatusService;
 
   @BeforeEach
   void setUp(WebApplicationContext webApplicationContext,
@@ -86,6 +89,7 @@ class MasterVersionControllerTest {
 
     Mockito.doReturn(expectedChangeInfo)
         .when(versionManagementService).getMasterInfo();
+    Mockito.doReturn(status).when(buildStatusService).getStatusVersionBuild(expectedChangeInfo, BuildType.MASTER);
 
     mockMvc.perform(
         get("/versions/master")
