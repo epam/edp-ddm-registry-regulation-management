@@ -123,6 +123,20 @@ public interface JGitService {
   void amend(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent);
 
   /**
+   * Amend commit with file and push to refs for head-branch. It requires that repository already is
+   * checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @param fileContent    content of file
+   * @param eTag hash of entity content
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     remote add or push git command failures
+   */
+  void amend(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag);
+
+  /**
    * Delete file and push to refs for head-branch. It requires that repository already is checkout
    * on FETCH_HEAD for successful push to repo
    *
@@ -132,7 +146,7 @@ public interface JGitService {
    * @throws GitCommandException         in case if it couldn't open repo or rm, log, commit, remote
    *                                     add or push git command failures
    */
-  void delete(@NonNull String repositoryName, @NonNull String filePath);
+  void delete(@NonNull String repositoryName, @NonNull String filePath, String eTag);
 
   /**
    * Delete repository from FileSystem
@@ -151,6 +165,20 @@ public interface JGitService {
   boolean repoExists(String repositoryName);
 
   /**
+   * Commit file and push to refs for head-branch. It requires that repository already is
+   * checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @param fileContent    content of file
+   * @param eTag    hash of entity content
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitCommandException         in case if it couldn't open repo or add, log, commit,
+   *                                     remote add or push git command failures
+   */
+  void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag);
+
+  /**
    * Revert the modified file to the state of the commit from which the branch was created. It
    * requires that repository already is checkout on FETCH_HEAD for successful push to repo
    *
@@ -163,4 +191,17 @@ public interface JGitService {
    *                                     checkout, remote add or push git command failures
    */
   void rollbackFile(@NonNull String repositoryName, @NonNull String filePath);
+
+  /**
+   * Delete file with eTags validation and push to head-branch. It requires that repository
+   * already is checkout on FETCH_HEAD for successful push to repo
+   *
+   * @param repositoryName name of the specified repository
+   * @param filePath       file location on FileSystem
+   * @param eTag           entity tag
+   * @throws RepositoryNotFoundException if repository not exists
+   * @throws GitCommandException         in case if it couldn't open repo or rm, log, commit, remote
+   *                                     add or push git command failures
+   */
+  void deleteAndSubmit(@NonNull String repositoryName, @NonNull String filePath, String eTag);
 }

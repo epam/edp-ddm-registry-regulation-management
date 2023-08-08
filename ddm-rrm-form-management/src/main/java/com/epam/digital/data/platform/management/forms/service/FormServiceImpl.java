@@ -28,6 +28,7 @@ import com.epam.digital.data.platform.management.forms.FormMapper;
 import com.epam.digital.data.platform.management.forms.exception.FormAlreadyExistsException;
 import com.epam.digital.data.platform.management.forms.exception.FormNotFoundException;
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
+import com.epam.digital.data.platform.management.gitintegration.exception.FileAlreadyExistsException;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -36,6 +37,7 @@ import com.google.gson.JsonParser;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
@@ -71,27 +73,34 @@ public class FormServiceImpl implements FormService {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
     String formPath = getFormPath(formName);
+    var formAlreadyExistsException = new FormAlreadyExistsException(
+        String.format("Form with path '%s' already exists", formPath));
     if (repo.isFileExists(formPath)) {
-      throw new FormAlreadyExistsException(
-          String.format("Form with path '%s' already exists", formPath));
+      throw formAlreadyExistsException;
     }
+
     content = addDatesToContent(content, time, time);
-    repo.writeFile(formPath, content);
+    try {
+      repo.writeFile(formPath, content);
+    } catch (FileAlreadyExistsException e) {
+      throw formAlreadyExistsException;
+    }
   }
 
   @Override
   public String getFormContent(String formName, String versionName) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    String formContent = repo.readFile(getFormPath(formName));
-    if (formContent == null) {
+    repo.updateRepository();
+    var formContent = repo.readFile(getFormPath(formName));
+    if (Objects.isNull(formContent)) {
       throw new FormNotFoundException("Form " + formName + " not found", formName);
     }
     return formContent;
   }
 
   @Override
-  public void updateForm(String content, String formName, String versionName) {
+  public void updateForm(String content, String formName, String versionName, String eTag) {
     String formPath = getFormPath(formName);
     LocalDateTime time = LocalDateTime.now();
     var repo =
@@ -117,14 +126,14 @@ public class FormServiceImpl implements FormService {
               .orElse(time));
     }
     content = addDatesToContent(content, fileDatesDto.getCreate(), time);
-    repo.writeFile(formPath, content);
+    repo.writeFile(formPath, content, eTag);
   }
 
   @Override
-  public void deleteForm(String formName, String versionName) {
+  public void deleteForm(String formName, String versionName, String eTag) {
     var repo =
         versionContextComponentManager.getComponent(versionName, VersionedFileRepository.class);
-    repo.deleteFile(getFormPath(formName));
+    repo.deleteFile(getFormPath(formName), eTag);
   }
 
   @Override

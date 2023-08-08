@@ -163,22 +163,22 @@ class CandidateVersionFormsControllerTest {
         content().json(expectedFormContent)
     ).andDo(document("versions/candidates/{versionCandidateId}/forms/{formName}/PUT"));
 
-    Mockito.verify(formService).updateForm(expectedFormContent, formName, versionCandidateId);
+    Mockito.verify(formService).updateForm(expectedFormContent, formName, versionCandidateId, null);
   }
 
   @Test
   @DisplayName("DELETE /versions/candidates/{versionCandidateId}/forms/{formName} should return 204")
   @SneakyThrows
   void deleteFormTest() {
-    Mockito.doNothing().when(formService).deleteForm("john-does-form", "1");
+    Mockito.doNothing().when(formService).deleteForm("john-does-form", "1", "eTag");
 
     mockMvc.perform(delete("/versions/candidates/{versionCandidateId}/forms/{formName}",
-        "1", "john-does-form")
+        "1", "john-does-form").header("IF-Match", "eTag")
     ).andExpect(
         status().isNoContent()
     ).andDo(document("versions/candidates/{versionCandidateId}/forms/{formName}/DELETE"));
 
-    Mockito.verify(formService).deleteForm("john-does-form", "1");
+    Mockito.verify(formService).deleteForm("john-does-form", "1", "eTag");
   }
 
   @Test

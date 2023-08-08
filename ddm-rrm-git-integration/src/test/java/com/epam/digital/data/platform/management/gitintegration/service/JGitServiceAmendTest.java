@@ -547,7 +547,6 @@ class JGitServiceAmendTest extends AbstractJGitServiceTest {
     Mockito.verify(commitCommand).call();
 
     Mockito.verify(git).remoteAdd();
-    Mockito.verify(git, Mockito.never()).push();
 
     Mockito.verify(remoteAddCommand, Mockito.never()).call();
     Mockito.verify(pushCommand, Mockito.never()).call();

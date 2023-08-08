@@ -39,7 +39,7 @@ import org.mockito.Spy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-public class HeadFileRepositoryTest {
+class HeadFileRepositoryTest {
 
   @Mock
   private JGitService jGitService;
@@ -101,18 +101,6 @@ public class HeadFileRepositoryTest {
   }
 
   @Test
-  void writeNotSupportTest() {
-    Assertions.assertThatCode(() -> repository.writeFile("/", "content"))
-        .isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
-  void deleteNotSupportTest() {
-    Assertions.assertThatCode(() -> repository.deleteFile("/"))
-        .isInstanceOf(UnsupportedOperationException.class);
-  }
-
-  @Test
   @SneakyThrows
   void readFileTest() {
     var path = RandomString.make();
@@ -143,5 +131,14 @@ public class HeadFileRepositoryTest {
 
     Assertions.assertThat(fileExists).isTrue();
     Mockito.verify(jGitService).getFilesInPath("version", normalize);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRefreshRepository() {
+    repository.updateRepository();
+
+    Mockito.verify(jGitService).cloneRepoIfNotExist("version");
+    Mockito.verify(jGitService).resetHeadBranchToRemote();
   }
 }

@@ -176,7 +176,7 @@ class CandidateVersionBusinessProcessControllerTest {
     );
 
     Mockito.verify(businessProcessService)
-        .updateProcess(expectedProcessContent, processId, versionCandidateId);
+        .updateProcess(expectedProcessContent, processId, versionCandidateId, null);
   }
 
   @Test
@@ -188,14 +188,14 @@ class CandidateVersionBusinessProcessControllerTest {
 
     mockMvc.perform(
         delete("/versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}",
-            versionCandidateId, processId)
+            versionCandidateId, processId).header("IF-Match", "eTag")
     ).andExpect(
         status().isNoContent()
     ).andDo(document(
         "versions/candidates/{versionCandidateId}/business-processes/{businessProcessName}/DELETE")
     );
 
-    Mockito.verify(businessProcessService).deleteProcess(processId, versionCandidateId);
+    Mockito.verify(businessProcessService).deleteProcess(processId, versionCandidateId, "eTag");
     Mockito.verify(groupService).deleteProcessDefinition(processId, versionCandidateId);
   }
 

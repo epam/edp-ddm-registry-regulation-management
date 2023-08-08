@@ -16,7 +16,15 @@
 
 package com.epam.digital.data.platform.management.gitintegration.service;
 
+import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
+import com.epam.digital.data.platform.management.gitintegration.exception.ETagValidationException;
+import com.epam.digital.data.platform.management.gitintegration.exception.FileAlreadyExistsException;
+import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.exception.MergeConflictException;
+import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -33,10 +41,12 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.AbortedByHookException;
@@ -55,7 +65,9 @@ import org.eclipse.jgit.api.errors.WrongRepositoryStateException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -65,14 +77,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-
-import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
-import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
-import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
-import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.FileCopyUtils;
 
 @Slf4j
 @Service
@@ -93,12 +98,18 @@ public class JGitServiceImpl implements JGitService {
     log.debug("Trying to clone repository {}", repositoryName);
     var directory = getRepositoryDir(repositoryName);
     if (directory.exists()) {
-      //    this condition was written in order to avoid cloning repo several times
+      // this condition was written in order to avoid cloning repo several times
       return;
     }
     log.trace("Synchronizing repo {}", repositoryName);
     var lock = getLock(repositoryName);
     lock.lock();
+    copyFolderFromHeadBranch(directory);
+    if (directory.exists()) {
+      // copying from headBranch repo went successful
+      return;
+    }
+
     try (var ignored = cloneRepo(directory)) {
       log.debug("Repository {} was successfully cloned.", repositoryName);
     } finally {
@@ -275,6 +286,11 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void amend(
       @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent) {
+      amend(repositoryName, filePath, fileContent, null);
+  }
+  @Override
+  public void amend(
+      @NonNull String repositoryName, @NonNull String filePath, @NonNull String fileContent, String eTag) {
     log.debug(
         "Trying to update file content in repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
@@ -283,6 +299,9 @@ public class JGitServiceImpl implements JGitService {
     var lock = getLock(repositoryName);
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
+
+      validateETag(repositoryDirectory, filePath, eTag);
+
       log.trace("Updating file at path {}", filePath);
       var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
       log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
@@ -295,8 +314,38 @@ public class JGitServiceImpl implements JGitService {
   }
 
   @Override
+  public void commitAndSubmit(@NonNull String repositoryName, @NonNull String filePath,
+                              @NonNull String fileContent, String eTag) {
+    log.debug("Trying to create file in repository {} at path {}", repositoryName,
+        filePath);
+    var repositoryDirectory = getExistedRepository(repositoryName);
+
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
+    try (var git = openRepo(repositoryDirectory)) {
+      if (!getFilesInPath(repositoryName, filePath).isEmpty()) {
+        throw new FileAlreadyExistsException(
+            String.format("File with path '%s' already exists", filePath));
+      }
+
+      validateETag(repositoryDirectory, filePath, eTag);
+
+      log.trace("Updating file at path {}", filePath);
+      var file = gitFileService.writeFile(repositoryName, fileContent, filePath);
+      log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
+      var commitMessage = "created file " + filePath;
+      doCommit(repositoryDirectory, file, git, commitMessage);
+      log.debug("File {} updated in repo {}", filePath, repositoryName);
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  @Override
   @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
-  public void delete(@NonNull String repositoryName, @NonNull String filePath) {
+  public void delete(@NonNull String repositoryName, @NonNull String filePath, String eTag) {
     log.debug("Trying to delete file from repository {} at path {}", repositoryName, filePath);
     var repositoryDirectory = getExistedRepository(repositoryName);
 
@@ -305,6 +354,7 @@ public class JGitServiceImpl implements JGitService {
     lock.lock();
     try (var git = openRepo(repositoryDirectory)) {
       log.trace("Deleting file at path {}", filePath);
+      validateETag(repositoryDirectory, filePath, eTag);
       var fileToDelete = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
       if (fileToDelete.delete()) {
         log.trace("Commit file {} in repo {} with amend", filePath, repositoryName);
@@ -320,12 +370,17 @@ public class JGitServiceImpl implements JGitService {
   @Override
   public void deleteRepo(String repoName) {
     var repositoryFile = getRepositoryDir(repoName);
+    deleteFolder(repositoryFile);
+  }
+
+  private static void deleteFolder(File repositoryFile) {
     try {
       FileUtils.delete(repositoryFile, FileUtils.RECURSIVE | FileUtils.SKIP_MISSING);
     } catch (IOException e) {
       throw new GitCommandException(
           String.format(
-              "Exception occurred during deleting repository %s: %s", repoName, e.getMessage()),
+              "Exception occurred during deleting repository %s: %s", repositoryFile.getName(),
+              e.getMessage()),
           e);
     }
   }
@@ -353,6 +408,48 @@ public class JGitServiceImpl implements JGitService {
     } finally {
       lock.unlock();
       log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  @Override
+  @SuppressWarnings("findsecbugs:PATH_TRAVERSAL_IN")
+  public void deleteAndSubmit(@NonNull String repositoryName, @NonNull String filePath,
+      String eTag) {
+    log.debug("Trying to delete file from repository {} at path {}", repositoryName, filePath);
+    var repositoryDirectory = getExistedRepository(repositoryName);
+
+    log.trace("Synchronizing repo {}", repositoryName);
+    var lock = getLock(repositoryName);
+    lock.lock();
+    try (var git = openRepo(repositoryDirectory)) {
+      log.trace("Deleting file at path {}", filePath);
+      validateETag(repositoryDirectory, filePath, eTag);
+      var fileToDelete = new File(repositoryDirectory, FilenameUtils.normalize(filePath));
+      if (fileToDelete.delete()) {
+        log.trace("Commit file {} in repo {}", filePath, repositoryName);
+        var commitMessage = "deleted file " + filePath;
+        doCommit(repositoryDirectory, fileToDelete, git, commitMessage);
+        log.debug("File {} deleted from repo {}", filePath, repositoryName);
+      }
+    } finally {
+      lock.unlock();
+      log.trace("Repo {} lock released", repositoryName);
+    }
+  }
+
+  private void validateETag(File repositoryDirectory, String filePath, String eTag) {
+    boolean isValidETag;
+    var content = getFileContent(repositoryDirectory, filePath);
+    if (eTag == null || ("*").equals(eTag) || content == null) {
+      isValidETag = true;
+    } else {
+      var contentETag = ETagUtils.getETagFromContent(content);
+      isValidETag = contentETag.equals(eTag);
+    }
+    if (!isValidETag) {
+      throw new ETagValidationException(
+          String.format("Invalid ETag for path %s, action will not be performed", filePath),
+          filePath);
     }
   }
 
@@ -398,6 +495,25 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
+  private void copyFolderFromHeadBranch(@NonNull File repositoryDirectory) {
+    var headBranchRepoName = gerritPropertiesConfig.getHeadBranch();
+
+    if (repoExists(headBranchRepoName)) {
+      var lock = getLock(headBranchRepoName);
+      lock.lock();
+      try {
+        FileCopyUtils.copy(getRepositoryDir(headBranchRepoName), repositoryDirectory);
+        log.debug("Repository {} was successfully cloned.", repositoryDirectory);
+      } catch (IOException e) {
+        log.warn("Exception occurred during copying head-branch folder: {}", e.getMessage());
+        deleteFolder(repositoryDirectory);
+      } finally {
+        lock.unlock();
+        log.trace("Repo {} lock released", headBranchRepoName);
+      }
+    }
+  }
+
   @NonNull
   private Git cloneRepo(@NonNull File repositoryDirectory) {
     var cloneCommand =
@@ -433,12 +549,16 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  /** Fetch method that needs opened {@link Git} */
+  /**
+   * Fetch method that needs opened {@link Git}
+   */
   private void fetchAll(Git git) {
     fetch(git, null);
   }
 
-  /** Fetch specific refs with opened {@link Git} */
+  /**
+   * Fetch specific refs with opened {@link Git}
+   */
   private void fetch(@NonNull Git git, @Nullable String refs) {
     var fetchCommand = git.fetch().setCredentialsProvider(getCredentialsProvider());
     if (Objects.nonNull(refs)) {
@@ -459,9 +579,9 @@ public class JGitServiceImpl implements JGitService {
     try {
       checkoutCommand.call();
     } catch (RefAlreadyExistsException
-        | RefNotFoundException
-        | InvalidRefNameException
-        | CheckoutConflictException e) {
+             | RefNotFoundException
+             | InvalidRefNameException
+             | CheckoutConflictException e) {
       // Checkout on FETCH_HEAD must not create any new refs, ref FETCH_HEAD must always exist
       // ref FETCH_HEAD must be always valid and there must not be any conflicts during such
       // checkout
@@ -540,7 +660,53 @@ public class JGitServiceImpl implements JGitService {
     var gitStatus = status(git);
     if (!gitStatus.isClean()) {
       commitAmend(git);
-      pushChanges(git);
+
+      var push = git.push()
+          .setCredentialsProvider(getCredentialsProvider())
+          .setRemote(Constants.DEFAULT_REMOTE_NAME)
+          .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+      pushChanges(git, push);
+    }
+  }
+
+  private void doCommit(File repoDirectory, File file, Git git, String commitMessage) {
+    addFileToGit(repoDirectory, file, git);
+    var gitStatus = status(git);
+    if (!gitStatus.isClean()) {
+      commit(git, commitMessage);
+
+      var push = git.push()
+          .setCredentialsProvider(getCredentialsProvider())
+          .setRemote(Constants.DEFAULT_REMOTE_NAME)
+          .setRefSpecs(new RefSpec(
+              "HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch() + "%private,submit"));
+      var pushResults = pushChanges(git, push);
+      handleGitPushStatus(pushResults, git);
+    }
+  }
+
+  private void commit(Git git, String message) {
+    try {
+      git.commit()
+          .setMessage(message)
+          .setInsertChangeId(true)
+          .call();
+    } catch (GitAPIException e) {
+      throw new GitCommandException(
+          String.format("Exception occurred during commit: %s", e.getMessage()), e);
+    }
+  }
+
+  private void handleGitPushStatus(Iterable<PushResult> pushResults, Git git) {
+    for (PushResult result : pushResults) {
+      for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+        if (update.getStatus() == RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD) {
+          log.warn("Merge conflict occurred while pushing to master, hard reset on origin head branch");
+          fetchAll(git);
+          hardResetOnOriginHeadBranch(git);
+          throw new MergeConflictException("Merge conflict occurred while pushing to master");
+        }
+      }
     }
   }
 
@@ -549,12 +715,12 @@ public class JGitServiceImpl implements JGitService {
       var lastCommit = git.log().call().iterator().next();
       git.commit().setMessage(lastCommit.getFullMessage()).setAmend(true).call();
     } catch (AbortedByHookException
-        | ConcurrentRefUpdateException
-        | NoHeadException
-        | NoMessageException
-        | ServiceUnavailableException
-        | UnmergedPathsException
-        | WrongRepositoryStateException e) {
+             | ConcurrentRefUpdateException
+             | NoHeadException
+             | NoMessageException
+             | ServiceUnavailableException
+             | UnmergedPathsException
+             | WrongRepositoryStateException e) {
       throw new IllegalStateException(
           String.format(
               "Log/commit command doesn't expected to throw such exception: %s", e.getMessage()),
@@ -633,18 +799,14 @@ public class JGitServiceImpl implements JGitService {
     }
   }
 
-  private void pushChanges(Git git) {
-    var addCommand =
-        git.remoteAdd().setUri(getRepositoryURIish()).setName(Constants.DEFAULT_REMOTE_NAME);
-    var push =
-        git.push()
-            .setCredentialsProvider(getCredentialsProvider())
-            .setRemote(Constants.DEFAULT_REMOTE_NAME)
-            .setRefSpecs(new RefSpec("HEAD:refs/for/" + gerritPropertiesConfig.getHeadBranch()));
+  private Iterable<PushResult> pushChanges(Git git, PushCommand pushCommand) {
+    var addCommand = git.remoteAdd()
+        .setUri(getRepositoryURIish())
+        .setName(Constants.DEFAULT_REMOTE_NAME);
 
     try {
       addCommand.call();
-      retryable.call(push);
+      return retryable.call(pushCommand);
     } catch (InvalidRemoteException e) {
       throw new IllegalStateException(
           String.format(

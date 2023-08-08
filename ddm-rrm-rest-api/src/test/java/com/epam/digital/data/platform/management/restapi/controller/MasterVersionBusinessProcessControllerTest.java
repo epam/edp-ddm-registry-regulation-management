@@ -20,12 +20,15 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
+import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessInfoDto;
 import com.epam.digital.data.platform.management.restapi.util.TestUtils;
 import com.epam.digital.data.platform.management.service.impl.BusinessProcessServiceImpl;
@@ -53,6 +56,8 @@ class MasterVersionBusinessProcessControllerTest {
   BusinessProcessServiceImpl businessProcessService;
   @MockBean
   GerritPropertiesConfig gerritPropertiesConfig;
+  @MockBean
+  GroupService groupService;
   MockMvc mockMvc;
 
   @BeforeEach
@@ -111,4 +116,52 @@ class MasterVersionBusinessProcessControllerTest {
         jsonPath("$[0].updated", equalTo("2022-11-04T13:16:00.000Z"))
     ).andDo(document("versions/master/business-processes/GET"));
   }
+
+  @Test
+  @DisplayName("DELETE /versions/master/business-processes/{businessProcessName} should return 204")
+  @SneakyThrows
+  void deleteBusinessProcess() {
+    final var processId = "John_Does_process";
+
+    mockMvc.perform(
+        delete("/versions/master/business-processes/{businessProcessName}",
+            processId).header("IF-Match", "tag")
+    ).andExpect(
+        status().isNoContent()
+    ).andDo(document(
+        "versions/master/business-processes/{businessProcessName}/DELETE")
+    );
+
+    Mockito.verify(businessProcessService).deleteProcess(processId, HEAD_BRANCH, "tag");
+    Mockito.verify(groupService).deleteProcessDefinition(processId, HEAD_BRANCH);
+  }
+
+  @Test
+  @DisplayName("PUT /versions/master/business-processes/{businessProcessName} should return 200 with business process content")
+  @SneakyThrows
+  void updateBusinessProcess() {
+    final var versionCandidateId = "master";
+    final var processId = "John_Does_process";
+    final var expectedProcessContent = TestUtils.getContent("controller/John_Does_process.bpmn");
+
+    Mockito.doReturn(expectedProcessContent)
+        .when(businessProcessService).getProcessContent(processId, versionCandidateId);
+
+    mockMvc.perform(
+        put("/versions/master/business-processes/{businessProcessName}", processId)
+            .accept(MediaType.TEXT_XML)
+            .contentType(MediaType.TEXT_XML)
+            .content(expectedProcessContent)
+    ).andExpectAll(
+        status().isOk(),
+        content().contentType(MediaType.TEXT_XML),
+        content().xml(expectedProcessContent)
+    ).andDo(document(
+        "versions/master/business-processes/{businessProcessName}/PUT")
+    );
+
+    Mockito.verify(businessProcessService)
+        .updateProcess(expectedProcessContent, processId, versionCandidateId, null);
+  }
+
 }

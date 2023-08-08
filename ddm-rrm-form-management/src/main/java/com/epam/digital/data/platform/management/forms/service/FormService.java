@@ -64,15 +64,7 @@ public interface FormService {
    * @param formName    name of form
    * @param versionName name of version candidate
    */
-  void updateForm(String content, String formName, String versionName);
-
-  /**
-   * Delete form
-   *
-   * @param formName    name of form
-   * @param versionName name of version candidate
-   */
-  void deleteForm(String formName, String versionName);
+  void updateForm(String content, String formName, String versionName, String eTag);
 
   /**
    * Rolls back a form to a specific version.
@@ -81,4 +73,12 @@ public interface FormService {
    * @param versionName name of version candidate
    */
   void rollbackForm(String formName, String versionName);
+
+  /**
+   * Delete form with eTag validation
+   *
+   * @param formName    name of form
+   * @param versionName name of version candidate
+   */
+  void deleteForm(String formName, String versionName, String eTag);
 }

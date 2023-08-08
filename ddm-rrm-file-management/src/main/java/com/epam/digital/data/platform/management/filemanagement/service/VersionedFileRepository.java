@@ -25,7 +25,7 @@ import org.springframework.lang.Nullable;
  * Used for working with files in specific version. It's needed to create an instance of
  * {@link VersionedFileRepository} for every single version.
  *
- * @see HeadFileRepositoryImpl implementation for head (readable only) version
+ * @see HeadFileRepositoryImpl implementation for head version
  * @see VersionedFileRepositoryImpl implementation for writable version
  * @see VersionedFileRepositoryFactory factory of the VersionedFileRepository
  */
@@ -50,6 +50,16 @@ public interface VersionedFileRepository {
   void writeFile(@NonNull String path, @NonNull String content);
 
   /**
+   * Creates or updates file at specific path with specific content
+   *
+   * @param path    version relative path of file to write new content
+   * @param content new content to write
+   * @param eTag hash of new content to write
+   * @throws UnsupportedOperationException if updating isn't allowed in version
+   */
+  void writeFile(@NonNull String path, @NonNull String content, String eTag);
+
+  /**
    * Reads file content at specific path in the version
    *
    * @param path version relative path of file to read the content
@@ -67,12 +77,13 @@ public interface VersionedFileRepository {
   boolean isFileExists(@NonNull String path);
 
   /**
-   * Deletes file at specific path in the version
+   * Deletes file at specific path in the version and comparing eTags
    *
    * @param path version relative path of file to delete
+   * @param eTag entity tag
    * @throws UnsupportedOperationException if updating isn't allowed in version
    */
-  void deleteFile(@NonNull String path);
+  void deleteFile(@NonNull String path, String eTag);
 
   /**
    * Gets an id of the version of this repository

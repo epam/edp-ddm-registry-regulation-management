@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.forms.service;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 
 import com.epam.digital.data.platform.management.core.config.GerritPropertiesConfig;
@@ -169,6 +170,7 @@ class FormServiceTest {
     var actualFormContent = formService.getFormContent("form", VERSION_ID);
 
     Assertions.assertThat(actualFormContent).isEqualTo(FORM_CONTENT);
+    Mockito.verify(repository).updateRepository();
   }
 
   @Test
@@ -184,10 +186,10 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void updateFormTestNoErrorTest() {
-    Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID))
+    Assertions.assertThatCode(() -> formService.updateForm(FORM_CONTENT, "form", VERSION_ID, null))
         .doesNotThrowAnyException();
     Mockito.verify(repository).isFileExists("forms/form.json");
-    Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString());
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), anyString(), isNull());
     //check if there is no error, but not real value
   }
 
@@ -201,8 +203,8 @@ class FormServiceTest {
         "\"title\": \"Update physical factors\"",
         "\"title\": \"Update physical factors updated\"");
 
-    formService.updateForm(newFormContent, "form", VERSION_ID);
-    Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture());
+    formService.updateForm(newFormContent, "form", VERSION_ID, null);
+    Mockito.verify(repository).writeFile(eq("forms/form.json"), captor.capture(), isNull());
     var response = captor.getValue();
     JSONAssert.assertEquals(newFormContent, response, new CustomComparator(JSONCompareMode.LENIENT,
         new Customization("modified", (o1, o2) -> true),
@@ -212,10 +214,10 @@ class FormServiceTest {
   @Test
   @SneakyThrows
   void deleteFormTest() {
-    Assertions.assertThatCode(() -> formService.deleteForm("form", VERSION_ID))
+    Assertions.assertThatCode(() -> formService.deleteForm("form", VERSION_ID, "eTag"))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).deleteFile("forms/form.json");
+    Mockito.verify(repository).deleteFile("forms/form.json", "eTag");
   }
 
   @Test
@@ -224,7 +226,7 @@ class FormServiceTest {
     Mockito.when(repository.isFileExists("forms/form.json")).thenReturn(true);
     Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT_UNICODE);
 
-    formService.updateForm(FORM_CONTENT, "form", VERSION_ID);
+    formService.updateForm(FORM_CONTENT, "form", VERSION_ID, null);
     Mockito.verify(repository, never()).writeFile(eq("forms/form.json"), captor.capture());
   }
 

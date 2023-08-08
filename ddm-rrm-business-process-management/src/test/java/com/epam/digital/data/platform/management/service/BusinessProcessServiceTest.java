@@ -18,6 +18,7 @@ package com.epam.digital.data.platform.management.service;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.springframework.util.StreamUtils.copyToString;
 
@@ -254,6 +255,7 @@ public class BusinessProcessServiceTest {
         businessProcessService.getProcessContent("business-process", VERSION_ID);
 
     Assertions.assertThat(actualBusinessProcessContent).isEqualTo(PROCESS_CONTENT);
+    Mockito.verify(repository).updateRepository();
   }
 
   @Test
@@ -274,11 +276,11 @@ public class BusinessProcessServiceTest {
     Assertions.assertThatCode(
             () ->
                 businessProcessService.updateProcess(
-                    PROCESS_CONTENT, "business-process", VERSION_ID))
+                    PROCESS_CONTENT, "business-process", VERSION_ID, null))
         .doesNotThrowAnyException();
     Mockito.verify(repository).isFileExists("bpmn/business-process.bpmn");
     Mockito.verify(repository)
-        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), anyString());
+        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), anyString(), isNull());
     // check if there is no error, but not real value
   }
 
@@ -298,11 +300,11 @@ public class BusinessProcessServiceTest {
             () ->
                 businessProcessService.updateProcess(
                     contentForUpdate, "business-process",
-                VERSION_ID))
+                VERSION_ID, null))
         .doesNotThrowAnyException();
 
     Mockito.verify(repository)
-        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
+        .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture(), isNull());
     String response = captor.getValue();
     Diff documentDiff =
         DiffBuilder.compare(contentForUpdate)
@@ -318,10 +320,10 @@ public class BusinessProcessServiceTest {
   @SneakyThrows
   void deleteProcessTest() {
     Assertions.assertThatCode(
-            () -> businessProcessService.deleteProcess("business-process", VERSION_ID))
+            () -> businessProcessService.deleteProcess("business-process", VERSION_ID, "eTag"))
         .doesNotThrowAnyException();
 
-    Mockito.verify(repository).deleteFile("bpmn/business-process." + BPMN_FILE_EXTENSION);
+    Mockito.verify(repository).deleteFile("bpmn/business-process." + BPMN_FILE_EXTENSION, "eTag");
   }
 
   @SneakyThrows
@@ -343,7 +345,7 @@ public class BusinessProcessServiceTest {
     Assertions.assertThat(PROCESS_CONTENT.indexOf(
         "rrm:modified=\"2022-10-03T14:41:20.128Z\"") > 0).isTrue();
 
-    businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID);
+    businessProcessService.updateProcess(PROCESS_CONTENT, "business-process", VERSION_ID, null);
     Mockito.verify(repository, never())
         .writeFile(eq("bpmn/business-process." + BPMN_FILE_EXTENSION), captor.capture());
 

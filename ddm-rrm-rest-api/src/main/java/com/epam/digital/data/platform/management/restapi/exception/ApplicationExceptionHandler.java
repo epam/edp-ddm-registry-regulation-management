@@ -26,8 +26,10 @@ import com.epam.digital.data.platform.management.forms.exception.FormNotFoundExc
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritChangeNotFoundException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritCommunicationException;
 import com.epam.digital.data.platform.management.gerritintegration.exception.GerritConflictException;
+import com.epam.digital.data.platform.management.gitintegration.exception.ETagValidationException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitCommandException;
 import com.epam.digital.data.platform.management.gitintegration.exception.GitFileNotFoundException;
+import com.epam.digital.data.platform.management.gitintegration.exception.MergeConflictException;
 import com.epam.digital.data.platform.management.gitintegration.exception.RepositoryNotFoundException;
 import com.epam.digital.data.platform.management.groups.exception.GroupDuplicateProcessDefinitionException;
 import com.epam.digital.data.platform.management.groups.exception.GroupEmptyProcessDefinitionException;
@@ -104,6 +106,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
   private static final String PROCESS_NOT_FOUND_EXCEPTION = "PROCESS_NOT_FOUND_EXCEPTION";
   private static final String GIT_FILE_NOT_FOUND_EXCEPTION = "GIT_FILE_NOT_FOUND_EXCEPTION";
   private static final String ETAG_FILTERING_EXCEPTION = "ETAG_FILTERING_EXCEPTION";
+  private static final String ETAG_VALIDATION_EXCEPTION = "ETAG_VALIDATION_EXCEPTION";
   private static final String DATA_MODEL_FILE_NOT_FOUND = "DATA_MODEL_FILE_NOT_FOUND";
   private static final String INVALID_CHANGELOG = "INVALID_CHANGELOG";
 
@@ -347,6 +350,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(newDetailedResponse(GROUPS_PARSING_EXCEPTION, exception));
   }
+
   @ExceptionHandler(GroupEmptyProcessDefinitionException.class)
   public ResponseEntity<DetailedErrorResponse> handleGroupEmptyProcessDefinitionException(
       GroupEmptyProcessDefinitionException exception) {
@@ -386,6 +390,7 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
     return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
         .body(newDetailedResponse(GROUPS_FIELD_REQUIRED_EXCEPTION, exception));
   }
+
   @ExceptionHandler(GroupDuplicateProcessDefinitionException.class)
   public ResponseEntity<DetailedErrorResponse> handleGroupDuplicateProcessDefinitionException(
       GroupDuplicateProcessDefinitionException exception) {
@@ -394,6 +399,21 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         .body(newDetailedResponse(GROUPS_PROCESS_DEFINITION_DUPLICATES_EXCEPTION, exception));
   }
 
+  @ExceptionHandler(ETagValidationException.class)
+  public ResponseEntity<DetailedErrorResponse> handleETagValidationException(
+      ETagValidationException exception) {
+    log.error("Invalid ETag for file with path {} from master", exception.getPath());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(newDetailedResponse(ETAG_FILTERING_EXCEPTION, exception));
+  }
+
+  @ExceptionHandler
+  public ResponseEntity<DetailedErrorResponse> handleMergeConflictException(
+      MergeConflictException exception) {
+    log.error("Conflict occurred on pushing to remote", exception);
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(newDetailedResponse(CONFLICT_ERROR, exception));
+  }
 
   private Annotation getAnnotationFromConstraintViolationException(
       ConstraintViolationException exception) {

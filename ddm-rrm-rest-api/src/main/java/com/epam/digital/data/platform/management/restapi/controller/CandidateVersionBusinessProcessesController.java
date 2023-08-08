@@ -16,6 +16,7 @@
 
 package com.epam.digital.data.platform.management.restapi.controller;
 
+import com.epam.digital.data.platform.management.core.utils.ETagUtils;
 import com.epam.digital.data.platform.management.groups.service.GroupService;
 import com.epam.digital.data.platform.management.model.dto.BusinessProcessDetailsShort;
 import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResponse;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -43,6 +45,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -149,6 +152,7 @@ public class CandidateVersionBusinessProcessesController {
             String.format("/versions/candidates/%s/business-processes/%s", versionCandidateId,
                 businessProcessName)))
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -187,15 +191,23 @@ public class CandidateVersionBusinessProcessesController {
         versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
   @Operation(description = "Update business process",
-      parameters = @Parameter(in = ParameterIn.HEADER,
-          name = "X-Access-Token",
-          description = "Token used for endpoint security",
-          required = true,
-          schema = @Schema(type = "string")),
+      parameters = {
+          @Parameter(in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")),
+          @Parameter(in = ParameterIn.HEADER,
+              name = "If-Match",
+              description = "ETag to verify whether user has latest data",
+              schema = @Schema(type = "string")
+          )
+      },
       responses = {
           @ApiResponse(responseCode = "200",
               description = "OK",
@@ -221,11 +233,16 @@ public class CandidateVersionBusinessProcessesController {
   @PutMapping("/{businessProcessName}")
   public ResponseEntity<String> updateBusinessProcess(
       @RequestBody @BusinessProcess String businessProcess,
-      @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
+      @PathVariable @Parameter(description = "Version candidate identifier", required = true)
+      String versionCandidateId,
+      @PathVariable @Parameter(description = "Process name", required = true)
+      String businessProcessName,
+      @RequestHeader HttpHeaders headers) {
     log.info("Started updating business process {} for {} version candidate", businessProcessName,
         versionCandidateId);
-    businessProcessService.updateProcess(businessProcess, businessProcessName, versionCandidateId);
+    var eTag = headers.getFirst("If-Match");
+    businessProcessService.updateProcess(businessProcess, businessProcessName,
+        versionCandidateId, eTag);
     log.info(
         "Finished updating business process {} for {} version candidate. Retrieving this process",
         businessProcessName, versionCandidateId);
@@ -235,6 +252,7 @@ public class CandidateVersionBusinessProcessesController {
         versionCandidateId);
     return ResponseEntity.ok()
         .contentType(MediaType.TEXT_XML)
+        .eTag(ETagUtils.getETagFromContent(response))
         .body(response);
   }
 
@@ -265,10 +283,12 @@ public class CandidateVersionBusinessProcessesController {
   @DeleteMapping("/{businessProcessName}")
   public ResponseEntity<String> deleteBusinessProcess(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true) String versionCandidateId,
-      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName) {
+      @PathVariable @Parameter(description = "Process name", required = true) String businessProcessName,
+      @RequestHeader HttpHeaders headers) {
     log.info("Started deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);
-    businessProcessService.deleteProcess(businessProcessName, versionCandidateId);
+    var eTag = headers.getFirst("If-Match");
+    businessProcessService.deleteProcess(businessProcessName, versionCandidateId, eTag);
     groupService.deleteProcessDefinition(businessProcessName, versionCandidateId);
     log.info("Finished deleting business process {} from {} version candidate", businessProcessName,
         versionCandidateId);

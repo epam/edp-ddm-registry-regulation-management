@@ -70,4 +70,9 @@ public class MasterVersionInfoDetailed {
    */
   @Schema(description = "Last version candidate validations")
   private List<Validation> validations;
+  /**
+   * last MR status
+   */
+  @Schema(description = "Last version candidate status")
+  private String status;
 }

@@ -43,6 +43,7 @@ import com.google.gson.JsonElement;
 import com.urswolfer.gerrit.client.rest.GerritApiImpl;
 import com.urswolfer.gerrit.client.rest.http.HttpStatusException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,11 +98,13 @@ public class GerritServiceImpl implements GerritService {
         gerritPropertiesConfig.getRepository(), gerritPropertiesConfig.getUser());
     var changes = gerritApi.changes();
     try {
-      var changeInfoList = changes.query(query).withLimit(1).get();
+      var changeInfoList = changes.query(query).withLimit(10).get();
       if (changeInfoList.isEmpty()) {
         return null;
       }
-      var changeId = changeInfoList.get(0).changeId;
+      var changeId = changeInfoList.stream()
+          .max(Comparator.comparing(changeInfo -> changeInfo.submitted))
+          .get().changeId;
       return gerritMapper.toChangeInfoDto(changes.id(changeId).get());
     } catch (HttpStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {

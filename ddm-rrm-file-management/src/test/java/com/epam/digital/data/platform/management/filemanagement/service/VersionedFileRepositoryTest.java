@@ -179,7 +179,7 @@ public class VersionedFileRepositoryTest {
 
     repository.writeFile(filepath, fileContent);
 
-    Mockito.verify(jGitService).amend("version", filepath, fileContent);
+    Mockito.verify(jGitService).amend("version", filepath, fileContent, null);
   }
 
   @Test
@@ -187,10 +187,10 @@ public class VersionedFileRepositoryTest {
   void deleteTest() {
     final var filepath = "folder/" + RandomString.make();
 
-    assertThatCode(() -> repository.deleteFile(filepath))
+    assertThatCode(() -> repository.deleteFile(filepath, "eTag"))
         .doesNotThrowAnyException();
 
-    Mockito.verify(jGitService).delete("version", filepath);
+    Mockito.verify(jGitService).delete("version", filepath, "eTag");
   }
 
   @Test

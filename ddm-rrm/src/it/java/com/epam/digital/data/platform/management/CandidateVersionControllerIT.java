@@ -160,7 +160,7 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.creationDate", is("2022-10-28T15:12:00.000Z")),
           jsonPath("$.latestUpdate", is("2022-10-29T06:47:00.000Z")),
           jsonPath("$.author", is(context.getGerritProps().getUser())),
-          jsonPath("$.validations[0].result", is("UNKNOWN"))
+          jsonPath("$.validations[0].result", is("PENDING"))
       );
     }
 
@@ -487,7 +487,7 @@ class CandidateVersionControllerIT extends BaseIT {
           jsonPath("$.creationDate", is("2022-10-28T15:34:00.000Z")),
           jsonPath("$.latestUpdate", is("2022-10-28T15:34:00.000Z")),
           jsonPath("$.author", is(context.getGerritProps().getUser())),
-          jsonPath("$.validations[0].result", is("UNKNOWN"))
+          jsonPath("$.validations[0].result", is("PENDING"))
       );
       Assertions.assertThat(context.getRepo(versionCandidateId)).exists();
     }

@@ -15,13 +15,16 @@
  */
 package com.epam.digital.data.platform.management.versionmanagement.model;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import com.google.gerrit.extensions.common.ChangeMessageInfo;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -44,4 +47,5 @@ public class VersionInfoDto {
   private String owner;
   private Boolean mergeable;
   private Map<String, Integer> labels;
+  private List<ChangeMessageInfo> messages;
 }

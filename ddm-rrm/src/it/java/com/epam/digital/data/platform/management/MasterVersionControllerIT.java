@@ -16,33 +16,43 @@
 
 package com.epam.digital.data.platform.management;
 
+import com.epam.digital.data.platform.management.restapi.model.ResultValues;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.http.MediaType;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import java.util.List;
-import java.util.Map;
-import lombok.SneakyThrows;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.MediaType;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("Master version controller tests")
 class MasterVersionControllerIT extends BaseIT {
 
-  @Test
+  @ParameterizedTest
+  @MethodSource("provideBuildStatuses")
   @DisplayName("GET /versions/master should return 200 with last merged change info")
   @SneakyThrows
-  public void getMasterVersionInfo() {
+  public void getMasterVersionInfo(String message, String status) {
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2022, 8, 10, 13, 18));
     final var lastMergedChangeInfo = Map.of(
         "_number", 1,
         "owner", Map.of("username", context.getGerritProps().getUser()),
@@ -50,12 +60,13 @@ class MasterVersionControllerIT extends BaseIT {
         "subject", "commit message",
         "submitted", "2022-08-02 16:15:12.786589626",
         "labels", Map.of(),
+        "messages", List.of(Map.of("message", message, "date", timestamp.toString())),
         "change_id", "change_id"
     );
 
     final var om = new ObjectMapper();
     context.getGerritMockServer().addStubMapping(stubFor(
-        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=1",
+        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=10",
                 context.getGerritProps().getRepository(), context.getGerritProps().getUser())))
             .willReturn(aResponse().withStatus(200)
                 .withBody(om.writeValueAsString(List.of(lastMergedChangeInfo))))
@@ -77,6 +88,7 @@ class MasterVersionControllerIT extends BaseIT {
         jsonPath("$.description", is("this is description for version candidate")),
         jsonPath("$.name", is("commit message")),
         jsonPath("$.latestUpdate", is("2022-08-02T16:15:12.000Z")),
+        jsonPath("$.status", is(status)),
         jsonPath("$.published", nullValue()),
         jsonPath("$.inspector", nullValue()),
         jsonPath("$.validations", nullValue())
@@ -88,7 +100,7 @@ class MasterVersionControllerIT extends BaseIT {
   @SneakyThrows
   public void getMasterVersionInfo_noLastMergedMR() {
     context.getGerritMockServer().addStubMapping(stubFor(
-        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=1",
+        WireMock.get(urlEqualTo(String.format("/a/changes/?q=project:%s+status:merged+owner:%s&n=10",
                 context.getGerritProps().getRepository(), context.getGerritProps().getUser())))
             .willReturn(aResponse().withStatus(200).withBody("[]"))
     ));
@@ -105,7 +117,17 @@ class MasterVersionControllerIT extends BaseIT {
         jsonPath("$.name", nullValue()),
         jsonPath("$.published", nullValue()),
         jsonPath("$.inspector", nullValue()),
+        jsonPath("$.status", nullValue()),
         jsonPath("$.validations", nullValue())
+    );
+  }
+
+  static Stream<Arguments> provideBuildStatuses() {
+    return Stream.of(
+        arguments("Build Started ... MASTER-Build ...", ResultValues.PENDING.name()),
+        arguments("Build Successful ... MASTER-Build ...", ResultValues.SUCCESS.name()),
+        arguments("Build Failed ... MASTER-Build ...", ResultValues.FAILED.name()),
+        arguments("Build Successful ... MASTER-Code-review ...", ResultValues.PENDING.name())
     );
   }
 }

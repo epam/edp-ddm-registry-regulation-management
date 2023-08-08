@@ -41,7 +41,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
-    Mockito.when(request.withLimit(1)).thenReturn(request);
+    Mockito.when(request.withLimit(10)).thenReturn(request);
     Mockito.when(request.get()).thenReturn(changeInfos);
     Mockito.when(changes.id(changeInfo.id)).thenReturn(changeApiRestClient);
     Mockito.when(changeApiRestClient.get()).thenReturn(changeInfo);
@@ -52,7 +52,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     assertThat(result).hasFieldOrPropertyWithValue("number", dto.getNumber());
 
     Mockito.verify(request).get();
-    Mockito.verify(request).withLimit(1);
+    Mockito.verify(request).withLimit(10);
     Mockito.verify(changes).query("project:repo+status:merged+owner:user");
     Mockito.verify(gerritPropertiesConfig).getRepository();
   }
@@ -63,7 +63,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
-    Mockito.when(request.withLimit(1)).thenReturn(request);
+    Mockito.when(request.withLimit(10)).thenReturn(request);
     Mockito.when(request.get()).thenReturn(List.of());
 
     var result = gerritService.getLastMergedMR();
@@ -71,7 +71,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Assertions.assertThat(result).isNull();
 
     Mockito.verify(request).get();
-    Mockito.verify(request).withLimit(1);
+    Mockito.verify(request).withLimit(10);
     Mockito.verify(changes).query("project:repo+status:merged+owner:user");
     Mockito.verify(gerritPropertiesConfig).getRepository();
   }
@@ -82,7 +82,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
-    Mockito.when(request.withLimit(1)).thenReturn(request);
+    Mockito.when(request.withLimit(10)).thenReturn(request);
     Mockito.when(request.get()).thenThrow(
         new HttpStatusException(HttpStatus.NOT_FOUND.value(), "", ""));
 
@@ -96,7 +96,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
-    Mockito.when(request.withLimit(1)).thenReturn(request);
+    Mockito.when(request.withLimit(10)).thenReturn(request);
     Mockito.when(request.get()).thenThrow(HttpStatusException.class);
 
     Assertions.assertThatCode(() -> gerritService.getLastMergedMR())
@@ -109,7 +109,7 @@ public class GerritServiceLastMergedTest extends AbstractGerritServiceTest {
     Mockito.when(gerritPropertiesConfig.getRepository()).thenReturn("repo");
     Mockito.when(gerritPropertiesConfig.getUser()).thenReturn("user");
     Mockito.when(changes.query("project:repo+status:merged+owner:user")).thenReturn(request);
-    Mockito.when(request.withLimit(1)).thenReturn(request);
+    Mockito.when(request.withLimit(10)).thenReturn(request);
     Mockito.when(request.get()).thenThrow(RestApiException.class);
 
     Assertions.assertThatCode(() -> gerritService.getLastMergedMR())
