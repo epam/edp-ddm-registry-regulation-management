@@ -17,8 +17,6 @@
 package com.epam.digital.data.platform.management;
 
 import com.epam.digital.data.platform.management.context.TestExecutionContext;
-import java.util.Map;
-import java.util.Objects;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
@@ -32,6 +30,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Abstract integration test that is used for setuping test execution context for all integration

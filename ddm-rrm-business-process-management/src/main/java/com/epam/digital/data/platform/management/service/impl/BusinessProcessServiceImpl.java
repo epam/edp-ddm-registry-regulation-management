@@ -44,6 +44,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -52,7 +53,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class BusinessProcessServiceImpl implements BusinessProcessService {
@@ -186,6 +187,9 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
         processContent = repo.readFile(getProcessPath(versionedFileInfoDto.getName()));
       }
       var dates = getDatesFromContent(processContent);
+      if(dates == null){
+        continue;
+      }
       if (Objects.isNull(dates.getCreate()) || Objects.isNull(dates.getUpdate())) {
         var path = getProcessPath(versionedFileInfoDto.getName());
         var datesFromRepo = versionedFileInfoDto.getStatus() == FileStatus.DELETED
@@ -215,7 +219,8 @@ public class BusinessProcessServiceImpl implements BusinessProcessService {
     try {
       doc = documentBuilder.parse(new InputSource(new StringReader(processContent)));
     } catch (SAXException | IOException exception) {
-      throw new RuntimeException("Could not parse xml document", exception);
+      log.warn("Exception during processing xml document : {}", exception.getMessage());
+      return null;
     }
     doc.getDocumentElement().normalize();
     Element element = doc.getDocumentElement();

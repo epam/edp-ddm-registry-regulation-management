@@ -22,6 +22,7 @@ spring:
           - /app/secrets/dbcredentials-public
           - /app/secrets/dbcredentials-registry
           - /app/secrets/dbcredentials-registry-2
+          - /app/secrets/user-access-token
     vault:
       uri: ${VAULT_URI}
       authentication: KUBERNETES

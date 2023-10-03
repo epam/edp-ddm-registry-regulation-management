@@ -33,6 +33,7 @@ public class CamundaGlobalSystemVarsFileRepresentationDto {
 
   private String themeFile;
   private String supportEmail;
+  private String supportChannelUrl;
 
 }
 

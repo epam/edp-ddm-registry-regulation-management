@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Registry regulations version candidates settings Rest API")
+@Tag(description = "Registry regulations version candidates settings Rest API",  name = "candidate-version-settings-api")
 @RestController
 @RequestMapping("/versions/candidates/{versionCandidateId}/settings")
 @RequiredArgsConstructor
@@ -46,29 +47,53 @@ public class CandidateVersionSettingsController {
 
   private final SettingService settingService;
 
-  @Operation(description = "Get existing settings for version-candidate",
-      parameters = @Parameter(in = ParameterIn.HEADER,
+  @Operation(
+      summary = "Get settings for version-candidate",
+      description = "### Endpoint purpose:\n This endpoint is used for retrieving a JSON representations of existing _settings_ for version candidate",
+      parameters = @Parameter(
+          in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
           required = true,
-          schema = @Schema(type = "string")),
+          schema = @Schema(type = "string")
+      ),
       responses = {
-          @ApiResponse(responseCode = "200",
-              description = "OK",
+          @ApiResponse(
+              responseCode = "200",
+              description = "OK. Settings information retrieved successfully",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = SettingsInfoDto.class))),
-          @ApiResponse(responseCode = "401",
+                  schema = @Schema(implementation = SettingsInfoDto.class),
+                  examples = {
+                      @ExampleObject(value = "{\n" +
+                          "  \"themeFile\": \"white-theme.js\",\n" +
+                          "  \"title\": \"mdtuddm\",\n" +
+                          "  \"titleFull\": \"<Назва реєстру>\",\n" +
+                          "  \"supportEmail\": \"support@registry.gov.ua\"\n" +
+                          "}"
+                      )
+                  })
+          ),
+          @ApiResponse(
+              responseCode = "401",
               description = "Unauthorized",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "403",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "403",
               description = "Forbidden",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "404",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "404",
               description = "Not Found",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "500",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))
+          ),
+          @ApiResponse(
+              responseCode = "500",
               description = "Internal server error",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))
+          )
+      })
   @GetMapping
   public ResponseEntity<SettingsInfoDto> getSettings(
       @PathVariable @Parameter(description = "Version candidate identifier", required = true)
@@ -79,34 +104,80 @@ public class CandidateVersionSettingsController {
     return ResponseEntity.ok(setting);
   }
 
-  @Operation(description = "Update existing settings for version-candidate",
-      parameters = @Parameter(in = ParameterIn.HEADER,
+  @Operation(
+      summary = "Update settings for version-candidate",
+      description = "### Endpoint purpose:\n This endpoint is used to update/create a _settings_ for the version candidate. A conflict can arise when two or more commits have made changes to the same part of a file. This can happen when two developers are working on the same branch at the same time, and both make changes to the same piece of code without being aware of each other's changes.",
+      parameters = @Parameter(
+          in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
           required = true,
-          schema = @Schema(type = "string")),
+          schema = @Schema(type = "string")
+      ),
+      requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+          content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+              schema = @Schema(implementation = SettingsInfoDto.class),
+              examples = {
+                  @ExampleObject(value = "{\n" +
+                      "  \"themeFile\": \"white-theme.js\",\n" +
+                      "  \"title\": \"mdtuddm\",\n" +
+                      "  \"titleFull\": \"<Назва реєстру>\",\n" +
+                      "  \"supportEmail\": \"support@registry.gov.ua\"\n" +
+                      "}"
+                  )
+              })
+      ),
       responses = {
-          @ApiResponse(responseCode = "200",
-              description = "OK",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "401",
+          @ApiResponse(
+              responseCode = "200",
+              description = "OK. Settings information updated successfully",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = SettingsInfoDto.class),
+                  examples = {
+                      @ExampleObject(value = "{\n" +
+                          "  \"themeFile\": \"white-theme.js\",\n" +
+                          "  \"title\": \"mdtuddm\",\n" +
+                          "  \"titleFull\": \"<Назва реєстру>\",\n" +
+                          "  \"supportEmail\": \"support@registry.gov.ua\"\n" +
+                          "}"
+                      )
+                  })
+          ),
+          @ApiResponse(
+              responseCode = "401",
               description = "Unauthorized",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "403",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "403",
               description = "Forbidden",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "404",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "404",
               description = "Not Found",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "422",
+                  schema = @Schema(implementation = DetailedErrorResponse.class))
+          ),
+          @ApiResponse(
+              responseCode = "409",
+              description = "Conflict. It means that settings file content already has been updated/deleted.",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))
+          ),
+          @ApiResponse(
+              responseCode = "422",
               description = "Unprocessable Entity",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "500",
+                  schema = @Schema(implementation = DetailedErrorResponse.class))
+          ),
+          @ApiResponse(
+              responseCode = "500",
               description = "Internal server error",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+                  schema = @Schema(implementation = DetailedErrorResponse.class))
+          )
+      })
   @PutMapping
   public ResponseEntity<SettingsInfoDto> updateSettings(
       @RequestBody SettingsInfoDto settings,

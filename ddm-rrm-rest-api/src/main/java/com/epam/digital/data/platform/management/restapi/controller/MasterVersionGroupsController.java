@@ -22,8 +22,8 @@ import com.epam.digital.data.platform.management.restapi.model.DetailedErrorResp
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
-@Tag(name = "Registry regulations Master version Groups management Rest API")
+@Tag(description = "Registry regulations Master version Groups management Rest API",  name = "master-version-business-process-groups-api")
 @RestController
 @RequestMapping("/versions/master/business-process-groups")
 @RequiredArgsConstructor
@@ -45,27 +45,70 @@ public class MasterVersionGroupsController {
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final GroupService groupService;
 
-  @Operation(description = "Get business process groups for master version", parameters = {
-      @Parameter(in = ParameterIn.HEADER,
-          name = "X-Access-Token",
-          description = "Token used for endpoint security",
-          required = true,
-          schema = @Schema(type = "string"))},
+  @Operation(
+      summary = "Get business process groups for master version",
+      description = "### Endpoint purpose:\n This endpoint is used to retrieve a list of JSON representations of _business process groups_ for the master version.",
+      parameters = @Parameter(
+              in = ParameterIn.HEADER,
+              name = "X-Access-Token",
+              description = "Token used for endpoint security",
+              required = true,
+              schema = @Schema(type = "string")
+          ),
       responses = {
-          @ApiResponse(responseCode = "200",
-              description = "OK",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  array = @ArraySchema(schema = @Schema(implementation = BusinessProcessGroupsResponse.class)))),
-          @ApiResponse(responseCode = "401",
+          @ApiResponse(
+              responseCode = "200",
+              description = "OK. Successful retrieval of business process groups",
+              content = @Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = BusinessProcessGroupsResponse.class),
+                  examples = {
+                      @ExampleObject(value = "{\n" +
+                          "  \"groups\": [\n" +
+                          "    {\n" +
+                          "      \"name\": \"Перша група\",\n" +
+                          "      \"processDefinitions\": []\n" +
+                          "    },\n" +
+                          "    {\n" +
+                          "      \"name\": \"Друга група\",\n" +
+                          "      \"processDefinitions\": []\n" +
+                          "    },\n" +
+                          "    {\n" +
+                          "      \"name\": \"Третя група\",\n" +
+                          "      \"processDefinitions\": []\n" +
+                          "    }\n" +
+                          "  ],\n" +
+                          "  \"ungrouped\": [\n" +
+                          "    {\n" +
+                          "      \"id\": \"bp-4-process_definition_id\",\n" +
+                          "      \"name\": \"John Doe added new component\"\n" +
+                          "    }\n" +
+                          "  ]\n" +
+                          "}"
+                      )
+                  }
+              )
+          ),
+          @ApiResponse(
+              responseCode = "401",
               description = "Unauthorized",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "403",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "403",
               description = "Forbidden",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "500",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "500",
               description = "Internal server error",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = DetailedErrorResponse.class)))})
+              content = @Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class)
+              )
+          )
+      }
+  )
   @GetMapping
   public ResponseEntity<BusinessProcessGroupsResponse> getBusinessProcessGroups() {
     log.info("Started getting business process groups from master");

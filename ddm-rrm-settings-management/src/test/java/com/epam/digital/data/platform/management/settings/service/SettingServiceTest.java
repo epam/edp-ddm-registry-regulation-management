@@ -55,7 +55,8 @@ class SettingServiceTest {
 
   private static final String GLOBAL_SETTINGS_VALUE =
       "supportEmail: \"support@registry.gov.ua\"\n" +
-          "themeFile: \"white-theme.js\"\n";
+          "themeFile: \"white-theme.js\"\n" +
+          "supportChannelUrl: \"http://test.com\"\n";
   private static final String SETTINGS_VALUE = "settings:\n" +
       "  general:\n" +
       "    validation:\n" +
@@ -68,18 +69,15 @@ class SettingServiceTest {
       "    title: \"mdtuddm\"\n";
 
   private static final String SETTINGS_EMPTY_CONTENT = "settings:\n" +
-      "  general:\n" +
-      "    titleFull: null\n" +
-      "    title: null\n";
-  private static final String GLOBAL_SETTINGS_EMPTY_VALUE = "themeFile: null\n" +
-      "supportEmail: null\n";
+      "  general: {}\n";
+  private static final String GLOBAL_SETTINGS_EMPTY_VALUE = "{}\n";
 
 
   @BeforeEach
   @SneakyThrows
   void beforeEach() {
-    Mockito.when(versionContextComponentManager.getComponent(VERSION_ID, VersionedFileRepository.class))
-        .thenReturn(repository);
+    Mockito.doReturn(repository).when(versionContextComponentManager)
+        .getComponent(VERSION_ID, VersionedFileRepository.class);
   }
 
   @Test
@@ -94,6 +92,7 @@ class SettingServiceTest {
         .titleFull("<Назва реєстру>")
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .themeFile("white-theme.js")
+        .supportChannelUrl("http://test.com")
         .build();
     settingServiceImpl.updateSettings(VERSION_ID, expected);
     SettingsInfoDto actual = settingServiceImpl.getSettings(VERSION_ID);
@@ -129,6 +128,7 @@ class SettingServiceTest {
         .titleFull("<Назва реєстру>")
 //        .blacklistedDomains(List.of("ya.ua", "ya.ru")) TODO uncomment after validator-cli update
         .themeFile("white-theme.js")
+        .supportChannelUrl("http://test.com")
         .build();
     SettingsInfoDto actual = settingServiceImpl.getSettings(VERSION_ID);
     assertThat(actual).isEqualTo(expected);

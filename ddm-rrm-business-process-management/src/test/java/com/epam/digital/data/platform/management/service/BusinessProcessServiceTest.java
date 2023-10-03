@@ -199,9 +199,12 @@ public class BusinessProcessServiceTest {
     Mockito.when(repository.readFile("bpmn/business-process." + BPMN_FILE_EXTENSION))
         .thenReturn("Invalid content");
 
-    Assertions.assertThatThrownBy(() -> businessProcessService.getProcessesByVersion(VERSION_ID))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessage("Could not parse xml document");
+    List<BusinessProcessInfoDto> expectedBusinessProcessesList =
+        businessProcessService.getProcessesByVersion(VERSION_ID);
+
+    Assertions.assertThat(expectedBusinessProcessesList)
+        .hasSize(0);
+
   }
 
   @Test

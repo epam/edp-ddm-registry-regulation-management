@@ -64,6 +64,7 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
           status().isOk(),
           content().contentType("application/json"),
           jsonPath("$.supportEmail", is("vc@registry.gov.ua")),
+          jsonPath("$.supportChannelUrl", is("https://registry.gov.ua")),
           jsonPath("$.themeFile", is("vc-white-theme.js")),
           jsonPath("$.titleFull", is("Version candidate Registry full title")),
 //        jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
@@ -98,7 +99,7 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
     @Test
     @DisplayName("should return 200 and update version candidate settings")
     @SneakyThrows
-    void getSettings() {
+    void putSettings() {
       // create version candidate
       final var versionCandidateId = context.createVersionCandidate();
 
@@ -118,6 +119,7 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
           status().isOk(),
           content().contentType("application/json"),
           jsonPath("$.supportEmail", is("putvc@registry.gov.ua")),
+          jsonPath("$.supportChannelUrl", is((String) null)),
           jsonPath("$.themeFile", is("put-vc-white-theme.js")),
           jsonPath("$.titleFull", is("PUT Version candidate Registry full title")),
 //        jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update
@@ -151,6 +153,7 @@ class CandidateVersionSettingsControllerIT extends BaseIT {
       // perform request
       final var requestBody = Map.of(
           "supportEmail", "putvc@registry.gov.ua",
+          "supportChannelUrl", "https://registry.gov.ua",
           "themeFile", "put-vc-white-theme.js",
           "titleFull", "PUT Version candidate Registry full title",
           "title", "PUT Version candidate Registry title"

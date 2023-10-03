@@ -92,7 +92,7 @@ public class BpGroupingValidatorTest {
 
   private static GroupListDetails nameContainsForbiddenCharacters() {
     return GroupListDetails.builder()
-        .groups(List.of(GroupDetails.builder().name("First group")
+        .groups(List.of(GroupDetails.builder().name("First group$")
                 .processDefinitions(List.of("bp-1-process_definition_id", "bp-2-process_definition_id"))
                 .build(),
             GroupDetails.builder().name("Перша група")
@@ -152,7 +152,8 @@ public class BpGroupingValidatorTest {
                 .build(),
             GroupDetails.builder().name("Друга група")
                 .processDefinitions(List.of("bp-3-process_definition_id")).build(),
-            GroupDetails.builder().name("Третя група").build()))
+            GroupDetails.builder().name("Третя група").build(),
+            GroupDetails.builder().name("Fourth group").build()))
         .ungrouped(List.of("bp-4-process_definition_id", "bp-5-process_definition_id")).build();
   }
 }

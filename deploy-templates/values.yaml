@@ -1,5 +1,26 @@
 global:
+  container:
+    requestsLimitsEnabled: true
   deploymentMode: development
+  istio:
+    sidecar:
+      requestsLimitsEnabled: true
+      resources:
+        requests: {}
+        limits: {}
+  registry:
+    registryRegulationManagement:
+      container:
+        envVars: {}
+        resources:
+          requests: {}
+          limits: {}
+      istio:
+        sidecar:
+          enabled: true
+          resources:
+            requests: {}
+            limits: {}
 
 name: registry-regulation-management
 
@@ -112,3 +133,7 @@ db:
 cache:
   names: dates,conflicts,latestRebase,catalog
   spec: expireAfterAccess=1d
+
+
+user:
+  accessToken: user-import-access-token

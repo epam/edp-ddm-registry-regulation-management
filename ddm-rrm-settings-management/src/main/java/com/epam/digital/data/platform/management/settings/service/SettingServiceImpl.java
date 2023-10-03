@@ -21,6 +21,7 @@ import com.epam.digital.data.platform.management.settings.exception.SettingsPars
 import com.epam.digital.data.platform.management.settings.model.CamundaGlobalSystemVarsFileRepresentationDto;
 import com.epam.digital.data.platform.management.settings.model.SettingsFileRepresentationDto;
 import com.epam.digital.data.platform.management.settings.model.SettingsInfoDto;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -55,14 +56,16 @@ public class SettingServiceImpl implements SettingService {
 
   @Override
   public void updateSettings(String versionCandidateId, SettingsInfoDto settings) {
-    YAMLMapper mapper = new YAMLMapper(new YAMLFactory()).disable(
-        YAMLGenerator.Feature.WRITE_DOC_START_MARKER);
+    var mapper = new YAMLMapper(new YAMLFactory())
+        .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+        .setSerializationInclusion(Include.NON_NULL);
     log.debug("YAMLMapper was initialized. Trying to get repo");
     var repo = versionContextComponentManager.getComponent(versionCandidateId, VersionedFileRepository.class);
     log.debug("Finished getting repo for {} version", versionCandidateId);
     CamundaGlobalSystemVarsFileRepresentationDto camundaDto = new CamundaGlobalSystemVarsFileRepresentationDto(
         settings.getThemeFile(),
-        settings.getSupportEmail());
+        settings.getSupportEmail(),
+        settings.getSupportChannelUrl());
     SettingsFileRepresentationDto settingDto = new SettingsFileRepresentationDto(
         settings.getTitleFull(),
         settings.getTitle()/*, settings.getBlacklistedDomains()*/); // TODO uncomment after validator-cli update
@@ -91,6 +94,7 @@ public class SettingServiceImpl implements SettingService {
           .supportEmail(camundaDto.getSupportEmail())
           .themeFile(camundaDto.getThemeFile())
           .title(settingDto.getTitle())
+          .supportChannelUrl(camundaDto.getSupportChannelUrl())
           .build();
     } catch (JsonProcessingException e) {
       throw new SettingsParsingException("Could not process settings files", e);

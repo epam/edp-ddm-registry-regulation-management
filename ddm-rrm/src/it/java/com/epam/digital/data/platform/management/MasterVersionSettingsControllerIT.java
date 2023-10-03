@@ -41,6 +41,7 @@ class MasterVersionSettingsControllerIT extends BaseIT {
         status().isOk(),
         content().contentType("application/json"),
         jsonPath("$.supportEmail", is("support@registry.gov.ua")),
+        jsonPath("$.supportChannelUrl", is("https://registry.gov.ua")),
         jsonPath("$.themeFile", is("white-theme.js")),
         jsonPath("$.titleFull", is("Registry full title")),
 //      jsonPath("$.blacklistedDomains", hasSize(2)), TODO uncomment after validator-cli update

@@ -19,25 +19,28 @@ package com.epam.digital.data.platform.management.osintegration.service;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobSpec;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import java.util.Arrays;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class OpenShiftServiceImpl implements OpenShiftService {
 
-  private static final String CALL_APP_JAR = ">- \njava -jar app.jar --id='%s' --USER_ACCESS_TOKEN='%s' --REQUEST_ID='%s'";
+  private static final String CALL_APP_JAR = ">- \njava -jar app.jar --id='%s' --USER_ACCESS_TOKEN='user_access_token' --REQUEST_ID='%s'";
   private static final String MDC_TRACE_ID_HEADER = "X-B3-TraceId";
   private static final String JOB_NAME_LABEL = "name";
   private static final String MINUS_DELIMITER = "-";
@@ -45,6 +48,9 @@ public class OpenShiftServiceImpl implements OpenShiftService {
   private final Config openShiftConfig;
   @Value("${openshift.job.name}")
   private final String jobName;
+
+  @Value("${user.accessToken}")
+  private final String userAccessTokenSecret;
 
   @Override
   public void startImport(String fileInfoId, SecurityContext securityContext) {
@@ -56,12 +62,24 @@ public class OpenShiftServiceImpl implements OpenShiftService {
 
       var job = getJob(openShiftClient);
 
+      saveAccessTokenToSecrets(securityContext, openShiftClient);
+
       var clonedJob = cloneJob(job, fileInfoId, securityContext);
 
       openShiftClient.batch().v1().jobs().createOrReplace(clonedJob);
     } catch (KubernetesClientException e) {
       throw new OpenShiftInvocationException("Unable to create Job", e);
     }
+  }
+
+  private void saveAccessTokenToSecrets(SecurityContext securityContext, OpenShiftClient openShiftClient) {
+    var data = new HashMap<String, String>();
+    data.put("userAccessToken", securityContext.getAccessToken());
+
+    openShiftClient.secrets()
+            .inNamespace(openShiftClient.getNamespace())
+            .withName(userAccessTokenSecret)
+            .edit(s -> new SecretBuilder(s).addToStringData(data).build());
   }
 
   private Job cloneJob(Job job, String fileId, SecurityContext securityContext) {
@@ -74,7 +92,7 @@ public class OpenShiftServiceImpl implements OpenShiftService {
         .findFirst()
         .orElseThrow(() -> new OpenShiftInvocationException("Missed or broken container job part for job: " + jobName));
 
-    var callAppJar = String.format(CALL_APP_JAR, fileId, securityContext.getAccessToken(), MDC.get(MDC_TRACE_ID_HEADER));
+    var callAppJar = String.format(CALL_APP_JAR, fileId, MDC.get(MDC_TRACE_ID_HEADER));
     var jobCommand = Arrays.asList("sh", "-c", callAppJar);
 
     container.setCommand(jobCommand);

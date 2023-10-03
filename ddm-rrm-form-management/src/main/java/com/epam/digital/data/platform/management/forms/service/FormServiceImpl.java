@@ -34,14 +34,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class FormServiceImpl implements FormService {
@@ -164,6 +167,9 @@ public class FormServiceImpl implements FormService {
         formContent = repo.readFile(getFormPath(versionedFileInfoDto.getName()));
       }
       var dates = getDatesFromContent(formContent);
+      if(dates == null){
+        continue;
+      }
       if (Objects.isNull(dates.getCreate()) || Objects.isNull(dates.getUpdate())) {
         var path = getFormPath(versionedFileInfoDto.getName());
         var datesFromRepo = versionedFileInfoDto.getStatus() == FileStatus.DELETED
@@ -190,12 +196,18 @@ public class FormServiceImpl implements FormService {
   private FileDatesDto getDatesFromContent(String formContent) {
     LocalDateTime create = null;
     LocalDateTime update = null;
-    var form = JsonParser.parseString(formContent).getAsJsonObject();
-    if (form.has(FORM_CREATED_FIELD)) {
-      create = parseDate(form.get(FORM_CREATED_FIELD));
-    }
-    if (form.has(FORM_MODIFIED_FIELD)) {
-      update = parseDate(form.get(FORM_MODIFIED_FIELD));
+    try {
+      var form = JsonParser.parseString(formContent).getAsJsonObject();
+
+      if (form.has(FORM_CREATED_FIELD)) {
+        create = parseDate(form.get(FORM_CREATED_FIELD));
+      }
+      if (form.has(FORM_MODIFIED_FIELD)) {
+        update = parseDate(form.get(FORM_MODIFIED_FIELD));
+      }
+    } catch (JsonSyntaxException | IllegalStateException e) {
+      log.warn("Exception during processing Form json file : {}", e.getMessage());
+      return null;
     }
     return FileDatesDto.builder().create(create).update(update).build();
   }

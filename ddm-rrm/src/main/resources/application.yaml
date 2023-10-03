@@ -107,6 +107,7 @@ platform:
       - /v3/api-docs/**
       - /swagger-ui/**
       - /actuator/**
+      - /v3/api-docs.yaml
 
 user-import-ceph:
   bucket: ${USER_IMPORT_CEPH_BUCKET_NAME}
@@ -121,6 +122,9 @@ keycloak:
 
 vault:
   key: ${VAULT_KEY}
+
+user:
+  accessToken: ${USER_ACCESS_TOKEN}
 
 file-validator:
   encoding: UTF-8

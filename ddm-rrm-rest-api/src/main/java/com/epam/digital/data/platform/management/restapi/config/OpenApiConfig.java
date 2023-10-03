@@ -26,13 +26,16 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
   @Bean
   public OpenApiCustomiser openApiCustomiser() {
-    return openApi -> openApi.setOpenapi("3.0.3");
+    return openApi -> {
+      openApi.setOpenapi("3.0.3");
+      openApi.setServers(null);
+    };
   }
 
   @Bean
   public OpenAPI openAPI() {
     return new OpenAPI()
-        .info(new Info().title("Registry regulations admin-portal")
+        .info(new Info().title("Registry regulations management")
             .description("This document describes REST API of 'Registry regulations admin-portal'")
             .version("1.0"));
   }

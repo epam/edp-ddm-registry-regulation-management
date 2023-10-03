@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: registry-regulation-management-properties
+  name: {{ .Chart.Name }}-properties
 data:
   config.yaml: |-
     server:
@@ -22,7 +22,10 @@ data:
 
     data:
       jobName: {{ .Values.data.jobName }}
-
+    
+    user:
+      accessToken: {{ .Values.user.accessToken }}
+    
     gerrit:
       url: {{ template "gerrit.url" . }}
       repository: {{ .Values.gerrit.repository }}
@@ -62,3 +65,8 @@ data:
         cache-names: {{.Values.cache.names}}
         caffeine:
           spec: {{.Values.cache.spec}}
+
+    {{- if .Values.global.language }}
+    locale:
+      language: {{ .Values.global.language }} 
+    {{- end }}

@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BpGroupingValidator {
 
-  private static final String GROUP_NAME_REGEXP = "^[А-ЩЬЮЯҐЄІЇа-щьюяґєії0-9 '`‘’()—–/:;№,.\\\\-]{3,512}$";
+  private static final String GROUP_NAME_REGEXP = "^[A-Za-zА-ЩЬЮЯҐЄІЇа-щьюяґєії0-9 '`‘’()—–/:;№,.\\\\-]{3,512}$";
 
   public void validate(GroupListDetails groupListDetails) {
     final var groups = groupListDetails.getGroups();

@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +36,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Registry regulations Master version settings Rest API")
+@Tag(description = "Registry regulations Master version settings Rest API",  name = "master-version-settings-api")
 @RestController
 @RequestMapping("/versions/master/settings")
 @RequiredArgsConstructor
@@ -45,29 +46,50 @@ public class MasterVersionSettingsController {
   private final GerritPropertiesConfig gerritPropertiesConfig;
   private final SettingService settingService;
 
-  @Operation(description = "Get existing settings for master version",
-      parameters = @Parameter(in = ParameterIn.HEADER,
+  @Operation(
+      summary = "Get settings for master version",
+      description = "### Endpoint purpose:\n This endpoint is used for retrieving a JSON representations of existing _settings_ for master version",
+      parameters = @Parameter(
+          in = ParameterIn.HEADER,
           name = "X-Access-Token",
           description = "Token used for endpoint security",
           required = true,
-          schema = @Schema(type = "string")),
+          schema = @Schema(type = "string")
+      ),
       responses = {
-          @ApiResponse(responseCode = "200",
-              description = "OK",
+          @ApiResponse(
+              responseCode = "200",
+              description = "OK. Settings information retrieved successfully",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                  schema = @Schema(implementation = SettingsInfoDto.class))),
-          @ApiResponse(responseCode = "401",
+                  schema = @Schema(implementation = SettingsInfoDto.class),
+                  examples = {
+                      @ExampleObject(value = "{\n" +
+                          "  \"themeFile\": \"white-theme.js\",\n" +
+                          "  \"title\": \"mdtuddm\",\n" +
+                          "  \"titleFull\": \"<Назва реєстру>\",\n" +
+                          "  \"supportEmail\": \"support@registry.gov.ua\"\n" +
+                          "}"
+                      )
+                  })
+          ),
+          @ApiResponse(
+              responseCode = "401",
               description = "Unauthorized",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "403",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "403",
               description = "Forbidden",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-          @ApiResponse(responseCode = "404",
-              description = "Not Found",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class))),
-          @ApiResponse(responseCode = "500",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+          ),
+          @ApiResponse(
+              responseCode = "500",
               description = "Internal server error",
-              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = DetailedErrorResponse.class)))})
+              content = @Content(
+                  mediaType = MediaType.APPLICATION_JSON_VALUE,
+                  schema = @Schema(implementation = DetailedErrorResponse.class))
+          )
+      })
   @GetMapping
   public ResponseEntity<SettingsInfoDto> getSettings() {
     var masterVersionId = gerritPropertiesConfig.getHeadBranch();

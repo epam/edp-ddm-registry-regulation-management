@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.epam.digital.data.platform.management.osintegration.exception.GetProcessingException;
 import com.epam.digital.data.platform.management.osintegration.exception.OpenShiftInvocationException;
 import com.epam.digital.data.platform.management.security.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.api.model.batch.v1.JobBuilder;
 import io.fabric8.kubernetes.api.model.batch.v1.JobListBuilder;
@@ -30,6 +31,7 @@ import io.fabric8.kubernetes.client.server.mock.EnableKubernetesMockClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesMockServer;
 import java.net.HttpURLConnection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ class OpenShiftServiceTest {
 
   static final String NAMESPACE = "test";
   static final String JOB_NAME = "example";
+  public static final String USER_ACCESS_TOKEN = "accessToken";
   OpenShiftService openShiftService;
   KubernetesMockServer server;
   KubernetesClient client;
@@ -49,7 +52,7 @@ class OpenShiftServiceTest {
   @BeforeEach
   void init() {
     this.openShiftService = new OpenShiftServiceImpl(server.createClient().getConfiguration(),
-        JOB_NAME);
+        JOB_NAME, USER_ACCESS_TOKEN);
   }
 
   @Test
@@ -66,6 +69,17 @@ class OpenShiftServiceTest {
         .withPath("/apis/batch/v1/namespaces/test/jobs")
         .andReturn(HttpURLConnection.HTTP_OK, exampleJob)
         .once();
+
+    server.expect()
+        .withPath("/api/v1/namespaces/test/secrets/accessToken")
+        .andReturn(HttpURLConnection.HTTP_OK, new SecretBuilder()
+            .withNewMetadata()
+            .withName(USER_ACCESS_TOKEN)
+            .endMetadata()
+            .withType("kubernetes.io/tls")
+            .withImmutable(false)
+            .addToStringData(new HashMap<>())
+            .build()).always();
 
     openShiftService.startImport(id, securityContext());
 

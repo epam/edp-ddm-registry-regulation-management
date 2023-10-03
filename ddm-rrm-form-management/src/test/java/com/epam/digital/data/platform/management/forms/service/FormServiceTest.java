@@ -64,6 +64,7 @@ class FormServiceTest {
   private final String FORM_CONTENT_UNICODE = TestUtils.getContent("form-sample-unicode.json");
   private final String FORM_CONTENT_WITHOUT_DATES = TestUtils.getContent(
       "form-sample-without-dates.json");
+  private final String FORM_CONTENT_WITHOUT_TITLE = TestUtils.getContent("form-sample-without-title.json");
 
   @Mock
   private VersionContextComponentManager versionContextComponentManager;
@@ -288,4 +289,39 @@ class FormServiceTest {
 
     Mockito.verify(repository).rollbackFile("forms/form.json");
   }
+
+  @Test
+  @SneakyThrows
+  void getFormWithNoNameListByVersionTest() {
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW)
+        .build();
+    Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));
+    Mockito.when(repository.readFile("forms/form.json")).thenReturn(FORM_CONTENT_WITHOUT_TITLE);
+    Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("forms/form.json"));
+
+    var resultList = formService.getFormListByVersion(VERSION_ID);
+
+    var expectedFormResponseDto = FormInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW).created(LocalDateTime.of(2022, 12, 21, 13, 52, 31, 357000000))
+        .updated(LocalDateTime.of(2022, 12, 22, 14, 52, 23, 745000000))
+        .title("").conflicted(true).build();
+
+    Assertions.assertThat(resultList).hasSize(1).element(0).isEqualTo(expectedFormResponseDto);
+  }
+
+  @Test
+  @SneakyThrows
+  void getFormListWithWrongStructureTest() {
+    var newForm = VersionedFileInfoDto.builder().name("form").path("forms/form.json")
+        .status(FileStatus.NEW)
+        .build();
+    Mockito.when(repository.getFileList("forms")).thenReturn(List.of(newForm));
+    Mockito.when(repository.readFile("forms/form.json")).thenReturn("Invalid content");
+    Mockito.when(cacheService.getConflictsCache(VERSION_ID)).thenReturn(List.of("forms/form.json"));
+
+    var resultList = formService.getFormListByVersion(VERSION_ID);
+    Assertions.assertThat(resultList).hasSize(0);
+  }
+
 }

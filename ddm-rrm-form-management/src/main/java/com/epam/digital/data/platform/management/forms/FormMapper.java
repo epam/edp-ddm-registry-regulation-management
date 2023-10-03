@@ -4,6 +4,7 @@ import com.epam.digital.data.platform.management.filemanagement.model.VersionedF
 import com.epam.digital.data.platform.management.forms.model.FormInfoDto;
 import com.epam.digital.data.platform.management.gitintegration.model.FileDatesDto;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -22,6 +23,10 @@ public interface FormMapper {
 
   @Named("getTitleFromFormContent")
   default String getTitleFromFormContent(String formContent) {
-    return JsonPath.read(formContent, "$.title");
+    try {
+      return JsonPath.read(formContent, "$.title");
+    }catch (PathNotFoundException e){
+      return "";
+    }
   }
 }

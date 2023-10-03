@@ -35,3 +35,8 @@ registry-regulation-management:
     exclude-table-prefixes: ddm,test
     exclude-table-suffixes: hst
     exclude-field-prefixes: ddm,dcm
+
+management:
+  endpoint:
+    prometheus:
+      enabled: false

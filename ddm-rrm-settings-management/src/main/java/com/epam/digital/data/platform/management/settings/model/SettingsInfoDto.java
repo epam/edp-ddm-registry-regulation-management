@@ -16,9 +16,11 @@
 
 package com.epam.digital.data.platform.management.settings.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -26,6 +28,8 @@ import lombok.ToString;
 @Setter
 @Builder
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode
 public class SettingsInfoDto {
 
@@ -33,6 +37,7 @@ public class SettingsInfoDto {
   private String title;
   private String themeFile;
   private String supportEmail;
+  private String supportChannelUrl;
 //  private List<String> blacklistedDomains; TODO uncomment after validator-cli update
 
 

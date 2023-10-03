@@ -49,7 +49,7 @@
     <java.version>11</java.version>
     <openshift-client.version>5.12.2</openshift-client.version>
     <kubernetes-mock.version>5.12.2</kubernetes-mock.version>
-    <ddm-starter-localization.version>1.6.0.1</ddm-starter-localization.version>
+    <ddm-starter-localization.version>1.6.0.11</ddm-starter-localization.version>
     <apache-encoding-detector.version>2.7</apache-encoding-detector.version>
     <jgit.version>6.1.0.202203080745-r</jgit.version>
     <gerrit.client.version>0.9.4</gerrit.client.version>

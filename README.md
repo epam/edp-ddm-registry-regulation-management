@@ -26,6 +26,10 @@ Check `src/main/resources/bootstrap.yaml` and replace if needed:
 
 To generate document describing RestAPI definition separate maven profile should be used called _generate-rest-api-docs_. Call `mvn -Pgenerate-rest-api-docs clean install` to generate rest api documentation from scratch. After this generated documentation should be commited and pushed into git together with potential other changes about RestAPI.  
 
+### Test execution
+
+* Tests could be run via maven command:
+    * `mvn verify` OR using appropriate functions of your IDE. To avoid `The filename or extension is too long` error on Windows, please uncomment `<fork>false</fork>` in `spring-boot-maven-plugin` configuration
 
 ### License
 registry-regulation-management is Open Source software released under the Apache 2.0 license.
